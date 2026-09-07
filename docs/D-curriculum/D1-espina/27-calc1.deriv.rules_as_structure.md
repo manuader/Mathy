@@ -17,13 +17,12 @@ Las reglas de derivación no son una lista para memorizar: son la lectura de có
 La arista que no sigue el orden escolar es la organización entera. La escuela dicta cinco reglas en fila: potencia, suma, producto, cociente, cadena. [C0](../../C-knowledge-graph/C0-esquema.md) las junta en un solo nodo cuyo contenido es la estructura, y cuelga las especializaciones después: `calc1.deriv.chain_as_gears`, `calc1.deriv.product_as_growing_rectangle` y `calc1.deriv.quotient_from_product` tienen a este nodo como único prerequisito. El nodo no depende de la recta tangente ni de la continuidad: para derivar una expresión armada con máquinas alcanza con saber qué mide la derivada y cómo está armada.
 
 ## 3. Dificultad cognitiva real
-
 Lo difícil no es aplicar una fórmula. Son cuatro capacidades que "derivar" mezcla:
 
-1. **Leer la forma antes de calcular.** Frente a `3x² · sen(x)` hay que ver un producto, no dos funciones. Frente a `(2x + 1)⁵` hay que ver una composición, no una potencia. Es la capacidad que sostiene `cs.calc1.strategy_rewrite_before_differentiating`, y la que hace que la lista de reglas se vuelva innecesaria.
-2. **Saber hasta dónde llega el reparto.** La derivada se reparte sobre la suma y sale del múltiplo constante, y no se reparte sobre el producto ni sobre la composición. El jugador que aprendió "se reparte" en el nodo 15 lo aplica de más y produce `derivative_of_product_as_product`.
-3. **Aceptar que la esquina no cuenta.** Cuando el rectángulo crece por los dos lados aparecen dos tiras y un cuadradito. El cuadradito existe, se ve, y aun así desaparece del resultado. Es la primera vez que el jugador descarta algo que está a la vista, y solo lo acepta si él mismo achica el crecimiento y ve que la esquina se hace despreciable frente a las tiras.
-4. **Contar todas las relaciones de la cadena.** En un tren de engranajes, cuánto gira el último por vuelta del primero es el producto de todas las relaciones. Quedarse con la del último es `chain_rule_missing_inner`, y es el error más caro del área.
+1. **Leer la forma antes de calcular.** Frente a `3x² · sen(x)` hay que ver un producto, no dos funciones; frente a `(2x + 1)⁵`, una composición y no una potencia. Es la capacidad que sostiene `cs.calc1.strategy_rewrite_before_differentiating` y la que vuelve innecesaria la lista de reglas.
+2. **Saber hasta dónde llega el reparto.** La derivada se reparte sobre la suma y sale del múltiplo constante, y no se reparte sobre el producto ni sobre la composición. Quien aprendió "se reparte" en el nodo 15 lo aplica de más y produce `derivative_of_product_as_product`.
+3. **Aceptar que la esquina no cuenta.** Cuando el rectángulo crece por los dos lados aparecen dos tiras y un cuadradito. El cuadradito existe, se ve, y aun así desaparece del resultado. Es la primera vez que el jugador descarta algo que está a la vista, y solo lo acepta si él mismo achica el crecimiento y ve que la esquina se vuelve despreciable frente a las tiras.
+4. **Contar todas las relaciones de la cadena.** En un tren de engranajes, cuánto gira el último por vuelta del primero es el producto de todas las relaciones. Quedarse con la del último es `chain_rule_missing_inner`, el error más caro del área.
 
 Las cuatro son independientes y la mecánica las separa: la primera vive en la tubería, la segunda y la tercera en las baldosas, la cuarta en los engranajes.
 
@@ -36,28 +35,25 @@ En `intuition` la escena se detiene con el lado ya estirado y el piso nuevo toda
 Al lado del piso hay un tablero con dos engranajes encadenados y una manivela. La misma pregunta con otra piel: si giro la manivela una vuelta, ¿cuánto gira el último?
 
 ## 5. Analogía del mundo real
-
 Dos analogías visten el nodo, una por familia de reglas ([G0](../../G-analogias/G0-reglas.md)).
 
-`growing_rectangle` (mecánica `tiles`) es la del YAML. Mapa: los dos lados → los dos factores; la tira que se agrega a lo largo del primer lado → el segundo factor por lo que creció el primero; la tira del segundo lado → el primer factor por lo que creció el segundo; el cuadradito de la esquina → el producto de los dos crecimientos, despreciable; el área nueva total → la regla del producto. Invariante: el área agregada es la suma de las dos tiras más una esquina que se achica más rápido que las tiras. Ruptura: `shrinking_sides`. Cuando un lado se acorta, la tira correspondiente sale en vez de entrar, y el piso no sabe dibujar baldosas negativas. Se retira en `formal`.
+`growing_rectangle` (mecánica `tiles`) es la del YAML. Mapa: los dos lados → los dos factores; la tira que se agrega a lo largo del primer lado → el segundo factor por lo que creció el primero; la tira del segundo lado → el primer factor por lo que creció el segundo; el cuadradito de la esquina → el producto de los dos crecimientos, despreciable; el área nueva total → la regla del producto. Invariante: el área agregada es la suma de las dos tiras más una esquina que se achica más rápido que ellas. Ruptura: `shrinking_sides`, porque un lado que se acorta pediría baldosas negativas.
 
-`gear_train_ratios` (mecánica `gears_sequence`) aporta la cadena. Mapa: engranaje → función; relación de dientes entre dos engranajes → tasa de cambio; una vuelta del primero → `dx`; vueltas del último → `dy`; producto de las relaciones a lo largo del tren → regla de la cadena; engranaje que gira al revés → tasa negativa. Ruptura: `ratio_that_changes_with_position`. Un tren de engranajes tiene una relación fija y una función curva no; por eso la cadena se juega con la relación medida en el punto donde está el marcador, y no en todo el tren a la vez.
+`gear_train_ratios` (mecánica `gears_sequence`) aporta la cadena. Mapa: engranaje → función; relación de dientes → tasa de cambio; una vuelta del primero → `dx`; vueltas del último → `dy`; producto de las relaciones a lo largo del tren → regla de la cadena; engranaje que gira al revés → tasa negativa. Ruptura: `ratio_that_changes_with_position`, porque una relación de dientes es fija y una función curva no. Las dos se retiran en `formal`.
 
-Por qué estas y no otras: el jugador ya tiene las dos pieles. Las baldosas son del nodo 15 y los engranajes son de la composición del nodo 20. La analogía no le pide un objeto nuevo, le pide ver la derivada dentro de objetos que ya usó para otra cosa. La tubería de `machine_pipe` es la superficie que las contiene: cada máquina de la tubería tiene su regla escrita en la panza, y derivar es recorrer la tubería.
+Por qué estas y no otras: el jugador ya tiene las dos pieles, las baldosas del nodo 15 y los engranajes del 20. La analogía no le pide un objeto nuevo, le pide ver la derivada dentro de objetos que usó para otra cosa. La tubería de `machine_pipe` es la superficie que las contiene: cada máquina lleva su regla en la panza y derivar es recorrer la tubería.
 
 ## 6. Mecánica de juego
-
 Primera capa jugable: `concrete`. `machine_pipe` es la mecánica principal y provee la superficie: la expresión como cadena de máquinas, con una entrada y una salida. `tiles` provee el piso que crece, donde se juegan la potencia y el producto. `gears_sequence` provee el tren, donde se juega la cadena. Las tres se encuentran en un gesto: tirar apenas de la entrada y mirar qué se agrega en cada etapa ([E0](../../E-mecanicas/E0-catalogo.md)). Gestos: `drag`, `tap`, `pinch` y `scrub`.
 
-1. Una tubería con dos o tres máquinas. Debajo de cada máquina, su forma propia: un piso cuadrado si es una potencia, dos pisos apilados si es una suma, un piso rectangular con dos lados vivos si es un producto, un par de engranajes si es una composición.
-2. Demostración: una mano fantasma toma la manija de la entrada y tira apenas. El piso cuadrado se alarga por los dos lados; dos tiras se encienden y la esquina queda gris. En la salida aparece una barrita con lo que creció. La escena vuelve al inicio.
-3. El jugador tira de la manija de la entrada. Todo lo que está encadenado responde a la vez: las tiras aparecen, los engranajes giran, la barrita de la salida cambia de largo.
-4. El jugador toca una tira. La tira se despega del piso y va a la bandeja del resultado. Toca la esquina: la esquina también se despega, pero al achicar el tirón con la manivela se ve que se encoge mucho más rápido que las tiras, y termina desapareciendo de la bandeja sola.
-5. El jugador arma la tubería. Arrastra máquinas de suma y de múltiplo constante y las encadena. Al tirar de la entrada, la salida de la tubería completa y la suma de las salidas de cada rama coinciden: eso es que la derivada se reparte sobre la suma.
-6. El jugador gira la manivela del tren. Cada engranaje muestra su relación en un cartelito. La bandeja del resultado acepta el producto de las relaciones; si el jugador pone solo la última, el marcador del final se atrasa a la vista.
-7. Éxito: la bandeja del resultado se ilumina y la máquina derivada queda dibujada al lado de la original, con la misma forma de tubería. Sin cartel.
+1. Una tubería con dos o tres máquinas. Debajo de cada una, su forma propia: un piso cuadrado si es una potencia, dos pisos apilados si es una suma, un piso rectangular con los dos lados vivos si es un producto, un par de engranajes si es una composición.
+2. Demostración: una mano fantasma tira apenas de la manija de la entrada. El piso cuadrado se alarga por los dos lados, dos tiras se encienden, la esquina queda gris y en la salida aparece una barrita. La escena vuelve al inicio.
+3. El jugador tira de la manija. Todo lo encadenado responde a la vez: las tiras aparecen, los engranajes giran, la barrita cambia de largo. Al tocar una tira, la tira se despega y va a la bandeja del resultado; al tocar la esquina, también se despega, pero al achicar el tirón con la manivela se ve que se encoge mucho más rápido y se apaga sola.
+4. El jugador arma la tubería con máquinas de suma y de múltiplo constante. Al tirar de la entrada, la salida total y la suma de las salidas de cada rama coinciden: eso es que la derivada se reparte sobre la suma.
+5. El jugador gira la manivela del tren. Cada engranaje muestra su relación en un cartelito y la bandeja acepta el producto de las relaciones; si pone solo la última, el marcador del final se atrasa a la vista.
+6. Éxito: la bandeja se ilumina y la máquina derivada queda dibujada al lado de la original, con la misma forma de tubería. Sin cartel.
 
-Errores con consecuencia física: si el jugador tira mucho de la entrada, la esquina se vuelve grande y el resultado no coincide con la barrita de la salida, y se ve el sobrante. Si arma el producto con una sola tira, el piso queda con un hueco alargado. Nada se llama "incorrecto".
+Errores con consecuencia física: tirar mucho de la entrada agranda la esquina y el resultado deja de coincidir con la barrita de la salida, y el sobrante se ve; armar el producto con una sola tira deja un hueco alargado en el piso. Nada se llama "incorrecto".
 
 ## 7. Representación visual
 
@@ -72,14 +68,13 @@ Capa `visual`, con la primitiva dominante `compose` y dos de apoyo de [H](../../
 Todavía no hay reglas escritas: las máquinas muestran su forma, las tiras muestran su tamaño y el resultado es una barra.
 
 ## 8. Transición a símbolos
-
 Cinco pasos sobre el mismo objeto, cada uno disparado por un gesto del jugador.
 
-1. **Tira → producto de dos etiquetas.** Al soltar la primera tira en la bandeja en `visual`, la tira se contrae hasta ser un renglón que conserva sus dos medidas: el lado que no cambió y el tirón. Queda `v · Δu`. La tira no se reemplaza: se aplana.
-2. **Dos tiras y una esquina → tres términos.** Al soltar la segunda tira, las dos aparecen sumadas en la bandeja y la esquina cae al lado, encogiéndose mientras el jugador achica el tirón, hasta que se apaga. Queda la forma del producto, todavía con `Δ`.
-3. **`Δ` → prima.** Cuando el jugador lleva la manivela del tirón al último diente, cada `Δu` se contrae en `u'` y `Δv` en `v'`, con la misma animación de plegado del nodo 26. El renglón del producto queda escrito con las dos notaciones que el jugador ya tiene.
-4. **Piso cuadrado → potencia con exponente.** Al repetir el tirón sobre un cubo de lado variable, las tres caras nuevas se apilan y se contraen en un solo renglón con el exponente como cantidad de tiras. Con la caja del exponente puesta en `n`, el renglón se pliega en la forma general.
-5. **Tren → producto de razones.** Al girar la manivela con la expresión completa en pantalla, cada cartelito de relación se convierte en una razón con la forma de `dy/dx`, y las razones se acomodan en fila multiplicándose. Los nombres intermedios se cancelan a la vista, como fichas que se tachan de a pares. Tocar el resultado despliega el tren como fantasma.
+1. **Tira → producto de dos etiquetas.** Al soltar la primera tira en la bandeja en `visual`, la tira se aplana en un renglón que conserva sus dos medidas, el lado que no cambió y el tirón. Queda `v · Δu`. La tira no se reemplaza.
+2. **Dos tiras y una esquina → tres términos.** Al soltar la segunda, las dos aparecen sumadas y la esquina cae al lado, encogiéndose mientras el jugador achica el tirón, hasta apagarse. Queda la forma del producto, todavía con `Δ`.
+3. **`Δ` → prima.** Cuando el jugador lleva la manivela del tirón al último diente, cada `Δu` se contrae en `u'` con la animación de plegado del nodo 26, y el renglón del producto queda escrito.
+4. **Piso cuadrado → potencia con exponente.** Al repetir el tirón sobre un cubo de lado variable, las caras nuevas se apilan y se contraen en un renglón donde el exponente es la cantidad de tiras. Con la caja del exponente en `n`, el renglón se pliega en la forma general.
+5. **Tren → producto de razones.** Al girar la manivela con la expresión completa en pantalla, cada cartelito se convierte en una razón con la forma de `dy/dx`, las razones se acomodan multiplicándose y los nombres intermedios se cancelan a la vista, como fichas que se tachan de a pares. Tocar el resultado despliega el tren como fantasma.
 
 ## 9. Notación matemática
 
@@ -90,10 +85,9 @@ Por la regla de oro de [H](../../H-progresion-abstraccion.md), cada símbolo lle
 La cadena aporta además una convención de escritura: `dy/dx = dy/du · du/dx`, con los nombres intermedios que se cancelan como fichas. No es una división de verdad, y el nodo 26 ya lo dijo; acá se usa esa forma justamente porque la cancelación a la vista es lo que hace recordable la regla.
 
 ## 10. Definición formal
-
 Capa `formal`: texto corto con voz y la tubería fantasma al lado. Cuatro frases, de a una: "La derivada de una suma es la suma de las derivadas, y una constante que multiplica sale afuera." "La derivada de una potencia baja el exponente y lo resta uno." "La derivada de un producto son dos términos: cada factor por la derivada del otro." "La derivada de una composición es la derivada de la de afuera, evaluada en la de adentro, por la derivada de la de adentro."
 
-Condiciones y casos especiales, verificados sobre el objeto: las reglas valen donde las derivadas de las partes existen; en un punto donde una parte tiene pico, la expresión entera puede no ser derivable. La regla de la potencia vale con exponente entero por conteo de tiras, y se extiende a exponentes negativos y fraccionarios sin volver a contar. La derivada de una constante es cero: un piso que no crece no agrega baldosas. Un producto donde uno de los factores es constante colapsa en el múltiplo constante, y el jugador lo ve porque una de las dos tiras tiene ancho cero.
+Condiciones y casos especiales, verificados sobre el objeto: las reglas valen donde las derivadas de las partes existen, y en un punto donde una parte tiene pico la expresión entera puede no ser derivable. La regla de la potencia vale con exponente entero por conteo de tiras y se extiende a negativos y fraccionarios sin volver a contar. La derivada de una constante es cero: un piso que no crece no agrega baldosas. Un producto con un factor constante colapsa en el múltiplo constante, y se ve porque una de las dos tiras tiene ancho cero.
 
 Ya jugado: las cuatro frases enteras, en la capa concreta. Nuevo: la palabra "regla", el alcance de las condiciones y la extensión de la potencia más allá del conteo.
 
@@ -107,47 +101,44 @@ Ya jugado: las cuatro frases enteras, en la capa concreta. Nuevo: la palabra "re
 - **Derivar conserva la estructura.** Ligada a la tubería derivada, que tiene una caja por cada caja de la original. Es la propiedad que hace innecesaria la lista de reglas.
 
 ## 12. Ejercicios como minijuegos
-
 Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
-- `recognize`: varios cuadrados de lado variable que crecen un poquito, cada uno con una pieza resaltada. Tocar la pieza que representa el área que se agrega al alargar el lado. Los distractores son la esquina sola, una sola tira y el cuadrado entero.
-- `explain`: arrastrar el lado del cuadrado y elegir, entre tres animaciones, la que muestra por qué el área nueva son dos tiras y no una. Una muestra las dos tiras y la esquina que se apaga; otra, una sola tira que deja un hueco; otra, la esquina tomada como si fuera todo el crecimiento. Tocar la correcta.
+- `recognize`: varios cuadrados de lado variable que crecen un poquito, cada uno con una pieza resaltada. Tocar la pieza que representa el área que se agrega. Los distractores son la esquina sola, una sola tira y el cuadrado entero.
+- `explain`: arrastrar el lado del cuadrado y elegir, entre tres animaciones, la que muestra por qué el área nueva son dos tiras y no una. Una muestra las dos tiras y la esquina que se apaga; otra, una sola tira que deja un hueco; otra, la esquina tomada como todo el crecimiento.
 - `manipulate`: encadenar en la tubería la máquina de suma y la de múltiplo constante, y comprobar tirando del lado que la salida total es la suma de las salidas de las ramas, multiplicada por la constante.
 - `apply`: recibir `3x³ − 5x` y armar su derivada con las fichas de potencia, suma y múltiplo constante, sin el diagrama de baldosas y contra el tiempo objetivo del nodo.
 - `generalize`: recibir `xⁿ` con `n` en una caja que el jugador mueve. Con las baldosas, descubrir cuántas tiras aparecen para cada `n` y colocar la ficha del patrón. No hay piso dibujado más allá de `n = 3`: el jugador continúa el conteo sin verlo.
-- `transfer`: en una tubería de dos máquinas con engranajes, girar el engranaje de entrada y armar la relación de giros total como producto de las dos relaciones. Es `csmath.inv.loop_invariant` en su forma de cadena de pasos.
+- `transfer`: en una tubería de dos máquinas con engranajes, girar el de entrada y armar la relación de giros total como producto de las dos relaciones. Es `csmath.inv.loop_invariant` en su forma de cadena de pasos.
 
 Misconceptions esperadas y su patrón ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
-- **`derivative_of_product_as_product`** (`missing_piece_tiles` sobre las baldosas). El jugador responde que la derivada de `u v` es `u' v'`. El juego coloca en el marco solo la esquina, que es la pieza que corresponde a esa respuesta, y superpone la forma verdadera: quedan dos tiras vacías parpadeando. Voz: "El piso creció por dos lados. ¿Qué tiras faltan?". Las tiras están en la bandeja; al colocarlas, el renglón pasa de la forma incorrecta a la correcta con un morph, no con un reemplazo.
-- **`chain_rule_missing_inner`** (`tree_unwrap` sobre los engranajes). El jugador deriva la de afuera y se olvida del factor de adentro. El juego dibuja la expresión como dos ruedas encadenadas, anima el orden en que el jugador las abrió y muestra que midió la vuelta de la exterior sin contar la relación de la interior: el marcador del final se atrasa. La rueda interior late. Voz: "Mediste la rueda de afuera. ¿Cuánto gira la de adentro por cada vuelta?". El estado del jugador se conserva y él agrega el factor que falta.
+- **`derivative_of_product_as_product`** (`missing_piece_tiles` sobre las baldosas). El jugador responde que la derivada de `u v` es `u' v'`. El juego coloca en el marco solo la esquina, que es la pieza que corresponde a esa respuesta, y superpone la forma verdadera: quedan dos tiras vacías parpadeando. Voz: "El piso creció por dos lados. ¿Qué tiras faltan?". Las tiras están en la bandeja, y al colocarlas el renglón cambia con un morph, no con un reemplazo.
+- **`chain_rule_missing_inner`** (`tree_unwrap` sobre los engranajes). El jugador deriva la de afuera y se olvida del factor de adentro. El juego dibuja la expresión como dos ruedas encadenadas, anima el orden en que el jugador las abrió y muestra que midió la vuelta de la exterior sin contar la relación de la interior: el marcador del final se atrasa y la rueda interior late. Voz: "Mediste la rueda de afuera. ¿Cuánto gira la de adentro por cada vuelta?". El estado del jugador se conserva.
 
 Los distractores de `explain` y de `apply` se generan desde las reglas `detect` de estas dos y desde las de los prerequisitos directos, en particular `distribute_over_wrong_op` del nodo 15, que acá reaparece como repartir la derivada sobre un producto.
 
 ## 13. Generalización
+La analogía se retira en `formal`, como declaran las dos entradas de [G](../../G-analogias/G0-reglas.md). Antes, en `symbolic`, el piso ya perdió la grilla: queda el rectángulo con sus dos lados etiquetados y las tiras son renglones. Los engranajes se piden con un toque sobre el resultado de la cadena.
 
-La analogía se retira en `formal`, como declaran las dos entradas de [G](../../G-analogias/G0-reglas.md). Antes, en `symbolic`, el piso ya perdió la grilla: queda el rectángulo con sus dos lados etiquetados, y las tiras son renglones. Los engranajes se piden con un toque sobre el resultado de la cadena.
+Variantes sin ayuda visual, en orden: polinomios con varios términos y coeficientes; potencias con exponente negativo y fraccionario, donde el conteo de tiras ya no alcanza; productos de tres factores, donde aparecen tres términos y no dos; composiciones de tres capas, donde aparecen tres relaciones; y expresiones que conviene reescribir antes de derivar.
 
-Variantes sin ayuda visual, en orden: polinomios con varios términos y coeficientes; potencias con exponente negativo y fraccionario, donde el conteo de tiras ya no alcanza y la regla se aplica sin dibujo; productos de tres factores, donde el jugador descubre que aparecen tres términos y no dos; composiciones de tres capas, donde aparecen tres relaciones; y expresiones que conviene reescribir antes de derivar, la estrategia de `cs.calc1.strategy_rewrite_before_differentiating`.
-
-Máquinas que no son baldosas. El nodo termina con derivadas de funciones básicas que no tienen piso: seno, coseno y exponencial, entregadas como máquinas con su regla en la panza. El jugador no las deduce; las usa dentro de la estructura y comprueba que la tubería sigue funcionando. Se evalúa que la estructura (leer la forma, aplicar la regla de esa forma, encadenar) se sostiene cuando las piezas son opacas.
+Máquinas que no son baldosas. El nodo termina con derivadas de funciones básicas que no tienen piso: seno, coseno y exponencial, entregadas como máquinas con su regla en la panza. El jugador no las deduce, las usa dentro de la estructura y comprueba que la tubería sigue funcionando. Se evalúa que la estructura (leer la forma, aplicar su regla, encadenar) se sostiene cuando las piezas son opacas.
 
 El nodo está en `abstract` cuando el jugador deriva una expresión de varias formas anidadas sin pedir baldosas ni engranajes, nombra qué regla aplicó en cada paso y reescribe antes de derivar cuando conviene.
 
 ## 14. Transferencia y concepto siguiente
-
 Los cuatro nodos de `transfer_to`, en otra área y con una mecánica que no se usó para aprender:
 
 - `calc2.tech.substitution_undoes_chain` (`chest_key` y `grid_stretch`): la cadena leída al revés. El cofre tiene adentro una composición y la llave de sustitución la deshace antes de acumular.
 - `mvcalc.jac.local_stretch` (`grid_stretch`): la sábana estirada alrededor de un punto, donde el factor de estiramiento local es un producto de derivadas y el jugador lo reconoce sin tubería.
-- `adv.alg.polynomial_arithmetic` (`ledger`): derivar un polinomio como una operación sobre la lista de coeficientes, donde la regla de la potencia se ve como un corrimiento de columnas.
-- `csmath.inv.loop_invariant` (`fill_accumulate` y `balance`): un bucle donde cada vuelta multiplica lo acumulado por un factor, y la relación entre la entrada y la salida es el producto de los factores de todas las vueltas.
+- `adv.alg.polynomial_arithmetic` (`ledger`): derivar un polinomio como operación sobre la lista de coeficientes, donde la regla de la potencia se ve como un corrimiento de columnas.
+- `csmath.inv.loop_invariant` (`fill_accumulate` y `balance`): un bucle donde cada vuelta multiplica lo acumulado por un factor, y la relación entre entrada y salida es el producto de los factores de todas las vueltas.
 
 Concepto siguiente: `calc1.deriv.chain_as_gears`. Frase puente, narrada sobre el tren con dos engranajes: "Ya sabés que las relaciones se multiplican cuando hay dos ruedas. ¿Y si el tren tiene cinco, y una de ellas gira al revés?". Se agregan engranajes al tren y el nodo siguiente empieza ahí.
 
 ---
 
-**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `tile_scene_growing_square_power_rule` es de ruta mixta: pre-renderizada para la apertura y nativa para dibujarse sobre el piso del jugador. El cuadrado de lado variable crece, las dos tiras se encienden, la esquina se apaga al achicar el tirón; gramática `scale`, parametrizada por el lado y el tamaño del crecimiento, produce también las animaciones de `explain`. `pipe_scene_rules_as_pipeline` es nativa: la expresión como cadena de máquinas y la tubería derivada dibujada en paralelo, con el pulso que recorre las dos a la vez; gramática `compose`, parametrizada por la expresión y por el conjunto de reglas habilitadas. Se reúsan las escenas de composición del nodo 20 como apertura de la parte de engranajes. Ninguna lleva texto rasterizado: las etiquetas de lados, exponentes y relaciones las dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)).
+**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `tile_scene_growing_square_power_rule` es de ruta mixta, pre-renderizada para la apertura y nativa sobre el piso del jugador: el cuadrado de lado variable crece, las dos tiras se encienden y la esquina se apaga al achicar el tirón; gramática `scale`, parametrizada por el lado y el tamaño del crecimiento, produce también las animaciones de `explain`. `pipe_scene_rules_as_pipeline` es nativa: la expresión como cadena de máquinas y la tubería derivada dibujada en paralelo, con el pulso que recorre las dos a la vez; gramática `compose`, parametrizada por la expresión y por el conjunto de reglas habilitadas. Se reúsan las escenas de composición del nodo 20 como apertura de la parte de engranajes. Ninguna lleva texto rasterizado: lados, exponentes y relaciones los dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)).
 
 **Calculadora:** en `ready` se refuerza `op_derivative` ([M](../../M-calculadora/M0-progresion.md)), que el nodo 26 había habilitado en su forma numérica. Desde acá el ícono de `d/dx` devuelve la forma simbólica para expresiones armadas con fichas, y no devuelve solo el resultado: escribe la tubería derivada, con un renglón por regla aplicada y el nombre de la forma que la disparó. Si el nodo decae, el ícono muestra óxido y la calculadora vuelve a la respuesta numérica del nodo 26.
 
