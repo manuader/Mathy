@@ -28,7 +28,7 @@ Lo difícil no es multiplicar cuatro números por dos. Son cuatro capacidades:
 
 Una lámina elástica con una grilla impresa y una casita dibujada, clavada al tablero por el centro. Sobre la lámina hay dos clavijas: una a un paso a la derecha del clavo, otra a un paso hacia arriba.
 
-En `intuition` la escena se detiene antes de soltar. Alguien tira de la clavija derecha hacia arriba y a la derecha. Tres desenlaces dibujados: la grilla se inclina con las líneas todavía rectas y la casa queda torcida; la grilla se curva como una tela mojada y la casa se abolla; la lámina entera se corre y el clavo se arranca. El jugador elige y después ve. Enseguida la escena repite el estiramiento tapando la casa, y la pregunta cambia sola: mirando solo dónde quedaron las dos clavijas, ¿se puede saber cómo quedó la casa?
+En `intuition` la escena se detiene antes de soltar. Alguien tira de la clavija derecha hacia arriba. Tres desenlaces dibujados: la grilla se inclina con las líneas todavía rectas y la casa queda torcida; la grilla se curva como una tela mojada y la casa se abolla; la lámina entera se corre y el clavo se arranca. El jugador elige y después ve. Enseguida la escena repite el estiramiento tapando la casa, y la pregunta cambia sola: mirando solo dónde quedaron las dos clavijas, ¿se puede saber cómo quedó la casa?
 
 ## 5. Analogía del mundo real
 
@@ -38,7 +38,7 @@ Invariante: cualquier punto de la lámina se mueve manteniendo su receta respect
 
 Punto de ruptura: `sliding_the_sheet`. Correr la lámina sin estirarla también deforma la escena en el sentido cotidiano, pero no es una transformación lineal, y el clavo del centro está justamente para impedirlo. Es una ruptura buena porque se puede jugar: el jugador intenta el gesto y el clavo lo frena. La analogía se retira recién en `formal`, más tarde que la mayoría, porque la lámina sigue explicando bien la linealidad cuando ya hay matrices escritas.
 
-Por qué esta y no otra. Una fotocopiadora que agranda conserva la escala pero no la inclinación ni la reflexión. Un espejo deformante conserva la deformación pero rompe las rectas. La lámina clavada conserva las tres cosas que definen el concepto y hace evidente la única que no puede hacer.
+Por qué esta y no otra. Una fotocopiadora que agranda conserva la escala pero no la inclinación ni la reflexión; un espejo deformante conserva la deformación pero rompe las rectas. La lámina clavada conserva las tres cosas que definen el concepto y hace evidente la única que no puede hacer.
 
 ## 6. Mecánica de juego
 
@@ -60,9 +60,9 @@ Capa `visual`, primitiva dominante `deform`, con `compose` de apoyo en el tubo (
 
 La lámina pierde la textura de goma y queda la grilla, con la grilla fantasma debajo en un tono apenas visible. Lo que se deforma es el retículo completo; lo que se conserva es la rectitud de las líneas, el paralelismo y el punto clavado. La casa queda como polígono de contorno, con una esquina marcada que es el punto que el juego pregunta.
 
-Las dos clavijas se vuelven dos flechas de colores fijos ancladas en el origen, y su llegada se resalta con un destello cuando el jugador suelta. La escena central del nodo es esa: la grilla deformándose mientras las dos flechas viajan a su destino, y todas las demás flechas del plano acomodándose sin que nadie las toque.
+Las dos clavijas se vuelven dos flechas de colores fijos ancladas en el origen, y su llegada se resalta con un destello al soltar. La escena central del nodo es esa: la grilla deformándose mientras las dos flechas viajan a su destino, y todas las demás flechas del plano acomodándose sin que nadie las toque.
 
-Todavía no hay números en las llegadas. Aparecen en el paso 3 de la transición, cuando el jugador ya usó las clavijas para reconstruir una deformación.
+Todavía no hay números en las llegadas: aparecen en el paso 3 de la transición.
 
 ## 8. Transición a símbolos
 
@@ -80,7 +80,7 @@ Queda la matriz de dos por dos como par de columnas encorchetadas, el producto `
 
 El símbolo nuevo es **`A`, el corchete alrededor de dos columnas**. El problema que lo hace necesario aparece en el paso 3, y es de comunicación: después de reproducir una deformación mirando solo las dos llegadas, el jugador ya no necesita la lámina para saber qué pasó, pero si escribe las dos llegadas como dos columnas sueltas está escribiendo dos vectores, que es otra cosa. El corchete dice "estas dos juntas son una sola deformación". Que las columnas sean las llegadas de la base no es una definición arbitraria: es lo que el jugador ya hizo con las manos, y `cs.linalg.matrix_columns_are_basis_images` lo registra tal cual.
 
-`Av⃗` tampoco es una convención libre. Nace en el paso 4 porque el jugador quiere preguntar dónde cae un punto sin arrastrar nada, y la yuxtaposición es la misma que ya usa desde el nodo 31 para escalar una flecha. La diferencia, que se dice en voz alta, es que acá lo de la izquierda no es un número sino una deformación.
+`Av⃗` nace en el paso 4 porque el jugador quiere preguntar dónde cae un punto sin arrastrar nada. La yuxtaposición es la misma que ya usa desde el nodo 31 para escalar una flecha, y la diferencia, que se dice en voz alta, es que acá lo de la izquierda no es un número sino una deformación.
 
 ## 10. Definición formal
 
@@ -111,7 +111,7 @@ Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
 Misconception esperada ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
-- **`matrix_multiplication_commutes`**, patrón `two_paths_diverge` sobre `grid_stretch`, que este nodo declara. El jugador tiene que llevar la casa al modelo con un giro y una inclinación, y aplica las dos en el orden contrario, o escribe el producto invirtiendo los factores. La pantalla se parte en dos y la misma casa aparece en las dos mitades sobre láminas idénticas. A la izquierda gira y después se inclina; a la derecha se inclina y después gira. Las dos animaciones corren a la vez, con el modelo dibujado en translúcido sobre cada una, y las dos casas terminan en lugares distintos. Ninguna se marca como mala: las dos quedan en pantalla y el jugador elige cuál coincide con el modelo. Voz: "Los dos caminos usan las mismas dos deformaciones. ¿Por qué la casa no termina en el mismo lugar?". La severidad es alta porque el error viaja después a `linalg.map.compose_as_multiply` y a `linalg.map.inverse_and_systems`.
+- **`matrix_multiplication_commutes`**, patrón `two_paths_diverge` sobre `grid_stretch`, que este nodo declara. El jugador tiene que llevar la casa al modelo con un giro y una inclinación, y aplica las dos en el orden contrario. La pantalla se parte y la misma casa aparece en las dos mitades sobre láminas idénticas: a la izquierda gira y después se inclina, a la derecha se inclina y después gira. Las dos animaciones corren a la vez, con el modelo en translúcido sobre cada una, y las dos casas terminan en lugares distintos. Ninguna se marca como mala: el jugador elige cuál coincide con el modelo. Voz: "Los dos caminos usan las mismas dos deformaciones. ¿Por qué la casa no termina en el mismo lugar?". La severidad es alta porque el error viaja a `linalg.map.compose_as_multiply` y a `linalg.map.inverse_and_systems`.
 
 Aplastar la lámina contra una línea es válido y no dispara nada acá: es un estado legítimo, y el juego lo aprovecha para dejar planteada la pregunta que abre el nodo 33.
 
@@ -121,7 +121,7 @@ La analogía se retira en `formal`, más tarde que otras, porque la lámina sigu
 
 Variantes sin ayuda visual, en orden: entradas negativas, que son reflexiones; una columna múltiplo de la otra, que aplasta; la identidad; matrices dadas de entrada sin lámina, donde hay que predecir la figura; dos matrices y el mismo par de figuras en los dos órdenes.
 
-Deformaciones que no son de un mapa. El nodo termina con transformaciones sobre objetos que no son geométricos: una mezcladora con dos diales que combina dos colores base, una tabla que convierte dos ingredientes en dos productos, la grilla de píxeles de `csmath.gfx.transform_matrix`. El jugador reconoce quiénes son las dos clavijas en cada caso, escribe la matriz y anticipa el efecto sobre una entrada.
+Deformaciones que no son de un mapa. El nodo termina con transformaciones sobre objetos que no son geométricos: una mezcladora con dos diales que combina dos colores base, una tabla que convierte dos ingredientes en dos productos. El jugador reconoce quiénes son las dos clavijas, escribe la matriz y anticipa el efecto sobre una entrada.
 
 El nodo está en `abstract` cuando el jugador escribe la matriz de una transformación descrita en palabras, calcula `Av⃗` sin dibujar y explica por qué el orden de dos transformaciones no se puede intercambiar.
 
@@ -138,8 +138,8 @@ Concepto siguiente: `linalg.map.inverse_and_systems` ([33](33-linalg.map.inverse
 
 ---
 
-**Visualización:** tres escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `grid_scene_rubber_sheet_house` es la escena central, de ruta mixta: la versión pre-renderizada abre el nodo con la lámina deformándose y la casa siguiéndola, y la versión nativa corre sobre el estado del jugador recibiendo la matriz y el contorno de la casa; gramática `deform`, con la grilla fantasma siempre presente. `grid_scene_basis_arrows_land` es nativa y es la que hace visible el concepto: solo la grilla y las dos flechas de base viajando a su destino, con el resto del plano acomodándose. Produce las animaciones de `explain` y las de `recognize`. `pipe_scene_vector_in_vector_out` es nativa: la flecha entra al tubo, se descompone en su receta, los ingredientes se cambian por las llegadas y sale la imagen; gramática `compose`. Ninguna lleva texto rasterizado: las entradas de la matriz las dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)). Se reúsa `grid_scene_two_kinds_of_steps` (nodo 31) para mostrar que la receta sobrevive al estiramiento.
+**Visualización:** tres escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `grid_scene_rubber_sheet_house` es la central, de ruta mixta: la versión pre-renderizada abre el nodo con la lámina deformándose y la casa siguiéndola, y la nativa corre sobre el estado del jugador; gramática `deform`, con la grilla fantasma siempre presente. `grid_scene_basis_arrows_land` es nativa y es la que hace visible el concepto: solo la grilla y las dos flechas de base viajando a su destino, con el resto del plano acomodándose. Produce las animaciones de `explain` y de `recognize`. `pipe_scene_vector_in_vector_out` es nativa: la flecha entra al tubo, se descompone en su receta, los ingredientes se cambian por las llegadas y sale la imagen; gramática `compose`. Ninguna lleva texto rasterizado ([P](../../P-internacionalizacion.md)). Se reúsa `grid_scene_two_kinds_of_steps` (nodo 31) para mostrar que la receta sobrevive al estiramiento.
 
-**Calculadora:** en `ready` se habilita `op_matrix_vector` ([M](../../M-calculadora/M0-progresion.md)), disponible sobre una matriz y una columna armadas con fichas. No devuelve solo la columna resultante: escribe la salida como la primera columna escalada más la segunda columna escalada, y ofrece dibujar la grilla antes y después con el fantasma. La operación se presenta con un ícono de grilla torcida, no con una tabla de números. Si el nodo decae, la grilla del ícono se curva.
+**Calculadora:** en `ready` se habilita `op_matrix_vector` ([M](../../M-calculadora/M0-progresion.md)), disponible sobre una matriz y una columna armadas con fichas. No devuelve solo la columna resultante: escribe la salida como la primera columna escalada más la segunda escalada, y ofrece dibujar la grilla antes y después con el fantasma. Se presenta con un ícono de grilla torcida, no con una tabla de números. Si el nodo decae, la grilla del ícono se curva.
 
-**Edad universal:** el nodo es `icons` porque las entradas de la matriz aparecen como dígitos con signo desde el nivel de fichas ([Q](../../Q-edad-universal.md)). Todo lo demás se juega sin leer: arrastrar clavijas, comparar con un modelo translúcido, tirar una flecha al tubo, `explain` entre animaciones y prompts por voz. Un adulto llega por diagnóstico saltando `real` e `intuition`, y casi siempre trae la matriz como tabla de un sistema; el nivel de reconstruir la deformación mirando solo las dos clavijas no se le saltea nunca, porque es el que reemplaza esa lectura.
+**Edad universal:** el nodo es `icons` porque las entradas de la matriz aparecen como dígitos con signo desde el nivel de fichas ([Q](../../Q-edad-universal.md)). Todo lo demás se juega sin leer: arrastrar clavijas, comparar con un modelo translúcido, tirar una flecha al tubo, `explain` entre animaciones y prompts por voz. Un adulto llega por diagnóstico saltando `real` e `intuition` y casi siempre trae la matriz como tabla de un sistema; el nivel de reconstruir la deformación mirando solo las dos clavijas no se le saltea nunca, porque es el que reemplaza esa lectura.

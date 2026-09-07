@@ -28,7 +28,7 @@ Lo difícil no es contar pasos. Son cuatro capacidades:
 
 Un caminante en el mapa que solo sabe dar dos clases de paso. Cada clase viene dibujada en una tarjeta: una flecha corta que va en diagonal hacia arriba a la derecha, otra más larga que va hacia la derecha y un poco abajo. La cruz del tesoro está en algún lado del mapa.
 
-En `intuition` la escena se detiene con el caminante en el origen y las dos tarjetas sobre la mesa. Tres desenlaces dibujados: combinando las dos clases llega a la cruz; llega cerca y se queda a un cuadradito; no llega nunca porque siempre pisa la misma línea. El jugador elige y después ve. Enseguida la escena cambia las dos tarjetas por dos flechas que apuntan en la misma dirección, una el doble de larga que la otra, y la pregunta cambia sola: con estas dos, ¿adónde puede ir?
+En `intuition` la escena se detiene con el caminante en el origen y las dos tarjetas sobre la mesa. Tres desenlaces dibujados: combinando las dos clases llega a la cruz; llega cerca y se queda a un cuadradito; no llega nunca porque siempre pisa la misma línea. El jugador elige y después ve. Enseguida las dos tarjetas se cambian por dos flechas que apuntan en la misma dirección, y la pregunta cambia sola: con estas dos, ¿adónde puede ir?
 
 ## 5. Analogía del mundo real
 
@@ -38,7 +38,7 @@ Invariante: cualquier orden de los pasos lleva al mismo lugar, y solo importa cu
 
 Punto de ruptura: `fractional_and_backward_steps`. Un caminante no da medio paso ni un paso de menos tres, y en cuanto los coeficientes salen de los enteros positivos la imagen deja de sostenerse. Por eso la analogía se retira en `symbolic`, justo cuando el deslizador del libro empieza a moverse de forma continua.
 
-Por qué esta y no otra. Una receta de cocina conserva los coeficientes pero no tiene geometría, así que no puede mostrar el span ni el caso alineado. Los pasos del caminante conservan las dos cosas: la cuenta y el lugar adonde se llega.
+Por qué esta y no otra. Una receta de cocina conserva los coeficientes pero no tiene geometría, así que no puede mostrar el span ni el caso alineado. Los pasos conservan las dos cosas: la cuenta y el lugar adonde se llega.
 
 ## 6. Mecánica de juego
 
@@ -52,7 +52,7 @@ Primera capa jugable: `concrete`. Tres mecánicas conviven y cada una aporta una
 6. Éxito: cuando el caminante cae exactamente sobre la cruz, el trazo en escalera se contrae en una sola flecha punteada del origen a la cruz y la fila del libro se sella.
 7. Mantener el dedo sobre el mapa: se enciende una nube de puntos con todos los lugares alcanzables. Con dos clases independientes se llena el plano. Con dos clases alineadas se enciende una sola línea y la cruz queda afuera, apagada.
 
-Nada se llama incorrecto. Con dos clases alineadas el jugador puede insistir con las manivelas todo lo que quiera: el caminante recorre la línea y nunca sale. La línea encendida es el mensaje. Una receta que llega cerca pero no exacto deja al caminante al lado de la cruz, y el juego lo deja ahí.
+Nada se llama incorrecto. Con dos clases alineadas el jugador puede insistir con las manivelas todo lo que quiera: el caminante recorre la línea y nunca sale. La línea encendida es el mensaje.
 
 ## 7. Representación visual
 
@@ -80,7 +80,7 @@ Queda la combinación escrita como suma de flechas escaladas, igualada al destin
 
 El símbolo nuevo es **`span{ }`**, y el problema que lo hace necesario aparece en el paso 5. Mientras el jugador pregunta por un destino, la receta escrita alcanza. En cuanto la pregunta pasa a ser "¿la cruz está entre los lugares alcanzables?", hay que hablar del conjunto entero antes de conocer la receta, y dibujarlo no sirve porque el conjunto es infinito y porque la respuesta tiene que poder darse sin mirar el mapa. La llave con los dos nombres adentro es lo mínimo que hace falta: estas dos flechas, todas las recetas posibles.
 
-El coeficiente pegado al nombre no es un símbolo nuevo, es una convención de escritura que se extiende: el número que multiplicaba una incógnita ahora multiplica una flecha, y el jugador tiene que aceptar que el resultado sigue siendo una flecha. La combinación completa, `c₁a⃗ + c₂b⃗`, es el objeto que el nodo aporta al vocabulario.
+El coeficiente pegado al nombre no es un símbolo nuevo sino una convención que se extiende: el número que multiplicaba una incógnita ahora multiplica una flecha, y el resultado sigue siendo una flecha.
 
 ## 10. Definición formal
 
@@ -111,7 +111,7 @@ Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
 Misconception esperada ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
-- **`variable_as_label`**, patrón `replay_on_mechanic` sobre `ledger`, que este nodo declara. El jugador trata los nombres de las flechas como etiquetas pegadas y no como objetos que se escalan: junta las dos filas del libro en una sola, "cinco pasos de la clase AB", o escribe la combinación fusionando los dos coeficientes y los dos nombres. El juego congela el libro y repite el movimiento en cámara lenta: la fila fusionada se abre en dos y los dos recorridos se caminan a la vez sobre el mapa, uno con el color de cada clase y el fusionado en gris. El recorrido real cae sobre la cruz; el fusionado cae en otro lado y ahí se queda, con el estado conservado. Voz: "Juntaste las dos clases de paso en una sola. ¿El caminante llega al mismo lugar?". El jugador corrige desde el estado real, separando la fila.
+- **`variable_as_label`**, patrón `replay_on_mechanic` sobre `ledger`, que este nodo declara. El jugador trata los nombres de las flechas como etiquetas pegadas y no como objetos que se escalan: junta las dos filas del libro en una, "cinco pasos de la clase AB". El juego congela el libro y repite el movimiento en cámara lenta: la fila fusionada se abre en dos y los dos recorridos se caminan a la vez sobre el mapa, uno con el color de cada clase y el fusionado en gris. El real cae sobre la cruz; el fusionado cae en otro lado y ahí se queda. Voz: "Juntaste las dos clases de paso en una sola. ¿El caminante llega al mismo lugar?". El jugador corrige desde el estado real, separando la fila.
 
 Una receta que llega a un lugar distinto de la cruz no rompe ningún invariante: es un recorrido válido y perfectamente escribible. Recibe un empujón suave, no una explicación.
 
@@ -121,7 +121,7 @@ La analogía se retira en `symbolic`, en el momento del `scrub`: cuando los coef
 
 Variantes sin ayuda visual, en orden: coeficientes negativos; coeficientes fraccionarios; flechas dadas por columnas sin dibujo; decidir si un destino está en el span sin encontrar la receta; el caso alineado presentado sin aviso, donde la respuesta correcta es que no se llega.
 
-Combinaciones que no son pasos. El nodo termina con recetas sobre objetos que no viven en un mapa: dos mezclas de pintura combinadas en proporciones, dos paquetes de ingredientes que se compran en cantidades enteras, dos señales que se suman con volúmenes distintos. El jugador reconoce en cada caso quiénes son las dos clases, qué son los coeficientes y qué significa que algo esté fuera del span, incluso cuando ninguna flecha está dibujada.
+Combinaciones que no son pasos. El nodo termina con recetas sobre objetos que no viven en un mapa: dos mezclas de pintura combinadas en proporciones, dos paquetes de ingredientes que se compran en cantidades, dos señales que se suman con volúmenes distintos. El jugador reconoce en cada caso quiénes son las dos clases, qué son los coeficientes y qué significa que algo esté fuera del span.
 
 El nodo está en `abstract` cuando el jugador escribe combinaciones sin pedir mapa, decide si un vector está en el span de otros dos y explica el caso alineado sin recurrir al dibujo.
 
@@ -137,8 +137,8 @@ Concepto siguiente: `linalg.map.linear_transformation_2d` ([32](32-linalg.map.li
 
 ---
 
-**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `grid_scene_two_kinds_of_steps` es nativa: recibe las dos flechas de base, el destino y los coeficientes, y dibuja la escalera de copias translúcidas, el destino alcanzado y la nube de puntos que llena el plano o la línea; gramática `displace`, con la región del span como estado y no como animación. Produce las animaciones de `explain`, incluido el caso alineado. `ledger_scene_recipe_of_steps` es nativa: recibe los mismos parámetros y muestra el libro con sus dos filas cambiando en sincronía con el recorrido, hasta el plegado sobre un solo renglón; gramática `partition`. Ninguna lleva texto rasterizado: los números de las filas los dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)). Se reúsa `grid_scene_arrow_on_map` (nodo 30) para presentar cada clase de paso.
+**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `grid_scene_two_kinds_of_steps` es nativa: recibe las dos flechas de base, el destino y los coeficientes, y dibuja la escalera de copias translúcidas, el destino alcanzado y la nube de puntos que llena el plano o la línea; gramática `displace`, con la región del span como estado y no como animación. Produce las animaciones de `explain`, incluido el caso alineado. `ledger_scene_recipe_of_steps` es nativa: muestra el libro con sus dos filas cambiando en sincronía con el recorrido, hasta el plegado sobre un solo renglón; gramática `partition`. Ninguna lleva texto rasterizado ([P](../../P-internacionalizacion.md)). Se reúsa `grid_scene_arrow_on_map` (nodo 30) para presentar cada clase de paso.
 
-**Calculadora:** en `ready` se habilita `op_vector_arith` ([M](../../M-calculadora/M0-progresion.md)), suma de vectores y múltiplo escalar sobre columnas armadas con fichas. No devuelve solo la columna resultante: escribe la receta con los coeficientes pegados a los nombres y dibuja el encadenado punta con cola al costado. La operación ya viene desbloqueada si el jugador pasó por `linalg.vec.add_tip_to_tail`; este nodo agrega la forma de combinación con dos coeficientes. Si el nodo decae, el ícono pierde uno de los dos sumandos.
+**Calculadora:** en `ready` se habilita `op_vector_arith` ([M](../../M-calculadora/M0-progresion.md)), suma de vectores y múltiplo escalar sobre columnas armadas con fichas. No devuelve solo la columna resultante: escribe la receta con los coeficientes pegados a los nombres y dibuja el encadenado al costado. Si el jugador pasó por `linalg.vec.add_tip_to_tail` ya la tenía; este nodo agrega la forma con dos coeficientes. Si el nodo decae, el ícono pierde uno de los dos sumandos.
 
-**Edad universal:** el nodo es `icons` porque los números de las filas del libro llevan dígitos con signo desde el segundo nivel ([Q](../../Q-edad-universal.md)). Todo lo demás se juega sin leer: flechas por color, manivelas, `scrub`, nube de puntos que se enciende, `explain` entre animaciones y prompts por voz. Un adulto llega por diagnóstico saltando `real` e `intuition`, entra por el nivel del libro y suele traer "combinación lineal" como fórmula vacía; el nivel de la nube de puntos no se le saltea, porque es donde el span deja de ser una palabra.
+**Edad universal:** el nodo es `icons` porque los números de las filas del libro llevan dígitos con signo desde el segundo nivel ([Q](../../Q-edad-universal.md)). Todo lo demás se juega sin leer: flechas por color, manivelas, `scrub`, nube de puntos que se enciende, `explain` entre animaciones y prompts por voz. Un adulto llega por diagnóstico saltando `real` e `intuition` y suele traer "combinación lineal" como fórmula vacía; el nivel de la nube de puntos no se le saltea, porque es donde el span deja de ser una palabra.

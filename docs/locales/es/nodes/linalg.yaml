@@ -23,20 +23,20 @@ nodes:
   linalg.map.linear_transformation_2d:
     name: Matriz como grilla deformada
     probes:
-      recognize: Entre varias sábanas estiradas, tocá la que fue deformada sin doblar ninguna línea.
-      explain: Estirá la sábana y mostrá por qué basta con saber dónde cayeron las dos clavijas de la base.
-      manipulate: Estirá la sábana hasta que la casa quede como en el modelo y leé la matriz que aparece.
-      apply: Con la matriz dada, ubicá dónde caerá la esquina de la casa antes de soltar la sábana.
+      recognize: Entre varias láminas estiradas, tocá la que fue deformada sin doblar ninguna línea.
+      explain: Estirá la lámina y mostrá por qué basta con saber dónde cayeron las dos clavijas de la base.
+      manipulate: Estirá la lámina hasta que la casa quede como en el modelo y leé la matriz que aparece.
+      apply: Con la matriz dada, ubicá dónde caerá la esquina de la casa antes de soltar la lámina.
       generalize: Encontrá una deformación que mande la casa a una línea y explicá qué le pasó a la grilla.
-      transfer: Con la misma sábana, girá la casa un cuarto de vuelta y leé qué números describen ese giro.
+      transfer: Con la misma lámina, girá la casa un cuarto de vuelta y leé qué números describen ese giro.
   linalg.map.inverse_and_systems:
     name: Inversa deshace la deformación
     probes:
-      recognize: Entre varias sábanas, tocá la que deshace exactamente la deformación mostrada.
-      explain: Mostrá por qué una sábana aplastada a una línea no se puede volver a desplegar.
-      manipulate: Tirá de la sábana hacia atrás hasta que la casa vuelva a su lugar y leé la matriz inversa.
+      recognize: Entre varias láminas, tocá la que deshace exactamente la deformación mostrada.
+      explain: Mostrá por qué una lámina aplastada a una línea no se puede volver a desplegar.
+      manipulate: Tirá de la lámina hacia atrás hasta que la casa vuelva a su lugar y leé la matriz inversa.
       apply: Dado el punto donde cayó la esquina, encontrá de dónde salió sin probar al azar.
-      generalize: Explicá con la sábana por qué dos ecuaciones con dos incógnitas son la misma pregunta que deshacer una deformación.
+      generalize: Explicá con la lámina por qué dos ecuaciones con dos incógnitas son la misma pregunta que deshacer una deformación.
       transfer: En el cofre con dos cerraduras, elegí la llave que abre las dos a la vez.
   linalg.vec.add_tip_to_tail:
     name: Sumar flechas punta con cola

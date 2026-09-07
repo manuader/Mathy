@@ -271,7 +271,7 @@ El segundo ejemplo va de `alg.sys.two_by_two` (nodo 16) a `linalg.map.inverse_an
 
 **Etapa 4. Ax = b.** `symbolic` avanzado, ya en `linalg.map.linear_transformation_2d`. Las filas se compactan en una tabla de coeficientes llamada `A`. Los totales se apilan en `b`; las incógnitas, en `x`. Nada nuevo se calcula; solo se reordena lo que ya estaba escrito. El jugador ve que `A` es la parte que no cambia si cambian los totales.
 
-**Etapa 5. A⁻¹b.** `symbolic` hacia `formal`, en `linalg.map.inverse_and_systems`. La pregunta cambia: de "qué valores cumplen las dos filas" a "qué deformación devuelve `b` a `x`". La llave regresa por cuarta vez. La inversa es la grilla reproducida al revés. Y aparece la condición de validez: hay tablas sin inversa, y se ven como grillas aplastadas a una línea.
+**Etapa 5. A⁻¹b.** `symbolic` hacia `formal`, en `linalg.map.inverse_and_systems`. La pregunta cambia: de "qué valores cumplen las dos filas" a "qué deformación devuelve `b` a `x`". La llave regresa: es el segundo de sus tres regresos, en el orden que fija [E0](E-mecanicas/E0-catalogo.md). La inversa es la grilla reproducida al revés. Y aparece la condición de validez: hay tablas sin inversa, y se ven como grillas aplastadas a una línea.
 
 **Etapa 6. Transformaciones lineales en general.** `formal` y `abstract`. Los sistemas ya no se resuelven; se interpretan. Resolver es preguntar qué punto fue a parar a `b`; no tener solución es que `b` cayó fuera de la imagen; tener infinitas es que la grilla se aplastó. El ledger no vuelve a aparecer.
 

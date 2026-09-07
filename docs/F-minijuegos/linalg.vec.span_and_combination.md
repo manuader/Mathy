@@ -27,9 +27,7 @@ En `symbolic` la superficie cambia de forma, no de reglas: las dos filas del lib
 
 **El destino depende solo de cuántos pasos de cada clase, no del orden.** Se ve confirmarse cuando el jugador alterna las manivelas de cualquier manera y el caminante cae siempre en el mismo cuadradito, con el trazo anterior en fantasma. Se ve romperse cuando el jugador altera un número de la fila: ahí sí el destino cambia, y cambia de forma proporcional.
 
-El segundo invariante, el que abre el concepto de span, es que **lo alcanzable no depende del destino que uno esté buscando**. La nube de puntos es la misma antes y después de encontrar la receta de la cruz, y esa permanencia es lo que hace del span un objeto y no un resultado.
-
-Se ve romperse de la manera más importante en el caso alineado: por más que el jugador gaste pasos de las dos clases, la nube sigue siendo una línea y la cruz queda afuera, apagada. Ningún mensaje lo dice; la línea encendida es el mensaje.
+El segundo invariante, el que abre el concepto de span, es que **lo alcanzable no depende del destino que uno esté buscando**. La nube de puntos es la misma antes y después de encontrar la receta de la cruz, y esa permanencia es lo que hace del span un objeto y no un resultado. Se ve en su forma más dura en el caso alineado: por más que el jugador gaste pasos de las dos clases, la nube sigue siendo una línea y la cruz queda afuera, apagada. Ningún mensaje lo dice; la línea encendida es el mensaje.
 
 Una receta que cae cerca de la cruz pero no encima no rompe nada: es un recorrido perfectamente válido. Recibe un empujón suave.
 
@@ -65,7 +63,7 @@ Símbolo nuevo: `span{ }`, que nace cuando la pregunta pasa de "¿llego a la cru
 
 El mapa se retira en `symbolic`, en el momento del `scrub`: cuando los coeficientes se mueven de forma continua, el caminante deja de tener sentido y solo queda la flecha resultante deslizándose. Se pide con un toque hasta `formal`.
 
-Variantes sin ayuda visual: coeficientes negativos; coeficientes fraccionarios; flechas dadas por columnas sin dibujo; decidir si un destino está en el span sin encontrar la receta; el caso alineado presentado sin aviso, donde la respuesta correcta es que no se llega. Después, combinaciones que no son pasos: dos mezclas de pintura combinadas en proporciones, dos paquetes de ingredientes comprados en cantidades, dos señales sumadas con volúmenes distintos. El jugador identifica las dos clases, los coeficientes y qué significa que algo esté fuera del span. Cuando escribe combinaciones sin pedir mapa y explica el caso alineado sin dibujarlo, la analogía se eliminó.
+Variantes sin ayuda visual: coeficientes negativos; coeficientes fraccionarios; flechas dadas por columnas sin dibujo; decidir si un destino está en el span sin encontrar la receta; el caso alineado sin aviso, donde la respuesta correcta es que no se llega. Después, combinaciones que no son pasos: dos mezclas de pintura en proporciones, dos paquetes de ingredientes comprados en cantidades, dos señales sumadas con volúmenes distintos. Cuando el jugador escribe combinaciones sin pedir mapa y explica el caso alineado sin dibujarlo, la analogía se eliminó.
 
 ## Desafío
 
@@ -104,9 +102,9 @@ Una receta que llega a un lugar distinto de la cruz no dispara nada: es válida 
 **Escenas** ([I](../I-manim/I0-mapping.md)):
 
 - `grid_scene_two_kinds_of_steps`, nativa. Recibe las dos flechas de base, el destino y los coeficientes; dibuja la escalera de copias translúcidas, el destino alcanzado y la nube de puntos que llena el plano o la línea. Gramática `displace`, con la región del span como estado y no como animación. Produce las animaciones de `explain`, incluido el caso alineado.
-- `ledger_scene_recipe_of_steps`, nativa. Recibe los mismos parámetros; muestra el libro con sus dos filas cambiando en sincronía con el recorrido, hasta el plegado sobre un solo renglón. Gramática `partition`. Es la imagen de cheatsheet de `cs.linalg.linear_combination`.
-- Reusada: `grid_scene_arrow_on_map` (nodo 30), para presentar cada clase de paso como flecha libre antes de que sea una clase.
-- Sin texto rasterizado: los números de las filas y los coeficientes los dibuja el runtime según el locale ([P](../P-internacionalizacion.md)).
+- `ledger_scene_recipe_of_steps`, nativa. Muestra el libro con sus dos filas cambiando en sincronía con el recorrido, hasta el plegado sobre un solo renglón. Gramática `partition`. Es la imagen de cheatsheet de `cs.linalg.linear_combination`.
+- Reusada: `grid_scene_arrow_on_map` (nodo 30), para presentar cada clase de paso como flecha libre.
+- Sin texto rasterizado: los números de las filas los dibuja el runtime según el locale ([P](../P-internacionalizacion.md)).
 
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 

@@ -31,7 +31,7 @@ El invariante operativo, el que el jugador usa, es que **la receta se conserva**
 
 `machine_pipe` aporta `same_input_same_output`: dos veces la misma flecha al tubo, dos veces la misma salida. Se ve romperse si alguien mueve una clavija entre las dos pasadas, y ahí se entiende que la matriz es la máquina.
 
-Aplastar la lámina contra una línea es un movimiento válido y ejecutable, no un error: la casa desaparece en un segmento y el fantasma queda de testigo. Ese estado es la puerta al nodo 33 y acá recibe un empujón suave.
+Aplastar la lámina contra una línea es válido y ejecutable, no un error: la casa desaparece en un segmento y el fantasma queda de testigo. Ese estado es la puerta al nodo 33 y recibe un empujón suave.
 
 ## Representación visual
 
@@ -65,7 +65,7 @@ Símbolo nuevo: el corchete alrededor de dos columnas, que nace cuando el jugado
 
 La lámina se retira en `formal`, y el retiro es progresivo: primero desaparece la goma y queda la grilla, después la grilla se pide con un toque, y al final la casa se reemplaza por un par de puntos cualesquiera.
 
-Variantes sin ayuda visual: entradas negativas, que son reflexiones; una columna múltiplo de la otra, que aplasta; la identidad; matrices dadas de entrada sin lámina, donde hay que predecir la figura; dos matrices y el mismo par de figuras en los dos órdenes. Después, deformaciones que no son de un mapa: una mezcladora con dos diales que combina dos colores base, una tabla que convierte dos ingredientes en dos productos, la grilla de píxeles de `csmath.gfx.transform_matrix`. Cuando el jugador escribe la matriz de una transformación descrita en palabras, calcula `Av⃗` sin dibujar y explica por qué el orden no se puede intercambiar, la analogía se eliminó.
+Variantes sin ayuda visual: entradas negativas, que son reflexiones; una columna múltiplo de la otra, que aplasta; la identidad; matrices dadas de entrada sin lámina, donde hay que predecir la figura; dos matrices y el mismo par de figuras en los dos órdenes. Después, deformaciones que no son de un mapa: una mezcladora con dos diales que combina dos colores base, una tabla que convierte dos ingredientes en dos productos. Cuando el jugador escribe la matriz de una transformación descrita en palabras, calcula `Av⃗` sin dibujar y explica por qué el orden no se puede intercambiar, la analogía se eliminó.
 
 ## Desafío
 
@@ -104,11 +104,10 @@ Aplastar la lámina no dispara nada acá: es un estado legítimo y el juego lo u
 
 **Escenas** ([I](../I-manim/I0-mapping.md)):
 
-- `grid_scene_rubber_sheet_house`, de ruta mixta. La versión pre-renderizada abre el nodo con la lámina deformándose y la casa siguiéndola; la nativa corre sobre el estado del jugador y recibe la matriz y el contorno de la casa. Gramática `deform`, con la grilla fantasma siempre presente.
-- `grid_scene_basis_arrows_land`, nativa. Solo la grilla y las dos flechas de base viajando a su destino, con el resto del plano acomodándose. Gramática `deform`. Es la escena que hace visible el concepto, produce las animaciones de `explain` y de `recognize`, y es la imagen de cheatsheet de `cs.linalg.matrix_columns_are_basis_images`.
+- `grid_scene_rubber_sheet_house`, de ruta mixta. La pre-renderizada abre el nodo con la lámina deformándose y la casa siguiéndola; la nativa corre sobre el estado del jugador. Gramática `deform`, con la grilla fantasma siempre presente.
+- `grid_scene_basis_arrows_land`, nativa. Solo la grilla y las dos flechas de base viajando a su destino, con el resto del plano acomodándose. Gramática `deform`. Hace visible el concepto, produce las animaciones de `explain` y de `recognize`, y es la imagen de cheatsheet de `cs.linalg.matrix_columns_are_basis_images`.
 - `pipe_scene_vector_in_vector_out`, nativa. La flecha entra al tubo, se descompone en su receta, los ingredientes se cambian por las llegadas y sale la imagen. Gramática `compose`. Es la imagen de cheatsheet de `cs.linalg.matrix_vector_product`.
-- Reusada: `grid_scene_two_kinds_of_steps` (nodo 31), para mostrar que la receta sobrevive al estiramiento.
-- Sin texto rasterizado: las entradas de la matriz las dibuja el runtime según el locale ([P](../P-internacionalizacion.md)).
+- Reusada: `grid_scene_two_kinds_of_steps` (nodo 31). Sin texto rasterizado: las entradas de la matriz las dibuja el runtime según el locale ([P](../P-internacionalizacion.md)).
 
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 

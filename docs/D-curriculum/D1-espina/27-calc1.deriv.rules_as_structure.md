@@ -17,6 +17,7 @@ Las reglas de derivación no son una lista para memorizar: son la lectura de có
 La arista que no sigue el orden escolar es la organización entera. La escuela dicta cinco reglas en fila: potencia, suma, producto, cociente, cadena. [C0](../../C-knowledge-graph/C0-esquema.md) las junta en un solo nodo cuyo contenido es la estructura, y cuelga las especializaciones después: `calc1.deriv.chain_as_gears`, `calc1.deriv.product_as_growing_rectangle` y `calc1.deriv.quotient_from_product` tienen a este nodo como único prerequisito. El nodo no depende de la recta tangente ni de la continuidad: para derivar una expresión armada con máquinas alcanza con saber qué mide la derivada y cómo está armada.
 
 ## 3. Dificultad cognitiva real
+
 Lo difícil no es aplicar una fórmula. Son cuatro capacidades que "derivar" mezcla:
 
 1. **Leer la forma antes de calcular.** Frente a `3x² · sen(x)` hay que ver un producto, no dos funciones; frente a `(2x + 1)⁵`, una composición y no una potencia. Es la capacidad que sostiene `cs.calc1.strategy_rewrite_before_differentiating` y la que vuelve innecesaria la lista de reglas.
@@ -35,6 +36,7 @@ En `intuition` la escena se detiene con el lado ya estirado y el piso nuevo toda
 Al lado del piso hay un tablero con dos engranajes encadenados y una manivela. La misma pregunta con otra piel: si giro la manivela una vuelta, ¿cuánto gira el último?
 
 ## 5. Analogía del mundo real
+
 Dos analogías visten el nodo, una por familia de reglas ([G0](../../G-analogias/G0-reglas.md)).
 
 `growing_rectangle` (mecánica `tiles`) es la del YAML. Mapa: los dos lados → los dos factores; la tira que se agrega a lo largo del primer lado → el segundo factor por lo que creció el primero; la tira del segundo lado → el primer factor por lo que creció el segundo; el cuadradito de la esquina → el producto de los dos crecimientos, despreciable; el área nueva total → la regla del producto. Invariante: el área agregada es la suma de las dos tiras más una esquina que se achica más rápido que ellas. Ruptura: `shrinking_sides`, porque un lado que se acorta pediría baldosas negativas.
@@ -44,6 +46,7 @@ Dos analogías visten el nodo, una por familia de reglas ([G0](../../G-analogias
 Por qué estas y no otras: el jugador ya tiene las dos pieles, las baldosas del nodo 15 y los engranajes del 20. La analogía no le pide un objeto nuevo, le pide ver la derivada dentro de objetos que usó para otra cosa. La tubería de `machine_pipe` es la superficie que las contiene: cada máquina lleva su regla en la panza y derivar es recorrer la tubería.
 
 ## 6. Mecánica de juego
+
 Primera capa jugable: `concrete`. `machine_pipe` es la mecánica principal y provee la superficie: la expresión como cadena de máquinas, con una entrada y una salida. `tiles` provee el piso que crece, donde se juegan la potencia y el producto. `gears_sequence` provee el tren, donde se juega la cadena. Las tres se encuentran en un gesto: tirar apenas de la entrada y mirar qué se agrega en cada etapa ([E0](../../E-mecanicas/E0-catalogo.md)). Gestos: `drag`, `tap`, `pinch` y `scrub`.
 
 1. Una tubería con dos o tres máquinas. Debajo de cada una, su forma propia: un piso cuadrado si es una potencia, dos pisos apilados si es una suma, un piso rectangular con los dos lados vivos si es un producto, un par de engranajes si es una composición.
@@ -68,6 +71,7 @@ Capa `visual`, con la primitiva dominante `compose` y dos de apoyo de [H](../../
 Todavía no hay reglas escritas: las máquinas muestran su forma, las tiras muestran su tamaño y el resultado es una barra.
 
 ## 8. Transición a símbolos
+
 Cinco pasos sobre el mismo objeto, cada uno disparado por un gesto del jugador.
 
 1. **Tira → producto de dos etiquetas.** Al soltar la primera tira en la bandeja en `visual`, la tira se aplana en un renglón que conserva sus dos medidas, el lado que no cambió y el tirón. Queda `v · Δu`. La tira no se reemplaza.
@@ -85,6 +89,7 @@ Por la regla de oro de [H](../../H-progresion-abstraccion.md), cada símbolo lle
 La cadena aporta además una convención de escritura: `dy/dx = dy/du · du/dx`, con los nombres intermedios que se cancelan como fichas. No es una división de verdad, y el nodo 26 ya lo dijo; acá se usa esa forma justamente porque la cancelación a la vista es lo que hace recordable la regla.
 
 ## 10. Definición formal
+
 Capa `formal`: texto corto con voz y la tubería fantasma al lado. Cuatro frases, de a una: "La derivada de una suma es la suma de las derivadas, y una constante que multiplica sale afuera." "La derivada de una potencia baja el exponente y lo resta uno." "La derivada de un producto son dos términos: cada factor por la derivada del otro." "La derivada de una composición es la derivada de la de afuera, evaluada en la de adentro, por la derivada de la de adentro."
 
 Condiciones y casos especiales, verificados sobre el objeto: las reglas valen donde las derivadas de las partes existen, y en un punto donde una parte tiene pico la expresión entera puede no ser derivable. La regla de la potencia vale con exponente entero por conteo de tiras y se extiende a negativos y fraccionarios sin volver a contar. La derivada de una constante es cero: un piso que no crece no agrega baldosas. Un producto con un factor constante colapsa en el múltiplo constante, y se ve porque una de las dos tiras tiene ancho cero.
@@ -101,6 +106,7 @@ Ya jugado: las cuatro frases enteras, en la capa concreta. Nuevo: la palabra "re
 - **Derivar conserva la estructura.** Ligada a la tubería derivada, que tiene una caja por cada caja de la original. Es la propiedad que hace innecesaria la lista de reglas.
 
 ## 12. Ejercicios como minijuegos
+
 Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
 - `recognize`: varios cuadrados de lado variable que crecen un poquito, cada uno con una pieza resaltada. Tocar la pieza que representa el área que se agrega. Los distractores son la esquina sola, una sola tira y el cuadrado entero.
@@ -118,6 +124,7 @@ Misconceptions esperadas y su patrón ([L0](../../L-modelo-errores/L0-taxonomia.
 Los distractores de `explain` y de `apply` se generan desde las reglas `detect` de estas dos y desde las de los prerequisitos directos, en particular `distribute_over_wrong_op` del nodo 15, que acá reaparece como repartir la derivada sobre un producto.
 
 ## 13. Generalización
+
 La analogía se retira en `formal`, como declaran las dos entradas de [G](../../G-analogias/G0-reglas.md). Antes, en `symbolic`, el piso ya perdió la grilla: queda el rectángulo con sus dos lados etiquetados y las tiras son renglones. Los engranajes se piden con un toque sobre el resultado de la cadena.
 
 Variantes sin ayuda visual, en orden: polinomios con varios términos y coeficientes; potencias con exponente negativo y fraccionario, donde el conteo de tiras ya no alcanza; productos de tres factores, donde aparecen tres términos y no dos; composiciones de tres capas, donde aparecen tres relaciones; y expresiones que conviene reescribir antes de derivar.
@@ -127,6 +134,7 @@ Máquinas que no son baldosas. El nodo termina con derivadas de funciones básic
 El nodo está en `abstract` cuando el jugador deriva una expresión de varias formas anidadas sin pedir baldosas ni engranajes, nombra qué regla aplicó en cada paso y reescribe antes de derivar cuando conviene.
 
 ## 14. Transferencia y concepto siguiente
+
 Los cuatro nodos de `transfer_to`, en otra área y con una mecánica que no se usó para aprender:
 
 - `calc2.tech.substitution_undoes_chain` (`chest_key` y `grid_stretch`): la cadena leída al revés. El cofre tiene adentro una composición y la llave de sustitución la deshace antes de acumular.

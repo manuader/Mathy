@@ -8,9 +8,7 @@ Una lámina que ya fue estirada por otra persona. La casa quedó torcida y su es
 
 Mapa objeto → concepto: tirar de la lámina hacia atrás → matriz inversa; encontrar de dónde salió un punto → resolver un sistema; lámina aplastada hasta una línea → matriz singular; área del sello de la casa → determinante; lámina dada vuelta → determinante negativo; lámina aplastada que no se puede desplegar → no hay inversa.
 
-La lámina aporta el objeto; el llavero aporta "qué llave"; la balanza aporta "en cuántos lados". Punto de ruptura: `more_than_two_dimensions`, porque una superficie no puede mostrar los grados de aplastamiento de tres dimensiones o más. La analogía se retira en `formal`, cuando el criterio numérico reemplaza a la mirada ([G0](../G-analogias/G0-reglas.md)).
-
-El área del sello pertenece a `linalg.map.determinant_as_area`. Acá el número `ad − bc` entra solo como la condición que separa las láminas con vuelta de las aplastadas, sin nombrarlo determinante y sin explicar por qué mide un área.
+La lámina aporta el objeto; el llavero aporta "qué llave"; la balanza aporta "en cuántos lados". Punto de ruptura: `more_than_two_dimensions`, porque una superficie no puede mostrar los grados de aplastamiento de tres dimensiones o más. La analogía se retira en `formal`, cuando el criterio numérico reemplaza a la mirada ([G0](../G-analogias/G0-reglas.md)). El área del sello pertenece a `linalg.map.determinant_as_area`: acá el número `ad − bc` entra solo como la condición que separa las láminas con vuelta de las aplastadas, sin nombrarlo determinante.
 
 ## Mecánica central
 
@@ -29,13 +27,11 @@ En `symbolic` la superficie cambia de forma, no de reglas: la lámina se pide co
 
 Dos invariantes, uno por mecánica secundaria, sobre la superficie de la principal.
 
-`inverse_restores_original` (llavero): la llave devuelve exactamente lo que había. El juez es el fantasma de la grilla: mientras la lámina no coincida con él, la vuelta no está completa. Se ve romperse con la llave equivocada, que hace algo visible y distinto, y se ve confirmarse cuando la casa recupera su forma y la verificación devuelve la esquina al punto marcado.
+`inverse_restores_original` (llavero): la llave devuelve exactamente lo que había. El juez es el fantasma de la grilla: mientras la lámina no coincida con él, la vuelta no está completa. Se ve romperse con la llave equivocada, que hace algo visible y distinto, y confirmarse cuando la casa recupera su forma y la verificación devuelve la esquina al punto marcado.
 
 `equality_under_identical_actions` (balanza): la igualdad sobrevive a la misma deformación aplicada a los dos lados. Se ve romperse cuando la llave cae sobre un solo lado y la línea se inclina.
 
-El tercer hecho, que no es un invariante sino su ausencia, es el que define el nodo: **hay deformaciones sin vuelta**. El llavero aparece con una ranura hueca y ninguna laminita despliega la línea, porque toda una recta de puntos ya se fusionó en uno solo.
-
-Aplicar una llave válida que no simplifica, por ejemplo deshacer y volver a hacer, no rompe nada: recibe un empujón suave.
+El tercer hecho, que no es un invariante sino su ausencia, define el nodo: **hay deformaciones sin vuelta**. El llavero aparece con una ranura hueca y ninguna laminita despliega la línea, porque toda una recta de puntos ya se fusionó en uno solo. Aplicar una llave válida que no simplifica, por ejemplo deshacer y volver a hacer, no rompe nada: recibe un empujón suave.
 
 ## Representación visual
 
@@ -61,15 +57,15 @@ Cinco pasos, cada uno disparado por un gesto, sobre el mismo objeto con ids esta
 
 Lo que queda al final, como texto corto con voz sobre la lámina fantasma: la inversa de `A` es la deformación que deshace `A`, la única que cumple `A⁻¹A = I`; existe si, y solo si, las dos columnas de `A` no están sobre la misma recta por el origen, es decir, si `ad − bc` no es cero; cuando existe, el sistema `Ax⃗ = b⃗` tiene exactamente una solución, y es `x⃗ = A⁻¹b⃗`.
 
-Propiedades: la llave devuelve lo original, `A⁻¹(Av⃗) = v⃗`, que es la propiedad del nodo 21 con láminas en lugar de máquinas; aplicar la misma deformación a los dos lados conserva la igualdad; no toda deformación tiene llave; deshacer dos estiramientos se hace al revés, `(AB)⁻¹ = B⁻¹A⁻¹`. Casos especiales: si `ad − bc` es cero y `b⃗` cae sobre la línea aplastada hay infinitos orígenes, y si cae fuera no hay ninguno; la identidad y las reflexiones son sus propias inversas.
+Propiedades: la llave devuelve lo original, `A⁻¹(Av⃗) = v⃗`, que es la propiedad del nodo 21 con láminas; aplicar la misma deformación a los dos lados conserva la igualdad; no toda deformación tiene llave; deshacer dos estiramientos se hace al revés, `(AB)⁻¹ = B⁻¹A⁻¹`. Casos especiales: si `ad − bc` es cero y `b⃗` cae sobre la línea aplastada hay infinitos orígenes, y si cae fuera no hay ninguno; la identidad y las reflexiones son sus propias inversas.
 
-Símbolos: el exponente `−1` ya nació en el nodo 21, y lo nuevo es a quién nombra, una deformación que se puede dibujar; el problema que lo hace necesario es que arrastrar clavijas no se puede escribir ni pasar a otro. `I` nace porque después de aplicar la llave hay que escribir qué quedó y "nada" no se escribe. `Ax⃗ = b⃗` es una convención de escritura, el libro de frutas compactado, y se vuelve necesaria en cuanto hay que aplicar una sola cosa a los dos lados. Cheatsheet: `cs.linalg.inverse_2x2`, `cs.linalg.solve_ax_equals_b` y `cs.linalg.singular_no_inverse`, las tres en capa `symbolic`.
+Símbolos: el exponente `−1` ya nació en el nodo 21 y lo nuevo es a quién nombra, una deformación que se puede dibujar; lo hace necesario que arrastrar clavijas no se puede escribir ni pasar a otro. `I` nace porque después de aplicar la llave hay que escribir qué quedó y "nada" no se escribe. `Ax⃗ = b⃗` es una convención, el libro de frutas compactado, necesaria en cuanto hay que aplicar una sola cosa a los dos lados. Cheatsheet: `cs.linalg.inverse_2x2`, `cs.linalg.solve_ax_equals_b` y `cs.linalg.singular_no_inverse`, en capa `symbolic`.
 
 ## Generalización
 
 La lámina se retira en `formal`, y el retiro tiene un momento preciso: cuando el jugador decide si hay inversa mirando `ad − bc` en vez de mirar si la grilla quedó aplastada. Desde ahí la lámina se pide con un toque y después no vuelve. Es la etapa 6 del ejemplo de frutas de [H](../H-progresion-abstraccion.md): los sistemas dejan de resolverse y pasan a interpretarse.
 
-Variantes sin ayuda visual: matrices con entradas negativas; inversas con entradas fraccionarias; matrices singulares donde la respuesta correcta es que no hay llave, con la justificación; sistemas dados directamente como dos filas, sin lámina; `b⃗` sobre la línea aplastada contra `b⃗` afuera. Después, vueltas que no son láminas: una mezcla de dos pinturas que hay que desandar, un cambio de moneda de ida y vuelta, un cifrado con dos transformaciones seguidas. El jugador identifica la llave, dice en qué orden se deshacen dos acciones apiladas y reconoce el caso sin vuelta, que siempre es el mismo: dos entradas distintas terminaron en la misma salida. Cuando resuelve `Ax⃗ = b⃗` sin pedir lámina y decide de antemano cuántas soluciones hay, la analogía se eliminó.
+Variantes sin ayuda visual: entradas negativas; inversas con entradas fraccionarias; matrices singulares donde la respuesta correcta es que no hay llave, con la justificación; sistemas dados como dos filas, sin lámina; `b⃗` sobre la línea aplastada contra `b⃗` afuera. Después, vueltas que no son láminas: una mezcla de dos pinturas que hay que desandar, un cifrado con dos transformaciones seguidas. El jugador identifica la llave, dice en qué orden se deshacen dos acciones apiladas y reconoce el caso sin vuelta: dos entradas distintas terminaron en la misma salida. Cuando resuelve `Ax⃗ = b⃗` sin pedir lámina y decide de antemano cuántas soluciones hay, la analogía se eliminó.
 
 ## Desafío
 
@@ -102,8 +98,8 @@ Un ejemplo por verbo de [K](../K-evaluacion.md):
 
 Misconceptions esperadas ([L0](../L-modelo-errores/L0-taxonomia.md)):
 
-- `wrong_inverse_choice`, patrón `key_mismatch` sobre `chest_key`, que el nodo declara. Frente a una lámina estirada al doble de ancho, el jugador toma la que estira al doble de alto, o la que achica las dos direcciones a la mitad. La llave se aplica de verdad, la lámina no coincide con el fantasma, y el juego marca las dos clavijas actuales y las dos del fantasma y dibuja al lado del llavero la silueta hueca de la laminita que sí cierra, mostrando solo adónde tienen que volver las clavijas. Voz: "Esa lámina no devuelve la casa. ¿Adónde tienen que volver las dos clavijas?". Es la de mayor severidad del nodo y viene catalogada desde `prealg.inv.operation_as_key`, así que se presenta como un regreso.
-- `matrix_multiplication_commutes`, patrón `two_paths_diverge` sobre `grid_stretch`, que el nodo declara. Con dos deformaciones apiladas, el jugador deshace primero la que se aplicó primero, o escribe la inversa del producto en el mismo orden. La pantalla se parte: en una mitad se desenrolla empezando por la última y la lámina coincide con el fantasma, en la otra se empieza por la primera y la casa termina torcida de una tercera manera. Las dos quedan en pantalla y el jugador elige. Voz: "Te pusieron una deformación y después otra. ¿Cuál sacás primero?".
+- `wrong_inverse_choice`, patrón `key_mismatch` sobre `chest_key`, que el nodo declara. Frente a una lámina estirada al doble de ancho, el jugador toma la que estira al doble de alto. La llave se aplica de verdad, la lámina no coincide con el fantasma, y el juego marca las dos clavijas actuales y las dos del fantasma y dibuja al lado del llavero la silueta hueca de la laminita que sí cierra. Voz: "Esa lámina no devuelve la casa. ¿Adónde tienen que volver las dos clavijas?". Es la de mayor severidad del nodo y viene catalogada desde `prealg.inv.operation_as_key`, así que se presenta como un regreso.
+- `matrix_multiplication_commutes`, patrón `two_paths_diverge` sobre `grid_stretch`, que el nodo declara. Con dos deformaciones apiladas, el jugador deshace primero la que se aplicó primero. La pantalla se parte: en una mitad se desenrolla empezando por la última y la lámina coincide con el fantasma, en la otra se empieza por la primera y la casa termina torcida de una tercera manera. Voz: "Te pusieron una deformación y después otra. ¿Cuál sacás primero?".
 
 Los distractores de `explain` y las opciones de `recognize` se generan desde las reglas `detect` de estas dos, más las de los prerequisitos directos, entre ellas `inverse_applied_one_side` heredada de la balanza.
 
@@ -114,8 +110,7 @@ Los distractores de `explain` y las opciones de `recognize` se generan desde las
 - `grid_scene_undo_stretch`, nativa. Recibe la matriz, su inversa y el contorno de la casa; muestra la lámina desenrollándose hasta coincidir con el fantasma, con el punto marcado deslizándose a su origen. Gramática `invert`. Parametrizada con una inversa que no corresponde, produce las animaciones de `explain` y el replay de `wrong_inverse_choice`.
 - `chest_scene_matrix_as_key`, nativa. El llavero de laminitas, la que entra y gira, la que se traba, y la ranura hueca cuando la lámina está aplastada. Gramática `invert`. Es la imagen de cheatsheet de `cs.linalg.singular_no_inverse`.
 - `balance_scene_two_equations_one_grid`, de ruta mixta. La pre-renderizada muestra las dos filas del libro compactándose en `Ax⃗ = b⃗` mientras la lámina hace lo mismo del otro lado; la nativa corre sobre el estado del jugador con la llave cayendo sobre el `=`. Gramática `invariant`. Es la imagen de cheatsheet de `cs.linalg.solve_ax_equals_b`.
-- Reusadas: `grid_scene_rubber_sheet_house` (nodo 32), para plantear el estiramiento, y `chest_wrong_key_stays_shut` (nodo 12), como distractor.
-- Sin texto rasterizado: las entradas de las matrices las dibuja el runtime según el locale ([P](../P-internacionalizacion.md)).
+- Reusadas: `grid_scene_rubber_sheet_house` (nodo 32) y `chest_wrong_key_stays_shut` (nodo 12). Sin texto rasterizado: las entradas de las matrices las dibuja el runtime según el locale ([P](../P-internacionalizacion.md)).
 
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 
@@ -126,8 +121,8 @@ Los distractores de `explain` y las opciones de `recognize` se generan desde las
 
 **Literacy soportada:** de `icons` a `full_text`. La primera capa se juega sin leer, pero las entradas de las matrices y el número `ad − bc` aparecen como dígitos con signo y por eso el mínimo es `icons`. En `full_text` la definición corta y la condición de existencia se muestran escritas además de narradas.
 
-**Instrucción por demostración:** la primera vez, una mano fantasma toma la laminita cuyas clavijas devuelven las de la lámina a su lugar, la arrastra sobre la lámina y suelta; la grilla se desenrolla y la casa recupera su forma. La escena vuelve al inicio y el llavero late. Hay una segunda demostración, en el nivel 4: la mano suelta la llave sobre el `=` y la etiqueta se escribe a la izquierda de los dos lados. No se repite la demostración de soltar de un solo lado: es la del nodo 13 ([Q](../Q-edad-universal.md)).
+**Instrucción por demostración:** la primera vez, una mano fantasma toma la laminita cuyas clavijas devuelven las de la lámina a su lugar, la arrastra sobre la lámina y suelta; la grilla se desenrolla y la casa recupera su forma. La escena vuelve al inicio y el llavero late. Hay una segunda demostración, en el nivel 4: la mano suelta la llave sobre el `=`. No se repite la de soltar de un solo lado: es la del nodo 13 ([Q](../Q-edad-universal.md)).
 
-**Calculadora:** `op_matrix_inverse` y la reescritura de `op_solve_system` quedan disponibles desde el panel lateral en cuanto el nodo pasa a `ready`. La primera muestra `ad − bc` antes que el resultado y, si es cero, dibuja la grilla aplastada en lugar de una matriz; la segunda agrega la lectura `x⃗ = A⁻¹b⃗` a la secuencia de filas que ya escribía desde el nodo 16 ([M](../M-calculadora/M0-progresion.md)).
+**Calculadora:** `op_matrix_inverse` y la reescritura de `op_solve_system` quedan disponibles desde el panel lateral en cuanto el nodo pasa a `ready`. La primera muestra `ad − bc` antes que el resultado y, si es cero, dibuja la grilla aplastada; la segunda agrega la lectura `x⃗ = A⁻¹b⃗` a la secuencia de filas que ya escribía desde el nodo 16 ([M](../M-calculadora/M0-progresion.md)).
 
 **Sin constantes propias.** Tiempo objetivo, umbrales de ítems por verbo, ventana de misconceptions y espera de la demostración viven en [K](../K-evaluacion.md).

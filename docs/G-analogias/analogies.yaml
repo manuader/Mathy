@@ -631,7 +631,7 @@ analogies:
 
   - id: rubber_grid_with_house
     mechanic: grid_stretch
-    target_nodes: [linalg.map.linear_transformation_2d, linalg.map.linear_transformation_2d, adv.cplx.function_deforms_plane, csmath.gfx.transform_matrix, linalg.map.compose_as_multiply, trig.rot.rotation_matrix]
+    target_nodes: [linalg.map.linear_transformation_2d, adv.cplx.function_deforms_plane, csmath.gfx.transform_matrix, linalg.map.compose_as_multiply, trig.rot.rotation_matrix]
     structure_map:
       - rubber_sheet: plane
       - drawn_house: shape_to_transform
@@ -793,7 +793,7 @@ analogies:
 
   - id: water_leveling_cups
     mechanic: fill_accumulate
-    target_nodes: [prob.stat.mean_as_leveling, prob.stat.mean_as_leveling]
+    target_nodes: [prob.stat.mean_as_leveling]
     structure_map:
       - cup: data_point
       - water_height: value

@@ -77,13 +77,13 @@ Todavía no hay letras: las curvas no se llaman `f` ni `F`, las marcas son bande
 
 Cinco pasos sobre el mismo objeto, cada uno disparado por un gesto del jugador.
 
-1. **Curva de nivel → función del extremo.** Al arrastrar la marca de la derecha por primera vez en `visual`, la curva de nivel gana una etiqueta que conserva la forma de la integral del nodo 28, con la marca de la izquierda fija y la de la derecha viva. La curva no se reemplaza: se nombra.
-2. **Poste sobre la curva de nivel → prima sobre esa etiqueta.** Al parar al caminante, el poste se contrae en la prima aplicada a la etiqueta anterior, con la animación de plegado del nodo 26. Al lado queda la aguja del caudal escrita como valor.
-3. **Coincidencia → igualdad escrita.** Al soltar al caminante en un tercer instante con las dos lecturas iguales, las dos etiquetas se acercan y una barra se contrae entre ellas en el signo igual, como la barra de la balanza del nodo 13. Es la primera parte del teorema.
-4. **Regla vertical → resta de dos valores.** Al medir la diferencia de alturas, la regla se aplana en dos etiquetas separadas por un signo de menos, la de arriba y la de abajo. Arriba, el área rellena se contrae en la integral con sus dos marcas, y las dos expresiones quedan a los lados del igual.
-5. **Resta → barra de evaluación.** Al repetir la medición en otro tramo, la resta se pliega: la expresión de la curva de nivel queda una sola vez, con una barra vertical a la derecha y las dos marcas escritas arriba y abajo de la barra. Tocar la barra despliega otra vez la resta.
+1. **Curva de nivel → función del extremo.** Al arrastrar la marca de la derecha por primera vez en `visual`, la curva gana una etiqueta que conserva la forma de la integral del nodo 28, con la marca izquierda fija y la derecha viva. La curva no se reemplaza: se nombra.
+2. **Poste → prima sobre esa etiqueta.** Al parar al caminante, el poste se contrae en la prima aplicada a la etiqueta anterior, con la animación de plegado del nodo 26. Al lado queda la aguja del caudal escrita como valor.
+3. **Coincidencia → igualdad escrita.** Al soltar al caminante en un tercer instante con las dos lecturas iguales, las etiquetas se acercan y una barra se contrae entre ellas en el signo igual, como la barra de la balanza del nodo 13. Es la primera parte del teorema.
+4. **Regla vertical → resta de dos valores.** Al medir la diferencia de alturas, la regla se aplana en dos etiquetas separadas por un menos. Arriba, el área rellena se contrae en la integral con sus dos marcas, y las dos expresiones quedan a los lados del igual.
+5. **Resta → barra de evaluación.** Al repetir la medición en otro tramo, la resta se pliega: la primitiva queda escrita una sola vez, con una barra vertical a la derecha y las dos marcas arriba y abajo. Tocar la barra despliega otra vez la resta.
 
-En paralelo, la familia de curvas paralelas se contrae en una sola curva con un `+ C` pegado, y arrastrarla hacia arriba y hacia abajo cambia el valor de `C` a la vista.
+En paralelo, la familia de curvas paralelas se contrae en una sola con un `+ C` pegado, y arrastrarla cambia el valor de `C` a la vista.
 
 ## 9. Notación matemática
 
@@ -116,17 +116,17 @@ Ya jugado: las cuatro frases enteras, en la capa concreta. Nuevo: la palabra "pr
 
 Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
-- `recognize`: varios pares de cofres, cada uno con una cerradura y una llave dibujadas. Tocar el par donde la llave de acumular abre lo que la de medir la cuesta cerró. Los distractores son pares donde la llave es otra operación inversa conocida, y un par donde la cerradura y la llave son la misma operación.
+- `recognize`: varios pares de cofres, cada uno con una cerradura y una llave dibujadas. Tocar el par donde la llave de acumular abre lo que la de medir la cuesta cerró. Los distractores son pares con otra inversa conocida, y un par donde cerradura y llave son la misma operación.
 - `explain`: arrastrar la llave de acumular al cofre de la derivada y elegir, entre tres animaciones, la que muestra por qué la altura del tanque en cada instante es el caudal acumulado. Una muestra el poste coincidiendo con la aguja; otra, el nivel que copia la forma del caudal en vez de su pendiente; otra, el área tomada como si fuera la altura de la curva de caudal.
 - `manipulate`: llenar el tanque siguiendo la curva de caudal y comprobar, con el caminante sobre la curva de nivel, que la pendiente del nivel coincide con el caudal en tres instantes, incluido uno con el grifo dado vuelta.
 - `apply`: recibir una función y sus dos extremos, y armar con fichas la integral definida como el valor de la primitiva al final menos el del inicio. El teclado ofrece la barra de evaluación. Contra el tiempo objetivo del nodo.
 - `generalize`: recibir una función acumulada cuyo extremo superior es una caja, y descubrir, tirando de la caja, cuál es su derivada. No hay tanque: hay dos curvas sobre ejes y el caminante.
-- `transfer`: en un cofre anidado con una composición adentro, elegir la llave de sustitución que deshace la composición antes de acumular. Es `calc2.tech.substitution_undoes_chain`, y la mecánica de acumular no interviene en la elección.
+- `transfer`: en un cofre anidado con una composición adentro, elegir la llave de sustitución que la deshace antes de acumular. Es `calc2.tech.substitution_undoes_chain`, y la mecánica de acumular no interviene en la elección.
 
 Misconceptions esperadas y su patrón ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
-- **`integral_ignores_sign`** (`replay_on_mechanic` sobre el tanque). El jugador calcula la diferencia de la primitiva pero informa la cantidad total que pasó por el grifo, o toma el valor absoluto en el tramo con caudal negativo. El juego congela y repite el llenado en cámara lenta con la curva de nivel dibujándose abajo: en el tramo negativo el grifo se da vuelta, los bloques salen y la curva de nivel baja, y la regla vertical se acorta a la vista. Un halo marca el cruce. Voz: "Acá el grifo drenaba. ¿El cuentakilómetros de la matemática sube o baja?". El jugador recoloca el total desde el estado real.
-- **`wrong_inverse_choice`** (`key_mismatch` sobre el cofre). Frente al cofre cuya cerradura es medir la cuesta, el jugador arrastra otra vez la llave de medir la cuesta, o elige la de la función inversa del nodo 21. La llave llega, gira un cuarto de vuelta y se traba. La cerradura brilla con su forma, que es el caminante con su triángulo, y al lado aparece la silueta hueca de la llave que sí entra, sin nombrarla. Voz: "Esa llave no abre este cofre. ¿Qué deshace medir la cuesta?". El llavero completo sigue disponible.
+- **`integral_ignores_sign`** (`replay_on_mechanic` sobre el tanque). El jugador informa la cantidad total que pasó por el grifo, o toma el valor absoluto en el tramo con caudal negativo. El juego congela y repite el llenado en cámara lenta con la curva de nivel dibujándose abajo: en el tramo negativo el grifo se da vuelta, los bloques salen, la curva baja y la regla vertical se acorta a la vista, con un halo en el cruce. Voz: "Acá el grifo drenaba. ¿El cuentakilómetros de la matemática sube o baja?". El jugador recoloca el total desde el estado real.
+- **`wrong_inverse_choice`** (`key_mismatch` sobre el cofre). Frente al cofre cuya cerradura es medir la cuesta, el jugador arrastra otra vez esa misma llave, o la de la función inversa del nodo 21. La llave gira un cuarto de vuelta y se traba. La cerradura brilla con su forma, que es el caminante con su triángulo, y al lado aparece la silueta hueca de la que sí entra, sin nombrarla. Voz: "Esa llave no abre este cofre. ¿Qué deshace medir la cuesta?". El llavero sigue disponible.
 
 Los distractores de `explain` y de `apply` se generan desde las reglas `detect` de estas dos y desde las de los tres prerequisitos directos, en particular `limit_as_reaching`, que llega por el nodo 28.
 
@@ -134,11 +134,11 @@ Los distractores de `explain` y de `apply` se generan desde las reglas `detect` 
 
 Las dos analogías se retiran en `formal`. Antes, en `symbolic`, el auto ya no aparece y el tanque perdió el grifo: quedan las dos curvas sobre ejes con el caminante como herramienta. El cofre se queda como fantasma a demanda hasta `formal`, porque representa estructura y no un objeto.
 
-Variantes sin ayuda visual, en orden: integrales definidas de expresiones cuya primitiva el jugador reconoce por tanteo, adivinando y verificando con la derivada; tramos donde el integrando cambia de signo, con el total separado de la cantidad total; marcas invertidas, con el signo que sale de la regla; funciones acumuladas con el extremo superior variable, donde hay que derivar sin calcular la integral; y familias de primitivas donde se da un dato extra, un valor conocido en un punto, para elegir una sola.
+Variantes sin ayuda visual, en orden: integrales definidas de expresiones cuya primitiva el jugador reconoce por tanteo, adivinando y verificando con la derivada; tramos donde el integrando cambia de signo, con el total separado de la cantidad total; marcas invertidas, con el signo que sale de la regla; funciones acumuladas con el extremo superior variable, donde hay que derivar sin calcular la integral; y familias donde se da un valor conocido en un punto para elegir una sola.
 
-Cofres que no son curvas. El nodo termina con pares de operaciones que el jugador nunca vio juntas y donde una destruye información: elevar al cuadrado y la raíz, que devuelve dos ramas; la exponencial y el logaritmo, que devuelve una sola; y el cifrado del nodo `csmath.crypto.caesar_shift`, que devuelve exactamente el original. El jugador clasifica cada par según si la llave devuelve un cofre, una familia o dos ramas. Se evalúa que la estructura (una operación, su inversa, y qué información se pierde en el camino) se reconoce fuera del cálculo.
+Cofres que no son curvas. El nodo termina con pares de operaciones que el jugador nunca vio juntas y donde una destruye información: elevar al cuadrado y la raíz, que devuelve dos ramas; la exponencial y el logaritmo, que devuelve una sola; y el cifrado de `csmath.crypto.caesar_shift`, que devuelve exactamente el original. El jugador clasifica cada par según si la llave devuelve un cofre, una familia o dos ramas. Se evalúa que la estructura (una operación, su inversa, y qué información se pierde) se reconoce fuera del cálculo.
 
-El nodo está en `abstract` cuando el jugador calcula una integral definida por primitiva sin tanque, deriva una función acumulada sin calcularla, explica por qué el `+ C` no afecta la diferencia y señala qué información destruye una cerradura arbitraria.
+El nodo está en `abstract` cuando el jugador calcula una integral definida por primitiva sin tanque, deriva una función acumulada sin calcularla, explica por qué el `+ C` no afecta la diferencia y señala qué destruye una cerradura arbitraria.
 
 ## 14. Transferencia y concepto siguiente
 

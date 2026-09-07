@@ -30,7 +30,7 @@ Las cuatro son independientes y ninguna se resuelve calculando.
 
 Un mapa viejo sobre un pergamino, con una grilla dibujada encima y una cruz. Un caminante está parado junto a un cofre y tiene una tarjeta con una flecha: la instrucción para llegar al faro. Camina y llega.
 
-En `intuition` la escena se detiene antes de repetir el viaje. El caminante ahora arranca desde el molino, con la misma tarjeta en la mano. Tres desenlaces dibujados: termina a la misma distancia y en la misma dirección respecto del molino; termina otra vez en el faro, como si la tarjeta apuntara a un lugar; vuelve al cofre. El jugador elige y después ve. Después la escena muestra al caminante recorriendo primero el tramo al este y después el tramo al norte, y la pregunta cambia sola: si hace primero el norte y después el este, ¿llega al mismo lado?
+En `intuition` la escena se detiene antes de repetir el viaje. El caminante ahora arranca desde el molino, con la misma tarjeta en la mano. Tres desenlaces dibujados: termina a la misma distancia y en la misma dirección respecto del molino; termina otra vez en el faro, como si la tarjeta apuntara a un lugar; vuelve al cofre. El jugador elige y después ve.
 
 ## 5. Analogía del mundo real
 
@@ -40,7 +40,7 @@ Invariante: dos flechas son la misma flecha si tienen las mismas dos cuentas, si
 
 Punto de ruptura: `length_of_diagonal_arrow`. El pergamino no ofrece ninguna manera de contar la diagonal en pasos. Ese vacío es útil: es exactamente el problema que después exige la fórmula del largo (`cs.linalg.vector_length`) y que conecta el nodo con Pitágoras. La analogía se retira en `symbolic`, antes de que el jugador intente medir el pergamino con una regla.
 
-Por qué esta y no otra. Una flecha que apunta a un lugar (la del cartel de la ruta) conserva la dirección pero pierde el vector libre, que es justamente lo difícil. El mapa con grilla conserva las dos cuentas, la independencia entre ellas y la libertad de dibujar la flecha donde uno quiera.
+Por qué esta y no otra. La flecha del cartel de una ruta conserva la dirección pero pierde el vector libre, que es justamente lo difícil. El mapa con grilla conserva las dos cuentas, la independencia entre ellas y la libertad de dibujar la flecha donde uno quiera.
 
 ## 6. Mecánica de juego
 
@@ -53,7 +53,7 @@ Primera capa jugable: `concrete`. `grid_stretch` provee la superficie (la grilla
 5. Encadenar: apoyar una segunda flecha en la punta de la primera. El caminante recorre las dos y aparece una flecha punteada del inicio al final, con sus propios contadores.
 6. Éxito: cuando la punta cae sobre la cruz, la flecha se ilumina y el cofre se abre. Sin cartel.
 
-Nada se llama incorrecto. Arrastrar la flecha por la punta hasta deformarla no es un error: el fantasma se separa, los contadores divergen y el jugador ve dos flechas distintas. Encadenar en el orden contrario, este primero o norte primero, también es válido y llega al mismo lado, y el juego lo muestra sin decirlo.
+Nada se llama incorrecto. Arrastrar la flecha por la punta hasta deformarla no es un error: el fantasma se separa, los contadores divergen y el jugador ve dos flechas distintas.
 
 ## 7. Representación visual
 
@@ -122,7 +122,7 @@ La analogía se retira en `symbolic`, en cuanto la columna se sostiene sin la gr
 
 Variantes sin ayuda visual, en orden: componentes negativas; flechas que salen de un punto que no es el origen y hay que leer por diferencia; componentes fraccionarias; el vector cero; predecir el largo antes de medirlo.
 
-Desplazamientos que no son pasos. El nodo termina con pares que no viven en un mapa: dos diales de una máquina, la variación de dos precios entre ayer y hoy, dos marcadores de un partido. El jugador reconoce que sumar dos cambios seguidos, dar vuelta un cambio y duplicarlo tienen exactamente la misma estructura, y que en esos casos el largo puede no significar nada útil. Se evalúa la estructura, no el dibujo.
+Desplazamientos que no son pasos. El nodo termina con pares que no viven en un mapa: dos diales de una máquina, la variación de dos precios entre ayer y hoy, dos marcadores de un partido. El jugador reconoce la misma estructura y que ahí el largo puede no significar nada útil.
 
 El nodo está en `abstract` cuando el jugador opera con columnas sin pedir grilla, distingue una posición de un desplazamiento en un contexto nuevo y explica por qué el largo no se reparte en la suma.
 
@@ -139,8 +139,8 @@ Concepto siguiente: `linalg.vec.add_tip_to_tail`, y enseguida `linalg.vec.scale_
 
 ---
 
-**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `grid_scene_arrow_on_map` es nativa: recibe el vector y una lista de puntos de partida, y dibuja la misma flecha naciendo en cada uno con los catetos punteados iguales; gramática `displace`. Es la escena del vector libre y produce también las animaciones de `explain`. `gear_scene_steps_east_then_north` es nativa: recibe las dos cuentas y anima al caminante recorriendo primero el tramo al este y después el del norte, con el trazo que queda y la flecha recta que lo resume; gramática `displace`, con las dos manivelas girando en sincronía. Ninguna lleva texto rasterizado: los contadores los dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)).
+**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `grid_scene_arrow_on_map` es nativa: recibe el vector y una lista de puntos de partida, y dibuja la misma flecha naciendo en cada uno con los catetos punteados iguales; gramática `displace`. Es la escena del vector libre y produce las animaciones de `explain`. `gear_scene_steps_east_then_north` es nativa: recibe las dos cuentas y anima al caminante haciendo primero el tramo al este y después el del norte, con la flecha recta que lo resume; gramática `displace`. Ninguna lleva texto rasterizado: los contadores los dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)).
 
-**Calculadora:** en `ready` se habilita `op_vector_length` ([M](../../M-calculadora/M0-progresion.md)), un ícono de flecha diagonal con una regla, disponible sobre cualquier columna armada con fichas. No devuelve solo el número: dibuja el triángulo de pasos con los dos catetos marcados y la hipotenusa iluminada, para que el resultado siga siendo la diagonal del camino. La aritmética de vectores todavía no está: llega con `linalg.vec.add_tip_to_tail`. Si el nodo decae, la flecha del ícono pierde la punta.
+**Calculadora:** en `ready` se habilita `op_vector_length` ([M](../../M-calculadora/M0-progresion.md)), un ícono de flecha diagonal con una regla, disponible sobre cualquier columna armada con fichas. No devuelve solo el número: dibuja el triángulo de pasos con la hipotenusa iluminada, para que el resultado siga siendo la diagonal del camino. La aritmética de vectores llega con `linalg.vec.add_tip_to_tail`. Si el nodo decae, la flecha del ícono pierde la punta.
 
-**Edad universal:** el nodo es `icons` porque los contadores de las manivelas muestran un dígito con signo desde el primer nivel ([Q](../../Q-edad-universal.md)). Todo lo demás se juega sin leer: manivelas, arrastre, mano fantasma, `explain` entre animaciones y prompts por voz; el mapa no tiene palabras. Un adulto llega por diagnóstico saltando `real` e `intuition`, empieza en la capa de fichas y suele traer la idea escolar del vector como par de coordenadas; el nivel del vector libre no se le saltea nunca, porque es donde esa idea se corrige.
+**Edad universal:** el nodo es `icons` porque los contadores de las manivelas muestran un dígito con signo desde el primer nivel ([Q](../../Q-edad-universal.md)). Todo lo demás se juega sin leer: manivelas, arrastre, mano fantasma, `explain` entre animaciones y prompts por voz; el mapa no tiene palabras. Un adulto llega por diagnóstico saltando `real` e `intuition` y suele traer la idea escolar del vector como par de coordenadas; el nivel del vector libre no se le saltea nunca, porque es donde esa idea se corrige.
