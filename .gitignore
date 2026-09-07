@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Node / Expo / React Native
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+coverage/
+ios/Pods/
+android/.gradle/
+android/app/build/
+
+# Python / Manim
+__pycache__/
+*.pyc
+.venv/
+venv/
+media/
+videos/
+*.egg-info/
+
+# Editor / tooling
+.idea/
+.vscode/
+*.log
+.env
+.env.*
+!.env.example
+
+# Claude local state
+.claude/avo/
