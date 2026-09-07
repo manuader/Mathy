@@ -1,0 +1,84 @@
+# Textos en español de los nodos de linalg. Claves: nodes.<id>.name (todos) y nodes.<id>.probes.<verbo> (solo espina).
+# Las probes describen un ítem jugado dentro de la mecánica; nunca son opción múltiple con texto.
+
+nodes:
+  linalg.vec.vector_as_displacement:
+    name: Vector como desplazamiento
+    probes:
+      recognize: Entre varias flechas del mapa, tocá la que va tres pasos al este y dos al norte.
+      explain: Arrastrá la misma flecha a otro rincón del mapa y mostrá con la voz por qué sigue siendo el mismo desplazamiento.
+      manipulate: Dibujá la flecha que lleva del cofre al faro y luego la flecha que vuelve.
+      apply: Con la flecha dada, ubicá dónde termina el caminante si sale desde el punto marcado, antes de que se mueva.
+      generalize: Estirá la flecha al doble sin cambiar su dirección y predecí cuántos pasos al este y al norte tendrá.
+      transfer: En la rueda giratoria, ubicá el punto que corresponde a la flecha que apunta hacia arriba y a la derecha.
+  linalg.vec.span_and_combination:
+    name: Combinación lineal y span
+    probes:
+      recognize: Tocá los lugares del mapa a los que se llega solo con pasos de tipo A y pasos de tipo B.
+      explain: Mostrá por qué dos tipos de paso sobre la misma línea no permiten salir de esa línea.
+      manipulate: Arrastrá tantos pasos A y tantos pasos B como hagan falta para llegar a la cruz.
+      apply: Anotá en el libro cuántos pasos de cada tipo llevan del origen al tesoro, antes de caminar.
+      generalize: Elegí un tercer tipo de paso que no agregue lugares nuevos y explicá por qué sobra.
+      transfer: En el libro de premios, escribí el promedio como una receta de pasos con pesos.
+  linalg.map.linear_transformation_2d:
+    name: Matriz como grilla deformada
+    probes:
+      recognize: Entre varias sábanas estiradas, tocá la que fue deformada sin doblar ninguna línea.
+      explain: Estirá la sábana y mostrá por qué basta con saber dónde cayeron las dos clavijas de la base.
+      manipulate: Estirá la sábana hasta que la casa quede como en el modelo y leé la matriz que aparece.
+      apply: Con la matriz dada, ubicá dónde caerá la esquina de la casa antes de soltar la sábana.
+      generalize: Encontrá una deformación que mande la casa a una línea y explicá qué le pasó a la grilla.
+      transfer: Con la misma sábana, girá la casa un cuarto de vuelta y leé qué números describen ese giro.
+  linalg.map.inverse_and_systems:
+    name: Inversa deshace la deformación
+    probes:
+      recognize: Entre varias sábanas, tocá la que deshace exactamente la deformación mostrada.
+      explain: Mostrá por qué una sábana aplastada a una línea no se puede volver a desplegar.
+      manipulate: Tirá de la sábana hacia atrás hasta que la casa vuelva a su lugar y leé la matriz inversa.
+      apply: Dado el punto donde cayó la esquina, encontrá de dónde salió sin probar al azar.
+      generalize: Explicá con la sábana por qué dos ecuaciones con dos incógnitas son la misma pregunta que deshacer una deformación.
+      transfer: En el cofre con dos cerraduras, elegí la llave que abre las dos a la vez.
+  linalg.vec.add_tip_to_tail:
+    name: Sumar flechas punta con cola
+  linalg.vec.scale_and_reverse:
+    name: Estirar y dar vuelta la flecha
+  linalg.map.compose_as_multiply:
+    name: Componer deformaciones es multiplicar
+  linalg.map.determinant_as_area:
+    name: Determinante como factor de área
+  linalg.map.linear_transformation_3d:
+    name: Deformar el espacio en 3D
+  linalg.map.matrix_counts_routes:
+    name: La matriz cuenta rutas
+  linalg.sys.row_operations:
+    name: Operaciones de fila conservan soluciones
+  linalg.sys.elimination_to_echelon:
+    name: Eliminación hasta la escalera
+  linalg.sys.solution_set_shape:
+    name: Forma del conjunto de soluciones
+  linalg.det.cofactor_by_slices:
+    name: Determinante 3×3 por rebanadas
+  linalg.det.factor_multiplies_under_composition:
+    name: El factor de área se multiplica
+  linalg.eig.eigenvector_stays_on_line:
+    name: La dirección que no gira
+  linalg.eig.characteristic_polynomial:
+    name: Polinomio característico
+  linalg.eig.diagonalize_as_change_of_view:
+    name: Diagonalizar es cambiar de mirada
+  linalg.basis.in_span_or_not:
+    name: ¿Está en el span?
+  linalg.basis.unique_recipe:
+    name: Base como receta única
+  linalg.basis.change_of_basis_as_translation:
+    name: Cambio de base como traducción
+  linalg.orth.dot_product_as_alignment:
+    name: Producto punto como alineación
+  linalg.orth.projection_as_shadow:
+    name: Proyección como sombra
+  linalg.orth.orthonormal_makes_coordinates_easy:
+    name: Bases ortonormales simplifican coordenadas
+  linalg.svd.least_squares_as_projection:
+    name: Mínimos cuadrados como proyección
+  linalg.svd.rotate_stretch_rotate:
+    name: Girar, estirar, girar

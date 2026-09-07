@@ -1,0 +1,47 @@
+# Cadenas en español de los nodos del área `found`. Claves: nodes.<id>.name | nodes.<id>.probes.<verbo>.
+# `name` para todos los nodos (≤ 6 palabras, nombra la idea). `probes` solo para nodos de espina:
+# describe cómo se ve el ítem dentro de la mecánica; nunca opción múltiple con texto. Nivel 0: sin leer.
+
+nodes:
+  found.count.cardinality:
+    name: "Contar dice cuántos hay"
+    probes:
+      recognize: "Aparecen tres pilas de frutas; el jugador toca la pila que tiene tantas frutas como la tarjeta con puntos que muestra el guía."
+      explain: "Dos animaciones cortas: en una las frutas se reordenan dentro del bol y la tarjeta no cambia; en la otra se reordenan y la tarjeta cambia de número. El jugador toca la animación que miente."
+      manipulate: "El jugador arrastra frutas una por una hasta que el bol tenga exactamente las que pide la tarjeta; cada fruta hace sonar un tic y el número de la tarjeta se ilumina al llegar."
+      apply: "Dos boles con frutas mezcladas; el jugador empareja fruta con fruta arrastrando y luego toca el bol al que le sobran, sin contar en voz alta."
+      generalize: "Los objetos cambian a piedras, luego a conchas, luego a marcas en una barra; el jugador pone la tarjeta correcta sobre cada colección aunque estén desparramadas o apiladas."
+      transfer: "En la red de islas, el jugador toca la isla que tiene la misma cantidad de puentes que indica la tarjeta de puntos."
+  found.count.number_line:
+    name: "Los números viven en fila"
+    probes:
+      recognize: "Una pista con casillas numeradas y un caminante; el jugador toca la casilla donde va a parar el caminante si da los pasos que muestra la manivela."
+      explain: "Dos animaciones: en una el caminante avanza un paso por número y las casillas quedan a la misma distancia; en la otra salta casillas de distinto tamaño. El jugador toca la que rompe la fila."
+      manipulate: "El jugador gira la manivela para llevar al caminante desde la casilla marcada hasta la casilla con la bandera y suelta cuando llega."
+      apply: "Se muestra una casilla vacía entre dos numeradas; el jugador arrastra la ficha con el número que falta mientras el caminante espera."
+      generalize: "La pista se estira, se acorta y luego pierde los dibujos hasta ser solo marcas; el jugador ubica la ficha del número pedido en cada versión."
+      transfer: "Sobre un dial de giro, el jugador lleva la aguja tantas marcas como indica la ficha, como si la rueda fuera la pista enrollada."
+  found.count.zero_as_empty:
+    name: "Cero es el plato vacío"
+  found.cmp.bigger_smaller:
+    name: "Dónde hay más, dónde menos"
+  found.cmp.same_amount:
+    name: "La misma cantidad, uno por uno"
+  found.cmp.likely_unlikely:
+    name: "Más probable, menos probable"
+  found.meas.fill_compare:
+    name: "Cuál se llena primero"
+  found.sort.by_attribute:
+    name: "Cada cosa en su caja"
+  found.pat.repeat_unit:
+    name: "El patrón se repite"
+  found.pat.what_comes_next:
+    name: "Qué viene después"
+  found.pat.rule_machine:
+    name: "La máquina siempre hace lo mismo"
+  found.lit.symbol_match:
+    name: "Reconocer los símbolos"
+  found.lit.follow_one_step:
+    name: "Seguir una instrucción corta"
+  found.lit.short_phrase:
+    name: "Entender una frase corta"

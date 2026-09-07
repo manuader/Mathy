@@ -1,0 +1,34 @@
+# Locale fuente (es) de los nodos del área csmath. Claves: nodes.<id>.name (≤ 6 palabras, nombra la idea).
+# Los ids vienen de ../../../C-knowledge-graph/graph/csmath.yaml; este archivo no agrega ni quita nodos.
+
+nodes:
+  csmath.bin.place_value_binary:
+    name: "Contar con dos dedos"
+  csmath.bool.logic_gates:
+    name: "Compuertas: máquinas de sí y no"
+  csmath.mod.wraparound:
+    name: "Números que dan la vuelta"
+  csmath.crypto.caesar_shift:
+    name: "Correr el alfabeto y volver"
+  csmath.crypto.rsa_trapdoor:
+    name: "Candado público, llave privada"
+  csmath.inv.loop_invariant:
+    name: "Lo que el bucle nunca rompe"
+  csmath.cplx.big_o_as_slope:
+    name: "Big-O: qué tan empinado crece"
+  csmath.rec.base_case_and_smaller_call:
+    name: "Llamarse a sí mismo más chico"
+  csmath.alg.state_machine:
+    name: "Máquina que cambia de estado"
+  csmath.alg.binary_search:
+    name: "Buscar partiendo a la mitad"
+  csmath.alg.sorting_algorithm:
+    name: "Ordenar sin perder lo ordenado"
+  csmath.alg.breadth_first_search:
+    name: "BFS: la cola de la frontera"
+  csmath.info.entropy_as_surprise:
+    name: "Entropía: cuánta sorpresa en bits"
+  csmath.float.rounding_gaps:
+    name: "Punto flotante: huecos entre números"
+  csmath.gfx.transform_matrix:
+    name: "Una matriz mueve los píxeles"

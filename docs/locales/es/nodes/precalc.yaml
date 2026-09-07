@@ -1,0 +1,56 @@
+# Locale fuente (es) de los nodos de precálculo. Claves: nodes.<id>.{name, probes.<verbo>}.
+# `probes` solo en la espina: describe el ítem DENTRO de la mecánica, nunca opción múltiple.
+
+nodes:
+
+  precalc.lim.approach:
+    name: "Acercarse sin llegar"
+    probes:
+      recognize: "Entre varios caminantes que avanzan hacia una pared, el jugador toca el que se acerca cada vez más a un punto sin tocarlo."
+      explain: "Arrastra el caminante con pasos que se van achicando y elige la animación que muestra por qué el punto al que se acerca no depende de si lo alcanza."
+      manipulate: "Ajusta la tabla de valores acercando la entrada por los dos lados y observa a qué altura se aproxima la salida en la gráfica."
+      apply: "Recibe una gráfica con un hueco en x = 2 y debe armar con fichas el valor al que se acerca la función, distinto del punto marcado."
+      generalize: "Recibe una sucesión de pasos a la mitad y debe predecir, con la manivela, la posición límite sin hacer todos los pasos."
+      transfer: "En la colina de la derivada, junta dos puntos de la curva con la manivela y observa a qué pendiente se acerca la secante."
+
+  precalc.lim.infinity_and_asymptote:
+    name: "Hasta dónde llega la gráfica"
+  precalc.lim.continuity_unbroken_pen:
+    name: "Continua: sin levantar el lápiz"
+
+  precalc.seq.arithmetic_sequence:
+    name: "Sumar lo mismo cada vez"
+  precalc.seq.geometric_sequence:
+    name: "Multiplicar lo mismo cada vez"
+  precalc.seq.sum_as_pattern:
+    name: "Sumar muchos con patrón"
+
+  precalc.conic.slice_of_cone:
+    name: "Cónicas: cortes y distancias"
+
+  precalc.cplx.plane_intro:
+    name: "i es un cuarto de giro"
+
+  precalc.vec.arrow_2d_intro:
+    name: "Flechas en la grilla"
+
+  precalc.param.time_as_hidden_input:
+    name: "El tiempo como entrada escondida"
+
+  precalc.fntr.shift_as_displace:
+    name: "Correr la gráfica"
+  precalc.fntr.stretch_as_scale:
+    name: "Estirar la gráfica"
+  precalc.fntr.reflect_and_symmetry:
+    name: "Reflejar y simetría par/impar"
+
+  precalc.binom.pascal_triangle_expansion:
+    name: "Binomio y triángulo de Pascal"
+
+  precalc.exp.natural_base:
+    name: "La base que crece como ella misma"
+
+  precalc.fn.increasing_decreasing:
+    name: "Sube, baja, da la vuelta"
+  precalc.fn.piecewise_machine:
+    name: "Máquina con interruptor"

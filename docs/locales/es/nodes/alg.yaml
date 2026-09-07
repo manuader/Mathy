@@ -1,0 +1,152 @@
+# Cadenas en español de los nodos del área `alg`. Claves: nodes.<id>.name | nodes.<id>.probes.<verbo>.
+# `name` para todos los nodos (≤ 6 palabras, nombra la idea). `probes` solo para nodos de espina:
+# describe cómo se ve el ítem dentro de la mecánica; nunca opción múltiple con texto; los distractores
+# de `explain` son las misconceptions del nodo.
+
+nodes:
+  alg.eq.one_step:
+    name: "Una llave, los dos platos"
+    probes:
+      recognize: "Balanza nivelada con una caja y fichas de un lado; el jugador toca la llave del llavero que deja la caja sola."
+      explain: "Tres animaciones: en una la llave se aplica a los dos platos y la balanza queda nivelada; en otra se aplica a un solo plato y se inclina; en otra se usa la llave de dividir donde hacía falta restar. El jugador toca las que no resuelven."
+      manipulate: "El jugador arrastra la misma llave sobre los dos platos; la balanza solo se mantiene nivelada si la llave es la inversa correcta."
+      apply: "Cuatro balanzas seguidas con operaciones distintas; el jugador resuelve cada una con una sola llave dentro del tiempo objetivo."
+      generalize: "La balanza se desvanece y queda la línea de igual; el jugador aplica fichas de operación a ambos lados, incluso con negativos y fracciones."
+      transfer: "En la grilla estirada, el jugador encuentra el vector de entrada aplicando la transformación inversa a la salida."
+  alg.eq.multi_step:
+    name: "Varias llaves, en orden"
+    probes:
+      recognize: "Un cofre anidado con dos operaciones y una expresión de fichas; el jugador toca la llave que hay que usar primero."
+      explain: "Dos animaciones: en una se abre el cofre exterior y luego el interior; en la otra se intenta abrir el interior primero y la cerradura no gira. El jugador toca la que abre en orden invertido."
+      manipulate: "El jugador arrastra las llaves en orden sobre el cofre anidado mientras la balanza de al lado muestra cada paso nivelado."
+      apply: "Una tubería de dos máquinas con salida conocida; el jugador corre la tubería al revés eligiendo las llaves en el orden correcto."
+      generalize: "Sin cofres dibujados: fichas con paréntesis y letras; el jugador ordena las llaves y aplica cada una a ambos lados."
+      transfer: "En la balanza de renglones, el jugador aplica operaciones de fila en el orden que despeja la caja."
+  alg.expr.distributive_tiles:
+    name: "Repartir el producto en baldosas"
+    probes:
+      recognize: "Dos habitaciones con el mismo ancho y largos distintos; el jugador toca la expresión de fichas que mide el piso total."
+      explain: "Tres animaciones: en una el ancho cubre las dos habitaciones; en otra se eleva al cuadrado cada habitación por separado y falta el pasillo; en otra se multiplican las etiquetas como nombres. El jugador toca las que pierden baldosas."
+      manipulate: "El jugador arrastra baldosas para cubrir un rectángulo con un lado partido en dos y arma la ficha de producto que lo describe."
+      apply: "Un rectángulo con lados de letras y números; el jugador arrastra las fichas de cada baldosa parcial al libro de cuentas y suma."
+      generalize: "Sin baldosas: fichas de paréntesis y letras; el jugador expande y también recompone el producto desde la suma."
+      transfer: "En el rectángulo que crece del cálculo, el jugador toca las dos franjas que se agregan cuando ambos lados cambian."
+  alg.sys.two_by_two:
+    name: "Dos balanzas comparten cajas"
+    probes:
+      recognize: "Dos balanzas con cajas de dos colores; el jugador toca la caja que aparece en las dos balanzas."
+      explain: "Dos animaciones: en una lo que se aprende de una balanza se reemplaza en la otra y ambas siguen niveladas; en la otra se cambia una caja solo en una balanza. El jugador toca la que rompe una de las balanzas."
+      manipulate: "El jugador reemplaza en la segunda balanza la caja por lo que la primera mostró, y luego resuelve con llaves hasta abrir las dos cajas."
+      apply: "Dos recibos del mercado con precios ocultos; el jugador arrastra las fichas de precio que cumplen ambos recibos."
+      generalize: "Las balanzas se desvanecen y quedan dos líneas con igual; el jugador elige entre sustituir o sumar balanzas para eliminar una caja."
+      transfer: "En la grilla estirada, el jugador toca el punto donde dos rectas se cruzan y verifica que es la entrada que la matriz manda a la salida pedida."
+  alg.fn.function_as_machine:
+    name: "Una función es una máquina"
+    probes:
+      recognize: "Varias máquinas con tuberías; el jugador toca la máquina que, ante la ficha de entrada mostrada, produce la salida indicada."
+      explain: "Dos animaciones: en una la misma entrada produce siempre la misma salida; en la otra una entrada saca dos salidas distintas. El jugador toca la que no es una máquina."
+      manipulate: "El jugador arma la máquina arrastrando fichas de operación dentro de la caja y prueba entradas hasta que la tabla coincide."
+      apply: "En la red de flechas, el jugador conecta cada entrada con exactamente una salida según la regla de la máquina."
+      generalize: "La máquina se convierte en una ficha con nombre y paréntesis; el jugador evalúa la ficha con entradas nuevas, incluidas letras."
+      transfer: "En la rueda del seno, el jugador toca la altura que la máquina de giro produce para el ángulo de entrada."
+  alg.fn.graph_as_picture:
+    name: "La gráfica es el rastro"
+    probes:
+      recognize: "Un caminante deja un rastro sobre la grilla; el jugador toca el punto del rastro que corresponde a la entrada mostrada."
+      explain: "Dos animaciones: en una cada paso horizontal deja un solo punto de altura; en la otra el rastro sube y baja sobre la misma posición. El jugador toca la que no puede ser el rastro de una máquina."
+      manipulate: "El jugador mueve al caminante por la grilla de cuatro cuadrantes y ve aparecer el rastro; luego ubica puntos con coordenadas negativas."
+      apply: "Una máquina y una grilla vacía; el jugador arrastra fichas de pares para armar el rastro punto a punto."
+      generalize: "Sin caminante: solo el rastro y las fichas de coordenadas; el jugador lee entradas y salidas de un rastro que nunca vio."
+      transfer: "En la escala de acumulación, el jugador toca en el rastro el punto donde el total alcanza el nivel pedido."
+  alg.fn.linear_slope:
+    name: "La pendiente es lo empinado"
+    probes:
+      recognize: "Tres rampas con caminantes; el jugador toca la rampa que sube tantos escalones por paso como indica la ficha."
+      explain: "Dos animaciones: en una el caminante da pasos de distinto tamaño y la rampa sigue igual de empinada; en la otra la rampa cambia de inclinación según el tamaño del paso. El jugador toca la que confunde paso con pendiente."
+      manipulate: "El jugador ajusta la altura inicial y la subida por paso de la rampa hasta que el rastro pasa por los dos puntos marcados."
+      apply: "Un taxímetro que empieza en un valor y sube por cuadra; el jugador arrastra las fichas de arranque y de tasa que arman la rampa."
+      generalize: "Sin rampa: fichas con letras y números; el jugador reconoce la pendiente y la ordenada en distintas formas de la misma recta."
+      transfer: "En la colina del cálculo, el jugador toca el tramo donde la subida por paso coincide con la ficha."
+  alg.fn.composition:
+    name: "Encadenar máquinas es componer"
+    probes:
+      recognize: "Dos máquinas conectadas por una tubería; el jugador toca la salida final para la entrada mostrada."
+      explain: "Dos animaciones: en una la salida de la primera máquina entra en la segunda; en la otra se salta la primera máquina y se aplica solo la segunda. El jugador toca la que olvida la máquina interior."
+      manipulate: "El jugador conecta las máquinas en el orden que produce la salida objetivo y luego las invierte para ver que cambia."
+      apply: "Un tren de engranajes con dos razones; el jugador arrastra la ficha con la razón total del tren."
+      generalize: "Las tuberías se convierten en la ficha de composición; el jugador evalúa y ordena máquinas escritas con nombres."
+      transfer: "En la grilla de matrices, el jugador aplica dos deformaciones seguidas y toca la grilla que resulta."
+  alg.fn.inverse_function:
+    name: "La máquina corriendo al revés"
+    probes:
+      recognize: "Una máquina y varias máquinas candidatas; el jugador toca la que devuelve cada salida a su entrada."
+      explain: "Dos animaciones: en una la máquina de elevar al cuadrado corre al revés y saca dos entradas; en la otra saca solo una. El jugador toca la que pierde una rama."
+      manipulate: "El jugador arrastra la llave sobre la máquina y la corre hacia atrás; la tubería confirma cuando la salida vuelve a ser la entrada."
+      apply: "El rastro de una máquina sobre la grilla; el jugador dobla la grilla por la diagonal y ubica el rastro de la inversa."
+      generalize: "Sin máquinas: fichas con nombre y exponente menos uno; el jugador reconoce cuándo existe la inversa y cuándo hay que recortar entradas."
+      transfer: "En la rueda del arcoseno, el jugador toca los dos ángulos que producen la misma altura."
+  alg.fn.quadratic_and_sqrt:
+    name: "El lado del cuadrado conocido"
+    probes:
+      recognize: "Un jardín cuadrado con el área marcada; el jugador toca la ficha del lado."
+      explain: "Tres animaciones: en una la llave de raíz abre dos cofres, uno positivo y otro negativo; en otra abre solo uno; en otra el cuadrado de una suma se arma sin las baldosas del medio. El jugador toca las que pierden algo."
+      manipulate: "El jugador arma un cuadrado con baldosas a partir del área y lee el lado; luego usa la llave de raíz sobre un cofre y ve abrirse dos."
+      apply: "Una grilla estirada por un factor al cuadrado; el jugador arrastra la ficha del factor que produce el área mostrada."
+      generalize: "Sin baldosas: fichas con exponente dos y raíz; el jugador resuelve cofres cuadrados con las dos ramas y descarta la rama sin sentido cuando la situación lo pide."
+      transfer: "En el triángulo de Pitágoras, el jugador toca el lado que resulta de recomponer las baldosas de los dos cuadrados."
+  alg.fn.exponential_growth:
+    name: "Multiplicar en cada paso"
+    probes:
+      recognize: "Dos pistas de engranajes: una suma en cada vuelta, otra multiplica; el jugador toca la que hace crecer más rápido la ficha."
+      explain: "Dos animaciones: en una doblar el papel tres veces y luego dos veces da lo mismo que doblarlo cinco; en la otra se cuenta como seis. El jugador toca la que mezcla las reglas."
+      manipulate: "El jugador gira la manivela que dobla el papel y ve la ficha duplicarse; ajusta el factor hasta alcanzar el objetivo en el número de vueltas pedido."
+      apply: "La carrera entre la rampa lineal y la curva que multiplica; el jugador toca el paso en que la curva pasa a la rampa."
+      generalize: "Sin papel: fichas con base y exponente; el jugador reconoce crecimiento y decaimiento según la base sea mayor o menor que uno."
+      transfer: "En la urna binomial, el jugador toca cuántos resultados posibles hay tras varias extracciones de dos opciones."
+  alg.fn.logarithm:
+    name: "Contar cuántas veces se escaló"
+    probes:
+      recognize: "Un cofre con base y resultado; el jugador toca la ficha que dice cuántas vueltas de la manivela hicieron falta."
+      explain: "Dos animaciones: en una el logaritmo del producto se arma como la suma de vueltas de dos pistas; en la otra se suman los resultados antes de contar vueltas. El jugador toca la que confunde suma con producto."
+      manipulate: "El jugador corre la máquina exponencial al revés arrastrando la llave de logaritmo y cuenta vueltas en la pista."
+      apply: "Una pista de duplicaciones leída hacia atrás; el jugador arrastra la ficha con el número de vueltas entre dos marcas."
+      generalize: "Sin pista: fichas con log y base; el jugador convierte entre forma exponencial y logarítmica y aplica las reglas del producto."
+      transfer: "En la búsqueda binaria, el jugador toca cuántas divisiones a la mitad hacen falta para encontrar la ficha escondida."
+  alg.eq.word_to_equation:
+    name: "De palabras a balanza"
+  alg.eq.variable_both_sides:
+    name: "Cajas en los dos platos"
+  alg.eq.quadratic_roots:
+    name: "Dos raíces, dos cofres"
+  alg.ineq.inequality_tilts:
+    name: "La balanza inclinada se resuelve"
+  alg.ineq.inequality_as_region:
+    name: "La solución es una región"
+  alg.sys.lines_intersect:
+    name: "Dos rectas se cruzan"
+  alg.sys.parallel_or_same_line:
+    name: "Paralelas o la misma recta"
+  alg.expr.binomial_product:
+    name: "Cuatro baldosas del producto"
+  alg.expr.factor_common:
+    name: "Sacar el lado compartido"
+  alg.expr.factor_trinomial:
+    name: "Rearmar el rectángulo"
+  alg.expr.complete_square:
+    name: "Completar el cuadrado"
+  alg.poly.coefficients_as_counts:
+    name: "Los coeficientes cuentan"
+  alg.pow.same_base_stack:
+    name: "Apilar potencias de igual base"
+  alg.pow.log_rules_from_stack:
+    name: "Las reglas del log, al revés"
+  alg.rad.root_as_fractional_power:
+    name: "La raíz es exponente fraccionario"
+  alg.rat.division_by_zero_hole:
+    name: "El agujero del denominador cero"
+  alg.abs.distance_two_branches:
+    name: "Valor absoluto es distancia"
+  alg.fn.domain_range:
+    name: "Qué entra, qué sale"
+  alg.fn.word_to_linear:
+    name: "De palabras a recta"

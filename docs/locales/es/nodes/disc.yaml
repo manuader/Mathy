@@ -1,0 +1,42 @@
+# Locale fuente (es) de los nodos del área disc. Claves: nodes.<id>.name (≤ 6 palabras, nombra la idea).
+# Los ids vienen de ../../../C-knowledge-graph/graph/disc.yaml; este archivo no agrega ni quita nodos.
+
+nodes:
+  disc.set.membership_rule:
+    name: "Pertenecer es cumplir la regla"
+  disc.set.union_intersection:
+    name: "Juntar aros y donde se cruzan"
+  disc.logic.and_or_not:
+    name: "Y, O y NO como filtros"
+  disc.logic.if_then_direction:
+    name: "La flecha si-entonces tiene dirección"
+  disc.logic.quantifiers_as_search:
+    name: "Para todos y existe como búsqueda"
+  disc.rel.relation_as_arrows:
+    name: "Relación como flechas; función, una sola"
+  disc.rel.equivalence_classes:
+    name: "Equivalentes van al mismo cajón"
+  disc.proof.chain_of_constructions:
+    name: "Demostrar es encadenar construcciones"
+  disc.proof.counterexample_breaks_forall:
+    name: "Un contraejemplo rompe el para-todos"
+  disc.proof.contradiction_no_exit:
+    name: "Suponer lo contrario y quedar encerrado"
+  disc.ind.domino_induction:
+    name: "Inducción como fila de dominós"
+  disc.rec.recurrence_step:
+    name: "El siguiente sale del anterior"
+  disc.rec.tree_recursion:
+    name: "Recursión que se ramifica como árbol"
+  disc.count.sum_rule:
+    name: "Casos separados se suman"
+  disc.count.product_rule:
+    name: "Elecciones en cadena se multiplican"
+  disc.count.choose_as_pascal_paths:
+    name: "Elegir es contar caminos de Pascal"
+  disc.mod.clock_equivalence:
+    name: "Misma hora en el reloj"
+  disc.mod.modular_inverse:
+    name: "La llave que deshace en el reloj"
+  disc.sum.sigma_notation:
+    name: "Sigma: sumar con una regla"

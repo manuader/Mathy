@@ -1,0 +1,75 @@
+# Textos en español de los nodos de prob. Claves: nodes.<id>.name (todos) y nodes.<id>.probes.<verbo> (solo espina).
+# Las probes describen un ítem jugado dentro de la mecánica; nunca son opción múltiple con texto.
+
+nodes:
+  prob.basic.probability_as_proportion:
+    name: Probabilidad como proporción
+    probes:
+      recognize: Entre varias urnas, tocá aquella en la que sacar una bola roja es más probable.
+      explain: Sacá bolas muchas veces y mostrá por qué la barra de rojas se acerca a la porción de rojas en la urna.
+      manipulate: Agregá o quitá bolas hasta que la porción de azules sea exactamente un cuarto.
+      apply: Antes de sacar, marcá en la barra cuánto esperás que salga rojo en cien extracciones.
+      generalize: Armá una urna donde una bola roja sea tan probable como un sector del disco giratorio mostrado.
+      transfer: En la baldosa con regiones, marcá la porción del área donde caería un dardo al azar.
+  prob.cond.conditional_and_independence:
+    name: Condicional e independencia
+    probes:
+      recognize: Tocá la caja que quedó con la misma mezcla de colores que la urna completa.
+      explain: Sacá bolas solo de una caja y mostrá por qué la porción cambia cuando cambia la caja.
+      manipulate: Reparte las bolas en las dos cajas para que saber la caja no diga nada sobre el color.
+      apply: Sabiendo que la bola salió de la caja redonda, marcá en la barra cuán probable es que sea roja.
+      generalize: Armá dos rasgos que sean independientes y dos que no, y mostrá la diferencia en la grilla.
+      transfer: En el mapa de rutas, elegí el camino cuyo tramo siguiente no depende de por dónde llegaste.
+  prob.rv.expectation_as_weighted_average:
+    name: Esperanza como promedio ponderado
+    probes:
+      recognize: Entre varias tablas, tocá la que muestra dónde se equilibra el juego a la larga.
+      explain: Mové las pesas sobre la tabla y mostrá por qué el punto de equilibrio se corre hacia la pesa mayor.
+      manipulate: Colocá las pesas de cada premio en su marca y encontrá el punto de apoyo que equilibra.
+      apply: Con los premios y sus chances en el libro, calculá el precio justo del boleto antes de jugar.
+      generalize: Cambiá una chance sin cambiar los premios y predecí hacia dónde se mueve el equilibrio.
+      transfer: En el mapa, escribí el equilibrio como una combinación de pasos con pesos que suman uno.
+  prob.basic.sample_space_grid:
+    name: Espacio muestral como grilla
+  prob.basic.union_intersection:
+    name: Unión e intersección de eventos
+  prob.basic.complement_fills_the_rest:
+    name: El complemento completa el total
+  prob.basic.count_outcomes_by_structure:
+    name: Contar resultados con estructura
+  prob.basic.equally_likely_or_weighted:
+    name: Equiprobable o sesgado
+  prob.cond.bayes_reverses_condition:
+    name: Bayes invierte la condición
+  prob.cond.markov_chain_walk:
+    name: Paseo en cadena de Markov
+  prob.rv.random_variable_as_machine:
+    name: Variable aleatoria como máquina
+  prob.rv.variance_as_spread:
+    name: Varianza como dispersión
+  prob.rv.cumulative_distribution:
+    name: Distribución acumulada
+  prob.rv.linear_change_of_variable:
+    name: Cambio lineal de variable
+  prob.dist.density_area_is_probability:
+    name: El área bajo la densidad
+  prob.dist.binomial_counts:
+    name: Binomial cuenta éxitos
+  prob.dist.normal_bell_from_sums:
+    name: La campana nace de sumar
+  prob.samp.sample_vs_population:
+    name: Muestra versus población
+  prob.samp.central_limit_bell:
+    name: Teorema central del límite
+  prob.inf.confidence_interval_net:
+    name: Intervalo de confianza como red
+  prob.inf.hypothesis_test_surprise:
+    name: Contraste de hipótesis como sorpresa
+  prob.stat.frequency_table:
+    name: Tabla de frecuencias
+  prob.stat.mean_as_leveling:
+    name: Media como nivelar
+  prob.stat.regression_line:
+    name: Recta de regresión
+  prob.stat.correlation_vs_cause:
+    name: Correlación no es causa

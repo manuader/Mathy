@@ -1,0 +1,72 @@
+# Precálculo. DATA, sin texto visible: nombres y probes en ../../locales/es/nodes/precalc.yaml.
+# Nivel 4. Límites intuitivos (el caminante que se acerca a la pared), sucesiones como engranajes,
+# transformaciones de funciones como deformaciones de la grilla. Espina: 25 lim.approach.
+
+area: precalc
+
+clusters:
+  lim: acercarse sin llegar; asíntotas; continuidad como trazo sin levantar el lápiz
+  seq: sucesiones como engranajes; la suma con patrón y su notación
+  conic: cónicas como cortes y como reglas de distancia
+  cplx: i como cuarto de giro
+  vec: flecha en 2D
+  param: el tiempo como entrada escondida
+  fntr: desplazar, estirar y reflejar una gráfica
+  binom: triángulo de Pascal y binomio
+  exp: la base natural
+  fn: crecer/decrecer; máquinas por tramos
+
+nodes:
+
+  # ---- lim ------------------------------------------------------------------
+  - id: precalc.lim.approach
+    area: precalc
+    level: 4
+    spine: true
+    prereqs: [alg.fn.graph_as_picture, arith.frac.parts_and_ratio]
+    grammar: displace
+    mechanics: [slope_walker, gears_sequence]
+    literacy: icons
+    analogy: zeno_half_steps
+    misconceptions: [limit_as_reaching]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [calc1.deriv.rate_as_slope_limit, calc2.ser.partial_sums, prob.lln.long_run_proportion]
+    calc_unlocks: [op_limit_table, op_limit_numeric]
+    cheatsheet: [cs.precalc.limit_notation, cs.precalc.limit_by_table_of_values, cs.precalc.limit_ignores_value_at_point]
+    manim: [slope_scene_walker_approaches_wall, gear_scene_zeno_halving]
+    next: precalc.lim.infinity_and_asymptote
+    doc: docs/D-curriculum/D1-espina/25-precalc.lim.approach.md
+  - {id: precalc.lim.infinity_and_asymptote, area: precalc, level: 4, prereqs: [precalc.lim.approach, alg.fn.exponential_growth], grammar: rate, mechanics: [slope_walker, sorter], literacy: short_text, analogy: walker_height_trace, misconceptions: [limit_as_reaching], cheatsheet: [cs.precalc.horizontal_vertical_asymptotes, cs.precalc.end_behavior_by_leading_term], calc_unlocks: [op_limit_at_infinity]}
+  - {id: precalc.lim.continuity_unbroken_pen, area: precalc, level: 4, prereqs: [precalc.lim.approach], grammar: invariant, mechanics: [slope_walker, sorter, machine_pipe], literacy: icons, analogy: walker_height_trace, misconceptions: [limit_as_reaching], cheatsheet: [cs.precalc.continuous_means_limit_equals_value], calc_unlocks: []}
+
+  # ---- seq ------------------------------------------------------------------
+  - {id: precalc.seq.arithmetic_sequence, area: precalc, level: 4, prereqs: [alg.fn.linear_slope, arith.seq.arithmetic], grammar: displace, mechanics: [gears_sequence, slope_walker], literacy: icons, analogy: beads_necklace_pattern, misconceptions: [], cheatsheet: [cs.precalc.arithmetic_nth_term, cs.precalc.arithmetic_sum_pairing], calc_unlocks: [op_arithmetic_nth_term, op_arithmetic_sum]}
+  - {id: precalc.seq.geometric_sequence, area: precalc, level: 4, prereqs: [alg.fn.exponential_growth, precalc.seq.arithmetic_sequence], grammar: scale, mechanics: [gears_sequence, grid_stretch], literacy: icons, analogy: paper_folding_doubles, misconceptions: [exponent_rules_mixed], cheatsheet: [cs.precalc.geometric_nth_term, cs.precalc.geometric_sum_finite], calc_unlocks: [op_geometric_nth_term, op_geometric_sum]}
+  - {id: precalc.seq.sum_as_pattern, area: precalc, level: 4, prereqs: [precalc.seq.arithmetic_sequence, precalc.seq.geometric_sequence, precalc.lim.approach], grammar: accumulate, mechanics: [fill_accumulate, ledger, gears_sequence], literacy: short_text, analogy: zeno_half_steps, misconceptions: [series_terms_to_zero_implies_converges], cheatsheet: [cs.precalc.sigma_notation, cs.precalc.infinite_geometric_sum_ratio_less_one], calc_unlocks: [op_sigma_sum, op_infinite_geometric_sum], aliases: [precalc.seq.sum_of_terms]}
+
+  # ---- conic ----------------------------------------------------------------
+  - {id: precalc.conic.slice_of_cone, area: precalc, level: 4, prereqs: [geom.coord.distance_as_pythagoras, alg.fn.quadratic_and_sqrt, geom.area.circle_by_slices], grammar: invariant, mechanics: [construct, grid_stretch, sorter], literacy: short_text, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.precalc.conic_equations_standard, cs.precalc.conic_distance_definitions], calc_unlocks: [op_conic_identify, op_circle_equation]}
+
+  # ---- cplx -----------------------------------------------------------------
+  - {id: precalc.cplx.plane_intro, area: precalc, level: 4, prereqs: [alg.fn.quadratic_and_sqrt, alg.fn.graph_as_picture, arith.int.negatives], grammar: deform, mechanics: [grid_stretch, gears_sequence, chest_key], literacy: short_text, analogy: quarter_turn_dial, misconceptions: [sqrt_loses_negative_branch, modulus_of_sum_adds], cheatsheet: [cs.precalc.i_squared_minus_one, cs.precalc.complex_add_multiply, cs.precalc.modulus_conjugate], calc_unlocks: [op_complex_add, op_complex_multiply, op_complex_modulus]}
+
+  # ---- vec ------------------------------------------------------------------
+  - {id: precalc.vec.arrow_2d_intro, area: precalc, level: 4, prereqs: [alg.fn.graph_as_picture, arith.add.displacement, geom.coord.distance_as_pythagoras], grammar: displace, mechanics: [grid_stretch, slope_walker], literacy: icons, analogy: treasure_map_arrows, misconceptions: [modulus_of_sum_adds], cheatsheet: [cs.precalc.vector_components_add, cs.precalc.vector_length_pythagoras], calc_unlocks: [op_vector_add, op_vector_length]}
+
+  # ---- param ----------------------------------------------------------------
+  - {id: precalc.param.time_as_hidden_input, area: precalc, level: 4, prereqs: [alg.fn.function_as_machine, precalc.vec.arrow_2d_intro, trig.fn.sine_as_height], grammar: compose, mechanics: [machine_pipe, slope_walker, gears_sequence], literacy: short_text, analogy: function_machine, misconceptions: [], cheatsheet: [cs.precalc.parametric_x_t_y_t, cs.precalc.eliminate_parameter], calc_unlocks: [op_parametric_plot]}
+
+  # ---- fntr -----------------------------------------------------------------
+  - {id: precalc.fntr.shift_as_displace, area: precalc, level: 4, prereqs: [alg.fn.graph_as_picture, alg.fn.composition], grammar: displace, mechanics: [grid_stretch, machine_pipe, slope_walker], literacy: icons, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.precalc.shift_rules_f_x_minus_h_plus_k], calc_unlocks: [op_shift_graph]}
+  - {id: precalc.fntr.stretch_as_scale, area: precalc, level: 4, prereqs: [precalc.fntr.shift_as_displace, arith.mul.scaling], grammar: scale, mechanics: [grid_stretch, machine_pipe], literacy: icons, analogy: rubber_band_stretch, misconceptions: [], cheatsheet: [cs.precalc.stretch_rules_a_f_bx], calc_unlocks: [op_stretch_graph]}
+  - {id: precalc.fntr.reflect_and_symmetry, area: precalc, level: 4, prereqs: [precalc.fntr.stretch_as_scale, geom.trans.rotation_reflection], grammar: invariant, mechanics: [grid_stretch, sorter, construct], literacy: icons, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.precalc.even_odd_definitions, cs.precalc.reflection_rules_minus_f_f_minus_x], calc_unlocks: [op_test_even_odd], aliases: [precalc.fn.even_odd_symmetry]}
+
+  # ---- binom ----------------------------------------------------------------
+  - {id: precalc.binom.pascal_triangle_expansion, area: precalc, level: 4, prereqs: [alg.expr.binomial_product, alg.expr.distributive_tiles], grammar: partition, mechanics: [ledger, tiles, network_routes], literacy: short_text, analogy: tile_floor_two_rooms, misconceptions: [distribute_over_wrong_op], cheatsheet: [cs.precalc.pascal_triangle, cs.precalc.binomial_theorem], calc_unlocks: [op_binomial_coefficient, op_binomial_expand]}
+
+  # ---- exp ------------------------------------------------------------------
+  - {id: precalc.exp.natural_base, area: precalc, level: 4, prereqs: [alg.fn.exponential_growth, alg.fn.logarithm, precalc.lim.approach], grammar: nonlinear, mechanics: [fill_accumulate, slope_walker, gears_sequence], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], analogy: tank_filling, misconceptions: [exponent_rules_mixed, log_of_sum], cheatsheet: [cs.precalc.e_as_limit_compounding, cs.precalc.ln_inverse_of_exp, cs.precalc.exp_slope_equals_value], calc_unlocks: [op_exp, op_ln]}
+
+  # ---- fn -------------------------------------------------------------------
+  - {id: precalc.fn.increasing_decreasing, area: precalc, level: 4, prereqs: [alg.fn.graph_as_picture, alg.fn.linear_slope], grammar: rate, mechanics: [slope_walker, sorter], literacy: icons, analogy: walker_height_trace, misconceptions: [], cheatsheet: [cs.precalc.increasing_decreasing_intervals, cs.precalc.local_max_min_turning_points], calc_unlocks: [op_find_turning_points]}
+  - {id: precalc.fn.piecewise_machine, area: precalc, level: 4, prereqs: [alg.fn.function_as_machine, alg.fn.graph_as_picture, alg.ineq.inequality_as_region], grammar: compose, mechanics: [machine_pipe, sorter, slope_walker], literacy: short_text, analogy: function_machine, misconceptions: [], cheatsheet: [cs.precalc.piecewise_notation, cs.precalc.absolute_value_as_piecewise], calc_unlocks: [op_piecewise_eval]}

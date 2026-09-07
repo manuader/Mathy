@@ -1,0 +1,52 @@
+# Nodos del área mvcalc (Cálculo multivariable). DATA, sin texto visible: nombres en ../../locales/es/nodes/mvcalc.yaml.
+# Schema y enums: ../schema/node.schema.yaml. Presupuesto D0: 16 (±20 %).
+# Tres nodos están en la lista de espera para 3D de D0 (slice_of_surface, terrain_walker, double_integral_tank).
+# El cluster `partial` de D0 excede los 6 caracteres del schema: el nodo es mvcalc.part.slice_of_surface y el id de D0 queda como alias.
+# Idem `lagrange` -> lagr y `divcurl` -> divrot (solo clusters; no hay ids de D0 afectados).
+# Ids de E/G/H con otros clusters (deriv, pd) se reconcilian con aliases.
+
+area: mvcalc
+
+clusters:
+  fn: funciones con más de una entrada y sus curvas de nivel
+  part: derivada parcial como pendiente de un corte de la superficie
+  grad: gradiente como flecha de subida más empinada
+  jac: Jacobiano como estiramiento local de la grilla
+  opt: puntos críticos y curvatura (Hessiano)
+  lagr: optimización con restricción como tangencia de curvas de nivel
+  int: integrales dobles y triples como acumulación por rebanadas
+  field: campos vectoriales (una flecha en cada punto)
+  line: integrales de línea y trabajo a lo largo de un camino
+  surf: integrales de superficie y flujo
+  divrot: divergencia como fuente y rotor como giro local
+  thm: Green, Stokes y divergencia (el borde cuenta lo que pasa adentro)
+
+nodes:
+
+  # ---- fn / part / grad -------------------------------------------------
+  - {id: mvcalc.fn.two_inputs_one_output, area: mvcalc, level: 7, prereqs: [alg.fn.function_as_machine, alg.fn.graph_as_picture], grammar: compose, mechanics: [machine_pipe, tiles], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.function_of_two_variables, cs.mvcalc.level_curves], calc_unlocks: [op_evaluate_two_variables]}
+  - {id: mvcalc.part.slice_of_surface, area: mvcalc, level: 7, prereqs: [mvcalc.fn.two_inputs_one_output, calc1.deriv.rate_as_slope_limit], grammar: rate, mechanics: [slope_walker, machine_pipe], literacy: icons, analogy: walker_on_hill_compass, cheatsheet: [cs.mvcalc.partial_derivative], calc_unlocks: [op_partial_derivative], aliases: [mvcalc.partial.slice_of_surface, mvcalc.deriv.partial_as_axis_slope, mvcalc.pd.partial_slope]}
+  - {id: mvcalc.grad.terrain_walker, area: mvcalc, level: 7, prereqs: [mvcalc.part.slice_of_surface, linalg.vec.vector_as_displacement], grammar: rate, mechanics: [slope_walker, grid_stretch], literacy: icons, analogy: walker_on_hill_compass, cheatsheet: [cs.mvcalc.gradient_vector, cs.mvcalc.directional_derivative], calc_unlocks: [op_gradient], aliases: [mvcalc.grad.steepest_ascent, mvcalc.deriv.gradient_steepest_ascent, mvcalc.deriv.gradient_as_steepest_ascent]}
+
+  # ---- jac / opt / lagr ------------------------------------------------
+  - {id: mvcalc.jac.local_stretch, area: mvcalc, level: 7, prereqs: [mvcalc.part.slice_of_surface, linalg.map.linear_transformation_2d], grammar: deform, mechanics: [grid_stretch, slope_walker], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.jacobian_matrix], calc_unlocks: [op_jacobian], aliases: [mvcalc.deriv.jacobian_local_stretch]}
+  - {id: mvcalc.opt.hessian_curvature, area: mvcalc, level: 7, prereqs: [mvcalc.grad.terrain_walker, mvcalc.jac.local_stretch], grammar: rate, mechanics: [slope_walker, sorter], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.critical_points_2d, cs.mvcalc.second_derivative_test], calc_unlocks: [op_hessian]}
+  - {id: mvcalc.lagr.tangent_level_curves, area: mvcalc, level: 7, prereqs: [mvcalc.grad.terrain_walker, alg.sys.two_by_two], grammar: invariant, mechanics: [construct, slope_walker], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.lagrange_multiplier], calc_unlocks: [op_lagrange]}
+
+  # ---- int -----------------------------------------------------------------
+  - {id: mvcalc.int.double_integral_tank, area: mvcalc, level: 7, prereqs: [calc1.int.accumulation, mvcalc.fn.two_inputs_one_output], grammar: accumulate, mechanics: [fill_accumulate, tiles], literacy: icons, analogy: tank_filling, misconceptions: [integral_ignores_sign], cheatsheet: [cs.mvcalc.double_integral], calc_unlocks: [op_double_integral], aliases: [mvcalc.int.double_integral_tiles, mvcalc.int.volume_under_surface]}
+  - {id: mvcalc.int.iterated_slices, area: mvcalc, level: 7, prereqs: [mvcalc.int.double_integral_tank, calc2.int.volume_by_slices], grammar: accumulate, mechanics: [fill_accumulate, construct], literacy: icons, analogy: stacked_slices_loaf, cheatsheet: [cs.mvcalc.fubini_iterated, cs.mvcalc.triple_integral], calc_unlocks: [op_triple_integral], aliases: [mvcalc.int.volume_by_slices]}
+  - {id: mvcalc.int.change_of_variables_jacobian, area: mvcalc, level: 7, prereqs: [mvcalc.int.iterated_slices, mvcalc.jac.local_stretch, trig.circle.unit_circle_radians], grammar: deform, mechanics: [grid_stretch, tiles], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.polar_double_integral, cs.mvcalc.jacobian_change_of_variables], calc_unlocks: [op_integrate_polar]}
+
+  # ---- field / line / surf -------------------------------------------------
+  - {id: mvcalc.field.arrow_at_every_point, area: mvcalc, level: 7, prereqs: [linalg.vec.vector_as_displacement, mvcalc.fn.two_inputs_one_output], grammar: compose, mechanics: [machine_pipe, grid_stretch], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.vector_field, cs.mvcalc.gradient_field], calc_unlocks: [op_plot_vector_field]}
+  - {id: mvcalc.line.work_along_path, area: mvcalc, level: 7, prereqs: [mvcalc.field.arrow_at_every_point, calc2.parpol.parametric_speed], grammar: accumulate, mechanics: [fill_accumulate, slope_walker], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.line_integral], calc_unlocks: [op_line_integral]}
+  - {id: mvcalc.line.conservative_path_independent, area: mvcalc, level: 7, prereqs: [mvcalc.line.work_along_path, mvcalc.grad.terrain_walker], grammar: invariant, mechanics: [network_routes, slope_walker], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.fundamental_theorem_line_integrals, cs.mvcalc.conservative_field_test]}
+  - {id: mvcalc.surf.flux_through_surface, area: mvcalc, level: 7, prereqs: [mvcalc.field.arrow_at_every_point, mvcalc.int.change_of_variables_jacobian], grammar: accumulate, mechanics: [fill_accumulate, construct], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.surface_integral, cs.mvcalc.flux], calc_unlocks: [op_flux]}
+
+  # ---- divrot / thm -------------------------------------------------------
+  - {id: mvcalc.divrot.divergence_as_source, area: mvcalc, level: 7, prereqs: [mvcalc.field.arrow_at_every_point, mvcalc.part.slice_of_surface], grammar: rate, mechanics: [fill_accumulate, grid_stretch], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.divergence], calc_unlocks: [op_divergence]}
+  - {id: mvcalc.divrot.curl_as_spin, area: mvcalc, level: 7, prereqs: [mvcalc.field.arrow_at_every_point, mvcalc.part.slice_of_surface], grammar: rate, mechanics: [grid_stretch, gears_sequence], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.curl], calc_unlocks: [op_curl]}
+  - {id: mvcalc.thm.green_boundary_counts_interior, area: mvcalc, level: 7, prereqs: [mvcalc.line.work_along_path, mvcalc.divrot.curl_as_spin, mvcalc.int.double_integral_tank], grammar: invariant, mechanics: [tiles, fill_accumulate], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.green_theorem]}
+  - {id: mvcalc.thm.stokes_curl_through_surface, area: mvcalc, level: 7, prereqs: [mvcalc.thm.green_boundary_counts_interior, mvcalc.surf.flux_through_surface], grammar: invariant, mechanics: [construct, fill_accumulate], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.stokes_theorem]}
+  - {id: mvcalc.thm.divergence_flux_equals_sources, area: mvcalc, level: 7, prereqs: [mvcalc.surf.flux_through_surface, mvcalc.divrot.divergence_as_source], grammar: invariant, mechanics: [fill_accumulate, tiles], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.mvcalc.divergence_theorem]}

@@ -1,0 +1,86 @@
+# Locale fuente (es) de los nodos de cálculo I. Claves: nodes.<id>.{name, probes.<verbo>}.
+# `probes` solo en la espina: describe el ítem DENTRO de la mecánica, nunca opción múltiple.
+
+nodes:
+
+  calc1.lim.zero_over_zero_cancel:
+    name: "Cero sobre cero se destraba"
+  calc1.lim.one_sided_and_jump:
+    name: "Llegar por cada lado"
+  calc1.lim.continuous_or_not:
+    name: "Clasificar los saltos"
+  calc1.lim.epsilon_delta_tolerance:
+    name: "Límite como juego de tolerancias"
+
+  calc1.deriv.rate_as_slope_limit:
+    name: "Derivada: pendiente exacta"
+    probes:
+      recognize: "En una colina curva, el jugador toca el punto donde el caminante sube más empinado."
+      explain: "Hace zoom con dos dedos sobre la curva y elige la animación que muestra por qué al acercarse tanto la colina se ve recta."
+      manipulate: "Arrastra el segundo punto de la secante hacia el primero con la manivela y observa a qué valor se acerca la pendiente del triángulo de subida."
+      apply: "Recibe la curva x al cuadrado y debe armar con fichas la pendiente exacta en x = 3 usando el cociente de diferencias con paso cada vez más chico."
+      generalize: "Recibe una curva desconocida y debe trazar, con la herramienta de secantes, la pendiente en tres puntos y ordenarlos del más empinado al menos."
+      transfer: "En la gráfica de posición de un auto, lee la velocidad en un instante como la pendiente exacta y la arma con fichas con sus unidades."
+
+  calc1.deriv.tangent_line:
+    name: "La recta que toca y sigue"
+
+  calc1.deriv.rules_as_structure:
+    name: "Reglas de derivación como estructura"
+    probes:
+      recognize: "Entre varios cuadrados de lado x que crecen, el jugador toca la tira que representa cuánto área se agrega al alargar el lado un poquito."
+      explain: "Arrastra el lado del cuadrado y elige la animación que muestra por qué el área nueva son dos tiras de largo x, y no una."
+      manipulate: "Encadena las máquinas suma y múltiplo constante en la tubería y comprueba, tirando del lado, que la derivada de la suma es la suma de las derivadas."
+      apply: "Recibe 3x al cubo menos 5x y debe armar su derivada con las fichas de potencia, suma y constante sin el diagrama."
+      generalize: "Recibe x a la n con n en una caja y debe descubrir, con las baldosas, el patrón de cuántas tiras aparecen."
+      transfer: "En una tubería de dos máquinas, gira el engranaje de entrada y arma la relación de giros total como producto de las dos relaciones."
+
+  calc1.deriv.chain_as_gears:
+    name: "Regla de la cadena: engranajes"
+  calc1.deriv.product_as_growing_rectangle:
+    name: "Producto: rectángulo que crece"
+  calc1.deriv.quotient_from_product:
+    name: "Cociente desde el producto"
+  calc1.deriv.implicit_as_constraint:
+    name: "Derivar una ligadura"
+
+  calc1.apply.max_where_slope_zero:
+    name: "Máximo donde la pendiente es cero"
+  calc1.apply.related_rates_chain:
+    name: "Tasas encadenadas"
+  calc1.apply.motion_position_velocity_accel:
+    name: "Posición, velocidad, aceleración"
+  calc1.apply.linearization_tangent_approx:
+    name: "Aproximar con la tangente"
+  calc1.apply.newton_tangent_root:
+    name: "Newton: la tangente busca la raíz"
+
+  calc1.int.accumulation:
+    name: "Integral: acumular franjas"
+    probes:
+      recognize: "Entre varios tanques que se llenan con distintos caudales, el jugador toca el que tiene más agua al final del tiempo marcado."
+      explain: "Parte el tiempo en trozos más finos con la manivela y elige la animación que muestra por qué el total no cambia aunque los rectángulos sí."
+      manipulate: "Apila rectángulos bajo la curva de caudal, refina el ancho y observa cómo la suma se estabiliza en un valor."
+      apply: "Recibe la curva de velocidad de un auto y debe armar con fichas la distancia recorrida entre dos instantes con rectángulos de ancho 1 y luego de ancho 0,5."
+      generalize: "Recibe una curva con un tramo bajo el eje y debe decidir, llenando y vaciando el tanque, qué pasa con el total."
+      transfer: "Sobre una fila de barras de probabilidad, acumula de izquierda a derecha y lee cuánto se juntó hasta cierto valor."
+
+  calc1.int.riemann_refines_to_limit:
+    name: "Rectángulos cada vez más finos"
+  calc1.int.signed_area_below_axis:
+    name: "Bajo el eje se vacía"
+  calc1.int.split_and_scale_properties:
+    name: "Partir y escalar la integral"
+
+  calc1.ftc.integral_undoes_derivative:
+    name: "La integral deshace la derivada"
+    probes:
+      recognize: "Entre varios pares de cofres, el jugador toca el par donde la llave integral abre lo que la derivada cerró."
+      explain: "Arrastra la llave integral al cofre de la derivada y elige la animación que muestra por qué la altura del tanque en cada instante es justo el caudal acumulado."
+      manipulate: "Llena el tanque siguiendo la curva de caudal y comprueba, con el caminante sobre la curva de nivel, que la pendiente del nivel coincide con el caudal."
+      apply: "Recibe una función y sus dos extremos y debe armar con fichas la integral definida como el valor de la antiderivada al final menos el del inicio."
+      generalize: "Recibe una función acumulada cuyo extremo superior es una caja y debe descubrir, tirando de la caja, cuál es su derivada."
+      transfer: "En un cofre anidado con la regla de la cadena adentro, elige la llave de sustitución que deshace la composición antes de integrar."
+
+  calc1.ftc.antiderivative_family:
+    name: "Antiderivadas: una familia más C"

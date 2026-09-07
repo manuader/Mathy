@@ -1,0 +1,40 @@
+# Textos en español de los nodos de mvcalc. Claves: nodes.<id>.name (todos) y nodes.<id>.probes.<verbo> (solo espina).
+# mvcalc no tiene nodos de espina.
+
+nodes:
+  mvcalc.fn.two_inputs_one_output:
+    name: Dos entradas, una salida
+  mvcalc.part.slice_of_surface:
+    name: Parcial como pendiente del corte
+  mvcalc.grad.terrain_walker:
+    name: La subida más empinada
+  mvcalc.jac.local_stretch:
+    name: Jacobiano como estiramiento local
+  mvcalc.opt.hessian_curvature:
+    name: Hessiano distingue cima, valle, silla
+  mvcalc.lagr.tangent_level_curves:
+    name: Lagrange como curvas de nivel tangentes
+  mvcalc.int.double_integral_tank:
+    name: Integral doble como tanque
+  mvcalc.int.iterated_slices:
+    name: Integrar rebanada por rebanada
+  mvcalc.int.change_of_variables_jacobian:
+    name: Cambio de variables con Jacobiano
+  mvcalc.field.arrow_at_every_point:
+    name: Una flecha en cada punto
+  mvcalc.line.work_along_path:
+    name: Trabajo a lo largo del camino
+  mvcalc.line.conservative_path_independent:
+    name: Campo conservativo ignora el camino
+  mvcalc.surf.flux_through_surface:
+    name: Flujo a través de una superficie
+  mvcalc.divrot.divergence_as_source:
+    name: Divergencia como fuente
+  mvcalc.divrot.curl_as_spin:
+    name: Rotor como giro local
+  mvcalc.thm.green_boundary_counts_interior:
+    name: El borde cuenta el interior
+  mvcalc.thm.stokes_curl_through_surface:
+    name: Rotor a través de la superficie
+  mvcalc.thm.divergence_flux_equals_sources:
+    name: Flujo saliente igual a fuentes

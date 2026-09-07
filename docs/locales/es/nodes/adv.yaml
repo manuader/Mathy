@@ -1,0 +1,76 @@
+# Locale fuente (es) de los nodos del área adv. Claves: nodes.<id>.name (≤ 6 palabras, nombra la idea).
+# Los ids vienen de ../../../C-knowledge-graph/graph/adv.yaml; este archivo no agrega ni quita nodos.
+
+nodes:
+  adv.cplx.i_as_new_axis:
+    name: "i: un eje nuevo"
+  adv.cplx.plane_and_modulus:
+    name: "El plano complejo y su distancia"
+  adv.cplx.multiplication_rotates_scales:
+    name: "Multiplicar gira y estira"
+  adv.cplx.euler_formula_circle:
+    name: "e elevado a i: girar sin parar"
+  adv.cplx.roots_of_unity_polygon:
+    name: "Raíces de la unidad: un polígono"
+  adv.cplx.function_deforms_plane:
+    name: "Función compleja que deforma el plano"
+  adv.real.supremum_least_ceiling:
+    name: "Supremo: el techo más bajo"
+  adv.real.epsilon_delta_challenge:
+    name: "Épsilon-delta como desafío"
+  adv.real.cauchy_terms_huddle:
+    name: "Cauchy: los términos se apretujan"
+  adv.real.uniform_continuity_one_delta:
+    name: "Un solo delta para todo"
+  adv.real.function_series_uniform_limit:
+    name: "Sumar funciones sin romper la continuidad"
+  adv.real.riemann_upper_lower_squeeze:
+    name: "Riemann: apretar entre sumas"
+  adv.alg.group_as_reversible_actions:
+    name: "Grupo: acciones que se deshacen"
+  adv.alg.cosets_partition:
+    name: "Cosets: el grupo en cajones iguales"
+  adv.alg.homomorphism_preserves_structure:
+    name: "Homomorfismo: traducir sin romper la estructura"
+  adv.alg.polynomial_arithmetic:
+    name: "Anillo: sumar y multiplicar polinomios"
+  adv.alg.field_every_nonzero_invertible:
+    name: "Cuerpo: todo salvo cero se invierte"
+  adv.alg.cayley_graph:
+    name: "El grupo dibujado como red"
+  adv.topo.open_or_closed:
+    name: "Abierto o cerrado: el borde"
+  adv.topo.connected_one_piece:
+    name: "Conexo: de una sola pieza"
+  adv.topo.compact_finite_cover:
+    name: "Compacto: alcanza con pocos parches"
+  adv.topo.euler_characteristic_invariant:
+    name: "Vértices menos aristas más caras"
+  adv.ode.slope_field:
+    name: "Campo de pendientes: seguir las flechas"
+  adv.ode.euler_method:
+    name: "Euler: avanzar de a pasitos"
+  adv.ode.separable_variables:
+    name: "Separar variables e integrar"
+  adv.ode.linear_first_order_factor:
+    name: "Factor integrante: multiplicar para deshacer"
+  adv.ode.system_equilibrium_phase:
+    name: "Sistemas: equilibrios y retrato de fase"
+  adv.num.newton_tangent_iteration:
+    name: "Newton: seguir la tangente"
+  adv.num.finite_difference_step:
+    name: "Derivar con un paso finito"
+  adv.num.monte_carlo_pi:
+    name: "Monte Carlo: estimar tirando dardos"
+  adv.opt.gradient_descent_downhill:
+    name: "Descenso por gradiente: bajar la loma"
+  adv.opt.convex_bowl_one_minimum:
+    name: "Convexo: un cuenco, un mínimo"
+  adv.opt.linear_program_corners_dual:
+    name: "Programación lineal: esquinas y dual"
+  adv.four.projection_onto_sines:
+    name: "Proyectar una señal sobre senos"
+  adv.four.transform_as_machine:
+    name: "Transformada de Fourier como máquina"
+  adv.four.inverse_transform:
+    name: "La llave que devuelve la señal"

@@ -1,0 +1,63 @@
+# Cadenas en español de los nodos del área `prealg`. Claves: nodes.<id>.name | nodes.<id>.probes.<verbo>.
+# `name` para todos los nodos (≤ 6 palabras, nombra la idea). `probes` solo para nodos de espina:
+# describe cómo se ve el ítem dentro de la mecánica; nunca opción múltiple con texto; los distractores
+# de `explain` son las misconceptions del nodo.
+
+nodes:
+  prealg.var.unknown_as_box:
+    name: "La incógnita es una caja cerrada"
+    probes:
+      recognize: "Un libro de cuentas con fichas y una caja cerrada; el jugador toca la caja cuando el guía pregunta qué cantidad no se ve."
+      explain: "Dos animaciones: en una dos cajas iguales más tres cajas iguales se juntan en cinco cajas; en la otra se pegan las etiquetas y se multiplican como si fueran nombres. El jugador toca la que trata la letra como etiqueta."
+      manipulate: "El jugador pone en la balanza tantas cajas como indica el coeficiente y ajusta fichas hasta que se equilibra con el otro plato."
+      apply: "Una caja aparece como hoja de un árbol de cofres; el jugador arrastra la caja al lugar del árbol donde está la cantidad desconocida."
+      generalize: "La caja se convierte en una letra sobre el libro de cuentas; el jugador sigue contando cajas iguales con letras distintas sin mezclarlas."
+      transfer: "En la máquina de tuberías, el jugador toca la entrada que la máquina todavía no conoce, marcada con una letra."
+  prealg.eq.balance:
+    name: "El igual es una balanza"
+    probes:
+      recognize: "Varias balanzas dibujadas; el jugador toca la que está nivelada cuando aparece la ficha de igual."
+      explain: "Dos animaciones: en una se saca lo mismo de los dos platos y la balanza sigue nivelada; en la otra se saca de un solo plato y se inclina. El jugador toca la que rompe el equilibrio."
+      manipulate: "El jugador arrastra fichas sobre los dos platos hasta nivelar la balanza, y la ficha de igual se enciende solo cuando queda horizontal."
+      apply: "Balanza nivelada con una caja de un lado; el jugador saca fichas de ambos platos hasta que la caja queda sola, sin que se incline."
+      generalize: "La balanza se desvanece y quedan fichas con el igual entre ellas; el jugador realiza la misma acción a ambos lados de la línea."
+      transfer: "En el reloj modular, el jugador aplica el mismo giro a las dos agujas y verifica que siguen marcando lo mismo."
+  prealg.inv.operation_as_key:
+    name: "Toda operación tiene llave"
+    probes:
+      recognize: "Un cofre cerrado con una operación grabada y un llavero; el jugador toca la llave que tiene la operación contraria."
+      explain: "Dos animaciones: en una el cofre de multiplicar se abre con la llave de dividir; en la otra se prueba la llave de restar y el cofre no se mueve. El jugador toca la que usa la llave equivocada."
+      manipulate: "El jugador arrastra llaves sobre una fila de cofres con distintas operaciones y cada cofre solo se abre con su llave."
+      apply: "Un cofre con una operación y un número; el jugador arma la llave completa eligiendo la operación y el número que devuelven lo original."
+      generalize: "Los cofres pierden los dibujos y quedan fichas de operación; el jugador empareja cada operación con su inversa, incluidas las de números negativos."
+      transfer: "En la grilla estirada, el jugador toca la transformación que devuelve la grilla a su forma, como una llave."
+  prealg.expr.substitute_value:
+    name: "Poner un número en la caja"
+  prealg.expr.like_terms:
+    name: "Solo se juntan cajas iguales"
+  prealg.expr.implicit_grouping:
+    name: "Escribir menos, decir lo mismo"
+  prealg.prop.order_does_not_matter:
+    name: "El orden no cambia el resultado"
+  prealg.int.sign_rules:
+    name: "Reglas de los signos"
+  prealg.exp.powers_of_ten:
+    name: "Potencias de diez y posición"
+  prealg.ratio.scaling_recipe:
+    name: "Escalar una receta"
+  prealg.ratio.rate_per_unit:
+    name: "Proporcional es razón constante"
+  prealg.ratio.proportion_as_line:
+    name: "Proporción es una recta"
+  prealg.pct.hundredths:
+    name: "Por ciento, decimal y fracción"
+  prealg.pct.percent_fill:
+    name: "Cuánto subió o bajó"
+  prealg.coord.grid_position:
+    name: "Dos números ubican un punto"
+  prealg.ineq.compare_expressions:
+    name: "La balanza inclinada compara"
+  prealg.fn.input_output_table:
+    name: "La tabla anota la máquina"
+  prealg.pat.rule_from_table:
+    name: "Descubrir la regla del paso"

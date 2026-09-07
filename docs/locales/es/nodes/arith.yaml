@@ -1,0 +1,109 @@
+# Cadenas en español de los nodos del área `arith`. Claves: nodes.<id>.name | nodes.<id>.probes.<verbo>.
+# `name` para todos los nodos (≤ 6 palabras, nombra la idea). `probes` solo para nodos de espina:
+# describe cómo se ve el ítem dentro de la mecánica; nunca opción múltiple con texto; los distractores
+# de `explain` son las misconceptions del nodo.
+
+nodes:
+  arith.add.displacement:
+    name: "Sumar es avanzar en la pista"
+    probes:
+      recognize: "El caminante está en una casilla y aparece una ficha con un número; el jugador toca la casilla donde va a terminar antes de que la manivela gire."
+      explain: "Dos animaciones: en una el caminante avanza y la ficha de igual aparece cuando el paso termina; en la otra el signo igual empuja al caminante como si fuera un botón de hacer. El jugador toca la que confunde el igual con una acción."
+      manipulate: "El jugador gira la manivela la cantidad exacta de pasos que muestra la ficha y ve cómo el libro de cuentas anota cada paso."
+      apply: "Dos fichas seguidas: el jugador avanza primero una y después la otra, y luego toca la ficha única que hubiera hecho el mismo viaje de un solo giro."
+      generalize: "La pista pierde los dibujos y quedan marcas; luego solo fichas con números; el jugador arrastra la ficha del resultado sin ver al caminante."
+      transfer: "Sobre la grilla del tesoro, el jugador encadena dos flechas punta con cola y toca dónde termina el viaje."
+  arith.sub.undo_add:
+    name: "La resta deshace la suma"
+    probes:
+      recognize: "El caminante acaba de avanzar y hay tres llaves con números; el jugador toca la llave que lo devuelve exactamente a la casilla de salida."
+      explain: "Dos animaciones: en una el caminante vuelve sobre sus pasos y pisa la casilla de partida; en la otra vuelve pero da un paso de más. El jugador toca la que no deshace el viaje."
+      manipulate: "El jugador gira la manivela hacia atrás hasta que el cofre se abre; el cofre solo abre cuando los pasos de vuelta igualan a los de ida."
+      apply: "Dos caminantes en distintas casillas; el jugador arrastra la ficha que dice cuántos pasos los separan, midiendo con la pista."
+      generalize: "Con la pista ya sin dibujos, el jugador elige entre fichas de resta y suma la que abre cada cofre, alternando idas y vueltas."
+      transfer: "En la grilla estirada, el jugador aplica la transformación que devuelve la figura a su lugar, como si fuera la llave de vuelta."
+  arith.mul.scaling:
+    name: "Multiplicar es estirar"
+    probes:
+      recognize: "Una banda elástica y tres bandas ya estiradas; el jugador toca la que se estiró tantas veces como marca la ficha."
+      explain: "Dos animaciones: en una la banda se estira tres veces y cada marca se separa igual; en la otra solo el extremo se mueve y las marcas del medio quedan. El jugador toca la que no escala."
+      manipulate: "El jugador pellizca la banda hasta que el cursor toca la ficha objetivo, y luego arma con baldosas el rectángulo que muestra el mismo producto en filas."
+      apply: "Filas de baldosas sueltas; el jugador arma el rectángulo y arrastra la ficha con el total sin contar baldosa por baldosa."
+      generalize: "El estirado se hace con fracciones y con cero; el jugador anticipa cuánto medirá la banda tocando la marca antes de soltar."
+      transfer: "Sobre un piso de baldosas geométrico, el jugador toca el área que resulta de duplicar un solo lado."
+  arith.div.undo_mul:
+    name: "Dividir deshace el estirado"
+    probes:
+      recognize: "Una banda quedó estirada tres veces; entre varias llaves, el jugador toca la que la devuelve a su largo original."
+      explain: "Dos animaciones: en una la banda se encoge de vuelta y todas las marcas vuelven a su lugar; en la otra se recorta un pedazo del extremo. El jugador toca la que no es la llave del estirado."
+      manipulate: "El jugador arrastra la llave de encoger sobre el cofre y ajusta el factor hasta que las marcas coinciden; luego parte el rectángulo de baldosas en filas iguales."
+      apply: "Un rectángulo de baldosas con un lado conocido; el jugador toca la ficha del otro lado sin desarmar el rectángulo."
+      generalize: "El estirado por cero aparece: el jugador debe reconocer que no hay llave que lo deshaga, arrastrando la ficha de cofre sin llave."
+      transfer: "En la grilla de vectores, el jugador aplica la transformación que devuelve la grilla estirada a la cuadrícula original."
+  arith.int.negatives:
+    name: "Negativo es la dirección contraria"
+    probes:
+      recognize: "El caminante está en cero y una ficha negativa aparece; el jugador toca la casilla donde termina, del lado izquierdo de la pista."
+      explain: "Dos animaciones: en una dar la vuelta dos veces deja al caminante mirando hacia adelante; en la otra sigue mirando hacia atrás. El jugador toca la que se equivoca al girar dos veces."
+      manipulate: "El jugador gira la manivela hacia atrás pasando por cero y ve cómo el ascensor baja a los subsuelos mientras el libro de cuentas anota deudas."
+      apply: "Dos pisos, uno arriba y otro abajo del cero; el jugador arrastra la ficha con la distancia entre ambos."
+      generalize: "La pista pierde el ascensor y solo quedan marcas; el jugador ordena fichas negativas y positivas de menor a mayor."
+      transfer: "En el plano de cuatro cuadrantes, el jugador toca el cuadrante donde un punto tiene los dos signos indicados."
+  arith.frac.parts_and_ratio:
+    name: "Una fracción es partes del todo"
+    probes:
+      recognize: "Varias pizzas cortadas de formas distintas; el jugador toca la que muestra exactamente la parte que indica la ficha de fracción."
+      explain: "Dos animaciones: en una dos porciones de pizzas iguales se juntan y el total se cuenta en porciones del mismo tamaño; en la otra se suman arriba y abajo por separado. El jugador toca la que suma cruzado."
+      manipulate: "El jugador corta la barra de baldosas en partes iguales y sombrea las que pide la ficha; la barra confirma cuando las partes son iguales."
+      apply: "Una urna con bolas de dos colores; el jugador arrastra la ficha de fracción que dice qué parte del total es de un color."
+      generalize: "La misma cantidad aparece como pizza, como barra, como urna y como reparto en platos; el jugador toca las que representan la misma fracción."
+      transfer: "En el dial de giro, el jugador lleva la aguja a la fracción de vuelta completa que indica la ficha."
+  arith.expr.precedence_tree:
+    name: "Los paréntesis son cofres anidados"
+    probes:
+      recognize: "Un cofre con otro cofre adentro y una expresión de fichas al lado; el jugador toca la parte de la expresión que está en el cofre interior."
+      explain: "Dos animaciones: en una se abre primero el cofre de adentro y después el de afuera; en la otra se intenta abrir el de afuera primero y se traba. El jugador toca la que abre en orden invertido."
+      manipulate: "El jugador arma con fichas de paréntesis el cofre anidado que corresponde a un árbol dibujado, y luego lo abre desde adentro hacia afuera."
+      apply: "Dos máquinas en tubería; el jugador conecta las fichas de operación en el orden que produce la salida mostrada."
+      generalize: "Sin cofres dibujados, solo fichas: el jugador toca la operación que se calcula primero en expresiones con y sin paréntesis."
+      transfer: "En una tubería de pasos de un algoritmo, el jugador ordena los pasos para que el resultado coincida con el árbol."
+  arith.add.combine_groups:
+    name: "Juntar dos montones"
+  arith.add.running_total:
+    name: "El total va creciendo"
+  arith.place.base_ten_carry:
+    name: "Diez unidades hacen una decena"
+  arith.mul.repeated_groups:
+    name: "Grupos iguales, paso constante"
+  arith.mul.rows_and_columns:
+    name: "Filas por columnas, da igual"
+  arith.mul.partial_products:
+    name: "Multiplicar por partes"
+  arith.div.remainder:
+    name: "Lo que sobra al repartir"
+  arith.int.add_signed:
+    name: "Sumar con deudas"
+  arith.int.mul_signed:
+    name: "El signo del producto"
+  arith.frac.equivalent:
+    name: "Misma fracción, distintos cortes"
+  arith.frac.add_same_denominator:
+    name: "Sumar porciones del mismo tamaño"
+  arith.frac.common_unit:
+    name: "Buscar un corte común"
+  arith.frac.multiply:
+    name: "Una fracción de una fracción"
+  arith.dec.tenths_as_place:
+    name: "Decimales son fracciones de diez"
+  arith.pct.percent_of_total:
+    name: "Por ciento es de cada cien"
+  arith.rate.per_unit:
+    name: "Cuánto por cada uno"
+  arith.meas.unit_conversion:
+    name: "Cambiar de unidad es escalar"
+  arith.pow.repeated_scaling:
+    name: "Potencia es estirar varias veces"
+  arith.num.factor_tree:
+    name: "Los primos son ladrillos"
+  arith.num.divisible_or_not:
+    name: "Se reparte justo o no"

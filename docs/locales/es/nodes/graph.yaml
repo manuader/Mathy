@@ -1,0 +1,40 @@
+# Locale fuente (es) de los nodos del área graph. Claves: nodes.<id>.name (≤ 6 palabras) y, solo en la espina,
+# nodes.<id>.probes.<verbo> (un ítem ejemplo por verbo de evidencia; apto para voz, el nivel 1 se juega sin leer).
+# Los ids vienen de ../../../C-knowledge-graph/graph/graph.yaml; este archivo no agrega ni quita nodos.
+
+nodes:
+  graph.basic.graph_and_paths:
+    name: "Puntos unidos por líneas"
+    probes:
+      recognize: "Mirá estas dos redes de islas y puentes. Tocá la que tiene las mismas conexiones que la de arriba, aunque esté dibujada distinto."
+      explain: "Arrastrá las islas a otro lugar sin soltar ningún puente. ¿Cambió quién se conecta con quién? Tocá sí o no."
+      manipulate: "Agregá puentes hasta que se pueda ir de la isla roja a la isla azul, usando la menor cantidad posible."
+      apply: "Contá cuántos puentes salen de la isla amarilla y tocá ese número."
+      generalize: "Cinco amigos se saludan de a dos: dibujá con puntos y líneas quién saludó a quién, sin que sobre ni falte ninguna línea."
+      transfer: "Este mapa de estaciones de tren es una red: tocá las estaciones a las que se llega desde la estación central sin cambiar de línea."
+  graph.walk.repeat_rules:
+    name: "Paseo, camino y ciclo"
+  graph.deg.handshake_lemma:
+    name: "Cada apretón cuenta dos manos"
+  graph.conn.components:
+    name: "Islas de la red"
+  graph.tree.tree_no_cycles:
+    name: "Árbol: conectado y sin vueltas"
+  graph.euler.bridges_konigsberg:
+    name: "Cruzar cada puente una vez"
+  graph.euler.hamilton_visits_every_node:
+    name: "Visitar cada ciudad una vez"
+  graph.color.map_coloring:
+    name: "Vecinos con colores distintos"
+  graph.search.bfs_dfs_frontier:
+    name: "Explorar por capas o en profundidad"
+  graph.path.shortest_path:
+    name: "El camino más barato"
+  graph.planar.no_crossing_euler_formula:
+    name: "Dibujar sin cruces: fórmula de Euler"
+  graph.matrix.two_step_routes_as_product:
+    name: "Rutas de dos pasos: multiplicar matrices"
+  graph.flow.max_flow_min_cut:
+    name: "Cuánto cabe por la red"
+  graph.match.bipartite_matching:
+    name: "Dos bandos y sus parejas"

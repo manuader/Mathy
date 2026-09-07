@@ -1,0 +1,66 @@
+# Locale fuente (es) de los nodos de trigonometría. Claves: nodes.<id>.{name, probes.<verbo>}.
+# `probes` solo en la espina: describe el ítem DENTRO de la mecánica, nunca opción múltiple.
+
+nodes:
+
+  trig.ratio.similar_shadows:
+    name: "Razones que no cambian"
+
+  trig.circle.unit_circle_radians:
+    name: "Círculo unitario y radianes"
+    probes:
+      recognize: "Sobre el círculo de radio 1, el jugador toca el punto donde termina un giro de un cuarto de vuelta."
+      explain: "Desenrolla el radio sobre el arco con la manivela y elige la animación que muestra por qué la vuelta completa mide un poco más de seis radios."
+      manipulate: "Gira el radio hasta un ángulo dado, baja la altura desde su extremo y lee las dos coordenadas del punto en la grilla."
+      apply: "Con la pista de radianes a la vista, ubica en el círculo los ángulos pi/6, pi/2 y 4pi/3 y arma sus coordenadas con las fichas."
+      generalize: "Recibe un círculo de radio 3 y debe predecir, con la manivela, cuánto mide el arco de un ángulo de 2 radianes."
+      transfer: "En el reloj de doce horas, encuentra qué giro en radianes lleva de las 12 a las 8 y comprueba que dar una vuelta más no cambia la posición."
+
+  trig.circle.radian_as_arc_length:
+    name: "Radián: arco de un radio"
+
+  trig.ang.quadrant_signs:
+    name: "Signos según el cuadrante"
+
+  trig.fn.sine_as_height:
+    name: "El seno es la altura"
+    probes:
+      recognize: "Mientras la rueda gira, el jugador toca el instante en que el pasajero está a la altura del centro."
+      explain: "Arrastra el radio y elige la animación que muestra por qué la altura del extremo es el seno y su sombra sobre el eje es el coseno."
+      manipulate: "Mete un ángulo en la máquina de la rueda y baja la altura desde el extremo del radio para leer la salida; repite con varios ángulos."
+      apply: "Con la rueda a la vista, arma con fichas el seno y el coseno de pi/3 y de 5pi/6 a partir del triángulo que forma el radio."
+      generalize: "Recibe una rueda de radio 4 y debe predecir con la máquina la altura del pasajero para un ángulo dado."
+      transfer: "En las paramétricas, alimenta la misma máquina con el tiempo y traza el recorrido del punto en la grilla."
+
+  trig.fn.wave_unrolls_circle:
+    name: "La rueda desenrollada es onda"
+  trig.fn.periodic_wraps:
+    name: "Cada vuelta repite"
+  trig.fn.tangent_as_slope:
+    name: "La tangente es la pendiente"
+  trig.fn.transform_wave:
+    name: "Estirar y correr la onda"
+
+  trig.id.pythagorean_identity:
+    name: "Pitágoras en el círculo unitario"
+  trig.id.angle_sum:
+    name: "Seno de una suma"
+  trig.id.double_angle:
+    name: "Ángulo doble en la balanza"
+
+  trig.inv.arcsin_two_branches:
+    name: "Deshacer el seno con ramas"
+
+  trig.law.sines_from_altitude:
+    name: "Ley de senos por la altura"
+  trig.law.cosines_extends_pythagoras:
+    name: "Ley de cosenos corrige Pitágoras"
+
+  trig.polar.point_by_angle_and_radius:
+    name: "Punto por giro y distancia"
+
+  trig.rot.rotation_matrix:
+    name: "Girar la grilla con matriz"
+
+  trig.euler.cis_as_rotation:
+    name: "Euler: multiplicar es girar"

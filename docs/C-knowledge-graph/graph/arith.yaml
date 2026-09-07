@@ -1,0 +1,183 @@
+# Knowledge graph — area `arith` (level 1: the four operations as transformations, negatives,
+# fractions, decimals, percent, rates, units, precedence as a tree, primes and divisibility).
+# DATA only: no user-visible text. Names live in ../../locales/es/nodes/arith.yaml.
+# Enums: ../schema/node.schema.yaml. Spine order and prereqs: ../spine.yaml.
+# Aliases absorb ids that other documents (E, G, L) already reference under another name.
+
+area: arith
+
+clusters:
+  - add     # addition: displacement on the track, joining groups, running total
+  - sub     # subtraction as the key that undoes addition
+  - mul     # multiplication: scaling, repeated groups, array, multi-digit algorithm
+  - div     # division as the key that undoes scaling; remainder
+  - int     # negatives as the opposite direction; signed addition and product
+  - frac    # fractions: parts of a whole, equivalence, same-unit addition, common unit, product
+  - dec     # decimals as base-ten fractions in the place-value dials
+  - pct     # percent as parts per hundred of a total
+  - rate    # per-unit rate as division
+  - meas    # unit conversion as scaling
+  - expr    # precedence as a tree of nested chests
+  - pow     # exponent as repeated scaling
+  - num     # primes as unique rectangles; divisibility as exact sharing
+  - place   # base-ten regrouping (carry / borrow) with odometer dials
+
+nodes:
+
+  - id: arith.add.displacement
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [found.count.number_line]
+    grammar: displace
+    mechanics: [gears_sequence, ledger]
+    literacy: none
+    analogy: number_line_walk
+    misconceptions: [equals_as_operator]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.vec.vector_as_displacement, geom.angle.turn_as_measure, graph.path.shortest_path]
+    calc_unlocks: [op_add]
+    cheatsheet: [cs.arith.add_as_step_forward, cs.arith.add_order_irrelevant]
+    manim: [gear_step_forward_adds, ledger_join_two_piles]
+    next: arith.sub.undo_add
+    doc: docs/D-curriculum/D1-espina/03-arith.add.displacement.md
+
+  - id: arith.sub.undo_add
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.add.displacement]
+    grammar: invert
+    mechanics: [chest_key, gears_sequence]
+    literacy: none
+    analogy: walker_forward_and_back
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [geom.trans.undo_transformation, linalg.vec.vector_as_displacement, calc1.ftc.integral_undoes_derivative]
+    calc_unlocks: [op_sub]
+    cheatsheet: [cs.arith.sub_undoes_add, cs.arith.sub_as_distance_between]
+    manim: [chest_step_back_undoes_step, gear_walk_back_same_count]
+    next: arith.mul.scaling
+    doc: docs/D-curriculum/D1-espina/04-arith.sub.undo_add.md
+
+  - id: arith.mul.scaling
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.add.displacement]
+    grammar: scale
+    mechanics: [tiles, grid_stretch, gears_sequence]
+    literacy: none
+    analogy: rubber_band_stretch
+    misconceptions: [negative_times_negative]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [geom.area.rect_and_triangle, geom.sim.similarity_as_scale, linalg.vec.span_and_combination, calc1.int.accumulation]
+    calc_unlocks: [op_mul]
+    cheatsheet: [cs.arith.mul_as_scaling, cs.arith.mul_by_one_and_zero]
+    manim: [tile_rows_become_rectangle, grid_stretch_by_factor]
+    next: arith.div.undo_mul
+    doc: docs/D-curriculum/D1-espina/05-arith.mul.scaling.md
+
+  - id: arith.div.undo_mul
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.mul.scaling, arith.sub.undo_add]
+    grammar: invert
+    mechanics: [chest_key, tiles, grid_stretch]
+    literacy: none
+    analogy: rubber_band_stretch
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.map.inverse_and_systems, geom.sim.similarity_as_scale, prob.basic.probability_as_proportion]
+    calc_unlocks: [op_div]
+    cheatsheet: [cs.arith.div_undoes_mul, cs.arith.div_by_zero_no_key]
+    manim: [chest_shrink_key_undoes_stretch, tile_split_rectangle_into_rows]
+    next: arith.int.negatives
+    doc: docs/D-curriculum/D1-espina/06-arith.div.undo_mul.md
+
+  - id: arith.int.negatives
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.sub.undo_add]
+    grammar: displace
+    mechanics: [gears_sequence, ledger, grid_stretch]
+    literacy: none
+    analogy: elevator_floors
+    misconceptions: [negative_times_negative]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [alg.fn.graph_as_picture, linalg.vec.vector_as_displacement, trig.ang.quadrant_signs]
+    calc_unlocks: [op_neg]
+    cheatsheet: [cs.arith.negative_as_opposite_direction, cs.arith.sub_past_zero]
+    manim: [gear_walk_past_zero, ledger_debt_tokens]
+    next: arith.frac.parts_and_ratio
+    doc: docs/D-curriculum/D1-espina/07-arith.int.negatives.md
+
+  - id: arith.frac.parts_and_ratio
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.div.undo_mul]
+    grammar: partition
+    mechanics: [tiles, ledger, urn_dice]
+    literacy: none
+    analogy: pizza_slices
+    misconceptions: [fraction_add_across]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [prob.basic.probability_as_proportion, geom.angle.turn_as_measure, geom.sim.similarity_as_scale, precalc.lim.approach]
+    calc_unlocks: [op_frac]
+    cheatsheet: [cs.arith.fraction_as_parts_of_whole, cs.arith.fraction_as_division]
+    manim: [tile_bar_cut_into_equal_parts, urn_fraction_of_balls]
+    next: arith.expr.precedence_tree
+    doc: docs/D-curriculum/D1-espina/08-arith.frac.parts_and_ratio.md
+
+  - id: arith.expr.precedence_tree
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.mul.scaling]
+    grammar: compose
+    mechanics: [chest_key, machine_pipe]
+    literacy: none
+    analogy: chest_nested
+    misconceptions: [unwrap_order_inverted]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [prealg.var.unknown_as_box, alg.eq.multi_step, csmath.alg.pipeline_of_steps, calc1.deriv.rules_as_structure]
+    calc_unlocks: [op_paren]
+    cheatsheet: [cs.arith.expression_is_a_tree, cs.arith.inner_chest_first]
+    manim: [chest_nested_open_inside_first, pipe_two_machines_order_matters]
+    next: prealg.var.unknown_as_box
+    doc: docs/D-curriculum/D1-espina/09-arith.expr.precedence_tree.md
+
+  # ---- add / sub / place -------------------------------------------------------------------
+  - {id: arith.add.combine_groups, area: arith, level: 1, prereqs: [found.count.cardinality], grammar: partition, mechanics: [ledger], literacy: none, analogy: fruit_ledger, cheatsheet: [cs.arith.add_as_join_groups]}
+  - {id: arith.add.running_total, area: arith, level: 1, prereqs: [arith.add.displacement], grammar: accumulate, mechanics: [fill_accumulate, ledger], literacy: none, analogy: tank_filling, cheatsheet: [cs.arith.running_total_is_sum_so_far]}
+  - {id: arith.place.base_ten_carry, area: arith, level: 1, prereqs: [arith.add.combine_groups, arith.add.displacement], grammar: partition, mechanics: [ledger, gears_sequence], literacy: none, analogy: odometer_dials, cheatsheet: [cs.arith.ten_ones_make_one_ten, cs.arith.column_add_and_borrow], calc_unlocks: [op_add_multidigit, op_sub_multidigit]}
+
+  # ---- mul / div -----------------------------------------------------------------------------
+  - {id: arith.mul.repeated_groups, area: arith, level: 1, prereqs: [arith.add.displacement], grammar: displace, mechanics: [ledger, gears_sequence], literacy: none, analogy: fruit_ledger, aliases: [arith.mul.skip_counting, arith.seq.skip_count, arith.seq.arithmetic], cheatsheet: [cs.arith.mul_as_repeated_add, cs.arith.skip_count_is_constant_step]}
+  - {id: arith.mul.rows_and_columns, area: arith, level: 1, prereqs: [arith.mul.scaling], grammar: scale, mechanics: [tiles], literacy: none, analogy: tile_floor, cheatsheet: [cs.arith.mul_order_irrelevant, cs.arith.mul_grouping_irrelevant], calc_unlocks: [op_mul_table]}
+  - {id: arith.mul.partial_products, area: arith, level: 1, prereqs: [arith.mul.rows_and_columns, arith.place.base_ten_carry], grammar: scale, mechanics: [tiles, ledger], literacy: icons, analogy: tile_floor, cheatsheet: [cs.arith.split_factor_tens_and_ones, cs.arith.column_multiply], calc_unlocks: [op_mul_multidigit]}
+  - {id: arith.div.remainder, area: arith, level: 1, prereqs: [arith.div.undo_mul], grammar: partition, mechanics: [tiles, sorter], literacy: none, analogy: sharing_into_plates, aliases: [arith.div.remainder_classes], cheatsheet: [cs.arith.quotient_times_divisor_plus_remainder], calc_unlocks: [op_div_remainder]}
+
+  # ---- int -----------------------------------------------------------------------------------
+  - {id: arith.int.add_signed, area: arith, level: 1, prereqs: [arith.int.negatives], grammar: displace, mechanics: [gears_sequence, ledger], literacy: none, analogy: debt_ledger, cheatsheet: [cs.arith.add_signed_as_net_steps, cs.arith.subtract_is_add_opposite], calc_unlocks: [op_add_signed]}
+  - {id: arith.int.mul_signed, area: arith, level: 1, prereqs: [arith.int.negatives, arith.mul.scaling], grammar: scale, mechanics: [grid_stretch, gears_sequence], literacy: none, analogy: debt_ledger, misconceptions: [negative_times_negative], cheatsheet: [cs.arith.sign_of_product], calc_unlocks: [op_mul_signed]}
+
+  # ---- frac / dec / pct ----------------------------------------------------------------------
+  - {id: arith.frac.equivalent, area: arith, level: 1, prereqs: [arith.frac.parts_and_ratio], grammar: scale, mechanics: [tiles], literacy: none, analogy: pizza_slices, cheatsheet: [cs.arith.equivalent_fraction_scale_both], calc_unlocks: [op_frac_simplify]}
+  - {id: arith.frac.add_same_denominator, area: arith, level: 1, prereqs: [arith.frac.parts_and_ratio], grammar: partition, mechanics: [ledger, tiles], literacy: none, analogy: pizza_slices, cheatsheet: [cs.arith.add_fractions_same_unit]}
+  - {id: arith.frac.common_unit, area: arith, level: 1, prereqs: [arith.frac.equivalent, arith.frac.add_same_denominator], grammar: partition, mechanics: [tiles, sorter], literacy: none, analogy: chocolate_bar_grid, aliases: [arith.ord.compare_fractions], misconceptions: [fraction_add_across], cheatsheet: [cs.arith.common_denominator, cs.arith.compare_fractions_same_unit], calc_unlocks: [op_frac_add, op_frac_compare]}
+  - {id: arith.frac.multiply, area: arith, level: 1, prereqs: [arith.frac.equivalent], grammar: scale, mechanics: [tiles], literacy: none, analogy: chocolate_bar_grid, cheatsheet: [cs.arith.fraction_of_fraction, cs.arith.divide_by_fraction_flip], calc_unlocks: [op_frac_mul, op_frac_div]}
+  - {id: arith.dec.tenths_as_place, area: arith, level: 1, prereqs: [arith.frac.equivalent, arith.place.base_ten_carry], grammar: partition, mechanics: [ledger, gears_sequence], literacy: icons, analogy: odometer_dials, cheatsheet: [cs.arith.decimal_as_tenths_hundredths, cs.arith.decimal_fraction_bridge], calc_unlocks: [op_decimal]}
+  - {id: arith.pct.percent_of_total, area: arith, level: 1, prereqs: [arith.frac.equivalent, found.lit.symbol_match], grammar: partition, mechanics: [urn_dice, tiles], literacy: icons, analogy: urn_of_balls, cheatsheet: [cs.arith.percent_is_per_hundred, cs.arith.percent_of_amount], calc_unlocks: [op_percent]}
+
+  # ---- rate / meas ---------------------------------------------------------------------------
+  - {id: arith.rate.per_unit, area: arith, level: 1, prereqs: [arith.div.undo_mul, found.lit.symbol_match], grammar: rate, mechanics: [slope_walker, ledger], literacy: icons, analogy: walker_on_ramp, cheatsheet: [cs.arith.rate_per_unit_is_division], calc_unlocks: [op_unit_rate]}
+  - {id: arith.meas.unit_conversion, area: arith, level: 1, prereqs: [arith.mul.scaling, found.meas.fill_compare], grammar: scale, mechanics: [tiles, gears_sequence], literacy: icons, analogy: rubber_band_stretch, cheatsheet: [cs.arith.convert_units_by_scaling], calc_unlocks: [op_unit_convert]}
+
+  # ---- pow / num -----------------------------------------------------------------------------
+  - {id: arith.pow.repeated_scaling, area: arith, level: 1, prereqs: [arith.mul.scaling], grammar: nonlinear, mechanics: [gears_sequence, tiles], literacy: none, analogy: paper_folding_doubles, cheatsheet: [cs.arith.exponent_counts_scalings, cs.arith.square_and_cube_as_shapes], calc_unlocks: [op_pow]}
+  - {id: arith.num.factor_tree, area: arith, level: 1, prereqs: [arith.div.remainder, arith.mul.rows_and_columns], grammar: partition, mechanics: [network_routes, tiles], literacy: none, analogy: tile_floor, aliases: [arith.mul.factor_tree], cheatsheet: [cs.arith.prime_has_one_rectangle, cs.arith.factor_tree_same_leaves], calc_unlocks: [op_prime_factor, op_gcd_lcm]}
+  - {id: arith.num.divisible_or_not, area: arith, level: 1, prereqs: [arith.div.remainder], grammar: partition, mechanics: [sorter, gears_sequence], literacy: none, analogy: sharing_into_plates, cheatsheet: [cs.arith.divisibility_shortcuts], calc_unlocks: [op_mod]}

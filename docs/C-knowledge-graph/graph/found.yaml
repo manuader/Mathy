@@ -1,0 +1,68 @@
+# Knowledge graph — area `found` (level 0: mathematical intuition, no reading).
+# DATA only: no user-visible text. Names live in ../../locales/es/nodes/found.yaml.
+# Enums: ../schema/node.schema.yaml. Spine order and prereqs: ../spine.yaml.
+# All found.* nodes stop at layer `visual` (no symbols yet), except found.lit.* which are
+# pre-literacy gates: recognising symbols and following an instruction. The diagnostic skips
+# found.lit.* for adults (Q-edad-universal.md); other areas use them as prereqs of the first
+# node that needs `icons` or `short_text`.
+
+area: found
+
+clusters:
+  - count   # cardinality, number line, zero as empty position
+  - cmp     # comparing amounts: more/less, same, likely/unlikely
+  - pat     # patterns: repeating unit, what comes next, rule machine
+  - meas    # measuring by filling and comparing containers
+  - sort    # classifying objects by attribute
+  - lit     # pre-literacy gates: symbol recognition, one-step instruction, short phrase
+
+nodes:
+
+  - id: found.count.cardinality
+    area: found
+    level: 0
+    spine: true
+    prereqs: []
+    grammar: partition
+    mechanics: [ledger, network_routes, sorter]
+    literacy: none
+    layers: [real, intuition, concrete, visual]
+    analogy: fruit_bowl_count
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [graph.basic.graph_and_paths, disc.count.sum_rule, prob.stat.frequency_table]
+    calc_unlocks: [op_count]
+    manim: [ledger_pair_fruit_to_fruit, sorter_number_card_on_bin]
+    next: found.count.number_line
+    doc: docs/D-curriculum/D1-espina/01-found.count.cardinality.md
+
+  - id: found.count.number_line
+    area: found
+    level: 0
+    spine: true
+    prereqs: [found.count.cardinality]
+    grammar: displace
+    mechanics: [gears_sequence, slope_walker]
+    literacy: none
+    layers: [real, intuition, concrete, visual]
+    analogy: number_line_walk
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [geom.angle.turn_as_measure, linalg.vec.vector_as_displacement, trig.circle.unit_circle_radians]
+    calc_unlocks: [op_number_line]
+    manim: [gear_track_numbers_in_order, gear_one_step_one_number]
+    next: arith.add.displacement
+    doc: docs/D-curriculum/D1-espina/02-found.count.number_line.md
+
+  - {id: found.count.zero_as_empty, area: found, level: 0, prereqs: [found.count.cardinality], grammar: partition, mechanics: [ledger, balance], literacy: none, layers: [real, intuition, concrete, visual], analogy: fruit_bowl_count}
+  - {id: found.cmp.bigger_smaller, area: found, level: 0, prereqs: [found.count.cardinality], grammar: partition, mechanics: [sorter, ledger], literacy: none, layers: [real, intuition, concrete, visual], analogy: fruit_bowl_count, aliases: [found.count.compare_more_less]}
+  - {id: found.cmp.same_amount, area: found, level: 0, prereqs: [found.cmp.bigger_smaller], grammar: invariant, mechanics: [balance, network_routes], literacy: none, layers: [real, intuition, concrete, visual], analogy: balance_pans, aliases: [found.rel.match_one_to_one]}
+  - {id: found.cmp.likely_unlikely, area: found, level: 0, prereqs: [found.cmp.bigger_smaller], grammar: random, mechanics: [urn_dice], literacy: none, layers: [real, intuition, concrete, visual], analogy: spinner_wheel}
+  - {id: found.meas.fill_compare, area: found, level: 0, prereqs: [found.cmp.bigger_smaller], grammar: accumulate, mechanics: [fill_accumulate], literacy: none, layers: [real, intuition, concrete, visual], analogy: tank_filling}
+  - {id: found.sort.by_attribute, area: found, level: 0, prereqs: [], grammar: partition, mechanics: [sorter], literacy: none, layers: [real, intuition, concrete, visual], analogy: sorting_bins}
+  - {id: found.pat.repeat_unit, area: found, level: 0, prereqs: [found.sort.by_attribute], grammar: invariant, mechanics: [gears_sequence, sorter], literacy: none, layers: [real, intuition, concrete, visual], analogy: beads_necklace_pattern}
+  - {id: found.pat.what_comes_next, area: found, level: 0, prereqs: [found.pat.repeat_unit, found.count.number_line], grammar: displace, mechanics: [gears_sequence], literacy: none, layers: [real, intuition, concrete, visual], analogy: number_line_walk}
+  - {id: found.pat.rule_machine, area: found, level: 0, prereqs: [found.pat.what_comes_next], grammar: compose, mechanics: [machine_pipe], literacy: none, layers: [real, intuition, concrete, visual], analogy: function_machine}
+  - {id: found.lit.symbol_match, area: found, level: 0, prereqs: [found.count.cardinality], grammar: relate, mechanics: [sorter, network_routes], literacy: none, layers: [intuition, visual]}
+  - {id: found.lit.follow_one_step, area: found, level: 0, prereqs: [found.lit.symbol_match], grammar: compose, mechanics: [machine_pipe], literacy: none, layers: [intuition, visual]}
+  - {id: found.lit.short_phrase, area: found, level: 0, prereqs: [found.lit.follow_one_step], grammar: relate, mechanics: [sorter, machine_pipe], literacy: none, layers: [intuition, visual]}

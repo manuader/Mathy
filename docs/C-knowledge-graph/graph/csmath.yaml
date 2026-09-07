@@ -1,0 +1,35 @@
+# Nodos del área csmath (matemática para computación). DATA, sin texto visible: nombres en ../../locales/es/nodes/csmath.yaml.
+# Enums y reglas en ../schema/node.schema.yaml. Presupuesto D0: 12 (±20 %).
+
+area: csmath
+
+clusters:
+  bin: "bases y binario como valor posicional"
+  bool: "álgebra booleana como compuertas"
+  cplx: "complejidad: big-O como pendiente, clases P y NP"
+  rec: "recursión: caso base y llamada más chica"
+  mod: "aritmética que se enrolla; hashing como cajones"
+  crypto: "César como desplazamiento, RSA como trampilla"
+  alg: "algoritmos: máquinas de estado, búsqueda binaria, ordenamiento, BFS"
+  info: "información y entropía como sorpresa"
+  float: "punto flotante y huecos de redondeo"
+  inv: "invariantes de bucle"
+  gfx: "matrices que mueven píxeles"
+
+nodes:
+
+  - {id: csmath.bin.place_value_binary, area: csmath, level: 3, prereqs: [arith.place.base_ten_carry, arith.pow.repeated_scaling], grammar: scale, mechanics: [gears_sequence, ledger], literacy: icons, analogy: odometer_dials, misconceptions: [], cheatsheet: [cs.csmath.binary_place_value], calc_unlocks: [op_to_binary, op_from_binary]}
+  - {id: csmath.bool.logic_gates, area: csmath, level: 4, prereqs: [disc.logic.and_or_not, csmath.bin.place_value_binary], grammar: compose, mechanics: [machine_pipe, sorter], literacy: icons, analogy: machine_chain, misconceptions: [], cheatsheet: [cs.csmath.boolean_identities], calc_unlocks: [op_boolean_eval]}
+  - {id: csmath.mod.wraparound, area: csmath, level: 4, prereqs: [disc.mod.clock_equivalence, arith.int.negatives], grammar: displace, mechanics: [gears_sequence, sorter], literacy: icons, analogy: clock_face_wrap, misconceptions: [modular_negative_remainder], cheatsheet: [cs.csmath.mod_wraparound, cs.csmath.hash_buckets], calc_unlocks: [op_mod_signed, op_hash_bucket], aliases: [csmath.mod.clock_arithmetic, csmath.data.hash_buckets]}
+  - {id: csmath.crypto.caesar_shift, area: csmath, level: 4, prereqs: [csmath.mod.wraparound, prealg.inv.operation_as_key], grammar: invert, mechanics: [chest_key, gears_sequence], literacy: icons, analogy: chest_single_lock, misconceptions: [], cheatsheet: [cs.csmath.caesar_shift_undo], calc_unlocks: [op_caesar_encode, op_caesar_decode]}
+  - {id: csmath.crypto.rsa_trapdoor, area: csmath, level: 7, prereqs: [csmath.crypto.caesar_shift, disc.mod.modular_inverse, arith.mul.factor_tree], grammar: invert, mechanics: [chest_key, machine_pipe], literacy: full_text, analogy: chest_nested, misconceptions: [exponent_rules_mixed], cheatsheet: [cs.csmath.rsa_keys], calc_unlocks: [op_mod_pow, op_rsa_keypair]}
+  - {id: csmath.inv.loop_invariant, area: csmath, level: 7, prereqs: [disc.ind.domino_induction, arith.add.running_total], grammar: invariant, mechanics: [gears_sequence, fill_accumulate, machine_pipe, balance], literacy: short_text, analogy: tank_filling, misconceptions: [], cheatsheet: [cs.csmath.loop_invariant_template, cs.csmath.prefix_sum], calc_unlocks: [op_prefix_sum, op_loop_trace], aliases: [csmath.alg.loop_iteration, csmath.alg.pipeline_of_steps, csmath.alg.prefix_sum]}
+  - {id: csmath.cplx.big_o_as_slope, area: csmath, level: 6, prereqs: [alg.fn.exponential_growth, alg.fn.logarithm, csmath.inv.loop_invariant], grammar: rate, mechanics: [slope_walker], literacy: short_text, analogy: walker_on_ramp, misconceptions: [], cheatsheet: [cs.csmath.big_o_hierarchy, cs.csmath.complexity_classes], calc_unlocks: [op_big_o_compare, op_count_steps]}
+  - {id: csmath.rec.base_case_and_smaller_call, area: csmath, level: 7, prereqs: [disc.rec.tree_recursion, alg.fn.composition], grammar: compose, mechanics: [machine_pipe, network_routes], literacy: short_text, analogy: river_tributaries, misconceptions: [], cheatsheet: [cs.csmath.recursion_base_case], calc_unlocks: [op_recursion_trace]}
+  - {id: csmath.alg.state_machine, area: csmath, level: 5, prereqs: [graph.basic.graph_and_paths, alg.fn.function_as_machine], grammar: relate, mechanics: [network_routes, machine_pipe], literacy: icons, analogy: function_machine, misconceptions: [], cheatsheet: [cs.csmath.automaton_transitions], calc_unlocks: [op_automaton_run]}
+  - {id: csmath.alg.binary_search, area: csmath, level: 6, prereqs: [found.cmp.bigger_smaller, csmath.cplx.big_o_as_slope], grammar: partition, mechanics: [sorter, chest_key], literacy: short_text, analogy: zeno_half_steps, misconceptions: [], cheatsheet: [cs.csmath.binary_search_halving], calc_unlocks: [op_binary_search_trace]}
+  - {id: csmath.alg.sorting_algorithm, area: csmath, level: 6, prereqs: [found.cmp.bigger_smaller, csmath.inv.loop_invariant, csmath.cplx.big_o_as_slope], grammar: partition, mechanics: [sorter, gears_sequence], literacy: short_text, analogy: sorting_bins, misconceptions: [], cheatsheet: [cs.csmath.sorting_invariant], calc_unlocks: [op_sort_trace]}
+  - {id: csmath.alg.breadth_first_search, area: csmath, level: 7, prereqs: [graph.search.bfs_dfs_frontier, csmath.inv.loop_invariant], grammar: relate, mechanics: [network_routes, gears_sequence], literacy: short_text, analogy: city_routes, misconceptions: [], cheatsheet: [cs.csmath.bfs_queue_invariant], calc_unlocks: [op_bfs_trace]}
+  - {id: csmath.info.entropy_as_surprise, area: csmath, level: 7, prereqs: [prob.basic.probability_as_proportion, alg.fn.logarithm, csmath.bin.place_value_binary], grammar: random, mechanics: [urn_dice, ledger], literacy: short_text, analogy: urn_of_balls, misconceptions: [log_of_sum], cheatsheet: [cs.csmath.entropy_bits], calc_unlocks: [op_entropy_bits, op_sample_draws], aliases: [csmath.rand.random_sampling]}
+  - {id: csmath.float.rounding_gaps, area: csmath, level: 7, prereqs: [csmath.bin.place_value_binary, arith.frac.parts_and_ratio, precalc.lim.approach], grammar: nonlinear, mechanics: [gears_sequence, fill_accumulate], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [], cheatsheet: [cs.csmath.float_gaps_epsilon], calc_unlocks: [op_float_round, op_machine_epsilon]}
+  - {id: csmath.gfx.transform_matrix, area: csmath, level: 6, prereqs: [linalg.map.linear_transformation_2d, csmath.bin.place_value_binary], grammar: deform, mechanics: [grid_stretch], literacy: icons, analogy: rubber_grid_with_house, misconceptions: [matrix_multiplication_commutes], cheatsheet: [cs.csmath.pixel_transform_matrix], calc_unlocks: [op_transform_pixels]}

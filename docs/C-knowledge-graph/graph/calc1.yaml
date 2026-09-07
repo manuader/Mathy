@@ -1,0 +1,112 @@
+# Cálculo I. DATA, sin texto visible: nombres y probes en ../../locales/es/nodes/calc1.yaml.
+# Nivel 5. La derivada es el caminante que hace zoom en la colina (slope_walker); la integral es el
+# tanque que se llena (fill_accumulate); el teorema fundamental es el tercer regreso de la llave.
+# Espina: 26 deriv.rate_as_slope_limit · 27 deriv.rules_as_structure · 28 int.accumulation ·
+#         29 ftc.integral_undoes_derivative.
+
+area: calc1
+
+clusters:
+  lim: 0/0 se cancela; límites laterales; continuidad clasificada; epsilon-delta como tolerancia
+  deriv: secantes → tangente; reglas como estructura; cadena, producto, cociente, implícita
+  apply: pendiente cero; tasas encadenadas; movimiento; linealización; Newton
+  int: acumulación; refinar; área con signo; propiedades
+  ftc: la integral deshace la derivada; familia de antiderivadas
+
+nodes:
+
+  # ---- lim ------------------------------------------------------------------
+  - {id: calc1.lim.zero_over_zero_cancel, area: calc1, level: 5, prereqs: [precalc.lim.approach, alg.expr.factor_common, alg.fn.quadratic_and_sqrt], grammar: invariant, mechanics: [chest_key, slope_walker, tiles], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.strategy_factor_and_cancel, cs.calc1.strategy_rationalize_conjugate], calc_unlocks: [op_limit_algebraic]}
+  - {id: calc1.lim.one_sided_and_jump, area: calc1, level: 5, prereqs: [precalc.lim.continuity_unbroken_pen, precalc.fn.piecewise_machine], grammar: invariant, mechanics: [slope_walker, sorter], literacy: short_text, analogy: walker_height_trace, misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.one_sided_limits_notation, cs.calc1.limit_exists_iff_sides_agree], calc_unlocks: [op_limit_one_sided]}
+  - {id: calc1.lim.continuous_or_not, area: calc1, level: 5, prereqs: [calc1.lim.one_sided_and_jump], grammar: partition, mechanics: [sorter, slope_walker, machine_pipe], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.continuity_three_conditions, cs.calc1.discontinuity_types, cs.calc1.intermediate_value_theorem], calc_unlocks: [op_check_continuity]}
+  - {id: calc1.lim.epsilon_delta_tolerance, area: calc1, level: 5, prereqs: [calc1.lim.continuous_or_not, alg.ineq.inequality_as_region], grammar: invariant, mechanics: [grid_stretch, slope_walker, sorter], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.epsilon_delta_definition, cs.calc1.strategy_find_delta_from_epsilon], calc_unlocks: [], t_star: 60}
+
+  # ---- deriv ----------------------------------------------------------------
+  - id: calc1.deriv.rate_as_slope_limit
+    area: calc1
+    level: 5
+    spine: true
+    prereqs: [precalc.lim.approach, alg.fn.linear_slope]
+    grammar: rate
+    mechanics: [slope_walker, grid_stretch, construct]
+    literacy: short_text
+    analogy: walker_zoom_on_hill
+    misconceptions: [limit_as_reaching]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [mvcalc.deriv.partial_as_axis_slope, calc2.par.parametric_speed, adv.ode.slope_field]
+    calc_unlocks: [op_derivative_numeric, op_difference_quotient]
+    cheatsheet: [cs.calc1.derivative_definition_limit, cs.calc1.derivative_notations, cs.calc1.derivative_as_rate_units]
+    manim: [slope_scene_secants_collapse_to_tangent, grid_scene_zoom_curve_looks_straight]
+    next: calc1.deriv.tangent_line
+    doc: docs/D-curriculum/D1-espina/26-calc1.deriv.rate_as_slope_limit.md
+  - {id: calc1.deriv.tangent_line, area: calc1, level: 5, prereqs: [calc1.deriv.rate_as_slope_limit], grammar: rate, mechanics: [construct, slope_walker], literacy: short_text, analogy: walker_zoom_on_hill, misconceptions: [], cheatsheet: [cs.calc1.tangent_line_equation, cs.calc1.strategy_point_slope_from_derivative], calc_unlocks: [op_tangent_line_at_point]}
+  - id: calc1.deriv.rules_as_structure
+    area: calc1
+    level: 5
+    spine: true
+    prereqs: [calc1.deriv.rate_as_slope_limit, alg.fn.composition, alg.expr.distributive_tiles]
+    grammar: compose
+    mechanics: [machine_pipe, tiles, gears_sequence]
+    literacy: short_text
+    analogy: growing_rectangle
+    misconceptions: [chain_rule_missing_inner, derivative_of_product_as_product]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [calc2.tech.substitution_undoes_chain, mvcalc.deriv.jacobian_local_stretch, adv.ring.polynomial_arithmetic, csmath.alg.pipeline_of_steps]
+    calc_unlocks: [op_derivative_symbolic_polynomial, op_derivative_sum_constant]
+    cheatsheet: [cs.calc1.power_rule, cs.calc1.sum_and_constant_multiple_rules, cs.calc1.derivatives_of_basic_functions, cs.calc1.strategy_rewrite_before_differentiating]
+    manim: [tile_scene_growing_square_power_rule, pipe_scene_rules_as_pipeline]
+    next: calc1.deriv.chain_as_gears
+    doc: docs/D-curriculum/D1-espina/27-calc1.deriv.rules_as_structure.md
+  - {id: calc1.deriv.chain_as_gears, area: calc1, level: 5, prereqs: [calc1.deriv.rules_as_structure], grammar: compose, mechanics: [gears_sequence, machine_pipe], literacy: short_text, analogy: gear_train_ratios, misconceptions: [chain_rule_missing_inner], cheatsheet: [cs.calc1.chain_rule, cs.calc1.strategy_outer_inner_layers], calc_unlocks: [op_derivative_chain]}
+  - {id: calc1.deriv.product_as_growing_rectangle, area: calc1, level: 5, prereqs: [calc1.deriv.rules_as_structure], grammar: scale, mechanics: [tiles, machine_pipe], literacy: short_text, analogy: growing_rectangle, misconceptions: [derivative_of_product_as_product], cheatsheet: [cs.calc1.product_rule], calc_unlocks: [op_derivative_product]}
+  - {id: calc1.deriv.quotient_from_product, area: calc1, level: 5, prereqs: [calc1.deriv.product_as_growing_rectangle, calc1.deriv.chain_as_gears], grammar: compose, mechanics: [machine_pipe, tiles, chest_key], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [derivative_of_product_as_product], cheatsheet: [cs.calc1.quotient_rule, cs.calc1.strategy_quotient_as_product_with_negative_power], calc_unlocks: [op_derivative_quotient]}
+  - {id: calc1.deriv.implicit_as_constraint, area: calc1, level: 5, prereqs: [calc1.deriv.chain_as_gears, precalc.conic.slice_of_cone], grammar: compose, mechanics: [machine_pipe, construct, gears_sequence], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [chain_rule_missing_inner], cheatsheet: [cs.calc1.implicit_differentiation, cs.calc1.strategy_treat_y_as_y_of_x], calc_unlocks: [op_derivative_implicit]}
+
+  # ---- apply ----------------------------------------------------------------
+  - {id: calc1.apply.max_where_slope_zero, area: calc1, level: 5, prereqs: [calc1.deriv.tangent_line, calc1.deriv.rules_as_structure, precalc.fn.increasing_decreasing], grammar: rate, mechanics: [construct, slope_walker, tiles], literacy: short_text, analogy: walker_zoom_on_hill, misconceptions: [], cheatsheet: [cs.calc1.critical_points_derivative_zero, cs.calc1.first_second_derivative_tests, cs.calc1.strategy_optimization_steps], calc_unlocks: [op_find_critical_points], t_star: 60, aliases: [calc1.opt.inscribed_rectangle]}
+  - {id: calc1.apply.related_rates_chain, area: calc1, level: 5, prereqs: [calc1.deriv.chain_as_gears, calc1.deriv.implicit_as_constraint, geom.tri.pythagoras_as_tiles], grammar: compose, mechanics: [gears_sequence, construct, machine_pipe], literacy: full_text, analogy: gear_train_ratios, misconceptions: [chain_rule_missing_inner], cheatsheet: [cs.calc1.strategy_related_rates_steps], calc_unlocks: [], t_star: 90}
+  - {id: calc1.apply.motion_position_velocity_accel, area: calc1, level: 5, prereqs: [calc1.deriv.rules_as_structure, precalc.fn.increasing_decreasing], grammar: rate, mechanics: [slope_walker, gears_sequence], literacy: short_text, analogy: odometer_from_speed, misconceptions: [], cheatsheet: [cs.calc1.position_velocity_acceleration, cs.calc1.speed_vs_velocity_sign], calc_unlocks: [op_velocity_from_position]}
+  - {id: calc1.apply.linearization_tangent_approx, area: calc1, level: 5, prereqs: [calc1.deriv.tangent_line], grammar: rate, mechanics: [slope_walker, grid_stretch, construct], literacy: short_text, analogy: walker_zoom_on_hill, misconceptions: [], cheatsheet: [cs.calc1.linear_approximation, cs.calc1.differential_dy], calc_unlocks: [op_linear_approximation]}
+  - {id: calc1.apply.newton_tangent_root, area: calc1, level: 5, prereqs: [calc1.apply.linearization_tangent_approx, precalc.lim.approach], grammar: compose, mechanics: [gears_sequence, construct, slope_walker], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.newton_iteration_formula, cs.calc1.newton_when_it_fails], calc_unlocks: [op_newton_root]}
+
+  # ---- int ------------------------------------------------------------------
+  - id: calc1.int.accumulation
+    area: calc1
+    level: 5
+    spine: true
+    prereqs: [precalc.lim.approach, arith.mul.scaling]
+    grammar: accumulate
+    mechanics: [fill_accumulate, tiles]
+    literacy: short_text
+    analogy: tank_filling
+    misconceptions: [integral_ignores_sign]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [prob.rv.cumulative_distribution, mvcalc.int.volume_under_surface, calc2.ser.partial_sums, csmath.alg.prefix_sum]
+    calc_unlocks: [op_riemann_sum, op_integral_numeric]
+    cheatsheet: [cs.calc1.riemann_sum_notation, cs.calc1.integral_notation_meaning, cs.calc1.integral_units_rate_times_time]
+    manim: [fill_scene_rectangles_under_curve, tile_scene_riemann_refine]
+    next: calc1.int.riemann_refines_to_limit
+    doc: docs/D-curriculum/D1-espina/28-calc1.int.accumulation.md
+  - {id: calc1.int.riemann_refines_to_limit, area: calc1, level: 5, prereqs: [calc1.int.accumulation, precalc.seq.sum_as_pattern], grammar: accumulate, mechanics: [fill_accumulate, gears_sequence], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.riemann_limit_definition, cs.calc1.left_right_midpoint_trapezoid], calc_unlocks: [op_riemann_left_right_midpoint]}
+  - {id: calc1.int.signed_area_below_axis, area: calc1, level: 5, prereqs: [calc1.int.accumulation, arith.int.negatives], grammar: accumulate, mechanics: [fill_accumulate, tiles, sorter], literacy: short_text, analogy: tank_filling, misconceptions: [integral_ignores_sign], cheatsheet: [cs.calc1.signed_area_negative_below, cs.calc1.strategy_split_at_zeros_for_total_area], calc_unlocks: [op_integral_signed]}
+  - {id: calc1.int.split_and_scale_properties, area: calc1, level: 5, prereqs: [calc1.int.signed_area_below_axis], grammar: partition, mechanics: [fill_accumulate, ledger, balance], literacy: short_text, analogy: tank_filling, misconceptions: [integral_ignores_sign], cheatsheet: [cs.calc1.integral_linearity, cs.calc1.integral_split_interval_reverse_bounds], calc_unlocks: [op_integral_properties]}
+
+  # ---- ftc ------------------------------------------------------------------
+  - id: calc1.ftc.integral_undoes_derivative
+    area: calc1
+    level: 5
+    spine: true
+    prereqs: [calc1.deriv.rate_as_slope_limit, calc1.int.accumulation, prealg.inv.operation_as_key]
+    grammar: invert
+    mechanics: [chest_key, fill_accumulate, slope_walker]
+    literacy: short_text
+    analogy: odometer_from_speed
+    misconceptions: [integral_ignores_sign, wrong_inverse_choice]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [calc2.tech.substitution_undoes_chain, adv.four.inverse_transform, prob.rv.cumulative_distribution, adv.ode.euler_method]
+    calc_unlocks: [op_antiderivative_symbolic, op_definite_integral_symbolic]
+    cheatsheet: [cs.calc1.ftc_part_one_accumulation_derivative, cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a, cs.calc1.strategy_integral_is_a_key]
+    manim: [chest_scene_integral_key_opens_derivative, fill_scene_accumulation_rate_equals_height]
+    next: calc1.ftc.antiderivative_family
+    doc: docs/D-curriculum/D1-espina/29-calc1.ftc.integral_undoes_derivative.md
+  - {id: calc1.ftc.antiderivative_family, area: calc1, level: 5, prereqs: [calc1.ftc.integral_undoes_derivative, calc1.deriv.rules_as_structure], grammar: invert, mechanics: [chest_key, machine_pipe, slope_walker], literacy: short_text, analogy: machine_reverse_run, misconceptions: [wrong_inverse_choice], cheatsheet: [cs.calc1.antiderivative_table, cs.calc1.plus_c_family_of_curves, cs.calc1.strategy_guess_and_check_derivative], calc_unlocks: [op_antiderivative_table, op_initial_value_find_c]}

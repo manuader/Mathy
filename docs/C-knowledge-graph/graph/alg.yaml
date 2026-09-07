@@ -1,0 +1,267 @@
+# Knowledge graph — area `alg` (level 3: equations, inequalities, systems, polynomials and
+# factoring, functions as machines, exponentials and logarithms, radicals, rational
+# expressions, absolute value).
+# DATA only: no user-visible text. Names live in ../../locales/es/nodes/alg.yaml.
+# Enums: ../schema/node.schema.yaml. Spine order and prereqs: ../spine.yaml.
+# alg.expr.like_terms (referenced by G) lives in prealg as prealg.expr.like_terms (alias).
+
+area: alg
+
+clusters:
+  - eq      # solving: one key, several keys in order, words to equation, boxes both sides, quadratic roots
+  - ineq    # inequality as a tilted balance; solution as a shaded region
+  - sys     # two balances sharing boxes; two lines crossing; parallel or coincident lines
+  - expr    # distributive tiles, binomial product, factoring, completing the square
+  - poly    # polynomial as a ledger of coefficients by degree
+  - fn      # function as machine, graph as trace, slope, composition, inverse, quadratic, exp, log, domain, words to linear
+  - pow     # exponent rules as stacking; logarithm rules as the same stack read backwards
+  - rad     # roots as fractional exponents
+  - rat     # rational expressions: domain hole at zero denominator, cancel common factor
+  - abs     # absolute value as distance: equations with two branches
+
+nodes:
+
+  - id: alg.eq.one_step
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [prealg.eq.balance, prealg.inv.operation_as_key]
+    grammar: invariant
+    mechanics: [balance, chest_key]
+    literacy: icons
+    analogy: balance_pans
+    misconceptions: [sign_flip_on_move, wrong_inverse_choice, inverse_applied_one_side]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.map.inverse_and_systems, disc.mod.congruence_both_sides, trig.id.identity_as_balance]
+    calc_unlocks: [op_solve_linear_1var]
+    cheatsheet: [cs.alg.one_key_both_sides, cs.alg.check_by_substituting]
+    manim: [balance_key_both_sides, chest_pick_key_for_lock]
+    next: alg.eq.multi_step
+    doc: docs/D-curriculum/D1-espina/13-alg.eq.one_step.md
+
+  - id: alg.eq.multi_step
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.eq.one_step, arith.expr.precedence_tree]
+    grammar: invert
+    mechanics: [chest_key, balance, machine_pipe]
+    literacy: icons
+    analogy: chest_nested
+    misconceptions: [unwrap_order_inverted, sign_flip_on_move]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.sys.row_operations, calc2.tech.substitution_undoes_chain, adv.ode.separable_variables]
+    calc_unlocks: [op_solve_linear_multi]
+    cheatsheet: [cs.alg.unwrap_outermost_first, cs.alg.solving_steps_checklist]
+    manim: [chest_unwrap_outer_to_inner, balance_two_keys_in_order]
+    next: alg.expr.distributive_tiles
+    doc: docs/D-curriculum/D1-espina/14-alg.eq.multi_step.md
+
+  - id: alg.expr.distributive_tiles
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [arith.mul.scaling, prealg.var.unknown_as_box]
+    grammar: scale
+    mechanics: [tiles, ledger]
+    literacy: icons
+    analogy: tile_floor_two_rooms
+    misconceptions: [distribute_over_wrong_op, variable_as_label]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [calc1.deriv.rules_as_structure, geom.area.rectangle, linalg.map.linear_transformation_2d, adv.ring.polynomial_arithmetic]
+    calc_unlocks: [op_expand]
+    cheatsheet: [cs.alg.distributive_law, cs.alg.area_model_of_product]
+    manim: [tile_two_rooms_one_width, ledger_a_times_sum]
+    next: alg.sys.two_by_two
+    doc: docs/D-curriculum/D1-espina/15-alg.expr.distributive_tiles.md
+
+  - id: alg.sys.two_by_two
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.eq.multi_step, alg.expr.distributive_tiles]
+    grammar: invariant
+    mechanics: [balance, grid_stretch]
+    literacy: icons
+    analogy: two_balances_shared_boxes
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.map.inverse_and_systems, linalg.sys.row_operations, linalg.space.in_span_or_not]
+    calc_unlocks: [op_solve_system_2x2]
+    cheatsheet: [cs.alg.substitution_method, cs.alg.elimination_method]
+    manim: [balance_two_scales_shared_boxes, grid_two_lines_cross]
+    next: alg.fn.function_as_machine
+    doc: docs/D-curriculum/D1-espina/16-alg.sys.two_by_two.md
+
+  - id: alg.fn.function_as_machine
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [prealg.var.unknown_as_box, arith.expr.precedence_tree]
+    grammar: compose
+    mechanics: [machine_pipe, network_routes, sorter]
+    literacy: icons
+    analogy: function_machine
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.map.linear_transformation_2d, prob.rv.random_variable_as_machine, disc.rel.function_vs_relation, trig.fn.sine_as_height]
+    calc_unlocks: [op_define_function]
+    cheatsheet: [cs.alg.function_notation_f_of_x, cs.alg.one_input_one_output]
+    manim: [pipe_machine_named_f, network_each_input_one_arrow]
+    next: alg.fn.graph_as_picture
+    doc: docs/D-curriculum/D1-espina/17-alg.fn.function_as_machine.md
+
+  - id: alg.fn.graph_as_picture
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.fn.function_as_machine, arith.int.negatives]
+    grammar: relate
+    mechanics: [slope_walker, machine_pipe]
+    literacy: icons
+    analogy: walker_height_trace
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [precalc.lim.approach, linalg.vec.vector_as_displacement, trig.circle.unit_circle_radians, prob.rv.cumulative_distribution]
+    calc_unlocks: [op_plot_function]
+    cheatsheet: [cs.alg.point_is_input_output_pair, cs.alg.vertical_line_test]
+    manim: [slope_walker_leaves_trace, grid_four_quadrants_with_signs]
+    next: alg.fn.linear_slope
+    doc: docs/D-curriculum/D1-espina/18-alg.fn.graph_as_picture.md
+
+  - id: alg.fn.linear_slope
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.fn.graph_as_picture, arith.mul.scaling]
+    grammar: rate
+    mechanics: [slope_walker, gears_sequence, grid_stretch]
+    literacy: icons
+    analogy: walker_on_ramp
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [calc1.deriv.rate_as_slope_limit, geom.line.parallel_same_slope, prob.stat.regression_line, trig.fn.tangent_as_slope]
+    calc_unlocks: [op_slope_intercept]
+    cheatsheet: [cs.alg.slope_rise_over_run, cs.alg.y_equals_mx_plus_b, cs.alg.delta_means_change]
+    manim: [slope_same_steepness_any_step, slope_intercept_is_start_height]
+    next: alg.fn.composition
+    doc: docs/D-curriculum/D1-espina/19-alg.fn.linear_slope.md
+
+  - id: alg.fn.composition
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.fn.function_as_machine]
+    grammar: compose
+    mechanics: [machine_pipe, gears_sequence]
+    literacy: icons
+    analogy: machine_chain
+    misconceptions: [chain_rule_missing_inner]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [calc1.deriv.rules_as_structure, linalg.map.compose_as_multiply, csmath.alg.pipeline_of_steps, disc.rel.relation_as_arrows]
+    calc_unlocks: [op_compose]
+    cheatsheet: [cs.alg.compose_inner_first, cs.alg.composition_order_matters]
+    manim: [pipe_chain_two_machines, gear_train_composed_ratio]
+    next: alg.fn.inverse_function
+    doc: docs/D-curriculum/D1-espina/20-alg.fn.composition.md
+
+  - id: alg.fn.inverse_function
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.fn.composition, prealg.inv.operation_as_key, alg.fn.graph_as_picture]
+    grammar: invert
+    mechanics: [chest_key, machine_pipe, slope_walker]
+    literacy: icons
+    analogy: machine_reverse_run
+    misconceptions: [sqrt_loses_negative_branch]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [linalg.map.inverse_and_systems, trig.inv.arcsin_two_branches, calc1.ftc.integral_undoes_derivative, prob.cond.bayes_reverses_condition]
+    calc_unlocks: [op_inverse_function]
+    cheatsheet: [cs.alg.inverse_undoes_f, cs.alg.inverse_reflects_over_diagonal, cs.alg.inverse_needs_one_to_one]
+    manim: [pipe_run_machine_backwards, slope_reflect_graph_over_diagonal]
+    next: alg.fn.quadratic_and_sqrt
+    doc: docs/D-curriculum/D1-espina/21-alg.fn.inverse_function.md
+
+  - id: alg.fn.quadratic_and_sqrt
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.expr.distributive_tiles, alg.fn.inverse_function]
+    grammar: nonlinear
+    mechanics: [tiles, chest_key, grid_stretch]
+    literacy: icons
+    analogy: square_garden_side
+    misconceptions: [sqrt_loses_negative_branch, distribute_over_wrong_op]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [geom.tri.pythagoras_as_tiles, geom.area.rect_and_triangle, trig.id.pythagorean_identity, calc1.deriv.rate_as_slope_limit]
+    calc_unlocks: [op_sqrt, op_solve_quadratic]
+    cheatsheet: [cs.alg.sqrt_two_branches, cs.alg.parabola_from_square_tile]
+    manim: [tile_square_from_area, chest_one_key_two_chests]
+    next: alg.fn.exponential_growth
+    doc: docs/D-curriculum/D1-espina/22-alg.fn.quadratic_and_sqrt.md
+
+  - id: alg.fn.exponential_growth
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.fn.linear_slope, arith.frac.parts_and_ratio]
+    grammar: nonlinear
+    mechanics: [gears_sequence, slope_walker]
+    literacy: icons
+    analogy: paper_folding_doubles
+    misconceptions: [exponent_rules_mixed]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [precalc.seq.geometric_sequence, calc2.seq.geometric, prob.dist.binomial_counts, precalc.exp.natural_base]
+    calc_unlocks: [op_exp]
+    cheatsheet: [cs.alg.exponential_multiplies_each_step, cs.alg.linear_adds_exponential_multiplies, cs.alg.fractional_base_decays]
+    manim: [gear_doubling_track, slope_linear_vs_exponential_race]
+    next: alg.fn.logarithm
+    doc: docs/D-curriculum/D1-espina/23-alg.fn.exponential_growth.md
+
+  - id: alg.fn.logarithm
+    area: alg
+    level: 3
+    spine: true
+    prereqs: [alg.fn.exponential_growth, alg.fn.inverse_function]
+    grammar: invert
+    mechanics: [chest_key, gears_sequence, machine_pipe]
+    literacy: icons
+    analogy: machine_reverse_run
+    misconceptions: [log_of_sum]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [precalc.exp.natural_base, csmath.cplx.big_o_as_slope, csmath.alg.binary_search, calc1.deriv.rules_as_structure]
+    calc_unlocks: [op_log]
+    cheatsheet: [cs.alg.log_counts_scalings, cs.alg.log_undoes_exponential, cs.alg.log_of_product_is_sum]
+    manim: [chest_log_key_counts_turns, gear_track_read_backwards]
+    next: precalc.lim.approach
+    doc: docs/D-curriculum/D1-espina/24-alg.fn.logarithm.md
+
+  # ---- eq / ineq -----------------------------------------------------------------------------
+  - {id: alg.eq.word_to_equation, area: alg, level: 3, prereqs: [alg.eq.multi_step, found.lit.short_phrase], grammar: invariant, mechanics: [balance, ledger], literacy: short_text, analogy: market_two_receipts, cheatsheet: [cs.alg.words_to_symbols_table]}
+  - {id: alg.eq.variable_both_sides, area: alg, level: 3, prereqs: [alg.eq.multi_step, prealg.expr.like_terms], grammar: invariant, mechanics: [balance, ledger], literacy: icons, analogy: balance_pans, misconceptions: [sign_flip_on_move], cheatsheet: [cs.alg.collect_boxes_on_one_side]}
+  - {id: alg.eq.quadratic_roots, area: alg, level: 3, prereqs: [alg.fn.quadratic_and_sqrt, alg.expr.factor_trinomial], grammar: invert, mechanics: [chest_key, tiles], literacy: icons, analogy: square_garden_side, misconceptions: [sqrt_loses_negative_branch], cheatsheet: [cs.alg.zero_product_rule, cs.alg.quadratic_formula], calc_unlocks: [op_quadratic_formula]}
+  - {id: alg.ineq.inequality_tilts, area: alg, level: 3, prereqs: [alg.eq.one_step, prealg.ineq.compare_expressions], grammar: invariant, mechanics: [balance, sorter], literacy: icons, analogy: balance_tilted, aliases: [alg.ineq.tilted_balance], cheatsheet: [cs.alg.inequality_same_key_both_sides, cs.alg.negative_factor_flips_tilt], calc_unlocks: [op_solve_inequality]}
+  - {id: alg.ineq.inequality_as_region, area: alg, level: 3, prereqs: [alg.ineq.inequality_tilts, alg.fn.linear_slope], grammar: partition, mechanics: [sorter, slope_walker], literacy: icons, analogy: walker_height_trace, cheatsheet: [cs.alg.shade_the_half_plane], calc_unlocks: [op_plot_inequality]}
+
+  # ---- sys -----------------------------------------------------------------------------------
+  - {id: alg.sys.lines_intersect, area: alg, level: 3, prereqs: [alg.sys.two_by_two, alg.fn.linear_slope], grammar: relate, mechanics: [slope_walker, grid_stretch], literacy: icons, analogy: walker_height_trace, cheatsheet: [cs.alg.solution_is_crossing_point]}
+  - {id: alg.sys.parallel_or_same_line, area: alg, level: 3, prereqs: [alg.sys.lines_intersect], grammar: invariant, mechanics: [slope_walker, balance], literacy: icons, analogy: two_balances_shared_boxes, cheatsheet: [cs.alg.zero_or_infinite_solutions]}
+
+  # ---- expr / poly ---------------------------------------------------------------------------
+  - {id: alg.expr.binomial_product, area: alg, level: 3, prereqs: [alg.expr.distributive_tiles], grammar: scale, mechanics: [tiles], literacy: icons, analogy: tile_floor_two_rooms, misconceptions: [distribute_over_wrong_op], cheatsheet: [cs.alg.binomial_product_four_tiles, cs.alg.square_of_a_sum, cs.alg.difference_of_squares], calc_unlocks: [op_expand_binomial]}
+  - {id: alg.expr.factor_common, area: alg, level: 3, prereqs: [alg.expr.distributive_tiles], grammar: invert, mechanics: [tiles, chest_key], literacy: icons, analogy: tile_floor_two_rooms, cheatsheet: [cs.alg.factor_out_shared_side], calc_unlocks: [op_factor_common]}
+  - {id: alg.expr.factor_trinomial, area: alg, level: 3, prereqs: [alg.expr.binomial_product, alg.expr.factor_common], grammar: invert, mechanics: [tiles, chest_key], literacy: icons, analogy: tile_floor_two_rooms, cheatsheet: [cs.alg.factor_trinomial_find_pair], calc_unlocks: [op_factor]}
+  - {id: alg.expr.complete_square, area: alg, level: 3, prereqs: [alg.expr.binomial_product, alg.fn.quadratic_and_sqrt], grammar: scale, mechanics: [tiles, chest_key], literacy: icons, analogy: square_garden_side, cheatsheet: [cs.alg.complete_square_recipe, cs.alg.vertex_from_completed_square]}
+  - {id: alg.poly.coefficients_as_counts, area: alg, level: 3, prereqs: [prealg.expr.like_terms, arith.pow.repeated_scaling], grammar: partition, mechanics: [ledger, sorter], literacy: icons, analogy: fruit_ledger, cheatsheet: [cs.alg.polynomial_degree_and_terms, cs.alg.add_polynomials_by_degree], calc_unlocks: [op_poly_add]}
+
+  # ---- pow / rad / rat / abs -----------------------------------------------------------------
+  - {id: alg.pow.same_base_stack, area: alg, level: 3, prereqs: [arith.pow.repeated_scaling, prealg.expr.implicit_grouping], grammar: nonlinear, mechanics: [gears_sequence, tiles], literacy: icons, analogy: paper_folding_doubles, misconceptions: [exponent_rules_mixed], cheatsheet: [cs.alg.product_adds_exponents, cs.alg.power_multiplies_exponents, cs.alg.zero_and_negative_exponent], calc_unlocks: [op_pow_rules]}
+  - {id: alg.pow.log_rules_from_stack, area: alg, level: 3, prereqs: [alg.fn.logarithm, alg.pow.same_base_stack], grammar: invert, mechanics: [chest_key, gears_sequence], literacy: icons, analogy: paper_folding_doubles, misconceptions: [log_of_sum], cheatsheet: [cs.alg.log_rules_mirror_exponent_rules, cs.alg.change_of_base], calc_unlocks: [op_log_any_base]}
+  - {id: alg.rad.root_as_fractional_power, area: alg, level: 3, prereqs: [alg.pow.same_base_stack, alg.fn.quadratic_and_sqrt], grammar: nonlinear, mechanics: [gears_sequence, chest_key], literacy: icons, analogy: square_garden_side, cheatsheet: [cs.alg.root_is_fractional_exponent, cs.alg.simplify_radicals_by_squares], calc_unlocks: [op_nth_root]}
+  - {id: alg.rat.division_by_zero_hole, area: alg, level: 3, prereqs: [alg.fn.function_as_machine, arith.frac.multiply], grammar: scale, mechanics: [machine_pipe, tiles], literacy: icons, analogy: function_machine, cheatsheet: [cs.alg.rational_domain_excludes_zero_denominator, cs.alg.cancel_common_factor_only], calc_unlocks: [op_simplify_rational]}
+  - {id: alg.abs.distance_two_branches, area: alg, level: 3, prereqs: [alg.eq.one_step], grammar: invert, mechanics: [chest_key, gears_sequence], literacy: icons, analogy: elevator_floors, cheatsheet: [cs.alg.abs_as_distance_from_zero, cs.alg.abs_equation_two_cases], calc_unlocks: [op_abs]}
+
+  # ---- fn (non-spine) ------------------------------------------------------------------------
+  - {id: alg.fn.domain_range, area: alg, level: 3, prereqs: [alg.fn.graph_as_picture], grammar: partition, mechanics: [sorter, machine_pipe], literacy: icons, analogy: function_machine, cheatsheet: [cs.alg.domain_inputs_range_outputs]}
+  - {id: alg.fn.word_to_linear, area: alg, level: 3, prereqs: [alg.fn.linear_slope, found.lit.short_phrase], grammar: rate, mechanics: [slope_walker, ledger], literacy: short_text, analogy: taxi_fare_meter, cheatsheet: [cs.alg.start_value_plus_rate_times_steps]}

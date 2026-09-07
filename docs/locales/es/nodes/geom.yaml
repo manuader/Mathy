@@ -1,0 +1,110 @@
+# Locale fuente (es) de los nodos de geometría. Claves: nodes.<id>.{name, probes.<verbo>}.
+# `probes` solo en la espina: describe el ítem DENTRO de la mecánica, nunca opción múltiple.
+
+nodes:
+
+  geom.class.polygon_by_sides:
+    name: "Figuras por cantidad de lados"
+  geom.class.quadrilateral_hierarchy:
+    name: "Todo cuadrado es rectángulo"
+
+  geom.angle.turn_as_measure:
+    name: "El ángulo es un giro"
+    probes:
+      recognize: "Aparecen varias manivelas giradas distinta cantidad; el jugador toca la que dio un cuarto de vuelta."
+      explain: "El jugador arrastra el brazo de la manivela y elige la animación que muestra por qué media vuelta y dos cuartos de vuelta terminan en el mismo lugar."
+      manipulate: "Gira la manivela hasta que la marca coincida con la meta y la pista numerada muestre 90; luego prolonga un lado de una figura para ver cuánto falta para completar el giro."
+      apply: "Con la pista de grados a la vista, gira exactamente 135 y después el ángulo que falta para cerrar la vuelta, sin ayuda de la marca."
+      generalize: "Recibe una vuelta partida en 8 partes iguales y debe decir cuántos grados vale cada parte girando la manivela una sola vez."
+      transfer: "En el reloj, mueve la aguja de las 12 a las 4 y marca en la pista de grados el giro que hizo."
+
+  geom.angle.parallel_transversal:
+    name: "Ángulos entre paralelas se repiten"
+  geom.angle.triangle_sum_half_turn:
+    name: "Los tres ángulos hacen media vuelta"
+
+  geom.line.parallel_same_slope:
+    name: "Paralelas: misma pendiente"
+
+  geom.area.rect_and_triangle:
+    name: "Área: contar baldosas"
+    probes:
+      recognize: "Entre varios pisos de baldosas, el jugador toca el que cubre más piso sin contarlas una por una."
+      explain: "Arrastra una baldosa suelta y elige la animación que muestra por qué 3 filas de 4 son lo mismo que 4 filas de 3."
+      manipulate: "Cubre un rectángulo con baldosas y luego baja la altura de un triángulo para ver que es la mitad de un rectángulo; recorta y reacomoda las piezas."
+      apply: "Recibe un rectángulo de lados 6 y 4 sin baldosas y debe armar el número de baldosas con las fichas; luego un triángulo de base 6 y altura 4."
+      generalize: "Recibe un triángulo inclinado sin ángulo recto y debe encontrar dónde bajar la altura para que las baldosas lo cubran."
+      transfer: "Sobre la balanza de álgebra, dos rectángulos de baldosas con un lado desconocido: arma la expresión de cada uno y descubre por qué son iguales."
+
+  geom.area.perimeter_vs_area:
+    name: "El borde no es el piso"
+  geom.area.shear_invariant:
+    name: "Inclinar no cambia el área"
+  geom.area.trapezoid_as_two_triangles:
+    name: "Trapecio: una diagonal, dos triángulos"
+  geom.area.circle_by_slices:
+    name: "El círculo en rebanadas"
+  geom.area.area_by_random_darts:
+    name: "Área con dardos al azar"
+
+  geom.solid.volume_as_layers:
+    name: "Volumen: capas apiladas"
+  geom.solid.cone_sphere_by_pouring:
+    name: "Cono y esfera trasvasando"
+
+  geom.tri.congruence_rigid_fit:
+    name: "Tres datos fijan el triángulo"
+  geom.tri.inequality_shortest_path:
+    name: "El atajo es siempre más corto"
+  geom.tri.pythagoras_as_tiles:
+    name: "Pitágoras reordenando baldosas"
+    probes:
+      recognize: "Entre varios triángulos con cuadrados dibujados sobre sus lados, el jugador toca aquel donde los dos cuadrados chicos llenan exactamente el grande."
+      explain: "Arrastra las cuatro copias del triángulo dentro del cuadrado grande y elige la animación que muestra por qué el hueco que queda cambia de forma pero no de tamaño."
+      manipulate: "Reacomoda las baldosas de los dos cuadrados chicos hasta cubrir el cuadrado de la hipotenusa sin que sobre ni falte ninguna."
+      apply: "Recibe un triángulo rectángulo con catetos 5 y 12 y debe armar con fichas la longitud de la hipotenusa; luego uno con hipotenusa 10 y un cateto 6."
+      generalize: "Recibe un triángulo sin ángulo recto y decide, bajando la altura, dónde hay un triángulo rectángulo escondido para aplicar Pitágoras."
+      transfer: "En la grilla de coordenadas, une dos puntos con una flecha y arma su longitud con las fichas usando el triángulo que forma con los ejes."
+
+  geom.sim.similarity_as_scale:
+    name: "Semejante es a escala"
+    probes:
+      recognize: "Entre varias figuras estiradas de distintas maneras, el jugador toca las que son copias a escala de la original."
+      explain: "Estira la grilla de goma con dos dedos y elige la animación que muestra por qué los ángulos no cambian aunque los lados sí."
+      manipulate: "Ajusta la grilla hasta que la figura chica coincida con la grande y lee el factor de escala en la regla; luego traza una paralela a un lado de un triángulo y comprueba que recorta un triángulo semejante."
+      apply: "Recibe dos triángulos semejantes con un lado desconocido y debe armar con fichas su longitud a partir del factor de escala."
+      generalize: "Recibe una figura ampliada por 3 y debe predecir, cubriéndola con baldosas, cuántas veces creció su área."
+      transfer: "Con el palo y su sombra, arma la razón que permite calcular la altura de un árbol cuya sombra se conoce."
+
+  geom.circle.radius_and_arc:
+    name: "Radio, vuelta y arco"
+  geom.circle.inscribed_half_central:
+    name: "Ángulo inscripto: mitad del central"
+  geom.circle.radius_bisects_chord:
+    name: "El radio parte la cuerda"
+
+  geom.trans.rotation_reflection:
+    name: "Deslizar, girar y reflejar"
+  geom.trans.dilation:
+    name: "Dilatar desde un centro"
+  geom.trans.undo_transformation:
+    name: "Cada movimiento tiene deshacer"
+
+  geom.coord.distance_as_pythagoras:
+    name: "Distancia en la grilla"
+
+  geom.cons.auxiliary_lines:
+    name: "Trazar la línea que falta"
+    probes:
+      recognize: "Ante una figura compuesta con una longitud desconocida, el jugador toca el punto desde donde conviene bajar una altura."
+      explain: "Traza una línea auxiliar, la borra, y elige la animación que muestra por qué el dato descubierto sigue valiendo aunque la línea ya no esté."
+      manipulate: "Sobre un trapecio, baja la altura desde un vértice, marca el triángulo rectángulo que aparece y encadena Pitágoras para obtener la longitud escondida."
+      apply: "Recibe una figura en L y otra con un triángulo pegado a un rectángulo y debe, con una sola línea cada una, obtener su área con las fichas."
+      generalize: "Recibe una figura donde bajar la altura no alcanza y debe descubrir que prolongar un lado o trazar una diagonal revela el dato que falta."
+      transfer: "En un triángulo cualquiera, baja una altura y usa los dos triángulos rectángulos que aparecen para relacionar dos lados con los senos de sus ángulos."
+
+  geom.cons.hidden_data_hunt:
+    name: "Cazar el dato escondido"
+
+  geom.top.euler_characteristic:
+    name: "Vértices menos aristas más caras"

@@ -1,0 +1,46 @@
+# Textos en español de los nodos de calc2. Claves: nodes.<id>.name (todos) y nodes.<id>.probes.<verbo> (solo espina).
+# calc2 no tiene nodos de espina.
+
+nodes:
+  calc2.tech.substitution_undoes_chain:
+    name: Sustitución deshace la cadena
+  calc2.tech.by_parts_undoes_product:
+    name: Por partes deshace el producto
+  calc2.tech.partial_fractions_split:
+    name: Partir la fracción en piezas
+  calc2.tech.trig_substitution_as_triangle:
+    name: Sustitución trigonométrica como triángulo
+  calc2.impr.limit_of_bounded_area:
+    name: Área infinita como límite
+  calc2.int.area_between:
+    name: Área entre dos curvas
+  calc2.int.volume_by_slices:
+    name: Volumen apilando rebanadas
+  calc2.ser.partial_sums:
+    name: Sumas parciales que se acumulan
+  calc2.ser.geometric_sum:
+    name: Suma geométrica infinita
+  calc2.ser.terms_vs_sum:
+    name: Términos a cero no alcanza
+  calc2.ser.p_series_threshold:
+    name: Serie p y su umbral
+  calc2.ser.comparison_squeeze:
+    name: Comparar con una serie conocida
+  calc2.ser.alternating_cancels:
+    name: Series alternadas se cancelan
+  calc2.ser.power_series_radius:
+    name: Radio de convergencia
+  calc2.taylor.polynomial_copies_derivatives:
+    name: Polinomio que copia derivadas
+  calc2.taylor.remainder_bounds_error:
+    name: Resto de Taylor acota el error
+  calc2.parpol.parametric_speed:
+    name: Velocidad en curvas paramétricas
+  calc2.parpol.polar_area_as_sectors:
+    name: Área polar como sectores
+  calc2.parpol.solid_of_revolution:
+    name: Sólido de revolución
+  calc2.ode.rate_equation_as_rule:
+    name: Ecuación diferencial como regla
+  calc2.ode.separate_and_integrate:
+    name: Separar variables e integrar
