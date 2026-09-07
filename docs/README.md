@@ -59,4 +59,10 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 
 ## Verificación
 
-El grafo y sus referencias cruzadas se validan con un script que comprueba ids, prerequisitos, aciclicidad, orden de la espina, mecánicas por área, reglas de `literacy`, claves de locale y referencias a escenas, operaciones, entradas de cheatsheet y desafíos. Las reglas están enumeradas al final de [`node.schema.yaml`](C-knowledge-graph/schema/node.schema.yaml).
+El grafo y sus referencias cruzadas se validan con [`tools/validate.py`](../tools/validate.py), que comprueba ids, prerequisitos, aciclicidad, orden de la espina, mecánicas por área, reglas de `literacy`, claves de locale y referencias a escenas, operaciones, entradas de cheatsheet y desafíos. Las reglas están enumeradas al final de [`node.schema.yaml`](C-knowledge-graph/schema/node.schema.yaml).
+
+```
+python3 tools/validate.py --stats
+```
+
+Distingue errores de avisos y sale con código 1 solo si hay errores. Los avisos señalan lo que conviene mirar sin bloquear: prerequisitos transitivamente redundantes, escenas que no usa ningún nodo, áreas fuera del presupuesto de [D0](D-curriculum/D0-mapa.md) y secciones todavía no escritas, cuyas reglas se saltan en vez de producir una cascada. Además comprueba que todo enlace relativo de la prosa resuelva y que ningún documento fuera de [I](I-manim/I0-mapping.md) nombre una clase de ManimGL.
