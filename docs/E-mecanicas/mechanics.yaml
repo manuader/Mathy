@@ -31,6 +31,25 @@ mechanics:
       - prob.rv.expectation_as_weighted_average
       - disc.mod.clock_equivalence
       - adv.ode.separable_variables
+      - adv.opt.linear_program_corners_dual
+      - alg.eq.variable_both_sides
+      - alg.eq.word_to_equation
+      - alg.sys.parallel_or_same_line
+      - calc1.int.split_and_scale_properties
+      - calc2.ode.separate_and_integrate
+      - csmath.inv.loop_invariant
+      - found.count.zero_as_empty
+      - linalg.eig.characteristic_polynomial
+      - linalg.svd.least_squares_as_projection
+      - linalg.sys.elimination_to_echelon
+      - prealg.ineq.compare_expressions
+      - prealg.prop.order_does_not_matter
+      - prob.rv.variance_as_spread
+      - prob.stat.mean_as_leveling
+      - trig.euler.cis_as_rotation
+      - trig.id.angle_sum
+      - trig.id.pythagorean_identity
+      - trig.law.sines_from_altitude
     areas: [found, prealg, alg, trig, linalg, prob, disc, adv]
     manim_family: balance_scene
 
@@ -60,6 +79,33 @@ mechanics:
       - disc.mod.modular_inverse
       - csmath.crypto.caesar_shift
       - adv.four.inverse_transform
+      - adv.alg.cayley_graph
+      - adv.alg.field_every_nonzero_invertible
+      - adv.alg.group_as_reversible_actions
+      - adv.cplx.i_as_new_axis
+      - adv.cplx.roots_of_unity_polygon
+      - adv.ode.linear_first_order_factor
+      - adv.ode.separable_variables
+      - alg.abs.distance_two_branches
+      - alg.eq.quadratic_roots
+      - alg.expr.complete_square
+      - alg.expr.factor_common
+      - alg.expr.factor_trinomial
+      - alg.pow.log_rules_from_stack
+      - alg.rad.root_as_fractional_power
+      - calc1.deriv.quotient_from_product
+      - calc1.ftc.antiderivative_family
+      - calc1.lim.zero_over_zero_cancel
+      - calc2.ode.separate_and_integrate
+      - calc2.tech.by_parts_undoes_product
+      - calc2.tech.partial_fractions_split
+      - calc2.tech.trig_substitution_as_triangle
+      - csmath.crypto.rsa_trapdoor
+      - csmath.rec.base_case_and_smaller_call
+      - linalg.eig.characteristic_polynomial
+      - prealg.expr.implicit_grouping
+      - precalc.cplx.plane_intro
+      - prob.basic.complement_fills_the_rest
     areas: [arith, prealg, alg, geom, trig, calc1, calc2, linalg, prob, disc, csmath, adv]
     manim_family: chest_scene
 
@@ -87,6 +133,45 @@ mechanics:
       - disc.rel.relation_as_arrows
       - csmath.inv.loop_invariant
       - adv.four.transform_as_machine
+      - adv.alg.group_as_reversible_actions
+      - adv.alg.homomorphism_preserves_structure
+      - adv.cplx.function_deforms_plane
+      - adv.four.inverse_transform
+      - adv.ode.linear_first_order_factor
+      - alg.fn.domain_range
+      - alg.fn.logarithm
+      - alg.rat.division_by_zero_hole
+      - calc1.apply.related_rates_chain
+      - calc1.deriv.chain_as_gears
+      - calc1.deriv.implicit_as_constraint
+      - calc1.deriv.product_as_growing_rectangle
+      - calc1.deriv.quotient_from_product
+      - calc1.ftc.antiderivative_family
+      - calc1.lim.continuous_or_not
+      - calc2.parpol.parametric_speed
+      - csmath.alg.state_machine
+      - csmath.bool.logic_gates
+      - csmath.crypto.rsa_trapdoor
+      - csmath.rec.base_case_and_smaller_call
+      - found.lit.follow_one_step
+      - found.lit.short_phrase
+      - linalg.basis.change_of_basis_as_translation
+      - linalg.eig.diagonalize_as_change_of_view
+      - linalg.map.compose_as_multiply
+      - linalg.map.linear_transformation_3d
+      - linalg.svd.rotate_stretch_rotate
+      - mvcalc.field.arrow_at_every_point
+      - mvcalc.part.slice_of_surface
+      - prealg.expr.implicit_grouping
+      - prealg.expr.substitute_value
+      - prealg.pat.rule_from_table
+      - prealg.ratio.rate_per_unit
+      - precalc.fntr.shift_as_displace
+      - precalc.fntr.stretch_as_scale
+      - precalc.lim.continuity_unbroken_pen
+      - precalc.param.time_as_hidden_input
+      - trig.id.angle_sum
+      - trig.id.double_angle
     areas: [found, arith, prealg, alg, trig, precalc, calc1, mvcalc, linalg, prob, disc, csmath, adv]
     manim_family: pipe_scene
 
@@ -111,6 +196,44 @@ mechanics:
       - prob.stat.frequency_table
       - disc.count.sum_rule
       - adv.alg.polynomial_arithmetic
+      - alg.eq.variable_both_sides
+      - alg.eq.word_to_equation
+      - alg.fn.word_to_linear
+      - arith.add.running_total
+      - arith.dec.tenths_as_place
+      - arith.frac.add_same_denominator
+      - arith.int.add_signed
+      - arith.int.negatives
+      - arith.mul.partial_products
+      - arith.place.base_ten_carry
+      - arith.rate.per_unit
+      - calc1.int.split_and_scale_properties
+      - calc2.tech.partial_fractions_split
+      - csmath.bin.place_value_binary
+      - csmath.info.entropy_as_surprise
+      - disc.set.union_intersection
+      - disc.sum.sigma_notation
+      - found.cmp.bigger_smaller
+      - found.count.zero_as_empty
+      - graph.deg.handshake_lemma
+      - graph.path.shortest_path
+      - linalg.basis.unique_recipe
+      - linalg.map.matrix_counts_routes
+      - linalg.orth.orthonormal_makes_coordinates_easy
+      - linalg.sys.elimination_to_echelon
+      - linalg.sys.row_operations
+      - linalg.sys.solution_set_shape
+      - prealg.exp.powers_of_ten
+      - prealg.expr.substitute_value
+      - prealg.fn.input_output_table
+      - prealg.prop.order_does_not_matter
+      - prealg.ratio.scaling_recipe
+      - precalc.binom.pascal_triangle_expansion
+      - precalc.seq.sum_as_pattern
+      - prob.basic.count_outcomes_by_structure
+      - prob.dist.binomial_counts
+      - prob.rv.linear_change_of_variable
+      - prob.rv.variance_as_spread
     areas: [found, arith, prealg, alg, linalg, prob, disc, adv]
     manim_family: ledger_scene
 
@@ -129,7 +252,6 @@ mechanics:
       - alg.expr.binomial_product
       - alg.fn.quadratic_and_sqrt
       - geom.area.rect_and_triangle
-      - geom.area.rect_and_triangle
       - geom.tri.pythagoras_as_tiles
       - trig.id.pythagorean_identity
       - calc1.deriv.rules_as_structure
@@ -139,6 +261,60 @@ mechanics:
       - prob.basic.probability_as_proportion
       - prob.cond.conditional_and_independence
       - disc.count.product_rule
+      - adv.num.monte_carlo_pi
+      - adv.real.riemann_upper_lower_squeeze
+      - alg.eq.quadratic_roots
+      - alg.expr.complete_square
+      - alg.expr.factor_common
+      - alg.expr.factor_trinomial
+      - alg.pow.same_base_stack
+      - alg.rat.division_by_zero_hole
+      - arith.div.remainder
+      - arith.frac.add_same_denominator
+      - arith.frac.common_unit
+      - arith.frac.equivalent
+      - arith.frac.multiply
+      - arith.meas.unit_conversion
+      - arith.mul.partial_products
+      - arith.num.factor_tree
+      - arith.pct.percent_of_total
+      - arith.pow.repeated_scaling
+      - calc1.apply.max_where_slope_zero
+      - calc1.deriv.product_as_growing_rectangle
+      - calc1.deriv.quotient_from_product
+      - calc1.int.signed_area_below_axis
+      - calc1.lim.zero_over_zero_cancel
+      - calc2.int.area_between
+      - calc2.tech.by_parts_undoes_product
+      - disc.count.choose_as_pascal_paths
+      - geom.area.area_by_random_darts
+      - geom.area.circle_by_slices
+      - geom.area.perimeter_vs_area
+      - geom.area.shear_invariant
+      - geom.area.trapezoid_as_two_triangles
+      - geom.cons.auxiliary_lines
+      - geom.cons.hidden_data_hunt
+      - geom.sim.similarity_as_scale
+      - geom.solid.volume_as_layers
+      - geom.trans.dilation
+      - linalg.det.cofactor_by_slices
+      - linalg.det.factor_multiplies_under_composition
+      - mvcalc.fn.two_inputs_one_output
+      - mvcalc.int.change_of_variables_jacobian
+      - mvcalc.thm.divergence_flux_equals_sources
+      - mvcalc.thm.green_boundary_counts_interior
+      - prealg.pct.hundredths
+      - prealg.prop.order_does_not_matter
+      - prealg.ratio.scaling_recipe
+      - precalc.binom.pascal_triangle_expansion
+      - prob.basic.count_outcomes_by_structure
+      - prob.basic.equally_likely_or_weighted
+      - prob.basic.sample_space_grid
+      - prob.cond.bayes_reverses_condition
+      - prob.dist.binomial_counts
+      - prob.dist.density_area_is_probability
+      - trig.id.double_angle
+      - trig.law.cosines_extends_pythagoras
     areas: [arith, alg, geom, trig, calc1, mvcalc, linalg, prob, disc]
     manim_family: tile_scene
 
@@ -166,6 +342,59 @@ mechanics:
       - prob.stat.regression_line
       - csmath.cplx.big_o_as_slope
       - adv.ode.slope_field
+      - adv.cplx.plane_and_modulus
+      - adv.num.finite_difference_step
+      - adv.num.newton_tangent_iteration
+      - adv.ode.euler_method
+      - adv.ode.system_equilibrium_phase
+      - adv.opt.convex_bowl_one_minimum
+      - adv.opt.gradient_descent_downhill
+      - adv.real.cauchy_terms_huddle
+      - adv.real.epsilon_delta_challenge
+      - adv.real.function_series_uniform_limit
+      - adv.real.supremum_least_ceiling
+      - adv.real.uniform_continuity_one_delta
+      - alg.fn.inverse_function
+      - alg.fn.word_to_linear
+      - alg.ineq.inequality_as_region
+      - alg.sys.lines_intersect
+      - alg.sys.parallel_or_same_line
+      - calc1.apply.linearization_tangent_approx
+      - calc1.apply.max_where_slope_zero
+      - calc1.apply.motion_position_velocity_accel
+      - calc1.apply.newton_tangent_root
+      - calc1.ftc.antiderivative_family
+      - calc1.lim.continuous_or_not
+      - calc1.lim.epsilon_delta_tolerance
+      - calc1.lim.one_sided_and_jump
+      - calc1.lim.zero_over_zero_cancel
+      - calc2.impr.limit_of_bounded_area
+      - calc2.ode.rate_equation_as_rule
+      - calc2.taylor.polynomial_copies_derivatives
+      - found.count.number_line
+      - geom.coord.distance_as_pythagoras
+      - geom.tri.inequality_shortest_path
+      - mvcalc.jac.local_stretch
+      - mvcalc.lagr.tangent_level_curves
+      - mvcalc.line.conservative_path_independent
+      - mvcalc.line.work_along_path
+      - mvcalc.opt.hessian_curvature
+      - prealg.coord.grid_position
+      - prealg.ratio.rate_per_unit
+      - precalc.exp.natural_base
+      - precalc.fn.increasing_decreasing
+      - precalc.fn.piecewise_machine
+      - precalc.fntr.shift_as_displace
+      - precalc.lim.continuity_unbroken_pen
+      - precalc.lim.infinity_and_asymptote
+      - precalc.param.time_as_hidden_input
+      - precalc.seq.arithmetic_sequence
+      - precalc.vec.arrow_2d_intro
+      - prob.stat.correlation_vs_cause
+      - trig.fn.sine_as_height
+      - trig.fn.transform_wave
+      - trig.fn.wave_unrolls_circle
+      - trig.ratio.similar_shadows
     areas: [arith, prealg, alg, geom, trig, precalc, calc1, calc2, mvcalc, prob, csmath, adv]
     manim_family: slope_scene
 
@@ -190,6 +419,41 @@ mechanics:
       - disc.sum.sigma_notation
       - csmath.inv.loop_invariant
       - adv.ode.euler_method
+      - adv.four.projection_onto_sines
+      - adv.num.finite_difference_step
+      - adv.real.function_series_uniform_limit
+      - adv.real.riemann_upper_lower_squeeze
+      - adv.topo.compact_finite_cover
+      - calc1.int.riemann_refines_to_limit
+      - calc1.int.signed_area_below_axis
+      - calc1.int.split_and_scale_properties
+      - calc2.impr.limit_of_bounded_area
+      - calc2.int.area_between
+      - calc2.parpol.polar_area_as_sectors
+      - calc2.parpol.solid_of_revolution
+      - calc2.ser.alternating_cancels
+      - calc2.ser.comparison_squeeze
+      - calc2.ser.geometric_sum
+      - calc2.ser.p_series_threshold
+      - calc2.ser.terms_vs_sum
+      - calc2.taylor.remainder_bounds_error
+      - csmath.float.rounding_gaps
+      - geom.area.circle_by_slices
+      - geom.solid.cone_sphere_by_pouring
+      - graph.flow.max_flow_min_cut
+      - mvcalc.divrot.divergence_as_source
+      - mvcalc.int.iterated_slices
+      - mvcalc.line.work_along_path
+      - mvcalc.surf.flux_through_surface
+      - mvcalc.thm.divergence_flux_equals_sources
+      - mvcalc.thm.green_boundary_counts_interior
+      - mvcalc.thm.stokes_curl_through_surface
+      - precalc.exp.natural_base
+      - prob.dist.density_area_is_probability
+      - prob.dist.normal_bell_from_sums
+      - prob.inf.confidence_interval_net
+      - prob.samp.central_limit_bell
+      - prob.stat.mean_as_leveling
     areas: [found, arith, prealg, geom, precalc, calc1, calc2, mvcalc, prob, disc, csmath, adv]
     manim_family: fill_scene
 
@@ -221,6 +485,60 @@ mechanics:
       - prob.rv.linear_change_of_variable
       - csmath.gfx.transform_matrix
       - adv.cplx.multiplication_rotates_scales
+      - adv.cplx.euler_formula_circle
+      - adv.cplx.function_deforms_plane
+      - adv.cplx.i_as_new_axis
+      - adv.cplx.plane_and_modulus
+      - adv.cplx.roots_of_unity_polygon
+      - adv.four.projection_onto_sines
+      - adv.four.transform_as_machine
+      - adv.ode.system_equilibrium_phase
+      - adv.real.uniform_continuity_one_delta
+      - adv.topo.open_or_closed
+      - alg.fn.graph_as_picture
+      - alg.sys.lines_intersect
+      - arith.int.mul_signed
+      - calc1.apply.linearization_tangent_approx
+      - calc1.lim.epsilon_delta_tolerance
+      - geom.angle.parallel_transversal
+      - geom.angle.turn_as_measure
+      - geom.area.shear_invariant
+      - geom.coord.distance_as_pythagoras
+      - geom.sim.similarity_as_scale
+      - geom.trans.undo_transformation
+      - graph.matrix.two_step_routes_as_product
+      - linalg.basis.change_of_basis_as_translation
+      - linalg.basis.in_span_or_not
+      - linalg.basis.unique_recipe
+      - linalg.det.factor_multiplies_under_composition
+      - linalg.eig.diagonalize_as_change_of_view
+      - linalg.map.compose_as_multiply
+      - linalg.map.linear_transformation_3d
+      - linalg.orth.dot_product_as_alignment
+      - linalg.orth.projection_as_shadow
+      - linalg.svd.rotate_stretch_rotate
+      - linalg.sys.solution_set_shape
+      - linalg.vec.add_tip_to_tail
+      - linalg.vec.scale_and_reverse
+      - mvcalc.divrot.curl_as_spin
+      - mvcalc.divrot.divergence_as_source
+      - mvcalc.field.arrow_at_every_point
+      - mvcalc.grad.terrain_walker
+      - mvcalc.int.change_of_variables_jacobian
+      - prealg.int.sign_rules
+      - precalc.conic.slice_of_cone
+      - precalc.cplx.plane_intro
+      - precalc.fntr.reflect_and_symmetry
+      - precalc.fntr.shift_as_displace
+      - precalc.fntr.stretch_as_scale
+      - precalc.seq.geometric_sequence
+      - precalc.vec.arrow_2d_intro
+      - trig.circle.unit_circle_radians
+      - trig.euler.cis_as_rotation
+      - trig.fn.transform_wave
+      - trig.id.angle_sum
+      - trig.polar.point_by_angle_and_radius
+      - trig.ratio.similar_shadows
     areas: [arith, alg, geom, trig, calc1, calc2, linalg, mvcalc, prob, csmath, adv]
     manim_family: grid_scene
 
@@ -240,7 +558,6 @@ mechanics:
       - prob.cond.conditional_and_independence
       - prob.cond.markov_chain_walk
       - disc.rel.relation_as_arrows
-      - disc.rel.relation_as_arrows
       - graph.basic.graph_and_paths
       - graph.tree.tree_no_cycles
       - graph.path.shortest_path
@@ -249,6 +566,28 @@ mechanics:
       - csmath.alg.state_machine
       - csmath.alg.breadth_first_search
       - adv.alg.cayley_graph
+      - adv.alg.homomorphism_preserves_structure
+      - adv.topo.connected_one_piece
+      - adv.topo.euler_characteristic_invariant
+      - disc.count.choose_as_pascal_paths
+      - disc.logic.if_then_direction
+      - disc.proof.contradiction_no_exit
+      - disc.rec.tree_recursion
+      - disc.rel.equivalence_classes
+      - found.lit.symbol_match
+      - graph.conn.components
+      - graph.deg.handshake_lemma
+      - graph.euler.hamilton_visits_every_node
+      - graph.flow.max_flow_min_cut
+      - graph.match.bipartite_matching
+      - graph.matrix.two_step_routes_as_product
+      - graph.planar.no_crossing_euler_formula
+      - graph.search.bfs_dfs_frontier
+      - graph.walk.repeat_rules
+      - mvcalc.line.conservative_path_independent
+      - prealg.coord.grid_position
+      - precalc.binom.pascal_triangle_expansion
+      - prob.stat.correlation_vs_cause
     areas: [found, arith, alg, geom, linalg, prob, disc, graph, csmath, adv]
     manim_family: network_scene
 
@@ -267,13 +606,22 @@ mechanics:
       - prob.cond.conditional_and_independence
       - prob.rv.expectation_as_weighted_average
       - prob.rv.variance_as_spread
-      - prob.basic.probability_as_proportion
       - prob.dist.binomial_counts
       - prob.samp.sample_vs_population
       - disc.count.sum_rule
       - csmath.info.entropy_as_surprise
       - adv.num.monte_carlo_pi
-      - adv.num.monte_carlo_pi
+      - prob.basic.complement_fills_the_rest
+      - prob.basic.equally_likely_or_weighted
+      - prob.basic.sample_space_grid
+      - prob.basic.union_intersection
+      - prob.cond.markov_chain_walk
+      - prob.dist.normal_bell_from_sums
+      - prob.inf.confidence_interval_net
+      - prob.inf.hypothesis_test_surprise
+      - prob.rv.cumulative_distribution
+      - prob.rv.random_variable_as_machine
+      - prob.samp.central_limit_bell
     areas: [found, arith, geom, prob, disc, csmath, adv]
     manim_family: urn_scene
 
@@ -309,6 +657,65 @@ mechanics:
       - disc.rec.recurrence_step
       - csmath.inv.loop_invariant
       - adv.num.newton_tangent_iteration
+      - adv.alg.polynomial_arithmetic
+      - adv.cplx.euler_formula_circle
+      - adv.ode.euler_method
+      - adv.opt.gradient_descent_downhill
+      - adv.real.cauchy_terms_huddle
+      - alg.abs.distance_two_branches
+      - alg.pow.log_rules_from_stack
+      - alg.pow.same_base_stack
+      - alg.rad.root_as_fractional_power
+      - arith.dec.tenths_as_place
+      - arith.int.add_signed
+      - arith.int.mul_signed
+      - arith.meas.unit_conversion
+      - arith.num.divisible_or_not
+      - arith.place.base_ten_carry
+      - arith.pow.repeated_scaling
+      - calc1.apply.motion_position_velocity_accel
+      - calc1.apply.newton_tangent_root
+      - calc1.apply.related_rates_chain
+      - calc1.deriv.chain_as_gears
+      - calc1.deriv.implicit_as_constraint
+      - calc1.int.riemann_refines_to_limit
+      - calc2.ode.rate_equation_as_rule
+      - calc2.ser.alternating_cancels
+      - calc2.ser.geometric_sum
+      - calc2.ser.partial_sums
+      - calc2.ser.power_series_radius
+      - calc2.ser.terms_vs_sum
+      - calc2.taylor.polynomial_copies_derivatives
+      - csmath.alg.breadth_first_search
+      - csmath.alg.sorting_algorithm
+      - csmath.bin.place_value_binary
+      - csmath.crypto.caesar_shift
+      - csmath.float.rounding_gaps
+      - csmath.mod.wraparound
+      - disc.count.product_rule
+      - disc.mod.modular_inverse
+      - disc.rec.tree_recursion
+      - found.pat.repeat_unit
+      - geom.angle.triangle_sum_half_turn
+      - geom.area.perimeter_vs_area
+      - geom.circle.inscribed_half_central
+      - geom.circle.radius_and_arc
+      - geom.trans.rotation_reflection
+      - graph.search.bfs_dfs_frontier
+      - linalg.eig.diagonalize_as_change_of_view
+      - linalg.vec.add_tip_to_tail
+      - mvcalc.divrot.curl_as_spin
+      - prealg.exp.powers_of_ten
+      - prealg.int.sign_rules
+      - precalc.cplx.plane_intro
+      - precalc.exp.natural_base
+      - precalc.param.time_as_hidden_input
+      - precalc.seq.sum_as_pattern
+      - trig.circle.radian_as_arc_length
+      - trig.circle.unit_circle_radians
+      - trig.euler.cis_as_rotation
+      - trig.fn.wave_unrolls_circle
+      - trig.polar.point_by_angle_and_radius
     areas: [found, arith, prealg, alg, trig, precalc, calc1, linalg, disc, csmath, adv]
     manim_family: gear_scene
 
@@ -343,6 +750,54 @@ mechanics:
       - csmath.mod.wraparound
       - adv.alg.cosets_partition
       - adv.topo.open_or_closed
+      - adv.alg.field_every_nonzero_invertible
+      - adv.opt.convex_bowl_one_minimum
+      - adv.opt.linear_program_corners_dual
+      - adv.real.epsilon_delta_challenge
+      - adv.real.supremum_least_ceiling
+      - adv.topo.compact_finite_cover
+      - adv.topo.connected_one_piece
+      - alg.fn.domain_range
+      - alg.ineq.inequality_tilts
+      - alg.poly.coefficients_as_counts
+      - arith.num.divisible_or_not
+      - calc1.int.signed_area_below_axis
+      - calc1.lim.epsilon_delta_tolerance
+      - calc1.lim.one_sided_and_jump
+      - calc2.ser.comparison_squeeze
+      - calc2.ser.p_series_threshold
+      - calc2.ser.power_series_radius
+      - calc2.taylor.remainder_bounds_error
+      - csmath.bool.logic_gates
+      - disc.logic.if_then_direction
+      - disc.logic.quantifiers_as_search
+      - disc.mod.clock_equivalence
+      - disc.proof.counterexample_breaks_forall
+      - found.count.cardinality
+      - found.lit.short_phrase
+      - found.lit.symbol_match
+      - found.pat.repeat_unit
+      - geom.tri.congruence_rigid_fit
+      - graph.color.map_coloring
+      - graph.conn.components
+      - graph.match.bipartite_matching
+      - linalg.sys.solution_set_shape
+      - mvcalc.opt.hessian_curvature
+      - prealg.expr.like_terms
+      - prealg.ineq.compare_expressions
+      - prealg.int.sign_rules
+      - precalc.conic.slice_of_cone
+      - precalc.fn.increasing_decreasing
+      - precalc.fn.piecewise_machine
+      - precalc.lim.continuity_unbroken_pen
+      - precalc.lim.infinity_and_asymptote
+      - prob.basic.complement_fills_the_rest
+      - prob.basic.union_intersection
+      - prob.cond.bayes_reverses_condition
+      - prob.inf.hypothesis_test_surprise
+      - prob.samp.sample_vs_population
+      - trig.fn.periodic_wraps
+      - trig.inv.arcsin_two_branches
     areas: [found, arith, alg, geom, trig, precalc, calc1, linalg, prob, disc, csmath, adv]
     manim_family: sorter_scene
 
@@ -370,5 +825,57 @@ mechanics:
       - disc.ind.domino_induction
       - disc.proof.chain_of_constructions
       - adv.cplx.multiplication_rotates_scales
+      - adv.topo.euler_characteristic_invariant
+      - calc1.apply.linearization_tangent_approx
+      - calc1.apply.newton_tangent_root
+      - calc1.apply.related_rates_chain
+      - calc1.deriv.implicit_as_constraint
+      - calc1.deriv.rate_as_slope_limit
+      - calc2.int.volume_by_slices
+      - calc2.parpol.polar_area_as_sectors
+      - calc2.parpol.solid_of_revolution
+      - calc2.tech.trig_substitution_as_triangle
+      - disc.proof.contradiction_no_exit
+      - disc.proof.counterexample_breaks_forall
+      - geom.angle.parallel_transversal
+      - geom.angle.triangle_sum_half_turn
+      - geom.area.circle_by_slices
+      - geom.area.shear_invariant
+      - geom.area.trapezoid_as_two_triangles
+      - geom.circle.inscribed_half_central
+      - geom.circle.radius_and_arc
+      - geom.class.polygon_by_sides
+      - geom.class.quadrilateral_hierarchy
+      - geom.cons.hidden_data_hunt
+      - geom.coord.distance_as_pythagoras
+      - geom.line.parallel_same_slope
+      - geom.top.euler_characteristic
+      - geom.trans.rotation_reflection
+      - geom.tri.congruence_rigid_fit
+      - geom.tri.inequality_shortest_path
+      - graph.planar.no_crossing_euler_formula
+      - linalg.det.cofactor_by_slices
+      - linalg.eig.eigenvector_stays_on_line
+      - linalg.orth.dot_product_as_alignment
+      - linalg.orth.orthonormal_makes_coordinates_easy
+      - linalg.svd.least_squares_as_projection
+      - mvcalc.int.iterated_slices
+      - mvcalc.lagr.tangent_level_curves
+      - mvcalc.surf.flux_through_surface
+      - mvcalc.thm.stokes_curl_through_surface
+      - precalc.conic.slice_of_cone
+      - precalc.fntr.reflect_and_symmetry
+      - prob.stat.regression_line
+      - trig.ang.quadrant_signs
+      - trig.circle.radian_as_arc_length
+      - trig.fn.tangent_as_slope
+      - trig.fn.wave_unrolls_circle
+      - trig.id.angle_sum
+      - trig.inv.arcsin_two_branches
+      - trig.law.cosines_extends_pythagoras
+      - trig.law.sines_from_altitude
+      - trig.polar.point_by_angle_and_radius
+      - trig.ratio.similar_shadows
+      - trig.rot.rotation_matrix
     areas: [found, geom, trig, calc1, linalg, disc, adv]
     manim_family: construction_scene

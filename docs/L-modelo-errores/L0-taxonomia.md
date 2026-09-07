@@ -215,3 +215,15 @@ Cada patrón declara `literacy_min`. Cinco de los siete funcionan con `literacy:
 Las respuestas al prompt tampoco son texto. En nodos con `literacy: none` el prompt se responde manipulando (nivelar la balanza, arrastrar la pieza) o eligiendo entre animaciones, nunca entre frases. Cuando el patrón reabre la interacción, la manipulación es la respuesta. Cuando no la reabre, el ítem se reinicia y el jugador vuelve a intentar con lo que vio.
 
 Por último, el ritmo. Una explicación dura lo que dura su animación y nunca interrumpe con una pantalla modal. El jugador puede tocar para saltar el replay a partir de la segunda vez que ve la misma misconception; el evento se registra igual.
+
+## La mecánica de la explicación no siempre es la del nodo
+
+Cada misconception declara una mecánica: aquella sobre la que su explicación se ve mejor. `inverse_applied_one_side` se explica en la balanza porque ahí la igualdad se rompe a la vista; `negative_times_negative` se explica en la malla estirada porque ahí dar vuelta dos veces devuelve la orientación original.
+
+Esa mecánica no tiene por qué estar entre las que declara el nodo donde el error aparece. Un jugador puede cometer `log_of_sum` en un nodo de entropía que se juega con urnas, y la explicación correcta sigue siendo la tubería que convierte productos en sumas. La regla es:
+
+1. Si el nodo declara la mecánica de la misconception, la explicación corre ahí.
+2. Si no la declara pero el jugador ya la conoce (la mecánica aparece en algún nodo suyo en `ready`), la explicación corre igual en esa mecánica, presentada como un regreso: "esto ya lo viste con las tuberías".
+3. Si el jugador todavía no conoce esa mecánica, el patrón corre sobre la mecánica principal del nodo, conservando el mismo invariante. Es el caso de `equals_as_operator` en un nodo de nivel 1, donde la balanza aún no existe: la cadena de igualdades se muestra sobre la pista, con el mismo mensaje.
+
+El validador emite un aviso, no un error, cuando la mecánica de la misconception no está entre las del nodo. El aviso sirve para revisar que el caso 2 o el 3 estén contemplados en el archivo del minijuego, no para forzar que coincidan.

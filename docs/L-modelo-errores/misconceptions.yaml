@@ -26,7 +26,7 @@ misconceptions:
 
   - id: sign_flip_on_move
     category: sign
-    nodes: [alg.eq.one_step, alg.eq.multi_step]
+    nodes: [alg.eq.one_step, alg.eq.multi_step, alg.eq.variable_both_sides]
     detect: {from: "x + a = b", to: "x = b + a", correct: "x = b - a"}
     pattern: replay_on_mechanic
     mechanic: balance
@@ -34,7 +34,7 @@ misconceptions:
 
   - id: negative_times_negative
     category: sign
-    nodes: [arith.int.negatives, arith.mul.scaling]
+    nodes: [arith.int.negatives, arith.mul.scaling, arith.int.mul_signed]
     detect: {from: "(-a) * (-b)", to: "-(a * b)", correct: "a * b"}
     pattern: double_flip
     mechanic: slope_walker
@@ -42,7 +42,7 @@ misconceptions:
 
   - id: integral_ignores_sign
     category: sign
-    nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative]
+    nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative, adv.real.riemann_upper_lower_squeeze, calc1.int.signed_area_below_axis, calc1.int.split_and_scale_properties, calc2.int.area_between, mvcalc.int.double_integral_tank]
     detect: {from: "int[a,b] f", guard: "f < 0 on part of [a,b]", to: "int[a,b] |f|", correct: "int[a,b] f"}
     pattern: replay_on_mechanic
     mechanic: fill_accumulate
@@ -52,7 +52,7 @@ misconceptions:
 
   - id: wrong_inverse_choice
     category: wrong_inverse
-    nodes: [alg.eq.one_step, prealg.inv.operation_as_key]
+    nodes: [alg.eq.one_step, prealg.inv.operation_as_key, adv.alg.field_every_nonzero_invertible, calc1.ftc.antiderivative_family, calc1.ftc.integral_undoes_derivative, disc.mod.modular_inverse, geom.trans.undo_transformation, linalg.map.inverse_and_systems]
     detect:
       - {from: "a * x = b", to: "x = b - a", correct: "x = b / a"}
       - {from: "x / a = b", to: "x = b / a", correct: "x = b * a"}
@@ -62,7 +62,7 @@ misconceptions:
 
   - id: sqrt_loses_negative_branch
     category: wrong_inverse
-    nodes: [alg.fn.quadratic_and_sqrt, alg.fn.inverse_function]
+    nodes: [alg.fn.quadratic_and_sqrt, alg.fn.inverse_function, adv.cplx.i_as_new_axis, adv.cplx.roots_of_unity_polygon, alg.eq.quadratic_roots, linalg.eig.characteristic_polynomial, precalc.cplx.plane_intro, trig.inv.arcsin_two_branches]
     detect: {from: "x^2 = a", guard: "a > 0", to: "x = sqrt(a)", correct: "x = sqrt(a) | x = -sqrt(a)"}
     pattern: double_flip
     mechanic: chest_key
@@ -72,7 +72,7 @@ misconceptions:
 
   - id: unwrap_order_inverted
     category: precedence
-    nodes: [alg.eq.multi_step, arith.expr.precedence_tree]
+    nodes: [alg.eq.multi_step, arith.expr.precedence_tree, linalg.sys.elimination_to_echelon]
     detect: {from: "a * x + b = c", to: "x = c / a - b", correct: "x = (c - b) / a"}
     pattern: tree_unwrap
     mechanic: chest_key
@@ -90,7 +90,7 @@ misconceptions:
 
   - id: limit_as_reaching
     category: conceptual
-    nodes: [precalc.lim.approach]
+    nodes: [precalc.lim.approach, adv.real.epsilon_delta_challenge, calc1.apply.newton_tangent_root, calc1.deriv.rate_as_slope_limit, calc1.int.riemann_refines_to_limit, calc1.lim.continuous_or_not, calc1.lim.epsilon_delta_tolerance, calc1.lim.one_sided_and_jump, calc1.lim.zero_over_zero_cancel, calc2.impr.limit_of_bounded_area, calc2.ser.partial_sums, precalc.lim.continuity_unbroken_pen, precalc.lim.infinity_and_asymptote]
     detect: {from: "lim[x->a] f(x)", guard: "f(a) != L", to: ["f(a)", "undefined"], correct: "L"}
     pattern: counterexample_slider
     mechanic: slope_walker
@@ -98,7 +98,7 @@ misconceptions:
 
   - id: conditional_reversed
     category: conceptual
-    nodes: [prob.cond.conditional_and_independence]
+    nodes: [prob.cond.conditional_and_independence, prob.cond.bayes_reverses_condition, prob.inf.hypothesis_test_surprise]
     detect: {from: "P(E | F)", to: "P(F | E)", correct: "P(E | F)"}
     pattern: two_paths_diverge
     mechanic: urn_dice
@@ -106,7 +106,7 @@ misconceptions:
 
   - id: equiprobable_assumed
     category: conceptual
-    nodes: [prob.basic.probability_as_proportion, prob.rv.expectation_as_weighted_average]
+    nodes: [prob.basic.probability_as_proportion, prob.rv.expectation_as_weighted_average, adv.num.monte_carlo_pi, disc.count.sum_rule, geom.area.area_by_random_darts, prob.basic.equally_likely_or_weighted]
     detect: {from: "P(E)", guard: "outcomes not equally weighted", to: "|E| / |Omega|", correct: "sum[w in E] P(w)"}
     pattern: counterexample_slider
     mechanic: urn_dice
@@ -114,7 +114,7 @@ misconceptions:
 
   - id: series_terms_to_zero_implies_converges
     category: conceptual
-    nodes: [calc2.ser.terms_vs_sum]
+    nodes: [calc2.ser.terms_vs_sum, adv.real.function_series_uniform_limit, precalc.seq.sum_as_pattern]
     detect: {from: "sum[n] a_n", guard: "lim[n->inf] a_n = 0", to: "converges", correct: "undetermined"}
     pattern: counterexample_slider
     mechanic: fill_accumulate
@@ -122,7 +122,7 @@ misconceptions:
 
   - id: converse_assumed
     category: conceptual
-    nodes: [disc.logic.if_then_direction]
+    nodes: [disc.logic.if_then_direction, disc.proof.counterexample_breaks_forall]
     detect: {from: "p -> q", to: "q -> p", correct: "p -> q"}
     pattern: two_paths_diverge
     mechanic: sorter
@@ -138,7 +138,7 @@ misconceptions:
 
   - id: independent_means_disjoint
     category: conceptual
-    nodes: [prob.cond.conditional_and_independence]
+    nodes: [prob.cond.conditional_and_independence, prob.dist.binomial_counts]
     detect: {from: "P(E and F)", guard: "E, F independent", to: "0", correct: "P(E) * P(F)"}
     pattern: replay_on_mechanic
     mechanic: urn_dice
@@ -148,7 +148,7 @@ misconceptions:
 
   - id: inverse_applied_one_side
     category: procedural
-    nodes: [alg.eq.one_step, prealg.eq.balance]
+    nodes: [alg.eq.one_step, prealg.eq.balance, adv.ode.separable_variables, linalg.sys.row_operations]
     detect: {from: "x + a = b", to: ["x = b", "x + a = b - a"], correct: "x = b - a"}
     pattern: replay_on_mechanic
     mechanic: balance
@@ -156,7 +156,7 @@ misconceptions:
 
   - id: fraction_add_across
     category: procedural
-    nodes: [arith.frac.parts_and_ratio, arith.frac.common_unit]
+    nodes: [arith.frac.parts_and_ratio, arith.frac.common_unit, calc2.tech.partial_fractions_split]
     detect: {from: "a / b + c / d", to: "(a + c) / (b + d)", correct: "(a * d + c * b) / (b * d)"}
     pattern: missing_piece_tiles
     mechanic: tiles
@@ -164,7 +164,7 @@ misconceptions:
 
   - id: exponent_rules_mixed
     category: procedural
-    nodes: [alg.pow.same_base_stack, alg.fn.exponential_growth]
+    nodes: [alg.pow.same_base_stack, alg.fn.exponential_growth, csmath.crypto.rsa_trapdoor, precalc.exp.natural_base, precalc.seq.geometric_sequence]
     detect:
       - {from: "a^m * a^n", to: "a^(m * n)", correct: "a^(m + n)"}
       - {from: "(a^m)^n", to: "a^(m + n)", correct: "a^(m * n)"}
@@ -174,7 +174,7 @@ misconceptions:
 
   - id: chain_rule_missing_inner
     category: procedural
-    nodes: [calc1.deriv.rules_as_structure, alg.fn.composition]
+    nodes: [calc1.deriv.rules_as_structure, alg.fn.composition, calc1.apply.related_rates_chain, calc1.deriv.chain_as_gears, calc1.deriv.implicit_as_constraint, calc2.tech.substitution_undoes_chain]
     detect: {from: "d/dx[f(g(x))]", to: "f'(g(x))", correct: "f'(g(x)) * g'(x)"}
     pattern: tree_unwrap
     mechanic: gears_sequence
@@ -182,7 +182,7 @@ misconceptions:
 
   - id: area_uses_slant_side
     category: procedural
-    nodes: [geom.area.shear_invariant, geom.area.rect_and_triangle]
+    nodes: [geom.area.shear_invariant, geom.area.rect_and_triangle, geom.area.trapezoid_as_two_triangles, geom.cons.auxiliary_lines, geom.cons.hidden_data_hunt]
     detect: {from: "area(parallelogram(b, h, s))", guard: "s > h", to: "b * s", correct: "b * h"}
     pattern: missing_piece_tiles
     mechanic: tiles
@@ -200,7 +200,7 @@ misconceptions:
 
   - id: variable_as_label
     category: notation
-    nodes: [prealg.var.unknown_as_box, alg.expr.distributive_tiles]
+    nodes: [prealg.var.unknown_as_box, alg.expr.distributive_tiles, linalg.vec.span_and_combination]
     detect: {from: "a * x + b * y", to: "(a + b) * x * y", correct: "a * x + b * y"}
     pattern: replay_on_mechanic
     mechanic: ledger
@@ -218,7 +218,7 @@ misconceptions:
 
   - id: distribute_over_wrong_op
     category: invalid_property
-    nodes: [alg.expr.distributive_tiles, alg.fn.quadratic_and_sqrt]
+    nodes: [alg.expr.distributive_tiles, alg.fn.quadratic_and_sqrt, adv.alg.polynomial_arithmetic, alg.expr.binomial_product, geom.coord.distance_as_pythagoras, geom.tri.pythagoras_as_tiles, precalc.binom.pascal_triangle_expansion, trig.id.pythagorean_identity, trig.law.cosines_extends_pythagoras]
     detect:
       - {from: "(a + b)^2", to: "a^2 + b^2", correct: "a^2 + 2 * a * b + b^2"}
       - {from: "a * (b * c)", to: "(a * b) * (a * c)", correct: "a * b * c"}
@@ -228,7 +228,7 @@ misconceptions:
 
   - id: log_of_sum
     category: invalid_property
-    nodes: [alg.fn.logarithm]
+    nodes: [alg.fn.logarithm, alg.pow.log_rules_from_stack, csmath.info.entropy_as_surprise, precalc.exp.natural_base]
     detect:
       - {from: "log(a + b)", to: "log(a) + log(b)", correct: "log(a + b)"}
       - {from: "log(a * b)", to: "log(a) * log(b)", correct: "log(a) + log(b)"}
@@ -238,7 +238,7 @@ misconceptions:
 
   - id: derivative_of_product_as_product
     category: invalid_property
-    nodes: [calc1.deriv.rules_as_structure]
+    nodes: [calc1.deriv.rules_as_structure, adv.ode.linear_first_order_factor, calc1.deriv.product_as_growing_rectangle, calc1.deriv.quotient_from_product, calc2.tech.by_parts_undoes_product]
     detect: {from: "d/dx[f * g]", to: "f' * g'", correct: "f' * g + f * g'"}
     pattern: missing_piece_tiles
     mechanic: tiles
@@ -246,7 +246,7 @@ misconceptions:
 
   - id: matrix_multiplication_commutes
     category: invalid_property
-    nodes: [linalg.map.linear_transformation_2d, linalg.map.compose_as_multiply]
+    nodes: [linalg.map.linear_transformation_2d, linalg.map.compose_as_multiply, csmath.gfx.transform_matrix, graph.matrix.two_step_routes_as_product, linalg.map.inverse_and_systems]
     detect: {from: "A * B", to: "B * A", correct: "A * B"}
     pattern: two_paths_diverge
     mechanic: grid_stretch
@@ -254,7 +254,7 @@ misconceptions:
 
   - id: sin_of_sum_distributes
     category: invalid_property
-    nodes: [trig.id.angle_sum, trig.circle.unit_circle_radians]
+    nodes: [trig.id.angle_sum, trig.circle.unit_circle_radians, adv.four.projection_onto_sines, trig.id.double_angle]
     detect: {from: "sin(a + b)", to: "sin(a) + sin(b)", correct: "sin(a) * cos(b) + cos(a) * sin(b)"}
     pattern: counterexample_slider
     mechanic: machine_pipe
@@ -262,7 +262,7 @@ misconceptions:
 
   - id: modulus_of_sum_adds
     category: invalid_property
-    nodes: [adv.cplx.plane_and_modulus, linalg.vec.vector_as_displacement]
+    nodes: [adv.cplx.plane_and_modulus, linalg.vec.vector_as_displacement, linalg.vec.add_tip_to_tail, precalc.cplx.plane_intro, precalc.vec.arrow_2d_intro, trig.euler.cis_as_rotation]
     detect: {from: "|z + w|", to: "|z| + |w|", correct: "|z + w|"}
     pattern: counterexample_slider
     mechanic: slope_walker
