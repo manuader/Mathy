@@ -60,7 +60,7 @@ analogies:
 
   chest_nested:
     name: "Cofres dentro de cofres"
-    text: "Un cofre tiene adentro otro cofre, y ese otro más. Cada cerradura pide su llave. Siempre se abre primero el cofre de afuera."
+    text: "Un cofre tiene adentro otro cofre, y ese otro más. Cada cerradura pide su llave. Para armarlo se empieza por el de adentro; para abrirlo, por el de afuera."
 
   chest_single_lock:
     name: "El cofre con una cerradura"

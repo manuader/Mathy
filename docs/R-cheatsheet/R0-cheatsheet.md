@@ -8,11 +8,11 @@ Está siempre disponible, nunca se bloquea y es la misma herramienta para un chi
 seis años que empieza a contar y para un adulto que repasa cálculo en dos variables.
 
 Este documento explica qué es una entrada, cuándo se agrega, los seis tipos que existen,
-cómo se organiza y se busca, dónde aparece dentro del juego, cómo se relaciona con la
-calculadora, qué pasa en los niveles sin lectura, cómo se traduce a otros idiomas, cómo
-se escribe una entrada nueva y qué cosas la cheatsheet no hace. Los datos completos viven
-en [`cheatsheet_entries.yaml`](cheatsheet_entries.yaml); los títulos y los cuerpos
-narrables, en [`locales/es/cheatsheet.yaml`](../locales/es/cheatsheet.yaml).
+cómo se organiza y se busca, dónde aparece, cómo se relaciona con la calculadora, qué
+pasa en los niveles sin lectura, cómo se traduce y cómo se escribe una entrada nueva. Los
+datos completos viven en [`cheatsheet_entries.yaml`](cheatsheet_entries.yaml); los
+títulos y los cuerpos narrables, en
+[`locales/es/cheatsheet.yaml`](../locales/es/cheatsheet.yaml).
 
 ## 1. Qué es
 
@@ -25,10 +25,10 @@ tipo de acordeón que un estudiante llevaría a un examen, pero construido en vi
 propio recorrido del jugador, y no copiado de ningún lado.
 
 La diferencia con un glosario es que la cheatsheet no es una lista fija de temas del
-curriculum. Es un espejo exacto de la experiencia de cada jugador. Dos personas en el
-mismo nivel pueden tener cheatsheets distintas si llegaron por caminos distintos, porque
-el orden de aparición de las entradas sigue el orden en que cada quien jugó los nodos, no
-un índice prefijado por un libro.
+curriculum. Es un espejo de la experiencia de cada jugador: dos personas en el mismo
+nivel pueden tener cheatsheets distintas si llegaron por caminos distintos, porque el
+orden de aparición sigue el orden en que cada quien jugó los nodos, no un índice
+prefijado por un libro.
 
 ## 2. La regla de agregado
 
@@ -194,10 +194,10 @@ primero.
 La cheatsheet nunca se bloquea y nunca se revoca. Una vez que una entrada existe, sigue
 ahí para siempre, incluso si el nodo que la originó decae con el tiempo
 ([K](../K-evaluacion.md)). Lo único que cambia es la textura: una entrada cuyo nodo está
-`decayed` se dibuja con óxido, la misma señal visual que usa el mapa y la calculadora.
-El óxido no castiga ni esconde la información: la fórmula se sigue leyendo perfectamente
-bien. Es una invitación a repasar, no un candado. Basta con que el nodo vuelva a `ready`
-para que el óxido desaparezca de la entrada.
+`decayed` se dibuja con óxido, la misma señal visual que usa el mapa y la calculadora. El
+óxido no castiga ni esconde la información: la fórmula se sigue leyendo bien. Es una
+invitación a repasar, no un candado, y basta con que el nodo vuelva a `ready` para que
+desaparezca.
 
 ## 7. Relación con la calculadora
 
@@ -209,14 +209,12 @@ calculadora ejecuta.**
 
 La cheatsheet guarda la fórmula del área del trapecio y la estrategia de trazar la
 altura cuando falta un dato. La calculadora, en cambio, calcula el área en cuanto el
-jugador le da las medidas, sin que tenga que aplicar la fórmula a mano otra vez. Muchas
-entradas de fórmula tienen una tecla asociada en la calculadora (el campo `play_again`
-de la calculadora y el `related` de la cheatsheet pueden apuntarse mutuamente), y el
-jugador pasa de una a la otra con un toque: tocar la tecla abre la entrada que la
-explica, tocar la entrada de fórmula sugiere la tecla que la ejecuta. Pero la cheatsheet
-tiene además todo lo que ninguna tecla puede ejecutar: teoremas con su condición de
-validez, definiciones, estrategias completas. Nada de eso es una operación que se
-aprieta; es conocimiento que se consulta antes de decidir qué operación apretar.
+jugador le da las medidas, sin aplicar la fórmula a mano otra vez. Muchas entradas de
+fórmula tienen una tecla asociada, y el jugador pasa de una a la otra con un toque:
+tocar la tecla abre la entrada que la explica, tocar la entrada sugiere la tecla que la
+ejecuta. Pero la cheatsheet tiene además todo lo que ninguna tecla puede ejecutar:
+teoremas con su condición de validez, definiciones, estrategias completas. Nada de eso
+se aprieta; es conocimiento que se consulta antes de decidir qué operación usar.
 
 ## 8. Edad universal
 

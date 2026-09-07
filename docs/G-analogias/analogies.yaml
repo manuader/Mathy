@@ -242,6 +242,7 @@ analogies:
       - chest_inside_chest: subexpression
       - lock_shape: operation
       - key_shape: inverse_operation
+      - closing_inner_chest_first: precedence_order
       - opening_outer_chest_first: reverse_precedence
       - treasure: value
       - sequence_of_locks_added: composition

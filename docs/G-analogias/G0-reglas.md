@@ -301,3 +301,13 @@ Resumen: 59 analogías. Por mecánica: slope_walker 9, tiles 7, grid_stretch 7, 
 - Un nodo `adv.*` cuyo `layers` no incluye `real` ni `concrete` no puede declarar `analogy`.
 - Ningún YAML de esta carpeta contiene texto visible al usuario; las claves `analogies.<id>.name` y `analogies.<id>.text` existen en `locales/es/analogies.yaml` para todo id.
 - `assets` no contiene emojis; cada id de asset se resuelve en el catálogo de assets de [N](../N-ux-ui.md).
+
+## Nota sobre los cofres anidados y las dos direcciones
+
+`chest_nested` es la única analogía del catálogo que se lee en dos sentidos, y conviene decirlo explícitamente porque los documentos de dos nodos distintos la usan al revés uno del otro.
+
+Al **armar** la expresión, los cofres se cierran de adentro hacia afuera: primero el cofre más interno, después el que lo contiene. Ese orden es la jerarquía de operaciones, y es el que usa `arith.expr.precedence_tree` para explicar por qué los paréntesis mandan.
+
+Al **deshacer**, las llaves se aplican de afuera hacia adentro: el último cofre que se cerró es el primero que se abre. Ese orden es el inverso de la jerarquía, y es el que usa `alg.eq.multi_step` para explicar por qué una ecuación de varios pasos se desenvuelve al revés de como se armó.
+
+Las dos lecturas están en el `structure_map` como `closing_inner_chest_first` y `opening_outer_chest_first`. La analogía preserva la estructura precisamente porque las dos direcciones coexisten en el mismo objeto: el jugador que cerró los cofres en un orden entiende sin que nadie se lo diga que abrirlos exige el orden contrario. La misconception `unwrap_order_inverted` nace justamente de tomar una dirección por la otra.

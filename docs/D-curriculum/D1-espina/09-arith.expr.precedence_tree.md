@@ -46,14 +46,14 @@ Cómo se sostiene físicamente: la cerradura del cofre de afuera tiene un hueco 
 
 Primera capa jugable: `concrete`. Dos mecánicas ([E0](../../E-mecanicas/E0-catalogo.md)). `chest_key` es la principal y aporta el anidamiento; `machine_pipe` aporta que el orden importa, con su invariante de que la misma entrada por el mismo camino da siempre la misma salida. Se encuentran en un gesto: el arrastre que mete una cosa adentro de otra. Gestos: `drag` y `tap`.
 
-1. Un cofre de madera cerrado con una cerradura de forma, un llavero al lado, y el cofre se ve más grande de lo que hace falta para una gema.
-2. Demostración: una mano fantasma abre el de madera; adentro hay uno de hierro. Toma su llave, lo abre, saca la gema y la apoya en el hueco de la tapa del de madera, que se ilumina. Repite la secuencia una vez y desaparece.
+1. Un cofre de madera cerrado con una cerradura de forma y un llavero al lado. Se ve más grande de lo que hace falta para una gema.
+2. Demostración: una mano fantasma abre el de madera; adentro hay uno de hierro. Lo abre, saca la gema y la apoya en el hueco de la tapa del de madera, que se ilumina. Repite la secuencia una vez y desaparece.
 3. El jugador abre con `drag`. Si usa la llave del cofre exterior antes de que el interior haya entregado su tesoro, la llave gira en el vacío y vuelve sola. Nada se llama incorrecto: el hueco de la tapa está vacío y late.
 4. Anidar: el jugador arrastra un cofre chico adentro de uno grande, cuyas paredes se abren para recibirlo. Con tres cofres, el orden queda dibujado en el tamaño.
-5. Armar desde un árbol: aparece un árbol con líneas y nodos y el jugador construye el anidamiento que le corresponde. El árbol y los cofres laten juntos cuando coinciden.
-6. Tubería: el jugador arrastra las máquinas para cambiarlas de orden y suelta una bolita, que sale con otro tamaño según el orden.
+5. Armar desde un árbol: el jugador construye el anidamiento que corresponde a un árbol dibujado. El árbol y los cofres laten juntos cuando coinciden.
+6. Tubería: arrastrar las máquinas cambia su orden, y la bolita sale con otro tamaño.
 7. Deshacer: en el nivel de vuelta el jugador tiene el tesoro y el cofre entero cerrado. Ahora funciona la llave del cofre de afuera, y el juego no lo avisa: quien prueba con la de adentro la ve girar en el vacío otra vez, por el motivo opuesto.
-8. Cofres invisibles: una fila de fichas sin cofres dibujados, con una cerradura de multiplicar entre dos. Al tocar la fila, un cofre fantasma se dibuja alrededor de la multiplicación y se desvanece, cuantas veces el jugador quiera.
+8. Cofres invisibles: una fila de fichas sin cofres dibujados. Al tocarla, un cofre fantasma se dibuja alrededor de la multiplicación y se desvanece, cuantas veces el jugador quiera.
 
 ## 7. Representación visual
 
@@ -76,9 +76,9 @@ Cuatro morphs del mismo objeto, cada uno disparado por un gesto.
 
 Queda `2 + ( 3 × 4 )` sobre la fila de fichas, con la ficha del total apoyada, y en el nivel siguiente la misma expresión sin paréntesis.
 
-El símbolo nuevo son los paréntesis. Por la regla de oro de [H](../../H-progresion-abstraccion.md), llegan con el problema que los hizo necesario, de encargo como en los nodos 5, 6 y 8 pero con un giro: el jugador tiene que describirle a otro, que está del otro lado de una pared, cómo armar un cofre que él ya armó. Con `2`, `3`, `4`, `+` y `×` no alcanza, porque el otro arma dos cofres distintos con las mismas piezas y saca dos tesoros distintos. Los paréntesis son lo único que dice cuál, y el nivel se pasa cuando el tesoro del otro lado coincide.
+El símbolo nuevo son los paréntesis. Por la regla de oro de [H](../../H-progresion-abstraccion.md), llegan con el problema que los hizo necesario, de encargo como en los nodos 5, 6 y 8 pero con un giro: el jugador tiene que describirle a otro, del otro lado de una pared, cómo armar un cofre que él ya armó. Con `2`, `3`, `4`, `+` y `×` no alcanza, porque el otro arma dos cofres distintos con las mismas piezas y saca dos tesoros distintos. Los paréntesis dicen cuál, y el nivel se pasa cuando el tesoro del otro lado coincide.
 
-Son el primer símbolo de la espina que no nombra ni cantidad ni acción sino estructura, y por eso [M](../../M-calculadora/M0-progresion.md) lo clasifica como `structural`. La convención de no escribirlos alrededor de la multiplicación llega enseguida, con su propio problema: escribir todos los cofres llena la fila de paredes y ya no se lee. La jerarquía es un acuerdo de ahorro y el jugador lo ve nacer como ahorro. Queda saldada además la deuda del nodo 7: el número con signo se mete en un cofre y deja de resolverse por altura.
+Son el primer símbolo de la espina que no nombra ni cantidad ni acción sino estructura, y por eso [M](../../M-calculadora/M0-progresion.md) lo clasifica como `structural`. La convención de no escribirlos alrededor de la multiplicación llega enseguida, con su propio problema: escribir todos los cofres llena la fila de paredes y ya no se lee. La jerarquía es un acuerdo de ahorro y el jugador lo ve nacer como ahorro. Queda saldada además la deuda del nodo 7: el número con signo se mete en un cofre.
 
 ## 10. Definición formal
 
