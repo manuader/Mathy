@@ -67,3 +67,15 @@ Los nodos de `transfer_to`: en qué área y con qué mecánica reaparece la mism
 **Calculadora:** qué operaciones desbloquea el nodo en `ready` y cómo se presentan ([M](../../M-calculadora/M0-progresion.md)).
 
 **Edad universal:** cómo se juega este nodo sin leer si `literacy` lo permite; qué cambia para un adulto ([Q](../../Q-edad-universal.md)).
+
+---
+
+## Convenciones fijadas con el nodo de calibración (13)
+
+Estas decisiones salieron de escribir [`13-alg.eq.one_step.md`](13-alg.eq.one_step.md) y valen para los 44 archivos:
+
+1. **Mecánica principal y secundaria.** Cuando el nodo declara más de una mecánica, el archivo dice en una frase qué aporta cada una (una provee la herramienta, la otra el invariante) y en qué gesto se encuentran.
+2. **Zonas de drop en la capa simbólica.** Soltar una ficha sobre el `=` es una transformación de equivalencia a ambos lados; soltar sobre un lado es aplicar a un lado; arrastrar una ficha a través del `=` es un movimiento libre que la línea valida inclinándose. Vale para todo nodo con `balance` y se hereda en los demás con su propio invariante.
+3. **"Sin símbolos nuevos" es una respuesta válida en la sección 9.** Si los símbolos ya nacieron en nodos previos, la aportación puede ser una convención de escritura, y hay que decir qué problema la hace necesaria.
+4. **Niveles propios y mapeo explícito.** El D1 y el F numeran sus propios niveles y declaran a qué niveles de los ejemplos de [H](../../H-progresion-abstraccion.md) corresponden cuando aplica (cofres, frutas).
+5. **Convenciones transversales.** La sección 14 se describe solo con los nodos de `transfer_to` del YAML. Los generadores se nombran `gen_<objeto>` con parámetros por nombre y rangos por nivel. El `literacy` mínimo del minijuego puede ser mayor que `none` aunque la primera capa se juegue sin leer, y se justifica. Los prompts de voz se escriben en formas que sirven igual para tú y vos.

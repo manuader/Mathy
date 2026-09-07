@@ -39,14 +39,14 @@ Dos analogías visten el nodo, una por capacidad ([G0](../../G-analogias/G0-regl
 
 `chest_single_lock` (mecánica `chest_key`) aporta las llaves: forma de la cerradura → operación; forma de la llave → inversa; llave que no gira → no inversa; cofre abierto → identidad alcanzada; llavero → conjunto de inversas. Ruptura: `two_branches_of_sqrt`, lejos de este nodo.
 
-Cómo conviven: la caja está unida a sus pesas por un broche con forma de cerradura; la llave abre el broche, pero abrirlo de un solo lado inclina la balanza. El cofre plantea "qué llave"; la balanza, "en cuántos platos". "La ecuación es un acertijo" se descartó porque no tiene acciones que conserven la igualdad.
+Cómo conviven: la caja está unida a sus pesas por un broche con forma de cerradura; la llave abre el broche, pero abrirlo de un solo lado inclina la balanza. El cofre plantea "qué llave"; la balanza, "en cuántos platos".
 
 ## 6. Mecánica de juego
 
 Primera capa jugable: `concrete`. La balanza es la mecánica principal y las llaves de `chest_key`, la herramienta ([E0](../../E-mecanicas/E0-catalogo.md)). Gestos: `drag` y `tap`.
 
 1. Balanza nivelada. Plato izquierdo: una caja cerrada y cinco pesas unidas por un broche con forma de cerradura de sumar; plato derecho: doce pesas sueltas; abajo, un llavero con dos llaves.
-2. Demostración: una mano fantasma toma la llave con forma de restar, la pasa sobre el plato izquierdo (el broche se abre, cinco pesas se elevan), sigue sin soltar hasta el derecho y suelta. La barra no se movió; la caja se abre y muestra siete. La escena vuelve al inicio y el llavero late.
+2. Demostración: una mano fantasma toma la llave con forma de restar, la pasa sobre el plato izquierdo (el broche se abre, cinco pesas se elevan), sigue sin soltar hasta el derecho y suelta. La barra no se movió; la caja se abre y muestra siete.
 3. El jugador arrastra una llave. Mientras pasa por un plato, la acción ocurre ahí y la balanza responde con inercia. Si suelta tras un solo plato, la barra queda inclinada y la caja no cede. El estado no se borra: pasa la llave por el otro plato y la barra se nivela.
 4. Llave equivocada: llega al broche, gira un cuarto de vuelta y se traba. Nada cambia.
 5. Éxito: la caja se abre sola cuando queda sin compañía en un plato nivelado. Sin cartel.
@@ -93,7 +93,6 @@ Ya jugado: las tres frases enteras, en la capa concreta. Nuevo: la palabra "solu
 - **La igualdad se conserva bajo la misma acción en ambos lados.** Si `a = b`, entonces `a + c = b + c`, `a · c = b · c` y `a / c = b / c` con `c ≠ 0`. Ligada a la barra que no se mueve cuando la llave pasa por los dos platos.
 - **La inversa devuelve lo original.** `(x + 5) − 5 = x`; `(3x) / 3 = x`. Es `f⁻¹(f(x)) = x`, dicho con el diagrama vertical y sin ese nombre: `f⁻¹` llega en el nodo 21. Ligada a la flecha que sube y deja la caja sola.
 - **Las transformaciones de equivalencia son reversibles.** De `x = 7` se vuelve a `x + 5 = 12` con la llave `+5`. Ligada a volver a poner las pesas en la caja.
-- **Las dos primeras juntas son el procedimiento.** "Despejar" es el nombre de esa combinación.
 
 ## 12. Ejercicios como minijuegos
 
@@ -109,7 +108,7 @@ Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 Misconceptions esperadas y su patrón ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
 - **`inverse_applied_one_side`** (`replay_on_mechanic` sobre la balanza). El jugador suelta la llave tras un solo plato, o en notación pasa de `x + 5 = 12` a `x = 12`. El juego congela y repite el gesto en cámara lenta: cinco pesas salen del plato izquierdo, ese plato sube, el derecho baja, y un halo marca el plato no tocado. Voz: "Sacaste 5 de un solo plato. ¿Qué le falta al otro?". La balanza sigue inclinada y el jugador la nivela desde ahí.
-- **`wrong_inverse_choice`** (`key_mismatch` sobre el cofre). Frente a `3x = 12` el jugador elige `−3`. El juego muestra la forma de la cerradura `×3`, acerca la llave, la hace trabarse y revela la silueta hueca de la que sí entra, sin nombrarla. Voz: "Esa llave no abre este cofre. ¿Qué deshace multiplicar por 3?". En `symbolic`, aplicar `−3` a los dos lados da `3x − 3 = 9`, válido pero no más simple: empujón suave, sin patrón.
+- **`wrong_inverse_choice`** (`key_mismatch` sobre el cofre). Frente a `3x = 12` el jugador elige `−3`. El juego muestra la forma de la cerradura `×3`, acerca la llave, la hace trabarse y revela la silueta hueca de la que sí entra, sin nombrarla. Voz: "Esa llave no abre este cofre. ¿Qué deshace multiplicar por 3?". En `symbolic`, aplicar `−3` a los dos lados es válido pero no simplifica: empujón suave, sin patrón.
 - **`sign_flip_on_move`** (`replay_on_mechanic` sobre la balanza). En la línea simbólica el jugador arrastra la ficha `+5` al otro lado del igual sin cambiarla: `x = 17`. La línea se inclina. El replay reconstruye la balanza y muestra qué hizo de verdad: cinco pesas salieron de un plato y entraron en el otro, dos acciones distintas. Voz: "Sacaste 5 de un plato y los pusiste en el otro. ¿Pesan lo mismo?". El jugador nivela desde el estado real.
 
 ## 13. Generalización
@@ -130,7 +129,7 @@ Los tres nodos de `transfer_to`, en otra área y con una mecánica que no se us�
 - `disc.mod.clock_equivalence` (`gears_sequence`): dos engranajes de doce dientes marcan la misma hora; girar los dos hacia atrás lo mismo conserva la coincidencia y deshace el giro desconocido.
 - `trig.id.double_angle` (`machine_pipe`): una identidad como tubería con salida conocida; correrla al revés aísla un factor.
 
-La llave sola vuelve además en `csmath.crypto.caesar_shift` (descifrar es girar el alfabeto al revés) y `geom.trans.undo_transformation`; esos ítems los evalúa el nodo 12, de cuyo `transfer_to` forman parte.
+La llave sola vuelve además en `csmath.crypto.caesar_shift` (descifrar es girar el alfabeto al revés) y `geom.trans.undo_transformation`, evaluados desde el nodo 12.
 
 Concepto siguiente: `alg.eq.multi_step` ([14](14-alg.eq.multi_step.md)). Frase puente, narrada sobre la última balanza: "Esta caja tenía una sola cerradura. La próxima viene guardada dentro de otro cofre. ¿Cuál se abre primero?". El cofre exterior se cierra sobre el recién abierto y el nodo 14 empieza ahí.
 
