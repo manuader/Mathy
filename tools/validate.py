@@ -686,6 +686,63 @@ def check_markdown_links(rep: Report) -> None:
                     rep.error("enlaces", f"{rel(path)}:{lineno}: enlace roto → {target}")
 
 
+def check_prose_ids(nodes, aliases, catalogs, rep: Report) -> None:
+    """Todo id citado entre comillas invertidas en la prosa resuelve, y no es un alias.
+
+    Un alias resuelve en el validador pero no es el nombre vigente: citarlo en la
+    prosa deja el documento apuntando a un id que puede desaparecer.
+    """
+    namespaces = [
+        (re.compile(r"`(op_[a-z0-9_]+)`"), "calc_ops", "operación de calculadora"),
+        (re.compile(r"`(cs\.[a-z0-9_]+\.[a-z0-9_]+)`"), "cheatsheet", "entrada de cheatsheet"),
+        (re.compile(r"`(ch\.[a-z0-9_]+\.[a-z0-9_]+)`"), "challenges", "desafío"),
+    ]
+
+    # aliases declarados por los catálogos que los admiten
+    catalog_aliases: dict[str, dict[str, str]] = {}
+    for name, relpath, key in [
+        ("calc_ops", "M-calculadora/calculator_ops.yaml", "ops"),
+        ("challenges", "S-desafios/challenges.yaml", "challenges"),
+    ]:
+        doc = load(DOCS / relpath, rep)
+        mapping: dict[str, str] = {}
+        for record in (doc or {}).get(key) or []:
+            for alias in as_list(record.get("aliases")):
+                mapping[alias] = record["id"]
+        catalog_aliases[name] = mapping
+
+    node_ref = re.compile(r"`([a-z0-9]+\.[a-z0-9]{2,6}\.[a-z0-9_]+)`")
+
+    for path in sorted(DOCS.rglob("*.md")):
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            where = f"{rel(path)}:{lineno}"
+
+            for pattern, catalog, label in namespaces:
+                known = catalogs.get(catalog)
+                if known is None:
+                    continue
+                for ref in pattern.findall(line):
+                    if ref in known:
+                        continue
+                    canonical = catalog_aliases.get(catalog, {}).get(ref)
+                    if canonical:
+                        rep.error(
+                            "prosa-ids",
+                            f"{where}: cita el alias `{ref}`; el id vigente es `{canonical}`",
+                        )
+                    else:
+                        rep.error("prosa-ids", f"{where}: {label} `{ref}` no existe")
+
+            for ref in node_ref.findall(line):
+                if ref in nodes:
+                    continue
+                if ref in aliases:
+                    rep.error(
+                        "prosa-ids",
+                        f"{where}: cita el alias `{ref}`; el id vigente es `{aliases[ref]}`",
+                    )
+
+
 def check_prose_hygiene(rep: Report) -> None:
     """Sin nombres de ManimGL fuera de I y de O.
 
@@ -781,6 +838,7 @@ def main() -> int:
     check_locales(nodes, spine, catalogs, rep)
     check_budget(nodes, budget, rep)
     check_markdown_links(rep)
+    check_prose_ids(nodes, aliases, catalogs, rep)
     check_prose_hygiene(rep)
 
     if args.stats:
