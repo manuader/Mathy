@@ -71,7 +71,7 @@ nodes:
     transfer_to: [calc1.deriv.rules_as_structure, geom.area.rect_and_triangle, linalg.map.linear_transformation_2d, adv.alg.polynomial_arithmetic]
     calc_unlocks: [op_expand]
     cheatsheet: [cs.alg.distributive_law, cs.alg.area_model_of_product]
-    manim: [tile_two_rooms_one_width, ledger_a_times_sum]
+    manim: [tile_two_rooms_one_width, ledger_a_times_sum, ledger_morph_fruit_to_symbol]
     next: alg.sys.two_by_two
     doc: docs/D-curriculum/D1-espina/15-alg.expr.distributive_tiles.md
 
@@ -143,7 +143,7 @@ nodes:
     transfer_to: [calc1.deriv.rate_as_slope_limit, geom.line.parallel_same_slope, prob.stat.regression_line, trig.fn.tangent_as_slope]
     calc_unlocks: [op_slope]
     cheatsheet: [cs.alg.slope_rise_over_run, cs.alg.y_equals_mx_plus_b, cs.alg.delta_means_change]
-    manim: [slope_same_steepness_any_step, slope_intercept_is_start_height]
+    manim: [slope_same_steepness_any_step, slope_intercept_is_start_height, slope_scene_hill_intro]
     next: alg.fn.composition
     doc: docs/D-curriculum/D1-espina/19-alg.fn.linear_slope.md
 

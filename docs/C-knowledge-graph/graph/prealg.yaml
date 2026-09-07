@@ -37,7 +37,7 @@ nodes:
     transfer_to: [alg.fn.function_as_machine, alg.expr.distributive_tiles, prob.rv.random_variable_as_machine, linalg.map.inverse_and_systems]
     calc_unlocks: [op_variable]
     cheatsheet: [cs.prealg.letter_names_the_box, cs.prealg.coefficient_counts_boxes]
-    manim: [ledger_box_hides_tokens, chest_box_as_tree_leaf]
+    manim: [ledger_box_hides_tokens, chest_box_as_tree_leaf, ledger_morph_fruit_to_symbol]
     next: prealg.eq.balance
     doc: docs/D-curriculum/D1-espina/10-prealg.var.unknown_as_box.md
 
@@ -73,7 +73,7 @@ nodes:
     transfer_to: [alg.fn.inverse_function, calc1.ftc.integral_undoes_derivative, linalg.map.inverse_and_systems, geom.trans.undo_transformation]
     calc_unlocks: [op_inverse_op]
     cheatsheet: [cs.prealg.every_operation_has_a_key, cs.prealg.inverse_pairs_table]
-    manim: [chest_key_matches_lock, chest_wrong_key_stays_shut]
+    manim: [chest_key_matches_lock, chest_wrong_key_stays_shut, chest_scene_key_intro]
     next: alg.eq.one_step
     doc: docs/D-curriculum/D1-espina/12-prealg.inv.operation_as_key.md
 

@@ -56,7 +56,7 @@ nodes:
     transfer_to: [geom.trans.undo_transformation, linalg.vec.vector_as_displacement, calc1.ftc.integral_undoes_derivative]
     calc_unlocks: [op_sub]
     cheatsheet: [cs.arith.sub_undoes_add, cs.arith.sub_as_distance_between]
-    manim: [chest_step_back_undoes_step, gear_walk_back_same_count]
+    manim: [chest_step_back_undoes_step, gear_walk_back_same_count, chest_scene_key_intro]
     next: arith.mul.scaling
     doc: docs/D-curriculum/D1-espina/04-arith.sub.undo_add.md
 

@@ -36,7 +36,7 @@ nodes:
     transfer_to: [mvcalc.part.slice_of_surface, calc2.parpol.parametric_speed, adv.ode.slope_field]
     calc_unlocks: [op_derivative]
     cheatsheet: [cs.calc1.derivative_definition_limit, cs.calc1.derivative_notations, cs.calc1.derivative_as_rate_units]
-    manim: [slope_scene_secants_collapse_to_tangent, grid_scene_zoom_curve_looks_straight]
+    manim: [slope_scene_secants_collapse_to_tangent, grid_scene_zoom_curve_looks_straight, slope_scene_hill_intro]
     next: calc1.deriv.tangent_line
     doc: docs/D-curriculum/D1-espina/26-calc1.deriv.rate_as_slope_limit.md
   - {id: calc1.deriv.tangent_line, area: calc1, level: 5, prereqs: [calc1.deriv.rate_as_slope_limit], grammar: rate, mechanics: [construct, slope_walker], literacy: short_text, analogy: walker_zoom_on_hill, misconceptions: [], cheatsheet: [cs.calc1.tangent_line_equation, cs.calc1.strategy_point_slope_from_derivative], calc_unlocks: [op_tangent_line]}
@@ -84,7 +84,7 @@ nodes:
     transfer_to: [prob.rv.cumulative_distribution, mvcalc.int.double_integral_tank, calc2.ser.partial_sums, csmath.inv.loop_invariant]
     calc_unlocks: [op_integral]
     cheatsheet: [cs.calc1.riemann_sum_notation, cs.calc1.integral_notation_meaning, cs.calc1.integral_units_rate_times_time]
-    manim: [fill_scene_rectangles_under_curve, tile_scene_riemann_refine]
+    manim: [fill_scene_rectangles_under_curve, tile_scene_riemann_refine, fill_scene_tank_intro]
     next: calc1.int.riemann_refines_to_limit
     doc: docs/D-curriculum/D1-espina/28-calc1.int.accumulation.md
   - {id: calc1.int.riemann_refines_to_limit, area: calc1, level: 5, prereqs: [calc1.int.accumulation, precalc.seq.sum_as_pattern], grammar: accumulate, mechanics: [fill_accumulate, gears_sequence], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [limit_as_reaching], cheatsheet: [cs.calc1.riemann_limit_definition, cs.calc1.left_right_midpoint_trapezoid], calc_unlocks: [op_integral]}
@@ -106,7 +106,7 @@ nodes:
     transfer_to: [calc2.tech.substitution_undoes_chain, adv.four.inverse_transform, prob.rv.cumulative_distribution, adv.ode.euler_method]
     calc_unlocks: [op_antiderivative]
     cheatsheet: [cs.calc1.ftc_part_one_accumulation_derivative, cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a, cs.calc1.strategy_integral_is_a_key]
-    manim: [chest_scene_integral_key_opens_derivative, fill_scene_accumulation_rate_equals_height]
+    manim: [chest_scene_integral_key_opens_derivative, fill_scene_accumulation_rate_equals_height, fill_scene_tank_intro]
     next: calc1.ftc.antiderivative_family
     doc: docs/D-curriculum/D1-espina/29-calc1.ftc.integral_undoes_derivative.md
   - {id: calc1.ftc.antiderivative_family, area: calc1, level: 5, prereqs: [calc1.ftc.integral_undoes_derivative, calc1.deriv.rules_as_structure], grammar: invert, mechanics: [chest_key, machine_pipe, slope_walker], literacy: short_text, analogy: machine_reverse_run, misconceptions: [wrong_inverse_choice], cheatsheet: [cs.calc1.antiderivative_table, cs.calc1.plus_c_family_of_curves, cs.calc1.strategy_guess_and_check_derivative], calc_unlocks: [op_antiderivative]}

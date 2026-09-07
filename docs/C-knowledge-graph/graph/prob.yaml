@@ -34,7 +34,7 @@ nodes:
     calc_unlocks: [op_probability]
     cheatsheet: [cs.prob.probability_as_fraction, cs.prob.probability_between_0_and_1, cs.prob.long_run_proportion]
     t_star: 20
-    manim: [urn_scene_draw_and_tally, urn_scene_fraction_of_total]
+    manim: [urn_scene_draw_and_tally, urn_scene_fraction_of_total, urn_scene_frequency_bar_stabilizes]
     next: prob.basic.sample_space_grid
     doc: docs/D-curriculum/D1-espina/34-prob.basic.probability_as_proportion.md
     aliases: [prob.lln.long_run_proportion]
@@ -87,7 +87,7 @@ nodes:
     calc_unlocks: [op_expected_value]
     cheatsheet: [cs.prob.expected_value_formula, cs.prob.linearity_of_expectation]
     t_star: 40
-    manim: [ledger_scene_prize_ledger, balance_scene_plank_with_weights]
+    manim: [ledger_scene_prize_ledger, balance_scene_plank_with_weights, urn_scene_frequency_bar_stabilizes]
     next: prob.rv.variance_as_spread
     doc: docs/D-curriculum/D1-espina/36-prob.rv.expectation_as_weighted_average.md
 

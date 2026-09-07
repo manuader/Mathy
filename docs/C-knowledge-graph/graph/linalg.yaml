@@ -76,7 +76,7 @@ nodes:
     calc_unlocks: [op_matrix_vector]
     cheatsheet: [cs.linalg.matrix_columns_are_basis_images, cs.linalg.matrix_vector_product, cs.linalg.rotation_shear_reflection_matrices]
     t_star: 45
-    manim: [grid_scene_rubber_sheet_house, grid_scene_basis_arrows_land, pipe_scene_vector_in_vector_out]
+    manim: [grid_scene_rubber_sheet_house, grid_scene_basis_arrows_land, pipe_scene_vector_in_vector_out, grid_scene_sheet_intro]
     next: linalg.map.inverse_and_systems
     doc: docs/D-curriculum/D1-espina/32-linalg.map.linear_transformation_2d.md
     aliases: [linalg.mat.matrix_columns]
@@ -100,7 +100,7 @@ nodes:
     calc_unlocks: [op_matrix_inverse, op_solve_system]
     cheatsheet: [cs.linalg.inverse_2x2, cs.linalg.solve_ax_equals_b, cs.linalg.singular_no_inverse]
     t_star: 45
-    manim: [grid_scene_undo_stretch, chest_scene_matrix_as_key, balance_scene_two_equations_one_grid]
+    manim: [grid_scene_undo_stretch, chest_scene_matrix_as_key, balance_scene_two_equations_one_grid, grid_scene_sheet_intro]
     next: linalg.sys.row_operations
     doc: docs/D-curriculum/D1-espina/33-linalg.map.inverse_and_systems.md
 
