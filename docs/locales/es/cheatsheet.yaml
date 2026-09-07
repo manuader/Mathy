@@ -1,0 +1,2298 @@
+# Cheatsheet incremental — locale es. Titulos (<=8 palabras) y cuerpos
+# narrables (1 a 3 frases) de cada entrada canonica, y nombres de temas.
+# Los ids y la estructura viven en ../../R-cheatsheet/cheatsheet_entries.yaml.
+# Formulas: notacion abstracta vestida por MathLocale (ver ../../P-internacionalizacion.md).
+topics:
+  topic.numbers:
+    name: Números
+  topic.numbers.operations:
+    name: Las cuatro operaciones
+  topic.numbers.fractions:
+    name: Fracciones
+  topic.numbers.decimals:
+    name: Decimales
+  topic.numbers.percent:
+    name: Porcentaje
+  topic.numbers.ratio:
+    name: Razón y proporción
+  topic.numbers.integers:
+    name: Números enteros
+  topic.numbers.powers:
+    name: Potencias y raíces
+  topic.numbers.primes:
+    name: Primos y divisibilidad
+  topic.numbers.order_of_operations:
+    name: Orden de las operaciones
+  topic.numbers.units:
+    name: Unidades y conversiones
+  topic.equations:
+    name: Ecuaciones
+  topic.equations.linear:
+    name: Ecuaciones lineales
+  topic.equations.quadratic:
+    name: Ecuaciones cuadráticas
+  topic.equations.systems:
+    name: Sistemas de ecuaciones
+  topic.equations.inequalities:
+    name: Inecuaciones
+  topic.functions:
+    name: Funciones
+  topic.functions.intro:
+    name: Qué es una función
+  topic.functions.linear:
+    name: Funciones lineales
+  topic.functions.quadratic:
+    name: Funciones cuadráticas
+  topic.functions.composition_inverse:
+    name: Composición e inversa
+  topic.functions.exponential_log:
+    name: Exponencial y logaritmo
+  topic.functions.piecewise_absolute:
+    name: Valor absoluto y funciones partidas
+  topic.functions.transformations:
+    name: Transformar gráficas
+  topic.functions.sequences:
+    name: Sucesiones y sumas
+  topic.functions.parametric:
+    name: Funciones paramétricas
+  topic.algebra:
+    name: Álgebra
+  topic.algebra.expressions:
+    name: Expresiones algebraicas
+  topic.algebra.polynomials:
+    name: Polinomios
+  topic.geometry:
+    name: Geometría
+  topic.geometry.angles:
+    name: Ángulos
+  topic.geometry.triangles:
+    name: Triángulos
+  topic.geometry.area:
+    name: Área, perímetro y volumen
+  topic.geometry.circles:
+    name: Círculos
+  topic.geometry.solids:
+    name: Sólidos
+  topic.geometry.similarity:
+    name: Semejanza
+  topic.geometry.transformations:
+    name: Transformaciones geométricas
+  topic.geometry.coordinate:
+    name: Geometría analítica
+  topic.geometry.constructions:
+    name: Construcciones auxiliares
+  topic.geometry.conics:
+    name: Secciones cónicas
+  topic.geometry.classification:
+    name: Clasificación de figuras
+  topic.trig:
+    name: Trigonometría
+  topic.trig.ratios:
+    name: Razones trigonométricas
+  topic.trig.unit_circle:
+    name: Círculo unitario y radianes
+  topic.trig.angles_quadrants:
+    name: Ángulos y cuadrantes
+  topic.trig.functions:
+    name: Funciones trigonométricas
+  topic.trig.identities:
+    name: Identidades trigonométricas
+  topic.trig.inverse:
+    name: Funciones trigonométricas inversas
+  topic.trig.laws:
+    name: Leyes del seno y del coseno
+  topic.trig.polar:
+    name: Coordenadas polares
+  topic.trig.rotation:
+    name: Matrices de rotación
+  topic.complex_numbers:
+    name: Números complejos
+  topic.complex_numbers.intro:
+    name: Qué es un número complejo
+  topic.complex_numbers.algebra:
+    name: Operar con complejos
+  topic.complex_numbers.polar_and_powers:
+    name: Forma polar y potencias
+  topic.complex_numbers.functions:
+    name: Funciones complejas
+  topic.calculus:
+    name: Cálculo
+  topic.calculus.limits:
+    name: Límites y continuidad
+  topic.calculus.derivative:
+    name: Derivadas
+  topic.calculus.integral:
+    name: Integrales
+  topic.calculus.series:
+    name: Series
+  topic.calculus.differential_equations:
+    name: Ecuaciones diferenciales
+  topic.multivariable_calculus:
+    name: Cálculo en varias variables
+  topic.multivariable_calculus.functions_of_several_variables:
+    name: Funciones de varias variables
+  topic.multivariable_calculus.partial_derivatives_and_gradient:
+    name: Derivadas parciales y gradiente
+  topic.multivariable_calculus.optimization:
+    name: Optimización con varias variables
+  topic.multivariable_calculus.multiple_integrals:
+    name: Integrales múltiples
+  topic.multivariable_calculus.vector_fields:
+    name: Campos vectoriales
+  topic.linear_algebra:
+    name: Álgebra lineal
+  topic.linear_algebra.vectors:
+    name: Vectores
+  topic.linear_algebra.transformations:
+    name: Transformaciones lineales
+  topic.linear_algebra.systems:
+    name: Sistemas y eliminación
+  topic.linear_algebra.determinants:
+    name: Determinantes
+  topic.linear_algebra.eigenvalues:
+    name: Autovalores y autovectores
+  topic.linear_algebra.basis:
+    name: Base y dimensión
+  topic.linear_algebra.orthogonality:
+    name: Ortogonalidad
+  topic.linear_algebra.svd_and_regression:
+    name: SVD y mínimos cuadrados
+  topic.probability:
+    name: Probabilidad y estadística
+  topic.probability.basics:
+    name: Probabilidad básica
+  topic.probability.conditional:
+    name: Probabilidad condicional
+  topic.probability.random_variables:
+    name: Variables aleatorias
+  topic.probability.distributions:
+    name: Distribuciones
+  topic.probability.sampling_and_inference:
+    name: Muestreo e inferencia
+  topic.probability.statistics:
+    name: Estadística descriptiva
+  topic.discrete:
+    name: Matemática discreta
+  topic.discrete.logic:
+    name: Lógica
+  topic.discrete.sets:
+    name: Conjuntos
+  topic.discrete.relations:
+    name: Relaciones
+  topic.discrete.proof:
+    name: Técnicas de demostración
+  topic.discrete.induction:
+    name: Inducción
+  topic.discrete.recurrence:
+    name: Recurrencias
+  topic.discrete.counting:
+    name: Conteo y combinatoria
+  topic.discrete.modular_arithmetic:
+    name: Aritmética modular
+  topic.discrete.sums:
+    name: Sumatorias
+  topic.discrete.graphs:
+    name: Grafos
+  topic.computer_science:
+    name: Matemática de la computación
+  topic.computer_science.foundations:
+    name: 'Bases: binario y punto flotante'
+  topic.computer_science.algorithms:
+    name: Algoritmos y recursión
+  topic.computer_science.cryptography_and_modular:
+    name: Criptografía y módulo
+  topic.computer_science.information_and_graphics:
+    name: Información y gráficos
+  topic.advanced:
+    name: Matemática avanzada
+  topic.advanced.real_analysis:
+    name: Análisis real
+  topic.advanced.abstract_algebra:
+    name: Álgebra abstracta
+  topic.advanced.topology:
+    name: Topología
+  topic.advanced.numerical_methods:
+    name: Métodos numéricos
+  topic.advanced.optimization:
+    name: Optimización
+  topic.advanced.fourier_analysis:
+    name: Análisis de Fourier
+cheatsheet:
+  cs.adv.cauchy_sequence:
+    title: Sucesión de Cauchy
+    body: Una sucesión es de Cauchy si sus términos se acercan cada vez más entre sí, no solo a un límite
+      en particular; en los reales, eso alcanza para garantizar que converge.
+  cs.adv.cayley_graph_generators:
+    title: Grafo de Cayley
+    body: El grafo de Cayley de un grupo dibuja un nodo por cada elemento y una arista por cada generador,
+      mostrando visualmente cómo se combinan los elementos.
+  cs.adv.compactness_heine_borel:
+    title: Teorema de Heine-Borel
+    body: 'En los números reales, un conjunto es compacto si y solo si es cerrado y acotado: no se escapa
+      al infinito y contiene todos sus puntos límite.'
+  cs.adv.complex_map_as_deformation:
+    title: Una función compleja deforma el plano
+    body: Aplicar una función de variable compleja a cada punto del plano produce una nueva imagen deformada;
+      ver esa deformación ayuda a entender qué hace la función.
+  cs.adv.complex_multiply_polar:
+    title: Multiplicar complejos en forma polar
+    body: 'Multiplicar dos números complejos en forma polar multiplica sus módulos y suma sus ángulos:
+      una multiplicación se convierte en un giro y un escalado.'
+  cs.adv.complex_plane_modulus:
+    title: El plano complejo y el módulo
+    body: Un número complejo a + bi es un punto del plano; su módulo es la distancia de ese punto al origen,
+      calculada con Pitágoras.
+  cs.adv.connectedness:
+    title: Conexidad
+    body: Un espacio es conexo si no se puede partir en dos pedazos abiertos separados que no se toquen;
+      de un extremo se puede llegar a cualquier otro sin saltar afuera.
+  cs.adv.convexity_test:
+    title: Cómo probar si una función es convexa
+    body: Una función es convexa si el segmento entre dos puntos de su gráfico queda siempre por encima
+      de la curva; equivale a que su segunda derivada nunca sea negativa.
+  cs.adv.epsilon_delta_template:
+    title: Plantilla para una prueba épsilon-delta
+    body: Para probar un límite con la definición formal, conviene partir de la desigualdad con épsilon,
+      trabajar hacia atrás algebraicamente, y así descubrir qué delta funciona.
+  cs.adv.euler_characteristic_surfaces:
+    title: Característica de Euler de una superficie
+    body: Cada superficie tiene un número fijo, la característica de Euler, que no cambia sin importar
+      cómo se la triangule; la esfera vale dos, el toro vale cero.
+  cs.adv.euler_step:
+    title: Método de Euler
+    body: Para aproximar la solución de una ecuación diferencial, se avanza en pasos chicos siguiendo
+      la pendiente que la ecuación indica en cada punto.
+  cs.adv.field_axioms_zp:
+    title: Axiomas de cuerpo
+    body: Un cuerpo es un conjunto con suma y producto donde todo elemento distinto de cero tiene inverso
+      multiplicativo; los enteros módulo un primo forman un cuerpo.
+  cs.adv.finite_difference_error:
+    title: El error de la diferencia finita
+    body: Aproximar una derivada con un cociente de diferencias finitas comete un error que depende de
+      qué tan chico es el paso; un paso más chico reduce el error hasta cierto punto.
+  cs.adv.fourier_coefficients:
+    title: Coeficientes de Fourier
+    body: Los coeficientes de Fourier miden cuánto de cada onda seno y coseno hay dentro de una señal;
+      se calculan proyectando la señal sobre cada onda.
+  cs.adv.fourier_transform_pairs:
+    title: Pares de la transformada de Fourier
+    body: La transformada de Fourier lleva una señal en el tiempo a su contenido en frecuencias; su inversa
+      hace el camino de vuelta, y juntas forman un par.
+  cs.adv.gradient_descent_step:
+    title: Paso de descenso por gradiente
+    body: Para minimizar una función, cada paso se mueve en la dirección opuesta al gradiente (la bajada
+      más empinada), multiplicada por un tamaño de paso η.
+  cs.adv.group_axioms:
+    title: Axiomas de grupo
+    body: Un grupo es un conjunto con una operación que es asociativa, tiene un elemento neutro, y donde
+      toda acción se puede deshacer con su inversa.
+  cs.adv.homomorphism_kernel:
+    title: Núcleo de un homomorfismo
+    body: El núcleo de un homomorfismo es todo lo que se manda al elemento neutro; mide cuánta información
+      se pierde al aplicar esa transformación entre grupos.
+  cs.adv.integrating_factor:
+    title: Factor integrante
+    body: Para resolver una ecuación diferencial lineal de primer orden, multiplicarla por este factor
+      la convierte en la derivada de un producto, fácil de integrar.
+  cs.adv.inverse_fourier:
+    title: Transformada de Fourier inversa
+    body: La transformada inversa reconstruye la señal original sumando de vuelta todas sus componentes
+      de frecuencia.
+  cs.adv.lagrange_cosets:
+    title: Teorema de Lagrange sobre cosets
+    body: El tamaño de cualquier subgrupo siempre divide exactamente al tamaño del grupo completo, porque
+      el grupo se parte en cosets del mismo tamaño que el subgrupo.
+  cs.adv.lp_corner_rule:
+    title: La solución óptima está en una esquina
+    body: En un problema de programación lineal, si existe una solución óptima, siempre se puede encontrar
+      en un vértice de la región de soluciones factibles.
+  cs.adv.lp_duality:
+    title: Dualidad en programación lineal
+    body: A todo problema de programación lineal (el primal) le corresponde otro problema relacionado
+      (el dual), y sus soluciones óptimas coinciden en valor.
+  cs.adv.monte_carlo_error:
+    title: El error de Monte Carlo
+    body: Estimar una cantidad tirando puntos al azar mejora con más muestras, pero el error solo se achica
+      proporcional a uno sobre la raíz de la cantidad de tiros.
+  cs.adv.newton_step:
+    title: Paso del método de Newton
+    body: Cada paso de Newton sigue la tangente en el punto actual hasta que corta el eje, y usa ese cruce
+      como la siguiente aproximación a la raíz.
+  cs.adv.open_closed_sets:
+    title: Conjuntos abiertos y cerrados
+    body: Un conjunto es abierto si todo punto suyo tiene un entorno completamente adentro; es cerrado
+      si contiene a todos sus puntos frontera.
+  cs.adv.phase_portrait_equilibria:
+    title: Puntos de equilibrio en el retrato de fases
+    body: Un punto de equilibrio de un sistema de ecuaciones diferenciales es donde nada cambia; el retrato
+      de fases muestra si las trayectorias cercanas se acercan o se alejan de él.
+  cs.adv.riemann_sums_formal:
+    title: Sumas de Riemann superior e inferior
+    body: La suma superior usa el máximo de la función en cada franja, la inferior usa el mínimo; una
+      función es integrable cuando ambas se acercan al mismo valor al achicar las franjas.
+  cs.adv.ring_axioms_polynomials:
+    title: Axiomas de anillo en los polinomios
+    body: 'Los polinomios forman un anillo: se pueden sumar y multiplicar con las propiedades usuales,
+      aunque no todo polinomio no nulo tenga un inverso multiplicativo.'
+  cs.adv.roots_of_unity:
+    title: Raíces n-ésimas de la unidad
+    body: Las soluciones de zⁿ = 1 son n puntos repartidos en partes iguales sobre el círculo unitario,
+      formando un polígono regular.
+  cs.adv.slope_field_reading:
+    title: Leer un campo de pendientes
+    body: Un campo de pendientes dibuja pequeños segmentos con la pendiente que indica la ecuación diferencial
+      en cada punto; seguir esos segmentos traza una solución aproximada sin resolver nada algebraicamente.
+  cs.adv.supremum_completeness:
+    title: El supremo y la completitud de los reales
+    body: Todo conjunto de números reales acotado por arriba tiene una menor cota superior, el supremo;
+      esta propiedad es lo que distingue a los reales de los racionales.
+  cs.adv.uniform_vs_pointwise:
+    title: Continuidad uniforme contra puntual
+    body: La continuidad puntual permite que el delta necesario cambie de un punto a otro; la continuidad
+      uniforme exige un mismo delta que sirva en todo el dominio a la vez.
+  cs.adv.weierstrass_m_test:
+    title: Criterio M de Weierstrass
+    body: Una serie de funciones converge uniformemente si cada término está acotado por una constante,
+      y la serie de esas constantes converge.
+  cs.alg.abs_as_distance_from_zero:
+    title: El valor absoluto es distancia a cero
+    body: El valor absoluto de un número es cuánto le falta caminar hasta el cero, sin importar de qué
+      lado esté.
+  cs.alg.abs_equation_two_cases:
+    title: Una ecuación con valor absoluto tiene dos casos
+    body: 'Si |x| = a, hay que resolver dos ecuaciones por separado: x = a y x = -a, porque los dos están
+      a la misma distancia de cero.'
+  cs.alg.add_polynomials_by_degree:
+    title: Sumar polinomios grado por grado
+    body: Para sumar dos polinomios se suman los coeficientes de los términos que tienen el mismo grado,
+      como sumar columnas de la misma posición.
+  cs.alg.area_model_of_product:
+    title: El modelo de área del producto
+    body: Multiplicar dos sumas se puede ver como el área de un rectángulo dividido en partes, una por
+      cada combinación de términos.
+  cs.alg.binomial_product_four_tiles:
+    title: El producto de dos binomios tiene cuatro partes
+    body: Multiplicar dos binomios da cuatro productos, uno por cada combinación de un término del primero
+      con uno del segundo.
+  cs.alg.cancel_common_factor_only:
+    title: Solo se cancela un factor común entero
+    body: En una fracción algebraica solo se puede simplificar un factor que multiplique a todo el numerador
+      y a todo el denominador, nunca un término suelto de una suma.
+  cs.alg.change_of_base:
+    title: Fórmula de cambio de base
+    body: Un logaritmo en cualquier base se puede calcular como el cociente de dos logaritmos en otra
+      base, la que tenga la calculadora.
+  cs.alg.check_by_substituting:
+    title: Verificar sustituyendo la solución
+    body: Después de resolver una ecuación, conviene reemplazar el valor encontrado en la ecuación original
+      para confirmar que los dos lados quedan iguales.
+  cs.alg.collect_boxes_on_one_side:
+    title: Juntar las incógnitas de un solo lado
+    body: Cuando la incógnita aparece en los dos lados de la ecuación, primero se suma o resta para dejarla
+      toda de un solo lado.
+  cs.alg.complete_square_recipe:
+    title: Receta para completar el cuadrado
+    body: Para completar el cuadrado se toma la mitad del coeficiente de x, se eleva al cuadrado, y se
+      suma y resta esa cantidad para armar un cuadrado perfecto.
+  cs.alg.compose_inner_first:
+    title: En la composición, la de adentro actúa primero
+    body: Al calcular (f∘g)(x), primero se aplica g al número de entrada, y recién después se aplica f
+      al resultado.
+  cs.alg.composition_order_matters:
+    title: El orden de la composición importa
+    body: Componer f después de g no es lo mismo que componer g después de f; el orden de las máquinas
+      cambia el resultado.
+  cs.alg.delta_means_change:
+    title: Delta significa cambio
+    body: 'El símbolo delta (Δ) siempre representa una diferencia: cuánto cambió una cantidad entre dos
+      momentos o dos puntos.'
+  cs.alg.difference_of_squares:
+    title: Diferencia de cuadrados
+    body: Una resta de dos cuadrados siempre se factoriza como el producto de la suma por la diferencia
+      de las bases.
+  cs.alg.distributive_law:
+    title: Propiedad distributiva
+    body: Multiplicar una suma por un número es lo mismo que multiplicar cada término por separado y después
+      sumar.
+  cs.alg.domain_inputs_range_outputs:
+    title: Dominio son las entradas, imagen son las salidas
+    body: El dominio de una función es el conjunto de valores que puede recibir la máquina; la imagen
+      es el conjunto de valores que puede devolver.
+  cs.alg.elimination_method:
+    title: Método de eliminación
+    body: Para resolver un sistema, se suman o restan las ecuaciones (multiplicadas si hace falta) de
+      forma que una incógnita se cancele.
+  cs.alg.exponential_multiplies_each_step:
+    title: Lo exponencial multiplica en cada paso
+    body: En una función exponencial, cada vez que la entrada aumenta uno, la salida se multiplica por
+      la misma base b, en vez de sumarle lo mismo.
+  cs.alg.factor_out_shared_side:
+    title: Sacar factor común
+    body: Cuando todos los términos comparten un mismo factor, se lo puede sacar afuera de un paréntesis,
+      el proceso inverso de distribuir.
+  cs.alg.factor_trinomial_find_pair:
+    title: Buscar el par que suma y multiplica
+    body: Para factorizar x² + bx + c, hay que buscar dos números que sumados den b y multiplicados den
+      c.
+  cs.alg.fractional_base_decays:
+    title: Una base fraccionaria hace decrecer
+    body: 'Si la base de una función exponencial es un número entre cero y uno, cada paso achica el valor
+      en vez de agrandarlo: es decaimiento, no crecimiento.'
+  cs.alg.function_notation_f_of_x:
+    title: Notación f de x
+    body: f(x) nombra el valor que devuelve la función f cuando se le da la entrada x, sin tener que describir
+      toda la máquina de nuevo.
+  cs.alg.inequality_same_key_both_sides:
+    title: La misma llave en los dos lados
+    body: Sumar o restar el mismo número a los dos lados de una desigualdad conserva el sentido de la
+      desigualdad.
+  cs.alg.inverse_needs_one_to_one:
+    title: Solo una función uno a uno tiene inversa
+    body: Una función tiene inversa como función solo si a cada salida le corresponde una única entrada;
+      si dos entradas dan la misma salida, no hay forma de volver.
+  cs.alg.inverse_reflects_over_diagonal:
+    title: La inversa se refleja sobre la diagonal
+    body: El gráfico de la función inversa es el reflejo del gráfico original sobre la recta y = x, porque
+      intercambia entradas por salidas.
+  cs.alg.inverse_undoes_f:
+    title: La inversa deshace a f
+    body: 'Aplicar f y después su inversa devuelve el valor original: la inversa es la llave que abre
+      lo que f cerró.'
+  cs.alg.linear_adds_exponential_multiplies:
+    title: Lo lineal suma, lo exponencial multiplica
+    body: En pasos iguales, una función lineal siempre suma la misma cantidad; una función exponencial
+      siempre multiplica por el mismo factor.
+  cs.alg.log_counts_scalings:
+    title: El logaritmo cuenta escalados
+    body: El logaritmo en base b de un número dice cuántas veces hay que multiplicar la base por sí misma
+      para llegar a ese número.
+  cs.alg.log_of_product_is_sum:
+    title: El logaritmo de un producto es una suma
+    body: 'El logaritmo convierte una multiplicación en una suma: el logaritmo del producto es la suma
+      de los logaritmos.'
+  cs.alg.log_rules_mirror_exponent_rules:
+    title: El logaritmo refleja las reglas de la potencia
+    body: 'Cada regla de las potencias tiene su espejo en los logaritmos: multiplicar potencias suma exponentes,
+      y el logaritmo de un producto suma logaritmos.'
+  cs.alg.log_undoes_exponential:
+    title: El logaritmo deshace la exponencial
+    body: 'El logaritmo en base b es la llave que deshace elevar a la base b: aplicar una después de la
+      otra devuelve el número original.'
+  cs.alg.negative_factor_flips_tilt:
+    title: Multiplicar por negativo da vuelta la desigualdad
+    body: Al multiplicar o dividir los dos lados de una desigualdad por un número negativo, el sentido
+      de la desigualdad se invierte.
+  cs.alg.one_input_one_output:
+    title: Una entrada, una sola salida
+    body: Para que una regla sea función, cada entrada tiene que producir exactamente un resultado, nunca
+      dos distintos.
+  cs.alg.one_key_both_sides:
+    title: Una sola llave para los dos lados
+    body: En una ecuación de un paso, aplicar la operación inversa a los dos lados por igual despeja la
+      incógnita.
+  cs.alg.parabola_from_square_tile:
+    title: La parábola nace de elevar al cuadrado
+    body: 'El gráfico de f(x) = x² es una parábola: cada baldosa cuadrada de lado x tiene área x², y esa
+      área crece cada vez más rápido.'
+  cs.alg.point_is_input_output_pair:
+    title: Un punto del gráfico es un par entrada-salida
+    body: Cada punto (x, y) del gráfico de una función junta una entrada x con la salida y = f(x) que
+      le corresponde.
+  cs.alg.polynomial_degree_and_terms:
+    title: Grado y términos de un polinomio
+    body: El grado de un polinomio es el mayor exponente que aparece; cada término es un coeficiente multiplicado
+      por una potencia de la variable.
+  cs.alg.power_multiplies_exponents:
+    title: Potencia de una potencia multiplica los exponentes
+    body: Elevar una potencia a otro exponente multiplica los dos exponentes entre sí.
+  cs.alg.product_adds_exponents:
+    title: Producto de potencias de igual base suma exponentes
+    body: 'Multiplicar dos potencias de la misma base es apilar los escalados: los exponentes se suman.'
+  cs.alg.quadratic_formula:
+    title: Fórmula resolvente de la cuadrática
+    body: Toda ecuación ax² + bx + c = 0 con a distinto de cero se resuelve con esta fórmula, que da hasta
+      dos soluciones según el signo de lo que hay bajo la raíz.
+  cs.alg.rational_domain_excludes_zero_denominator:
+    title: El dominio racional excluye el denominador cero
+    body: Una expresión con una variable en el denominador no está definida donde ese denominador se hace
+      cero; ese punto queda fuera del dominio.
+  cs.alg.root_is_fractional_exponent:
+    title: La raíz es un exponente fraccionario
+    body: Sacar la raíz enésima de un número es lo mismo que elevarlo a la potencia uno sobre n.
+  cs.alg.shade_the_half_plane:
+    title: Sombrear el semiplano solución
+    body: La solución de una inecuación con dos variables es todo un lado de la recta frontera; conviene
+      probar un punto para saber cuál lado sombrear.
+  cs.alg.simplify_radicals_by_squares:
+    title: Simplificar raíces buscando cuadrados
+    body: Para simplificar una raíz, conviene buscar el mayor cuadrado perfecto que divide al número de
+      adentro y sacarlo de la raíz.
+  cs.alg.slope_rise_over_run:
+    title: Pendiente es subida sobre avance
+    body: La pendiente de una recta es cuánto sube (o baja) dividido cuánto avanza hacia la derecha entre
+      dos puntos.
+  cs.alg.solution_is_crossing_point:
+    title: La solución del sistema es el cruce
+    body: Resolver un sistema de dos ecuaciones lineales es encontrar el punto donde las dos rectas se
+      cruzan, el único que cumple las dos a la vez.
+  cs.alg.solving_steps_checklist:
+    title: Lista de pasos para resolver una ecuación
+    body: Conviene distribuir, juntar términos semejantes, agrupar la incógnita de un lado y despejar
+      al final, siempre en ese orden.
+  cs.alg.sqrt_two_branches:
+    title: La raíz cuadrada tiene dos ramas
+    body: Cuando se deshace un cuadrado con una raíz, hay que recordar las dos soluciones posibles, la
+      positiva y la negativa.
+  cs.alg.square_of_a_sum:
+    title: El cuadrado de una suma
+    body: 'Elevar una suma al cuadrado no es elevar cada término por separado: aparece además el doble
+      producto de los dos términos.'
+  cs.alg.start_value_plus_rate_times_steps:
+    title: Valor inicial más razón por los pasos
+    body: Una situación que crece de a pasos iguales se traduce como el valor de arranque más la razón
+      de cambio multiplicada por la cantidad de pasos.
+  cs.alg.substitution_method:
+    title: Método de sustitución
+    body: Para resolver un sistema, se despeja una incógnita en una ecuación y se reemplaza esa expresión
+      en la otra ecuación.
+  cs.alg.unwrap_outermost_first:
+    title: Desenvolver de afuera hacia adentro
+    body: En una ecuación con varias operaciones, conviene deshacer primero la última operación aplicada,
+      como desenvolver un regalo por la capa exterior.
+  cs.alg.vertex_from_completed_square:
+    title: El vértice sale de completar el cuadrado
+    body: Al escribir una cuadrática en la forma con el cuadrado completado, el vértice de la parábola
+      se lee directamente como el punto (h, k).
+  cs.alg.vertical_line_test:
+    title: La prueba de la recta vertical
+    body: Si una recta vertical corta al gráfico en más de un punto, esa curva no es el gráfico de una
+      función.
+  cs.alg.words_to_symbols_table:
+    title: Tabla de palabras a símbolos
+    body: Frases como 'el doble de', 'tres más que' o 'la mitad de' se traducen siempre a la misma operación
+      matemática; conviene armar esa tabla antes de escribir la ecuación.
+  cs.alg.y_equals_mx_plus_b:
+    title: Ecuación de la recta pendiente-ordenada
+    body: Toda recta no vertical se escribe como y igual a la pendiente m por x, más b, el valor donde
+      cruza el eje vertical.
+  cs.alg.zero_and_negative_exponent:
+    title: Exponente cero y exponente negativo
+    body: Cualquier base distinta de cero elevada a cero da uno; un exponente negativo indica el recíproco
+      de la potencia positiva.
+  cs.alg.zero_or_infinite_solutions:
+    title: Sin solución o infinitas soluciones
+    body: Si las dos rectas de un sistema son paralelas y distintas, no hay solución; si son la misma
+      recta, hay infinitas soluciones.
+  cs.alg.zero_product_rule:
+    title: Regla del producto cero
+    body: Si un producto de factores da cero, al menos uno de esos factores tiene que ser cero. Es la
+      base para resolver ecuaciones factorizadas.
+  cs.arith.add_as_join_groups:
+    title: Sumar es juntar dos grupos
+    body: Sumar dos números es juntar sus cantidades en un solo grupo y contar todo junto.
+  cs.arith.add_as_step_forward:
+    title: Sumar es avanzar en la recta
+    body: Sumar a + b es pararse en a y dar b pasos hacia adelante en la recta numérica.
+  cs.arith.add_fractions_same_unit:
+    title: Sumar fracciones con igual denominador
+    body: Si dos fracciones tienen el mismo denominador, se suman los numeradores y el denominador queda
+      igual.
+  cs.arith.add_order_irrelevant:
+    title: El orden de la suma no importa
+    body: Sumar a más b da lo mismo que sumar b más a. Es la propiedad conmutativa.
+  cs.arith.add_signed_as_net_steps:
+    title: Sumar con signo es el paso neto
+    body: Sumar números con signo es dar pasos hacia adelante (positivo) y hacia atrás (negativo) y ver
+      dónde se termina.
+  cs.arith.column_add_and_borrow:
+    title: Sumar y restar en columna
+    body: Se alinean las cifras por su valor posicional y se opera de derecha a izquierda. Cuando una
+      columna se pasa de nueve, se agrupa una decena y se lleva; cuando falta, se pide prestada una decena
+      a la columna siguiente.
+  cs.arith.column_multiply:
+    title: Multiplicar en columna
+    body: Se multiplica cada cifra del segundo número por todas las del primero, se corren los productos
+      parciales un lugar según su valor posicional y se suman al final.
+  cs.arith.common_denominator:
+    title: Buscar la unidad común
+    body: Para sumar o comparar fracciones con distinto denominador, primero hay que reescribirlas con
+      el mismo denominador, un múltiplo común de los dos.
+  cs.arith.compare_fractions_same_unit:
+    title: Comparar fracciones con la misma unidad
+    body: Dos fracciones solo se comparan directamente por su numerador cuando comparten el mismo denominador;
+      si no, primero hay que igualar la unidad.
+  cs.arith.convert_units_by_scaling:
+    title: Convertir unidades es escalar
+    body: 'Cambiar de unidad es multiplicar por un factor de conversión: cuántas unidades nuevas equivalen
+      a una unidad vieja.'
+  cs.arith.decimal_as_tenths_hundredths:
+    title: El decimal son décimos y centésimos
+    body: 'Cada cifra después de la coma vale una fracción de diez: la primera son décimos, la segunda
+      centésimos, y así siguiendo.'
+  cs.arith.decimal_fraction_bridge:
+    title: Todo decimal es una fracción
+    body: Un número decimal se puede escribir como fracción con denominador diez, cien, mil, según cuántas
+      cifras tenga después de la coma.
+  cs.arith.div_by_zero_no_key:
+    title: Dividir por cero no tiene llave
+    body: No existe ningún número que multiplicado por cero dé un resultado distinto de cero, así que
+      la división por cero queda sin respuesta.
+  cs.arith.div_undoes_mul:
+    title: Dividir deshace la multiplicación
+    body: 'Dividir es la llave que devuelve el factor que faltaba: si a × b = c, entonces c ÷ b = a.'
+  cs.arith.divide_by_fraction_flip:
+    title: Dividir por una fracción es multiplicar al revés
+    body: Para dividir por una fracción se multiplica por esa fracción invertida (numerador y denominador
+      cambiados de lugar).
+  cs.arith.divisibility_shortcuts:
+    title: Atajos para ver si divide exacto
+    body: Un número es divisible por dos si termina en cifra par, por cinco si termina en cero o cinco,
+      y por tres si la suma de sus cifras es múltiplo de tres.
+  cs.arith.equivalent_fraction_scale_both:
+    title: Fracciones equivalentes escalan igual
+    body: Multiplicar o dividir el numerador y el denominador por el mismo número no cambia el valor de
+      la fracción.
+  cs.arith.exponent_counts_scalings:
+    title: El exponente cuenta escalados
+    body: El exponente de una potencia dice cuántas veces se multiplica la base por sí misma.
+  cs.arith.expression_is_a_tree:
+    title: Una expresión es un árbol de cofres
+    body: 'Una cuenta con paréntesis anidados es como cofres uno dentro de otro: se abre siempre el más
+      interior primero.'
+  cs.arith.factor_tree_same_leaves:
+    title: Todo árbol de factores termina igual
+    body: Por más que se empiece a descomponer un número de distintas formas, el árbol de factores siempre
+      termina en los mismos números primos. Vale para todo número mayor que uno.
+  cs.arith.fraction_as_division:
+    title: La fracción es una división
+    body: 'La fracción a/b es también la cuenta a dividido b: repartir a partes en b porciones.'
+  cs.arith.fraction_as_parts_of_whole:
+    title: La fracción son partes de un entero
+    body: Una fracción a/b representa a partes iguales de un entero dividido en b partes.
+  cs.arith.fraction_of_fraction:
+    title: Multiplicar fracciones es tomar una parte de otra
+    body: 'Multiplicar dos fracciones es tomar una fracción de una fracción: se multiplican los numeradores
+      entre sí y los denominadores entre sí.'
+  cs.arith.inner_chest_first:
+    title: El cofre más interno se abre primero
+    body: En una expresión con paréntesis anidados, siempre se resuelve primero lo que está más adentro.
+  cs.arith.mul_as_repeated_add:
+    title: Multiplicar es sumar varias veces
+    body: a × b es sumar el número a, b veces seguidas.
+  cs.arith.mul_as_scaling:
+    title: Multiplicar es escalar
+    body: Multiplicar por b estira o achica una cantidad b veces; es una transformación, no solo una cuenta
+      repetida.
+  cs.arith.mul_by_one_and_zero:
+    title: Multiplicar por uno o por cero
+    body: Multiplicar por uno deja el número igual; multiplicar por cero siempre da cero.
+  cs.arith.mul_grouping_irrelevant:
+    title: Agrupar la multiplicación no cambia el resultado
+    body: Da lo mismo multiplicar primero los dos primeros factores o los dos últimos. Es la propiedad
+      asociativa.
+  cs.arith.mul_order_irrelevant:
+    title: El orden de la multiplicación no importa
+    body: Multiplicar a por b da lo mismo que multiplicar b por a, como girar el rectángulo de filas y
+      columnas.
+  cs.arith.negative_as_opposite_direction:
+    title: El negativo es la dirección opuesta
+    body: Un número negativo representa la misma distancia que su positivo pero para el otro lado del
+      cero.
+  cs.arith.percent_is_per_hundred:
+    title: El porcentaje es de cada cien
+    body: 'Un porcentaje es una fracción con denominador cien: a% significa a de cada cien.'
+  cs.arith.percent_of_amount:
+    title: Calcular el porcentaje de una cantidad
+    body: Para hallar el a por ciento de un número n, se multiplica n por a dividido cien.
+  cs.arith.prime_has_one_rectangle:
+    title: El primo solo forma un rectángulo
+    body: 'Un número primo solo se puede acomodar en un único rectángulo de baldosas: una fila de esa
+      cantidad. Un número compuesto forma más de uno.'
+  cs.arith.quotient_times_divisor_plus_remainder:
+    title: Dividendo igual a divisor por cociente más resto
+    body: Toda división entera cumple que el dividendo es el divisor multiplicado por el cociente, más
+      lo que sobra.
+  cs.arith.rate_per_unit_is_division:
+    title: La razón por unidad es una división
+    body: Cuánto corresponde a una sola unidad se calcula dividiendo el total por la cantidad de unidades.
+  cs.arith.running_total_is_sum_so_far:
+    title: El total acumulado es la suma hasta ahora
+    body: En cada paso, el total acumulado es todo lo sumado hasta ese momento; el paso siguiente se suma
+      a lo que ya había.
+  cs.arith.sign_of_product:
+    title: El signo del producto
+    body: El producto de dos números del mismo signo da positivo; el de signos distintos da negativo.
+  cs.arith.skip_count_is_constant_step:
+    title: Contar de a saltos es un paso constante
+    body: Contar de dos en dos, de cinco en cinco, es avanzar siempre el mismo paso; ese paso es lo que
+      se multiplica.
+  cs.arith.split_factor_tens_and_ones:
+    title: Separar en decenas y unidades para multiplicar
+    body: Para multiplicar un número de varias cifras, conviene separarlo en decenas y unidades, multiplicar
+      cada parte y sumar los resultados.
+  cs.arith.square_and_cube_as_shapes:
+    title: El cuadrado y el cubo son formas
+    body: Elevar al cuadrado arma un cuadrado de ese lado; elevar al cubo arma un cubo de esa arista.
+  cs.arith.sub_as_distance_between:
+    title: Restar es la distancia entre dos puntos
+    body: a menos b es cuánto hay que caminar desde b hasta a en la recta numérica.
+  cs.arith.sub_past_zero:
+    title: Restar puede cruzar el cero
+    body: Si se resta más de lo que hay, el resultado sigue caminando y cruza al lado negativo del cero.
+  cs.arith.sub_undoes_add:
+    title: Restar deshace la suma
+    body: 'Restar b es la llave que deshace haber sumado b: vuelve el paso atrás.'
+  cs.arith.subtract_is_add_opposite:
+    title: Restar es sumar el opuesto
+    body: Restar un número es lo mismo que sumar su opuesto (el mismo número con el signo cambiado).
+  cs.arith.ten_ones_make_one_ten:
+    title: Diez unos hacen un diez
+    body: Cada diez unidades de una posición se agrupan en una unidad de la posición siguiente; así funciona
+      el sistema de base diez.
+  cs.calc1.antiderivative_table:
+    title: Tabla de antiderivadas básicas
+    body: 'Cada regla de derivar tiene su espejo para integrar: potencias, seno, coseno y exponencial
+      tienen una antiderivada conocida de memoria.'
+  cs.calc1.chain_rule:
+    title: Regla de la cadena
+    body: 'Para derivar una función compuesta, se deriva la de afuera dejando adentro igual, y se multiplica
+      por la derivada de adentro. Es como engranajes: la velocidad total es el producto de las velocidades
+      de cada engranaje.'
+  cs.calc1.continuity_three_conditions:
+    title: Las tres condiciones de continuidad
+    body: Una función es continua en un punto si está definida ahí, si el límite existe en ese punto,
+      y si ese límite coincide con el valor de la función.
+  cs.calc1.critical_points_derivative_zero:
+    title: 'Los puntos críticos: derivada igual a cero'
+    body: Los máximos y mínimos de una función solo pueden estar donde la derivada vale cero o no existe;
+      ahí el caminante deja de subir o bajar.
+  cs.calc1.derivative_as_rate_units:
+    title: La derivada es una razón de cambio
+    body: La derivada mide cuánto cambia una cantidad por cada unidad que cambia otra, y sus unidades
+      son las de la salida sobre las de la entrada.
+  cs.calc1.derivative_definition_limit:
+    title: Definición de la derivada como límite
+    body: La derivada en un punto es el límite de la pendiente de la secante cuando los dos puntos se
+      acercan hasta juntarse.
+  cs.calc1.derivative_notations:
+    title: Notaciones de la derivada
+    body: 'La derivada se escribe de varias formas: f prima de x es compacta, dy sobre dx muestra que
+      viene de un cociente, y el punto arriba se usa para el tiempo.'
+  cs.calc1.derivatives_of_basic_functions:
+    title: Derivadas de funciones básicas
+    body: Potencias, seno, coseno, exponencial y logaritmo tienen derivadas fijas y conocidas que conviene
+      tener de memoria.
+  cs.calc1.differential_dy:
+    title: El diferencial dy
+    body: El diferencial dy estima cuánto cambia y usando la recta tangente, para un cambio pequeño dx
+      en x.
+  cs.calc1.discontinuity_types:
+    title: Tipos de discontinuidad
+    body: Una función puede tener un salto (los dos lados se acercan a valores distintos), un agujero
+      (el límite existe pero no coincide con el valor), o una asíntota (se va al infinito).
+  cs.calc1.epsilon_delta_definition:
+    title: Definición épsilon-delta del límite
+    body: El límite de f en a es L si para cualquier tolerancia épsilon que se pida en la salida, existe
+      una cercanía delta en la entrada que la garantiza.
+  cs.calc1.first_second_derivative_tests:
+    title: Criterios de la primera y la segunda derivada
+    body: Si la derivada cambia de signo en un punto crítico, ahí hay un máximo o un mínimo; si la segunda
+      derivada es positiva es un mínimo, si es negativa es un máximo.
+  cs.calc1.ftc_part_one_accumulation_derivative:
+    title: Primer teorema fundamental del cálculo
+    body: La derivada de la función que acumula área bajo f, hasta x, es la propia f. Derivar deshace
+      acumular.
+  cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a:
+    title: Segundo teorema fundamental del cálculo
+    body: Para calcular una integral definida alcanza con encontrar una antiderivada F y restar sus valores
+      en los extremos del intervalo.
+  cs.calc1.implicit_differentiation:
+    title: Derivación implícita
+    body: Cuando y no está despejada, se deriva la ecuación completa tratando a y como una función de
+      x, y se aplica la regla de la cadena cada vez que aparece y.
+  cs.calc1.integral_linearity:
+    title: Linealidad de la integral
+    body: La integral de una suma es la suma de las integrales, y una constante que multiplica se puede
+      sacar afuera de la integral.
+  cs.calc1.integral_notation_meaning:
+    title: Qué significa la notación de la integral
+    body: El símbolo ∫ recuerda una S de suma; dx recuerda una franja angosta. La integral es la suma
+      de infinitas franjas de altura f(x) y ancho dx.
+  cs.calc1.integral_split_interval_reverse_bounds:
+    title: Partir el intervalo o invertir los límites
+    body: Una integral se puede partir en dos tramos que se suman, y cambiar el orden de los límites de
+      integración cambia el signo del resultado.
+  cs.calc1.integral_units_rate_times_time:
+    title: La integral de una razón da el total
+    body: Si f mide una razón de cambio (por ejemplo velocidad), su integral en un intervalo de tiempo
+      da la cantidad total acumulada (la distancia recorrida).
+  cs.calc1.intermediate_value_theorem:
+    title: Teorema del valor intermedio
+    body: Si una función es continua en un intervalo cerrado, toma todos los valores entre el valor en
+      un extremo y el valor en el otro. Necesita continuidad para valer.
+  cs.calc1.left_right_midpoint_trapezoid:
+    title: Sumas por izquierda, derecha, punto medio y trapecios
+    body: Para aproximar el área bajo una curva con rectángulos, se puede usar la altura del borde izquierdo,
+      del derecho, del medio de cada franja, o promediarlas con trapecios.
+  cs.calc1.limit_exists_iff_sides_agree:
+    title: El límite existe si los dos lados coinciden
+    body: El límite de una función en un punto existe si y solo si el límite por la izquierda y el límite
+      por la derecha son iguales.
+  cs.calc1.linear_approximation:
+    title: Aproximación lineal
+    body: Cerca de un punto, una función se puede aproximar por su recta tangente en ese punto; cuanto
+      más cerca, mejor la aproximación.
+  cs.calc1.newton_iteration_formula:
+    title: Fórmula de iteración de Newton
+    body: Para acercarse a una raíz de f, se sigue la tangente en el punto actual hasta que corta el eje,
+      y ese cruce es el siguiente punto.
+  cs.calc1.newton_when_it_fails:
+    title: Cuándo falla el método de Newton
+    body: El método de Newton puede no converger si la derivada es cero cerca del punto, o si el punto
+      inicial está lejos de la raíz y la tangente lo manda para cualquier lado.
+  cs.calc1.one_sided_limits_notation:
+    title: Notación de límites laterales
+    body: El límite lateral izquierdo mira solo los valores que se acercan por abajo de a; el derecho,
+      los que se acercan por arriba.
+  cs.calc1.plus_c_family_of_curves:
+    title: 'Más C: la familia de antiderivadas'
+    body: 'Como la derivada de una constante es cero, toda antiderivada tiene infinitas versiones que
+      difieren en una constante C: todas tienen la misma pendiente en cada punto, corridas verticalmente.'
+  cs.calc1.position_velocity_acceleration:
+    title: Posición, velocidad y aceleración
+    body: La velocidad es la derivada de la posición respecto del tiempo; la aceleración es la derivada
+      de la velocidad. Cada una mide qué tan rápido cambia la anterior.
+  cs.calc1.power_rule:
+    title: Regla de la potencia
+    body: Para derivar una potencia de x, se baja el exponente como factor y se resta uno al exponente.
+  cs.calc1.product_rule:
+    title: Regla del producto
+    body: 'La derivada de un producto de funciones no es el producto de las derivadas: es la derivada
+      de la primera por la segunda, más la primera por la derivada de la segunda.'
+  cs.calc1.quotient_rule:
+    title: Regla del cociente
+    body: La derivada de un cociente se calcula con esta fórmula, que sale de escribir la división como
+      producto por el inverso y aplicar la regla del producto.
+  cs.calc1.riemann_limit_definition:
+    title: La integral como límite de sumas de Riemann
+    body: La integral definida es el límite de la suma de las áreas de rectángulos cada vez más angostos,
+      cuando su cantidad tiende a infinito.
+  cs.calc1.riemann_sum_notation:
+    title: Notación de la suma de Riemann
+    body: Una suma de Riemann suma las áreas de varios rectángulos, cada uno de ancho Δx y altura el valor
+      de f en algún punto de la franja.
+  cs.calc1.signed_area_negative_below:
+    title: El área con signo es negativa abajo
+    body: En una integral, las franjas por encima del eje horizontal suman positivo y las que están por
+      debajo restan; el resultado es un área con signo, no el área total.
+  cs.calc1.speed_vs_velocity_sign:
+    title: Rapidez y velocidad no son lo mismo
+    body: La velocidad tiene signo, que indica la dirección; la rapidez es su valor absoluto, siempre
+      positiva, sin decir hacia dónde.
+  cs.calc1.strategy_factor_and_cancel:
+    title: Factorizar y cancelar
+    body: Para resolver un límite que da 0/0, conviene factorizar numerador y denominador y cancelar el
+      factor que se anula en ambos.
+  cs.calc1.strategy_find_delta_from_epsilon:
+    title: Encontrar delta a partir de épsilon
+    body: En una prueba épsilon-delta, conviene trabajar hacia atrás desde |f(x)-L| < épsilon hasta despejar
+      qué tan chico tiene que ser |x-a|, y ese es el delta.
+  cs.calc1.strategy_guess_and_check_derivative:
+    title: Adivinar y comprobar derivando
+    body: Para encontrar una antiderivada, conviene proponer una función parecida y derivarla para comprobar
+      si da la función original; si no, se ajusta.
+  cs.calc1.strategy_integral_is_a_key:
+    title: La integral es la llave de la derivada
+    body: Para calcular una integral definida, conviene pensarla como buscar la llave que deshace la derivada,
+      y no como sumar franjas a mano.
+  cs.calc1.strategy_optimization_steps:
+    title: Pasos para un problema de optimización
+    body: Conviene escribir la cantidad a optimizar en función de una sola variable, derivar, igualar
+      a cero, y verificar que sea un máximo o un mínimo.
+  cs.calc1.strategy_outer_inner_layers:
+    title: La capa de afuera y la de adentro
+    body: Antes de aplicar la regla de la cadena, conviene identificar qué función está afuera y cuál
+      está adentro, como separar los engranajes de una máquina.
+  cs.calc1.strategy_point_slope_from_derivative:
+    title: Usar la derivada como pendiente en punto-pendiente
+    body: Para escribir la recta tangente, se usa el valor de la derivada en el punto como pendiente,
+      y el punto de tangencia como el punto conocido.
+  cs.calc1.strategy_quotient_as_product_with_negative_power:
+    title: Reescribir el cociente como producto con exponente negativo
+    body: A veces conviene escribir f sobre g como f por g elevado a menos uno, y usar la regla del producto
+      y la de la cadena en vez de la regla del cociente.
+  cs.calc1.strategy_rationalize_conjugate:
+    title: Racionalizar con el conjugado
+    body: Cuando un límite con raíces da 0/0, multiplicar por el conjugado suele cancelar la raíz y destrabar
+      el límite.
+  cs.calc1.strategy_related_rates_steps:
+    title: Pasos para razones relacionadas
+    body: Conviene escribir la ecuación que relaciona las cantidades, derivar respecto del tiempo usando
+      la regla de la cadena, y recién ahí reemplazar los valores conocidos.
+  cs.calc1.strategy_rewrite_before_differentiating:
+    title: Reescribir antes de derivar
+    body: Muchas veces conviene simplificar o reescribir una expresión (separar una fracción, distribuir)
+      antes de derivar, para evitar reglas más complicadas.
+  cs.calc1.strategy_split_at_zeros_for_total_area:
+    title: Partir en los ceros para el área total
+    body: Para calcular el área total entre una curva y el eje (sin signo), hay que partir la integral
+      en los puntos donde la función cruza el eje y sumar los valores absolutos de cada tramo.
+  cs.calc1.strategy_treat_y_as_y_of_x:
+    title: Tratar a y como función de x
+    body: En derivación implícita, cada vez que aparece y hay que recordar que es una función de x, y
+      aplicarle la regla de la cadena al derivarla.
+  cs.calc1.sum_and_constant_multiple_rules:
+    title: Reglas de la suma y del múltiplo constante
+    body: La derivada de una suma es la suma de las derivadas, y una constante que multiplica se puede
+      sacar afuera antes de derivar.
+  cs.calc1.tangent_line_equation:
+    title: Ecuación de la recta tangente
+    body: La recta tangente en el punto a pasa por (a, f(a)) y tiene pendiente f'(a), la derivada evaluada
+      en ese punto.
+  cs.calc2.absolute_vs_conditional:
+    title: Convergencia absoluta y condicional
+    body: Una serie converge absolutamente si converge incluso tomando todos los términos en valor absoluto;
+      si solo converge por la cancelación de signos, converge condicionalmente.
+  cs.calc2.alternating_series_test:
+    title: Criterio de la serie alternada
+    body: Una serie de signos alternados converge si sus términos, en valor absoluto, decrecen hacia cero.
+  cs.calc2.arc_length:
+    title: Longitud de arco de una curva
+    body: La longitud de una curva paramétrica se calcula integrando la rapidez del punto que la recorre
+      a lo largo del tiempo.
+  cs.calc2.area_between_curves:
+    title: Área entre dos curvas
+    body: El área entre dos curvas es la integral de la curva de arriba menos la de abajo, en el intervalo
+      donde una está por encima de la otra.
+  cs.calc2.by_parts_choice_liate:
+    title: Elegir u con el orden LIATE
+    body: 'Para integrar por partes conviene elegir u siguiendo el orden logarítmica, inversa trigonométrica,
+      algebraica, trigonométrica, exponencial: lo que esté antes en esa lista suele convenir como u.'
+  cs.calc2.common_maclaurin:
+    title: Series de Maclaurin conocidas
+    body: Exponencial, seno y coseno tienen series de potencias centradas en cero que conviene reconocer
+      de memoria.
+  cs.calc2.comparison_tests:
+    title: Criterios de comparación
+    body: Una serie de términos positivos converge si está siempre por debajo de otra que converge, y
+      diverge si está siempre por encima de otra que diverge.
+  cs.calc2.disc_washer_method:
+    title: Método de discos y arandelas
+    body: Para hallar el volumen de un sólido de revolución, se suman las rebanadas circulares (discos)
+      o circulares con agujero (arandelas) perpendiculares al eje de giro.
+  cs.calc2.divergence_test:
+    title: Criterio del término n-ésimo
+    body: Si los términos de una serie no tienden a cero, la serie no puede converger. Pero que tiendan
+      a cero no garantiza que converja.
+  cs.calc2.exponential_ode_solution:
+    title: Solución de la ecuación de crecimiento exponencial
+    body: Cuando la razón de cambio de una cantidad es proporcional a la cantidad misma, la solución es
+      siempre una exponencial.
+  cs.calc2.geometric_series_sum:
+    title: Suma de una serie geométrica infinita
+    body: Una serie geométrica infinita converge solo si la razón está entre -1 y 1, y su suma es el primer
+      término dividido uno menos la razón.
+  cs.calc2.harmonic_diverges:
+    title: La serie armónica diverge
+    body: Aunque sus términos tienden a cero, la suma de uno sobre n crece sin límite; es el ejemplo clásico
+      de que términos que tienden a cero no alcanzan para converger.
+  cs.calc2.improper_integral:
+    title: Integral impropia
+    body: Una integral con un límite infinito, o con una función que se dispara en el intervalo, se define
+      como el límite de integrales acotadas.
+  cs.calc2.integral_test:
+    title: Criterio de la integral
+    body: Si los términos de una serie coinciden con los valores de una función positiva y decreciente,
+      la serie converge exactamente cuando converge la integral impropia de esa función.
+  cs.calc2.integration_by_parts:
+    title: Integración por partes
+    body: 'Esta fórmula deshace la regla del producto de la derivada: convierte una integral difícil en
+      otra, a veces más fácil.'
+  cs.calc2.ode_meaning:
+    title: Qué es una ecuación diferencial
+    body: Una ecuación diferencial relaciona una función con su propia razón de cambio; resolverla es
+      encontrar qué función cumple esa regla.
+  cs.calc2.p_integral_threshold:
+    title: Umbral de convergencia de la integral p
+    body: La integral impropia de uno sobre x a la p converge si y solo si p es mayor que uno.
+  cs.calc2.p_series:
+    title: Serie p
+    body: La serie de uno sobre n a la p converge exactamente cuando p es mayor que uno; para p igual
+      a uno es la serie armónica, que diverge.
+  cs.calc2.parametric_derivative:
+    title: Derivada de una curva paramétrica
+    body: La pendiente de una curva dada por x(t) e y(t) es el cociente de sus derivadas respecto de t.
+  cs.calc2.partial_fractions:
+    title: Fracciones parciales
+    body: Una fracción racional complicada se puede descomponer en una suma de fracciones más simples,
+      cada una fácil de integrar por separado.
+  cs.calc2.partial_sums_sequence:
+    title: La sucesión de sumas parciales
+    body: Una serie converge cuando la sucesión de sus sumas parciales (ir sumando cada vez un término
+      más) tiene un límite.
+  cs.calc2.polar_area:
+    title: Área en coordenadas polares
+    body: El área barrida por una curva polar se calcula sumando sectores infinitesimales, cada uno de
+      área un medio de r al cuadrado por dθ.
+  cs.calc2.radius_of_convergence:
+    title: Radio de convergencia
+    body: Una serie de potencias converge para todo x dentro de una distancia fija al centro, y diverge
+      afuera; esa distancia es el radio de convergencia.
+  cs.calc2.ratio_test:
+    title: Criterio del cociente
+    body: Si el cociente entre un término y el anterior tiende a un número menor que uno, la serie converge;
+      si tiende a un número mayor que uno, diverge.
+  cs.calc2.separable_ode:
+    title: Ecuación diferencial separable
+    body: Cuando la ecuación se puede escribir con todas las y de un lado y todas las x del otro, se integra
+      cada lado por separado.
+  cs.calc2.shell_method:
+    title: Método de las capas cilíndricas
+    body: Para un volumen de revolución, en vez de rebanadas se pueden sumar cáscaras cilíndricas concéntricas
+      alrededor del eje de giro.
+  cs.calc2.taylor_polynomial:
+    title: Polinomio de Taylor
+    body: El polinomio de Taylor imita a una función copiando el valor de sus primeras n derivadas en
+      un punto.
+  cs.calc2.taylor_remainder:
+    title: Cota del resto de Taylor
+    body: La diferencia entre una función y su polinomio de Taylor de grado n se puede acotar, y esa cota
+      depende de la derivada siguiente y de qué tan lejos se está del centro.
+  cs.calc2.trig_integrals_powers:
+    title: Integrales de potencias trigonométricas
+    body: Para integrar potencias de seno y coseno conviene usar identidades (como la pitagórica o las
+      de ángulo doble) para reducir la potencia antes de integrar.
+  cs.calc2.trig_substitution:
+    title: Sustitución trigonométrica
+    body: Cuando aparece una raíz con suma o resta de cuadrados, sustituir la variable por una función
+      trigonométrica arma un triángulo que la simplifica.
+  cs.calc2.u_substitution:
+    title: Sustitución u
+    body: 'Esta técnica deshace la regla de la cadena: se reemplaza una parte de la expresión por u de
+      forma que quede una integral más simple en términos de u.'
+  cs.calc2.volume_by_cross_sections:
+    title: Volumen por secciones transversales
+    body: El volumen de un sólido se puede calcular integrando el área de sus rebanadas perpendiculares
+      a un eje, a lo largo de ese eje.
+  cs.csmath.automaton_transitions:
+    title: Transiciones de una máquina de estados
+    body: Una máquina de estados pasa de un estado a otro según una regla fija que depende del estado
+      actual y de la entrada que recibe.
+  cs.csmath.bfs_queue_invariant:
+    title: El invariante de la cola en BFS
+    body: En una búsqueda por anchura, la cola siempre guarda los nodos en el orden en que se descubrieron,
+      garantizando que se visite cada capa de distancia antes de pasar a la siguiente.
+  cs.csmath.big_o_hierarchy:
+    title: Jerarquía de complejidades
+    body: Estas familias de crecimiento están ordenadas de más lenta a más rápida; un algoritmo de una
+      familia más lenta siempre gana para entradas suficientemente grandes.
+  cs.csmath.binary_place_value:
+    title: Valor posicional en binario
+    body: En base dos, cada posición vale una potencia de dos; un número binario se lee sumando esas potencias
+      donde hay un uno.
+  cs.csmath.binary_search_halving:
+    title: La búsqueda binaria parte a la mitad
+    body: Buscar en una lista ordenada descartando la mitad de las opciones en cada paso encuentra el
+      elemento en una cantidad de pasos que crece como el logaritmo del tamaño.
+  cs.csmath.boolean_identities:
+    title: Identidades booleanas
+    body: Las leyes de De Morgan y la doble negación permiten reescribir expresiones lógicas equivalentes
+      sin cambiar su valor de verdad.
+  cs.csmath.caesar_shift_undo:
+    title: Deshacer el cifrado César
+    body: Si cifrar corre cada letra k lugares, descifrar corre esos mismos k lugares para el otro lado;
+      la llave del cifrado César es su propio desplazamiento negativo.
+  cs.csmath.complexity_classes:
+    title: Clases de complejidad P y NP
+    body: P son los problemas que se resuelven rápido; NP son los problemas cuya solución, una vez dada,
+      se puede verificar rápido. Si son la misma clase es una de las preguntas abiertas más famosas.
+  cs.csmath.entropy_bits:
+    title: Entropía en bits
+    body: La entropía mide cuánta sorpresa promedio trae un mensaje; se calcula pesando cada resultado
+      posible por su probabilidad y por cuánta información aporta.
+  cs.csmath.float_gaps_epsilon:
+    title: Los huecos del punto flotante
+    body: 'Los números de punto flotante no representan todos los reales: hay un hueco mínimo, épsilon
+      de máquina, entre un número y el siguiente representable.'
+  cs.csmath.hash_buckets:
+    title: Los cajones de una tabla hash
+    body: Una función hash reparte cada dato en un cajón según el resto de una división; varios datos
+      distintos pueden caer en el mismo cajón.
+  cs.csmath.loop_invariant_template:
+    title: Plantilla del invariante de bucle
+    body: Un invariante de bucle es una afirmación que es verdadera antes de empezar, se mantiene verdadera
+      después de cada vuelta, y al terminar el bucle implica lo que se quería probar.
+  cs.csmath.mod_wraparound:
+    title: El módulo da la vuelta
+    body: 'La operación módulo n envuelve los números como las horas de un reloj: al llegar a n, se vuelve
+      a empezar desde cero.'
+  cs.csmath.pixel_transform_matrix:
+    title: Matrices que mueven píxeles
+    body: Rotar, escalar o mover una imagen se hace multiplicando las coordenadas de cada píxel por una
+      matriz de transformación.
+  cs.csmath.prefix_sum:
+    title: Suma de prefijos
+    body: Precalcular la suma acumulada hasta cada posición permite responder cuánto suma cualquier tramo
+      de la lista con una sola resta, sin volver a sumar.
+  cs.csmath.recursion_base_case:
+    title: El caso base de la recursión
+    body: Toda función recursiva necesita un caso base que se resuelve sin volver a llamarse a sí misma;
+      sin eso, la recursión nunca termina.
+  cs.csmath.rsa_keys:
+    title: Claves pública y privada de RSA
+    body: RSA cifra con una clave pública que cualquiera puede usar, pero solo se puede descifrar con
+      una clave privada relacionada, calculada a partir de dos números primos grandes secretos.
+  cs.csmath.sorting_invariant:
+    title: El invariante de un algoritmo de ordenamiento
+    body: En cada paso de un algoritmo de ordenamiento, una parte de la lista ya queda ordenada y no se
+      vuelve a tocar; ese invariante garantiza que al final toda la lista quede en orden.
+  cs.disc.closed_form_sums:
+    title: Sumas con fórmula cerrada
+    body: Algunas sumas con patrón, como los primeros n números naturales, tienen una fórmula directa
+      que evita sumar término por término.
+  cs.disc.combinations_choose:
+    title: 'Combinaciones: n eligiendo k'
+    body: El número de formas de elegir k elementos de un total de n, sin importar el orden, se calcula
+      con este coeficiente binomial.
+  cs.disc.congruence_both_sides:
+    title: La misma acción en los dos lados
+    body: Sumar, restar o multiplicar el mismo número a los dos lados de una congruencia conserva la congruencia,
+      igual que en una balanza.
+  cs.disc.congruence_mod_n:
+    title: Congruencia módulo n
+    body: Dos números son congruentes módulo n si caen en la misma posición de un reloj de n horas, es
+      decir, si su diferencia es múltiplo de n.
+  cs.disc.counterexample:
+    title: Un contraejemplo rompe un para todo
+    body: Para mostrar que una afirmación 'para todo x' es falsa, alcanza con encontrar un solo caso que
+      no la cumpla.
+  cs.disc.direct_proof_template:
+    title: Plantilla de la prueba directa
+    body: Una prueba directa parte de lo que se sabe y encadena pasos válidos, uno detrás de otro, hasta
+      llegar exactamente a lo que se quería mostrar.
+  cs.disc.equivalence_relation:
+    title: Relación de equivalencia
+    body: Una relación es de equivalencia si es reflexiva, simétrica y transitiva; parte a todo el conjunto
+      en grupos donde todos los elementos de un grupo se consideran iguales entre sí.
+  cs.disc.implication_converse_contrapositive:
+    title: Recíproca y contrarrecíproca
+    body: La recíproca de 'si p entonces q' es 'si q entonces p', y no siempre es verdadera aunque la
+      original lo sea. La contrarrecíproca invierte y niega las dos partes, y siempre tiene el mismo valor
+      de verdad que la original.
+  cs.disc.inclusion_exclusion:
+    title: Principio de inclusión-exclusión
+    body: Para contar cuántos elementos hay en la unión de dos conjuntos, se suman sus tamaños y se resta
+      lo que se contó dos veces, la intersección.
+  cs.disc.induction_template:
+    title: Plantilla de la inducción matemática
+    body: 'Para probar que algo vale para todo número natural, se muestra que vale para el primero (caso
+      base) y que si vale para uno, vale para el siguiente (paso inductivo): como fichas de dominó que
+      se van tirando.'
+  cs.disc.modular_inverse_gcd:
+    title: El inverso modular exige máximo común divisor uno
+    body: Un número tiene inverso multiplicativo módulo n solo si es coprimo con n, es decir, si su máximo
+      común divisor con n es uno.
+  cs.disc.pascal_triangle:
+    title: Triángulo de Pascal
+    body: Cada número del triángulo de Pascal es la suma de los dos que tiene arriba; cada fila junta
+      los coeficientes binomios de esa n y también las formas de llegar a cada casillero contando caminos.
+  cs.disc.permutations_factorial:
+    title: Permutaciones y factorial
+    body: 'La cantidad de formas de ordenar n objetos distintos es n factorial: n por todos los números
+      menores hasta llegar a uno.'
+  cs.disc.product_rule:
+    title: Principio del producto
+    body: Si una elección se hace en varios pasos independientes, la cantidad total de resultados posibles
+      es el producto de las opciones de cada paso.
+  cs.disc.proof_by_contradiction:
+    title: Prueba por contradicción
+    body: Para probar una afirmación, se supone que es falsa y se busca llegar a algo imposible; si aparece
+      una contradicción, la suposición inicial tenía que ser falsa.
+  cs.disc.quantifiers_negation:
+    title: Negar un cuantificador cambia el otro
+    body: 'Negar ''para todo x se cumple P'' equivale a decir ''existe un x que no cumple P'', y viceversa:
+      negar intercambia los dos cuantificadores.'
+  cs.disc.recurrence_notation:
+    title: Notación de una recurrencia
+    body: Una recurrencia define cada término de una sucesión en función de los términos anteriores, junto
+      con uno o más casos base para arrancar.
+  cs.disc.recursion_tree:
+    title: Árbol de recursión
+    body: Dibujar cada llamada recursiva como una rama que se abre en más llamadas ayuda a ver cuántas
+      veces se repite el trabajo y a calcular el costo total.
+  cs.disc.relation_vs_function:
+    title: Relación contra función
+    body: 'Toda función es una relación, pero no toda relación es función: una función exige que cada
+      entrada tenga una única salida, una relación no.'
+  cs.disc.set_builder_notation:
+    title: Notación de conjunto por comprensión
+    body: Esta notación describe un conjunto dando la regla que deben cumplir sus elementos, en vez de
+      listarlos uno por uno.
+  cs.disc.set_operations:
+    title: Operaciones entre conjuntos
+    body: La unión junta los elementos de dos conjuntos, la intersección deja solo los que están en los
+      dos, y el complemento deja lo que no está en el conjunto.
+  cs.disc.sigma_rules:
+    title: Reglas de manipulación de sigma
+    body: Una suma de sumas se puede partir en dos sumas separadas, y una constante que multiplica a todos
+      los términos se puede sacar afuera del símbolo sigma.
+  cs.disc.sum_rule:
+    title: Principio de la suma
+    body: Si dos formas de elegir son mutuamente excluyentes (no pueden pasar las dos a la vez), el total
+      de opciones es la suma de las opciones de cada una.
+  cs.disc.truth_tables:
+    title: Tablas de verdad
+    body: Una tabla de verdad lista todas las combinaciones posibles de verdadero y falso para las proposiciones
+      de entrada, y el resultado de la conexión lógica para cada una.
+  cs.geom.angle_names_right_straight:
+    title: Ángulo recto y ángulo llano
+    body: Un ángulo recto mide un cuarto de vuelta (90°); un ángulo llano mide media vuelta (180°).
+  cs.geom.arc_length_fraction_of_turn:
+    title: El arco es una fracción de la vuelta
+    body: La longitud de un arco es la misma fracción de la circunferencia completa que el ángulo es de
+      la vuelta completa. En radianes esta misma idea se escribe s = rθ.
+  cs.geom.area_by_proportion_of_hits:
+    title: Estimar un área tirando dardos
+    body: Si se tiran puntos al azar dentro de un rectángulo conocido, la proporción que cae dentro de
+      una figura estima qué fracción del rectángulo ocupa esa figura.
+  cs.geom.area_circle_pi_r_squared:
+    title: Área del círculo
+    body: El área de un círculo es pi multiplicado por el radio al cuadrado. Sale de acomodar las franjas
+      del círculo en un rectángulo de base πr y altura r.
+  cs.geom.area_parallelogram_base_height:
+    title: Área del paralelogramo
+    body: 'El área de un paralelogramo es base por altura, la misma fórmula que el rectángulo: cortar
+      un triángulo de un lado y pegarlo del otro lo convierte en rectángulo sin cambiar el área.'
+  cs.geom.area_rectangle:
+    title: Área del rectángulo
+    body: 'El área de un rectángulo es su base multiplicada por su altura: cuántas baldosas de un cuadrado
+      unitario entran.'
+  cs.geom.area_scales_by_k_squared:
+    title: El área escala al cuadrado del factor
+    body: Si una figura se agranda por un factor k, su área se multiplica por k al cuadrado, aunque el
+      perímetro solo se multiplique por k. Vale para toda figura semejante.
+  cs.geom.area_trapezoid:
+    title: Área del trapecio
+    body: El área del trapecio es la semisuma de las dos bases por la altura. Sale de partir el trapecio
+      en dos triángulos que comparten la altura.
+  cs.geom.area_triangle_half_base_height:
+    title: Área del triángulo
+    body: 'El área de un triángulo es base por altura dividido dos: todo triángulo es la mitad de un rectángulo
+      o paralelogramo que lo contiene.'
+  cs.geom.circumference_2_pi_r:
+    title: Circunferencia de un círculo
+    body: 'El perímetro de un círculo es dos pi por el radio: pi es la cantidad de veces que el diámetro
+      entra en la vuelta completa.'
+  cs.geom.congruence_sss_sas_asa:
+    title: Criterios de congruencia de triángulos
+    body: Dos triángulos son congruentes si coinciden sus tres lados, o dos lados y el ángulo entre ellos,
+      o dos ángulos y el lado entre ellos. Cualquiera de los tres alcanza para fijar la forma.
+  cs.geom.dilation_center_and_factor:
+    title: La dilatación necesita centro y factor
+    body: Agrandar o achicar una figura requiere elegir un punto fijo (el centro) y un número (el factor
+      de escala) que multiplica todas las distancias a ese centro.
+  cs.geom.distance_formula:
+    title: Fórmula de la distancia entre dos puntos
+    body: La distancia entre dos puntos de la grilla es la hipotenusa del triángulo rectángulo que forman
+      sus diferencias en x y en y. Es el teorema de Pitágoras aplicado a coordenadas.
+  cs.geom.euler_v_minus_e_plus_f:
+    title: Fórmula de Euler para poliedros y grafos planos
+    body: En todo poliedro convexo, o en todo grafo dibujado en el plano sin cruces, vértices menos aristas
+      más caras da siempre dos. La misma fórmula, en superficies más generales, se vuelve un invariante
+      topológico distinto de dos.
+  cs.geom.exterior_angle_completes_turn:
+    title: El ángulo exterior completa la vuelta
+    body: El ángulo exterior y su ángulo interior adyacente suman siempre 180°, porque juntos forman una
+      vuelta media sobre la misma recta.
+  cs.geom.full_turn_360:
+    title: Una vuelta completa mide 360 grados
+    body: Girar en el mismo lugar hasta volver a la posición inicial es una vuelta completa, y se mide
+      como 360 grados.
+  cs.geom.inscribed_angle_half_central:
+    title: El ángulo inscripto es la mitad del central
+    body: Un ángulo inscripto en un círculo mide la mitad del ángulo central que abarca el mismo arco.
+      Vale para cualquier punto del círculo que no esté sobre ese arco.
+  cs.geom.inverse_transformations_table:
+    title: Cada transformación tiene su inversa
+    body: Rotar se deshace rotando el ángulo opuesto, reflejar se deshace reflejando de nuevo sobre el
+      mismo eje, dilatar se deshace con el factor inverso.
+  cs.geom.midpoint_formula:
+    title: Fórmula del punto medio
+    body: El punto medio entre dos puntos es el promedio de sus coordenadas x y el promedio de sus coordenadas
+      y.
+  cs.geom.parallel_angles_equal_or_supplementary:
+    title: Ángulos entre paralelas cortadas por una transversal
+    body: Cuando una recta cruza dos rectas paralelas, los ángulos que forma son iguales entre sí (correspondientes,
+      alternos) o suplementarios (que suman 180°), según su posición.
+  cs.geom.parallel_same_slope:
+    title: Rectas paralelas tienen la misma pendiente
+    body: Dos rectas son paralelas si y solo si suben o bajan al mismo ritmo, es decir, tienen la misma
+      pendiente.
+  cs.geom.perimeter_sum_of_sides:
+    title: El perímetro es la suma de los lados
+    body: El perímetro de una figura es la suma de las longitudes de todos sus lados, el camino completo
+      alrededor.
+  cs.geom.perpendicular_from_center_bisects_chord:
+    title: La perpendicular desde el centro parte la cuerda
+    body: El segmento que va del centro de un círculo a una cuerda, perpendicular a ella, siempre la corta
+      exactamente por la mitad.
+  cs.geom.perpendicular_negative_reciprocal:
+    title: Rectas perpendiculares con pendientes recíprocas y opuestas
+    body: 'Dos rectas son perpendiculares si y solo si el producto de sus pendientes es menos uno: una
+      es la recíproca negativa de la otra.'
+  cs.geom.pi_as_ratio:
+    title: Pi es la razón entre circunferencia y diámetro
+    body: Pi es el número de veces que el diámetro entra en el contorno del círculo; es el mismo valor
+      sin importar el tamaño del círculo.
+  cs.geom.polygon_angle_sum:
+    title: Suma de los ángulos interiores de un polígono
+    body: La suma de los ángulos interiores de un polígono de n lados es (n menos dos) veces 180°. Sale
+      de partir el polígono en triángulos desde un vértice.
+  cs.geom.polygons_by_sides:
+    title: Los polígonos se nombran por sus lados
+    body: 'Un polígono se clasifica por su número de lados: tres es triángulo, cuatro cuadrilátero, cinco
+      pentágono, y así sigue.'
+  cs.geom.pythagoras:
+    title: Teorema de Pitágoras
+    body: En todo triángulo rectángulo, la suma de los cuadrados de los catetos es igual al cuadrado de
+      la hipotenusa. Solo vale cuando el ángulo entre los catetos es recto.
+  cs.geom.pythagorean_triples:
+    title: Ternas pitagóricas
+    body: Algunos tríos de enteros cumplen exactamente el teorema de Pitágoras, como 3-4-5 o 5-12-13,
+      y sirven para armar triángulos rectángulos sin medir ángulos.
+  cs.geom.quadrilateral_family_tree:
+    title: El árbol genealógico de los cuadriláteros
+    body: El cuadrado es un caso particular de rectángulo y de rombo; el rectángulo y el rombo son casos
+      particulares de paralelogramo. Cada figura hereda las propiedades de sus familias más generales.
+  cs.geom.rigid_motions_preserve_lengths_angles:
+    title: Los movimientos rígidos conservan medidas
+    body: Rotar y reflejar una figura no cambia ninguna de sus longitudes ni ninguno de sus ángulos; solo
+      cambia su posición u orientación.
+  cs.geom.similar_ratios_equal:
+    title: En figuras semejantes los lados correspondientes son proporcionales
+    body: Si dos figuras son semejantes, todos los pares de lados correspondientes guardan la misma razón
+      entre sí.
+  cs.geom.strategy_draw_altitude:
+    title: Trazar la altura
+    body: Cuando falta un dato de área en un triángulo o un trapecio, trazar la altura suele revelar un
+      triángulo rectángulo escondido que conecta los datos conocidos con el que falta.
+  cs.geom.strategy_draw_diagonal:
+    title: Trazar la diagonal
+    body: Trazar una diagonal parte un cuadrilátero en dos triángulos, que son más fáciles de calcular
+      por separado.
+  cs.geom.strategy_draw_radii_isosceles:
+    title: Trazar radios para formar un triángulo isósceles
+    body: Dos radios del mismo círculo siempre miden igual, así que trazarlos arma un triángulo isósceles
+      que ayuda a encontrar ángulos.
+  cs.geom.strategy_drop_perpendicular_from_center:
+    title: Bajar la perpendicular desde el centro
+    body: Trazar la perpendicular desde el centro de un círculo hasta una cuerda parte esa cuerda al medio
+      y arma un triángulo rectángulo útil.
+  cs.geom.strategy_extend_side:
+    title: Prolongar un lado
+    body: Extender un lado más allá de la figura a veces revela un triángulo más grande o un ángulo que
+      estaba escondido.
+  cs.geom.strategy_find_right_triangle:
+    title: Buscar el triángulo rectángulo escondido
+    body: Muchos problemas de geometría se resuelven encontrando o construyendo un triángulo rectángulo
+      entre los datos conocidos, para poder usar Pitágoras.
+  cs.geom.strategy_list_what_you_know:
+    title: Listar todos los datos conocidos
+    body: Antes de construir nada, conviene anotar todas las medidas y relaciones que da el problema;
+      a veces el dato que falta aparece de combinar dos que ya estaban.
+  cs.geom.strategy_mark_equal_parts:
+    title: Marcar las partes iguales
+    body: Señalar en el dibujo los lados o ángulos que son iguales por construcción ayuda a ver qué triángulos
+      son congruentes o isósceles.
+  cs.geom.strategy_parallel_cuts_similar_triangle:
+    title: Una paralela corta un triángulo semejante
+    body: Trazar una recta paralela a un lado de un triángulo arma un triángulo más chico semejante al
+      original, con lados proporcionales.
+  cs.geom.strategy_work_backwards_from_goal:
+    title: Trabajar desde el objetivo hacia atrás
+    body: Cuando no se sabe por dónde empezar, conviene preguntar qué dato haría falta para llegar a la
+      respuesta, y buscar ese dato primero.
+  cs.geom.triangle_angles_180:
+    title: Los ángulos de un triángulo suman 180°
+    body: En cualquier triángulo, la suma de sus tres ángulos interiores es siempre media vuelta.
+  cs.geom.triangle_inequality:
+    title: Desigualdad triangular
+    body: La suma de dos lados cualesquiera de un triángulo tiene que ser mayor que el tercer lado; si
+      no, los tres segmentos no pueden cerrar un triángulo.
+  cs.geom.volume_cone_third_cylinder:
+    title: El cono es un tercio del cilindro
+    body: 'Un cono y un cilindro de la misma base y altura: el cono entra exactamente tres veces dentro
+      del cilindro.'
+  cs.geom.volume_cylinder:
+    title: Volumen del cilindro
+    body: El volumen del cilindro es el área de su base circular multiplicada por la altura, como apilar
+      capas circulares.
+  cs.geom.volume_prism_base_times_height:
+    title: Volumen del prisma
+    body: 'El volumen de cualquier prisma es el área de la base multiplicada por la altura: apilar copias
+      de la base hasta llegar arriba.'
+  cs.geom.volume_sphere_two_thirds_cylinder:
+    title: La esfera es dos tercios de su cilindro
+    body: Una esfera ocupa dos tercios del cilindro más chico que la envuelve, de donde sale la fórmula
+      del volumen de la esfera.
+  cs.graph.bfs_dfs_order:
+    title: Orden de BFS y DFS
+    body: BFS explora el grafo por capas, todos los vecinos antes de alejarse; DFS se mete lo más profundo
+      posible por un camino antes de retroceder.
+  cs.graph.bipartite_two_colors:
+    title: Un grafo bipartito se colorea con dos colores
+    body: Un grafo se puede separar en dos grupos, sin aristas dentro de un mismo grupo, si y solo si
+      no tiene ciclos de longitud impar.
+  cs.graph.connected_components:
+    title: Componentes conexas
+    body: Una componente conexa es un grupo de nodos donde se puede llegar de cualquiera a cualquiera
+      siguiendo aristas; un grafo puede tener varias componentes separadas entre sí.
+  cs.graph.dijkstra_relax:
+    title: Relajar aristas como Dijkstra
+    body: Para encontrar el camino más corto, se va guardando la mejor distancia conocida a cada nodo
+      y se actualiza (se relaja) cada vez que se encuentra un camino más corto pasando por un vecino.
+  cs.graph.euler_path_degree_rule:
+    title: Regla del grado para el camino de Euler
+    body: Un grafo tiene un camino que recorre cada arista una sola vez si tiene exactamente cero o dos
+      nodos de grado impar; con más de dos, es imposible.
+  cs.graph.graph_vocabulary:
+    title: Vocabulario básico de grafos
+    body: Un grafo son nodos (vértices) unidos por aristas; lo que importa es qué está conectado con qué,
+      no cómo se dibuja.
+  cs.graph.greedy_coloring:
+    title: Colorear evitando repetir el color de un vecino
+    body: Una forma simple de colorear un grafo es recorrer los nodos uno por uno y darle a cada uno el
+      primer color que no tenga ya un vecino suyo.
+  cs.graph.hamilton_vs_euler:
+    title: Camino de Euler contra camino de Hamilton
+    body: Un camino de Euler visita cada arista una sola vez; un camino de Hamilton visita cada nodo una
+      sola vez. Son condiciones distintas, y una no garantiza la otra.
+  cs.graph.handshake_lemma:
+    title: Lema del apretón de manos
+    body: La suma de los grados de todos los nodos de un grafo es siempre el doble de la cantidad de aristas,
+      porque cada arista suma uno a dos nodos.
+  cs.graph.matching_hall:
+    title: Emparejamiento y el teorema de Hall
+    body: En un grafo bipartito, existe un emparejamiento que cubre un lado completo si y solo si todo
+      subconjunto de ese lado tiene al menos tantos vecinos como elementos tiene.
+  cs.graph.max_flow_min_cut:
+    title: Flujo máximo igual a corte mínimo
+    body: El mayor flujo posible de una fuente a un destino es exactamente igual a la capacidad del corte
+      más chico que separa a la fuente del destino.
+  cs.graph.tree_edges_n_minus_1:
+    title: Un árbol tiene una arista menos que nodos
+    body: Todo árbol (grafo conexo sin ciclos) con n nodos tiene exactamente n menos uno aristas; ni una
+      más, porque formaría un ciclo, ni una menos, porque lo desconectaría.
+  cs.graph.walk_path_cycle:
+    title: Paseo, camino y ciclo
+    body: Un paseo puede repetir nodos y aristas; un camino no repite nodos; un ciclo es un camino que
+      vuelve a empezar en el mismo nodo donde arrancó.
+  cs.linalg.adjacency_matrix_powers:
+    title: Las potencias de la adyacencia cuentan caminos
+    body: Si A es la matriz de adyacencia de un grafo, la entrada (i,j) de A elevada a la k cuenta cuántos
+      caminos de exactamente k pasos van de i a j.
+  cs.linalg.angle_between_vectors:
+    title: Ángulo entre dos vectores
+    body: El coseno del ángulo entre dos vectores es su producto punto dividido el producto de sus longitudes.
+  cs.linalg.basis_and_dimension:
+    title: Base y dimensión
+    body: Una base es el conjunto más chico de vectores que genera todo el espacio sin repetir información;
+      la dimensión es cuántos vectores tiene esa base.
+  cs.linalg.change_of_basis_matrix:
+    title: Matriz de cambio de base
+    body: Una matriz de cambio de base traduce las coordenadas de un vector escritas en una base a las
+      coordenadas en otra base.
+  cs.linalg.characteristic_polynomial:
+    title: Polinomio característico
+    body: Los autovalores de una matriz son las raíces de este polinomio, que sale de restarle lambda
+      a la diagonal y pedir que el determinante sea cero.
+  cs.linalg.cofactor_expansion:
+    title: Desarrollo por cofactores
+    body: El determinante de una matriz grande se puede calcular expandiéndolo por una fila o columna,
+      como una suma de determinantes más chicos con signo alternado.
+  cs.linalg.coordinates_in_basis:
+    title: Coordenadas en una base
+    body: Las coordenadas de un vector en una base son la única combinación de los vectores de esa base
+      que lo reconstruye.
+  cs.linalg.det_of_product:
+    title: El determinante de un producto
+    body: El determinante del producto de dos matrices es el producto de sus determinantes por separado.
+  cs.linalg.det_zero_singular:
+    title: Determinante cero significa singular
+    body: Una matriz tiene inversa si y solo si su determinante no es cero; si el determinante es cero,
+      la transformación aplasta el espacio y no se puede deshacer.
+  cs.linalg.determinant_2x2:
+    title: Determinante de una matriz 2x2
+    body: El determinante de una matriz de dos por dos es el producto de la diagonal principal menos el
+      producto de la diagonal secundaria.
+  cs.linalg.determinant_3x3:
+    title: Determinante de una matriz 3x3
+    body: El determinante de una matriz de tres por tres se calcula expandiendo por cofactores de una
+      fila o columna, reduciéndolo a determinantes de dos por dos.
+  cs.linalg.diagonalization:
+    title: Diagonalización
+    body: Si una matriz tiene suficientes autovectores independientes, se puede escribir como el producto
+      de una matriz de cambio de base, una diagonal de autovalores, y la inversa del cambio de base.
+  cs.linalg.dot_product:
+    title: Producto punto
+    body: El producto punto de dos vectores suma los productos de sus componentes correspondientes; mide
+      cuánto apuntan en la misma dirección.
+  cs.linalg.eigenvector_definition:
+    title: Definición de autovector
+    body: 'Un autovector es un vector que la transformación no saca de su propia recta: solo lo estira
+      o encoge por un factor lambda, el autovalor.'
+  cs.linalg.free_variables:
+    title: Variables libres
+    body: 'En un sistema resuelto, las variables sin pivote quedan libres: se les puede dar cualquier
+      valor, y las demás se ajustan en función de ellas.'
+  cs.linalg.gaussian_elimination:
+    title: Eliminación gaussiana
+    body: Para resolver un sistema, se combinan filas para ir dejando ceros debajo de la diagonal, hasta
+      llegar a una forma escalonada fácil de resolver de abajo hacia arriba.
+  cs.linalg.gram_schmidt:
+    title: Proceso de Gram-Schmidt
+    body: Este proceso convierte cualquier base en una base ortonormal, restando a cada vector sus proyecciones
+      sobre los anteriores y normalizando.
+  cs.linalg.inverse_2x2:
+    title: Inversa de una matriz 2x2
+    body: Para invertir una matriz de dos por dos, se intercambian los elementos de la diagonal principal,
+      se cambia el signo de la otra diagonal, y se divide todo por el determinante.
+  cs.linalg.linear_combination:
+    title: Combinación lineal
+    body: Una combinación lineal de vectores es sumarlos después de escalar cada uno por su propio número.
+  cs.linalg.linear_independence:
+    title: Independencia lineal
+    body: Un conjunto de vectores es linealmente independiente si ninguno se puede escribir como combinación
+      de los demás; cada uno aporta una dirección nueva.
+  cs.linalg.matrix_3x3_columns:
+    title: Las columnas de una matriz 3x3
+    body: Cada columna de una matriz de transformación en el espacio dice dónde va a parar cada uno de
+      los tres vectores de la base.
+  cs.linalg.matrix_columns_are_basis_images:
+    title: Las columnas son las imágenes de la base
+    body: 'Para saber qué hace una transformación lineal alcanza con mirar sus columnas: cada una es adónde
+      va a parar un vector de la base.'
+  cs.linalg.matrix_powers_via_eigen:
+    title: Potencias de una matriz vía diagonalización
+    body: 'Para calcular una potencia alta de una matriz, conviene diagonalizarla primero: elevar una
+      matriz diagonal a una potencia es solo elevar cada número de la diagonal.'
+  cs.linalg.matrix_product:
+    title: Producto de matrices
+    body: 'Multiplicar dos matrices es componer dos transformaciones: aplicar primero una y después la
+      otra.'
+  cs.linalg.matrix_vector_product:
+    title: Producto de una matriz por un vector
+    body: Multiplicar una matriz por un vector combina las columnas de la matriz, cada una escalada por
+      la componente correspondiente del vector.
+  cs.linalg.negative_det_flips:
+    title: El determinante negativo da vuelta la orientación
+    body: Un determinante negativo significa que la transformación invierte la orientación del espacio,
+      como un espejo, además de escalar el área o volumen.
+  cs.linalg.normal_equations:
+    title: Ecuaciones normales
+    body: Para encontrar la mejor aproximación a un sistema sin solución exacta, se resuelven estas ecuaciones,
+      que salen de proyectar b sobre el espacio de columnas de A.
+  cs.linalg.orthogonal_matrix_inverse_is_transpose:
+    title: La inversa ortogonal es su transpuesta
+    body: Si las columnas de una matriz son ortonormales, invertirla es tan simple como transponerla,
+      sin ninguna cuenta más.
+  cs.linalg.pivots_and_back_substitution:
+    title: Pivotes y sustitución hacia atrás
+    body: Después de escalonar un sistema, se despeja primero la última incógnita y se va sustituyendo
+      hacia arriba, fila por fila.
+  cs.linalg.product_not_commutative:
+    title: El producto de matrices no es conmutativo
+    body: Multiplicar matrices en distinto orden generalmente da resultados distintos, porque componer
+      dos transformaciones en un orden u otro no es lo mismo.
+  cs.linalg.projection_formula:
+    title: Fórmula de la proyección
+    body: La proyección de un vector sobre otro es la sombra que el primero proyecta sobre la dirección
+      del segundo.
+  cs.linalg.rank_and_solutions:
+    title: El rango determina las soluciones
+    body: Comparando el rango de la matriz de coeficientes con el rango de la matriz ampliada se sabe
+      si un sistema no tiene solución, tiene una única, o tiene infinitas.
+  cs.linalg.rotation_matrices_3d:
+    title: Matrices de rotación en 3D
+    body: En el espacio, rotar alrededor de cada eje tiene su propia matriz, y rotar en un eje cualquiera
+      se arma combinando esas rotaciones.
+  cs.linalg.rotation_shear_reflection_matrices:
+    title: Matrices de rotación, cizalla y reflexión
+    body: Rotar, inclinar y reflejar son transformaciones lineales, cada una con su propia matriz reconocible
+      por lo que le hace a los vectores de la base.
+  cs.linalg.row_operations_preserve_solutions:
+    title: Las operaciones de fila conservan las soluciones
+    body: Sumar un múltiplo de una fila a otra, intercambiar filas o escalar una fila no cambia el conjunto
+      de soluciones del sistema.
+  cs.linalg.scalar_multiple:
+    title: Múltiplo escalar de un vector
+    body: Multiplicar un vector por un número cambia su longitud (y da vuelta su sentido si el número
+      es negativo), sin cambiar su dirección.
+  cs.linalg.singular_no_inverse:
+    title: Una matriz singular no tiene inversa
+    body: Una matriz es singular cuando aplasta el espacio a una dimensión menor; en ese caso no existe
+      ninguna transformación que la deshaga.
+  cs.linalg.singular_values_as_stretch:
+    title: Los valores singulares son los estiramientos
+    body: Los valores singulares miden cuánto estira una transformación a lo largo de cada una de sus
+      direcciones principales.
+  cs.linalg.solve_ax_equals_b:
+    title: Resolver Ax = b con la inversa
+    body: 'Si A tiene inversa, el sistema Ax = b tiene una única solución: x es la inversa de A aplicada
+      a b.'
+  cs.linalg.span:
+    title: El span de un conjunto de vectores
+    body: 'El span de unos vectores es todo lo que se puede alcanzar combinándolos: todas sus combinaciones
+      lineales posibles.'
+  cs.linalg.svd_decomposition:
+    title: Descomposición SVD
+    body: 'Toda matriz se puede escribir como girar, estirar sobre ejes nuevos, y volver a girar: una
+      rotación, una escala y otra rotación.'
+  cs.linalg.trace_and_det_from_eigen:
+    title: Traza y determinante desde los autovalores
+    body: La traza de una matriz es la suma de sus autovalores, y el determinante es el producto de todos
+      ellos.
+  cs.linalg.vector_addition_components:
+    title: Sumar vectores por componentes
+    body: Para sumar dos vectores se suman sus componentes correspondientes por separado; geométricamente
+      es ponerlos punta con cola.
+  cs.linalg.vector_components:
+    title: Componentes de un vector
+    body: Las componentes de un vector son cuánto se mueve en cada dirección de los ejes; juntas describen
+      completamente la flecha.
+  cs.linalg.vector_length:
+    title: Longitud de un vector
+    body: La longitud de un vector es la raíz cuadrada de la suma de sus componentes al cuadrado, el mismo
+      Pitágoras aplicado a la flecha.
+  cs.mvcalc.conservative_field_test:
+    title: Cómo probar si un campo es conservativo
+    body: Un campo en el plano es conservativo si sus derivadas cruzadas coinciden; en ese caso, existe
+      una función potencial de la que el campo es el gradiente.
+  cs.mvcalc.critical_points_2d:
+    title: Puntos críticos en dos variables
+    body: Un punto crítico de una función de dos variables es donde las dos derivadas parciales se anulan
+      a la vez; ahí puede haber un máximo, un mínimo o un punto silla.
+  cs.mvcalc.curl:
+    title: Rotor de un campo vectorial
+    body: El rotor mide cuánto giraría una rueda de paletas puesta en cada punto del campo; si es cero,
+      el campo no tiene remolinos.
+  cs.mvcalc.directional_derivative:
+    title: Derivada direccional
+    body: La derivada direccional mide qué tan rápido cambia f al moverse en una dirección cualquiera;
+      es el gradiente proyectado sobre esa dirección.
+  cs.mvcalc.divergence:
+    title: Divergencia de un campo vectorial
+    body: La divergencia mide si un punto es fuente (el campo sale de ahí) o sumidero (el campo entra),
+      sumando cuánto se expande el campo en cada dirección.
+  cs.mvcalc.divergence_theorem:
+    title: Teorema de la divergencia
+    body: El flujo total de un campo hacia afuera de una superficie cerrada es igual a la suma de toda
+      la divergencia (las fuentes y sumideros) encerrada adentro.
+  cs.mvcalc.double_integral:
+    title: Integral doble
+    body: La integral doble suma el valor de una función sobre una región del plano, como llenar un tanque
+      cuya altura en cada punto es f(x,y).
+  cs.mvcalc.flux:
+    title: Flujo a través de una superficie
+    body: El flujo mide cuánto campo atraviesa una superficie, sumando en cada punto la componente del
+      campo perpendicular a esa superficie.
+  cs.mvcalc.fubini_iterated:
+    title: 'Teorema de Fubini: integrar de a una variable'
+    body: Una integral doble o triple se puede calcular integrando una variable por vez, tratando a las
+      demás como constantes en cada paso, si la función se comporta razonablemente.
+  cs.mvcalc.function_of_two_variables:
+    title: Función de dos variables
+    body: Una función de dos variables recibe dos números de entrada y devuelve uno de salida; su gráfico
+      es una superficie en el espacio.
+  cs.mvcalc.fundamental_theorem_line_integrals:
+    title: Teorema fundamental de las integrales de línea
+    body: Si un campo es el gradiente de una función potencial, su integral de línea entre dos puntos
+      solo depende de esos puntos, no del camino recorrido.
+  cs.mvcalc.gradient_field:
+    title: Campo gradiente
+    body: Un campo gradiente asigna a cada punto la dirección de mayor crecimiento de alguna función potencial;
+      es un tipo particular de campo vectorial.
+  cs.mvcalc.gradient_vector:
+    title: El vector gradiente
+    body: El gradiente junta las derivadas parciales en un vector que apunta en la dirección donde la
+      función crece más rápido.
+  cs.mvcalc.green_theorem:
+    title: Teorema de Green
+    body: La circulación de un campo a lo largo del borde de una región del plano es igual a la suma del
+      rotor de ese campo en toda la región encerrada.
+  cs.mvcalc.jacobian_change_of_variables:
+    title: Cambio de variables con el jacobiano
+    body: Al cambiar de variables en una integral múltiple, el elemento de área o volumen se corrige multiplicando
+      por el valor absoluto del determinante jacobiano.
+  cs.mvcalc.jacobian_matrix:
+    title: Matriz jacobiana
+    body: La matriz jacobiana junta todas las derivadas parciales de una transformación; describe cómo
+      estira la grilla localmente, cerca de cada punto.
+  cs.mvcalc.lagrange_multiplier:
+    title: Multiplicadores de Lagrange
+    body: Para optimizar una función sujeta a una restricción, el punto óptimo es donde el gradiente de
+      la función es paralelo al gradiente de la restricción.
+  cs.mvcalc.level_curves:
+    title: Curvas de nivel
+    body: Una curva de nivel une todos los puntos donde una función de dos variables toma el mismo valor,
+      como las líneas de un mapa topográfico.
+  cs.mvcalc.line_integral:
+    title: Integral de línea
+    body: Una integral de línea suma, a lo largo de un camino, cuánto del campo apunta en la dirección
+      del recorrido; es el trabajo hecho por ese campo.
+  cs.mvcalc.partial_derivative:
+    title: Derivada parcial
+    body: 'La derivada parcial respecto de x mide cómo cambia f al mover solo x, dejando las demás variables
+      fijas: es la pendiente de un corte de la superficie.'
+  cs.mvcalc.polar_double_integral:
+    title: Integral doble en coordenadas polares
+    body: Al pasar una integral doble a polares, aparece un factor extra r que corrige el cambio de escala
+      del sistema polar.
+  cs.mvcalc.second_derivative_test:
+    title: Criterio de la segunda derivada en dos variables
+    body: Este número combina las segundas derivadas parciales para decidir si un punto crítico es máximo,
+      mínimo o punto silla.
+  cs.mvcalc.stokes_theorem:
+    title: Teorema de Stokes
+    body: La circulación de un campo alrededor del borde de una superficie es igual al flujo del rotor
+      de ese campo a través de la superficie.
+  cs.mvcalc.surface_integral:
+    title: Integral de superficie
+    body: Una integral de superficie suma, sobre toda una superficie, cuánto campo la atraviesa en cada
+      punto.
+  cs.mvcalc.triple_integral:
+    title: Integral triple
+    body: La integral triple suma el valor de una función sobre una región del espacio, rebanando en tres
+      direcciones.
+  cs.mvcalc.vector_field:
+    title: Campo vectorial
+    body: Un campo vectorial asigna una flecha a cada punto del espacio o del plano, como la velocidad
+      del viento en cada lugar de un mapa.
+  cs.prealg.coefficient_counts_boxes:
+    title: El coeficiente cuenta cajas iguales
+    body: En 3x, el número 3 dice cuántas cajas x hay juntas; no es una multiplicación pendiente, es un
+      conteo.
+  cs.prealg.combine_like_terms_only:
+    title: Solo se combinan términos semejantes
+    body: Se pueden sumar o restar entre sí únicamente los términos que tienen exactamente la misma letra
+      elevada al mismo exponente.
+  cs.prealg.commutative_associative_with_letters:
+    title: Conmutativa y asociativa también con letras
+    body: El orden y el agrupamiento no cambian el resultado de una suma o un producto, sin importar si
+      los términos son números o letras.
+  cs.prealg.constant_step_reveals_rule:
+    title: Un paso constante revela la regla
+    body: Si en una tabla el valor aumenta siempre lo mismo por cada paso, esa cantidad fija es el número
+      que multiplica a la entrada en la regla.
+  cs.prealg.equals_means_level_pans:
+    title: El igual es la balanza nivelada
+    body: El signo igual dice que los dos platos de la balanza pesan lo mismo, no que 'acá viene el resultado'.
+  cs.prealg.every_operation_has_a_key:
+    title: Toda operación tiene una llave
+    body: 'Cada transformación tiene una inversa que la deshace: sumar y restar son un par de llaves,
+      multiplicar y dividir son otro.'
+  cs.prealg.fraction_bar_groups:
+    title: La raya de fracción agrupa
+    body: Todo lo que está arriba de la raya de fracción y todo lo que está abajo se trata como si tuviera
+      paréntesis propios.
+  cs.prealg.identity_zero_and_one:
+    title: El cero y el uno no cambian nada
+    body: Sumar cero deja cualquier número igual; multiplicar por uno también. Son los elementos neutros
+      de la suma y el producto.
+  cs.prealg.inverse_pairs_table:
+    title: La tabla de llaves inversas
+    body: 'Cada operación tiene su par: sumar con restar, multiplicar con dividir, elevar al cuadrado
+      con la raíz cuadrada.'
+  cs.prealg.juxtaposition_means_times:
+    title: Escribir dos cosas juntas es multiplicar
+    body: Cuando un número y una letra se escriben pegados, como 3x, significa que se están multiplicando.
+  cs.prealg.letter_names_the_box:
+    title: La letra le pone nombre a la caja
+    body: Una letra como x es el nombre de una cantidad desconocida, la misma caja cerrada de antes, ahora
+      con etiqueta.
+  cs.prealg.lt_gt_as_tilt:
+    title: Menor y mayor son la balanza inclinada
+    body: Los símbolos < y > muestran hacia qué lado se inclina la balanza cuando los dos platos no pesan
+      igual.
+  cs.prealg.percent_change_as_fill_delta:
+    title: El cambio porcentual es cuánto subió o bajó
+    body: Un aumento o una rebaja de porcentaje mueve el nivel de llenado de la barra; el porcentaje de
+      cambio es esa diferencia sobre el valor inicial.
+  cs.prealg.percent_decimal_fraction_triangle:
+    title: Porcentaje, fracción y decimal son la misma cantidad
+    body: Todo porcentaje se puede escribir como fracción de denominador cien y como número decimal; son
+      tres formas de la misma cantidad.
+  cs.prealg.place_value_as_power_of_ten:
+    title: Cada posición vale una potencia de diez
+    body: En un número, cada cifra vale lo que indica multiplicado por una potencia de diez según su posición.
+  cs.prealg.proportional_graph_line_through_origin:
+    title: Lo proporcional es una recta por el origen
+    body: Una relación es proporcional si y solo si su gráfico es una línea recta que pasa por el punto
+      (0, 0).
+  cs.prealg.proportional_means_constant_ratio:
+    title: Proporcional es razón constante
+    body: Dos cantidades son proporcionales cuando el cociente entre ellas es siempre el mismo número,
+      sin importar los valores.
+  cs.prealg.ratio_scales_both_parts:
+    title: Escalar una razón multiplica las dos partes
+    body: Para agrandar o achicar una receta manteniendo el sabor, hay que multiplicar todos los ingredientes
+      por el mismo factor.
+  cs.prealg.same_action_both_sides:
+    title: La misma acción en los dos platos
+    body: Sumar, restar, multiplicar o dividir por el mismo número en ambos platos de la balanza no rompe
+      el equilibrio.
+  cs.prealg.scientific_notation:
+    title: La notación científica
+    body: Un número muy grande o muy chico se escribe como un número entre uno y diez multiplicado por
+      una potencia de diez.
+  cs.prealg.sign_rules_four_operations:
+    title: Reglas de signo en las cuatro operaciones
+    body: 'Sumar y restar enteros mueve la posición según el signo; multiplicar y dividir siguen la regla
+      de signos: igual da positivo, distinto da negativo.'
+  cs.prealg.substitute_then_evaluate:
+    title: Sustituir y después calcular
+    body: Para evaluar una expresión con letras, primero se reemplaza cada letra por su valor y recién
+      después se hacen las cuentas.
+  cs.prealg.table_records_machine:
+    title: La tabla registra lo que hace la máquina
+    body: Una tabla de entrada y salida anota, para cada valor que entra a la máquina de función, qué
+      valor sale.
+  cs.precalc.absolute_value_as_piecewise:
+    title: El valor absoluto como función partida
+    body: 'El valor absoluto se puede escribir como una función definida por partes: deja igual a los
+      números positivos y cambia el signo a los negativos.'
+  cs.precalc.arithmetic_nth_term:
+    title: Término general de una sucesión aritmética
+    body: En una sucesión que suma siempre el mismo paso d, el término n se calcula desde el primero más
+      ese paso repetido n menos uno veces.
+  cs.precalc.arithmetic_sum_pairing:
+    title: Sumar emparejando extremos
+    body: 'Para sumar una sucesión aritmética, conviene emparejar el primer término con el último, el
+      segundo con el anteúltimo, y así: cada par suma lo mismo.'
+  cs.precalc.binomial_theorem:
+    title: Teorema del binomio
+    body: El desarrollo de una suma elevada a la n se escribe como una suma de términos, cada uno con
+      un coeficiente binomial del triángulo de Pascal.
+  cs.precalc.complex_add_multiply:
+    title: Sumar y multiplicar números complejos
+    body: Para sumar complejos se suman las partes reales entre sí y las imaginarias entre sí; para multiplicarlos
+      se distribuye y se usa que i al cuadrado es menos uno.
+  cs.precalc.conic_distance_definitions:
+    title: Las cónicas como distancias
+    body: 'Cada cónica se define por una condición de distancia: la elipse por la suma de distancias a
+      dos focos constante, la hipérbola por su diferencia, la parábola por igual distancia a un foco y
+      una recta.'
+  cs.precalc.conic_equations_standard:
+    title: Ecuaciones estándar de las cónicas
+    body: Cada tipo de cónica (circunferencia, elipse, parábola, hipérbola) tiene una forma algebraica
+      reconocible cuando está centrada en el origen.
+  cs.precalc.continuous_means_limit_equals_value:
+    title: Continua significa que el límite es el valor
+    body: 'Una función es continua en un punto cuando, al acercarse por cualquier lado, el límite coincide
+      exactamente con el valor de la función ahí: se puede dibujar sin levantar el lápiz.'
+  cs.precalc.e_as_limit_compounding:
+    title: e como límite de interés compuesto
+    body: 'El número e aparece como el límite de capitalizar interés cada vez más seguido: es la base
+      natural del crecimiento continuo.'
+  cs.precalc.eliminate_parameter:
+    title: Eliminar el parámetro
+    body: Para pasar de una curva paramétrica a una ecuación en x e y, conviene despejar el parámetro
+      de una ecuación y reemplazarlo en la otra.
+  cs.precalc.end_behavior_by_leading_term:
+    title: El término principal manda en los extremos
+    body: Para valores muy grandes o muy negativos de x, una función se comporta como su término de mayor
+      grado; los demás términos se vuelven insignificantes.
+  cs.precalc.even_odd_definitions:
+    title: Funciones pares e impares
+    body: Una función es par si su gráfico es simétrico respecto del eje vertical; es impar si es simétrico
+      respecto del origen.
+  cs.precalc.exp_slope_equals_value:
+    title: La pendiente de eˣ es su propio valor
+    body: La función e a la x crece exactamente a la velocidad de su propio valor en cada punto; es la
+      única función (salvo múltiplos) con esa propiedad.
+  cs.precalc.geometric_nth_term:
+    title: Término general de una sucesión geométrica
+    body: En una sucesión que multiplica siempre por la misma razón r, el término n se calcula desde el
+      primero multiplicado por esa razón n menos uno veces.
+  cs.precalc.geometric_sum_finite:
+    title: Suma de una sucesión geométrica finita
+    body: La suma de los primeros n términos de una sucesión geométrica se calcula con esta fórmula, sin
+      sumar término por término.
+  cs.precalc.horizontal_vertical_asymptotes:
+    title: Asíntotas horizontales y verticales
+    body: Una asíntota vertical aparece donde la función se dispara al infinito; una horizontal describe
+      hacia qué valor se acerca la función cuando x crece o decrece sin límite.
+  cs.precalc.i_squared_minus_one:
+    title: i al cuadrado es menos uno
+    body: El número imaginario i se define como aquel cuyo cuadrado da menos uno, algo que ningún número
+      real puede cumplir.
+  cs.precalc.increasing_decreasing_intervals:
+    title: Intervalos de crecimiento y decrecimiento
+    body: Una función crece en un intervalo si sus valores suben a medida que x avanza, y decrece si bajan;
+      se puede leer directamente del gráfico.
+  cs.precalc.infinite_geometric_sum_ratio_less_one:
+    title: Converge solo si la razón es chica
+    body: Una suma geométrica con infinitos términos tiene un resultado finito únicamente cuando la razón
+      está entre -1 y 1; si no, la suma crece sin límite.
+  cs.precalc.limit_by_table_of_values:
+    title: Estimar un límite con una tabla de valores
+    body: Para intuir a qué valor se acerca una función cerca de un punto, conviene evaluarla en valores
+      cada vez más cercanos por los dos lados y ver a qué número se acercan los resultados.
+  cs.precalc.limit_ignores_value_at_point:
+    title: El límite no mira el valor exacto
+    body: El límite de una función cuando x se acerca a a depende de los valores cercanos a a, no de lo
+      que pase (o no pase) exactamente en a.
+  cs.precalc.limit_notation:
+    title: Notación de límite
+    body: Esta notación dice que a medida que x se acerca a a, los valores de f(x) se acercan a L, sin
+      que x llegue a valer a.
+  cs.precalc.ln_inverse_of_exp:
+    title: El logaritmo natural deshace la exponencial natural
+    body: 'Aplicar la exponencial de base e y después el logaritmo natural (o al revés) devuelve el número
+      original: son un par de llaves.'
+  cs.precalc.local_max_min_turning_points:
+    title: Máximos y mínimos locales
+    body: Un máximo local es un punto donde la función deja de crecer y empieza a decrecer; un mínimo
+      local es lo contrario. Son los picos y valles del gráfico.
+  cs.precalc.modulus_conjugate:
+    title: Módulo y conjugado de un complejo
+    body: El módulo de a+bi es su distancia al origen; el conjugado es el mismo número con la parte imaginaria
+      cambiada de signo.
+  cs.precalc.parametric_x_t_y_t:
+    title: Curvas paramétricas x(t), y(t)
+    body: Una curva paramétrica describe la posición de un punto en movimiento dando por separado su coordenada
+      x y su coordenada y en función del tiempo t.
+  cs.precalc.piecewise_notation:
+    title: Notación de función definida por partes
+    body: Una función partida usa una regla distinta según en qué intervalo caiga la entrada, y se escribe
+      con llave agrupando los casos.
+  cs.precalc.reflection_rules_minus_f_f_minus_x:
+    title: Reflejar una gráfica
+    body: Menos f de x refleja el gráfico verticalmente, sobre el eje horizontal; f de menos x lo refleja
+      horizontalmente, sobre el eje vertical.
+  cs.precalc.shift_rules_f_x_minus_h_plus_k:
+    title: Desplazar una gráfica
+    body: Restar h adentro de la función la corre h unidades hacia la derecha; sumar k afuera la corre
+      k unidades hacia arriba.
+  cs.precalc.sigma_notation:
+    title: Notación sigma
+    body: El símbolo sigma indica sumar una expresión que cambia con k, desde el valor de abajo hasta
+      el de arriba del símbolo.
+  cs.precalc.stretch_rules_a_f_bx:
+    title: Estirar y comprimir una gráfica
+    body: Multiplicar la función por a la estira o comprime verticalmente; multiplicar la entrada por
+      b la comprime o estira horizontalmente, al revés de lo que parece.
+  cs.prob.addition_rule_inclusion_exclusion:
+    title: Regla de la suma para la unión
+    body: La probabilidad de que pase A o B es la suma de sus probabilidades, menos la probabilidad de
+      que pasen las dos, para no contarla dos veces.
+  cs.prob.bayes_rule:
+    title: Regla de Bayes
+    body: 'Bayes es la llave que invierte una probabilidad condicional: a partir de P(A dado B) permite
+      calcular P(B dado A).'
+  cs.prob.biased_sample:
+    title: Muestra sesgada
+    body: Una muestra está sesgada cuando la forma de elegirla favorece a algunos resultados sobre otros,
+      y entonces no representa bien a toda la población.
+  cs.prob.binomial_formula:
+    title: Fórmula de la distribución binomial
+    body: La probabilidad de obtener exactamente k éxitos en n intentos independientes, cada uno con probabilidad
+      p, se calcula con esta fórmula.
+  cs.prob.binomial_mean_variance:
+    title: Media y varianza de la binomial
+    body: En una distribución binomial, el promedio esperado de éxitos es n por p, y la varianza es n
+      por p por uno menos p.
+  cs.prob.cdf_definition:
+    title: Definición de la función de distribución acumulada
+    body: La acumulada en x es la probabilidad de que la variable aleatoria tome un valor menor o igual
+      a x.
+  cs.prob.central_limit_theorem:
+    title: Teorema central del límite
+    body: El promedio de muchas muestras independientes de cualquier población se acerca a una distribución
+      normal, sin importar la forma de la distribución original, siempre que la muestra sea suficientemente
+      grande.
+  cs.prob.complement_rule:
+    title: Regla del complemento
+    body: La probabilidad de que algo no pase es uno menos la probabilidad de que sí pase.
+  cs.prob.conditional_definition:
+    title: Definición de probabilidad condicional
+    body: La probabilidad de A sabiendo que pasó B es la probabilidad de que pasen las dos, dividida la
+      probabilidad de B.
+  cs.prob.confidence_interval:
+    title: Intervalo de confianza
+    body: Un intervalo de confianza da un rango de valores razonables para un parámetro de la población,
+      construido a partir de la muestra y con un nivel de confianza elegido.
+  cs.prob.confounders_and_causation:
+    title: Correlación no implica causalidad
+    body: 'Que dos variables se muevan juntas no significa que una cause la otra: puede haber una tercera
+      variable, un factor de confusión, detrás de las dos.'
+  cs.prob.continuous_uniform:
+    title: Distribución uniforme continua
+    body: En una distribución uniforme continua, la probabilidad de caer en un intervalo depende solo
+      de su longitud, no de dónde está dentro del rango.
+  cs.prob.correlation_coefficient:
+    title: Coeficiente de correlación
+    body: 'El coeficiente r mide qué tan alineados están dos conjuntos de datos en una línea recta: cercano
+      a uno o menos uno es fuerte, cercano a cero es débil.'
+  cs.prob.counting_principle:
+    title: Principio de conteo
+    body: Si una elección tiene n1 opciones y otra, independiente, tiene n2 opciones, el total de combinaciones
+      posibles es el producto de ambas.
+  cs.prob.density_area:
+    title: La densidad y el área bajo la curva
+    body: En una variable continua, la probabilidad de caer en un intervalo es el área bajo la curva de
+      densidad en ese intervalo, no la altura de la curva.
+  cs.prob.expectation_variance_of_ax_plus_b:
+    title: Esperanza y varianza de una transformación lineal
+    body: Al escalar y desplazar una variable aleatoria, la esperanza se transforma igual, pero la varianza
+      solo se ve afectada por la escala, al cuadrado.
+  cs.prob.expected_value_formula:
+    title: Fórmula del valor esperado
+    body: El valor esperado de una variable aleatoria es el promedio de sus valores posibles, cada uno
+      pesado por su probabilidad.
+  cs.prob.frequency_and_relative_frequency:
+    title: Frecuencia y frecuencia relativa
+    body: La frecuencia es cuántas veces aparece un valor; la frecuencia relativa es esa cantidad dividida
+      el total de datos, una proporción.
+  cs.prob.histogram_reading:
+    title: Leer un histograma
+    body: Un histograma agrupa los datos en franjas y muestra con la altura de cada barra cuántos datos
+      caen en esa franja.
+  cs.prob.independence_product_rule:
+    title: Regla del producto para eventos independientes
+    body: Si dos eventos son independientes, la probabilidad de que pasen los dos es el producto de sus
+      probabilidades por separado.
+  cs.prob.least_squares_line:
+    title: Recta de mínimos cuadrados
+    body: La recta de regresión es la que minimiza la suma de los cuadrados de las distancias verticales
+      entre los puntos y la recta.
+  cs.prob.linearity_of_expectation:
+    title: Linealidad de la esperanza
+    body: El valor esperado de una suma de variables aleatorias es siempre la suma de sus valores esperados,
+      aunque las variables no sean independientes.
+  cs.prob.long_run_proportion:
+    title: La probabilidad es la proporción a largo plazo
+    body: La probabilidad de un resultado es la fracción de veces que ocurriría si se repitiera el experimento
+      muchísimas veces.
+  cs.prob.mean_median_mode:
+    title: Media, mediana y moda
+    body: La media es el promedio, la mediana es el valor del medio al ordenar los datos, y la moda es
+      el valor que más se repite.
+  cs.prob.multiplication_rule:
+    title: Regla del producto general
+    body: La probabilidad de que pasen dos eventos es la probabilidad del primero, por la probabilidad
+      del segundo sabiendo que ya pasó el primero.
+  cs.prob.normal_68_95_99:
+    title: Regla del 68-95-99.7
+    body: En una distribución normal, alrededor del 68% de los datos cae a menos de un desvío estándar
+      de la media, el 95% a menos de dos, y el 99.7% a menos de tres.
+  cs.prob.null_hypothesis_test:
+    title: Contraste de hipótesis nula
+    body: Un test de hipótesis supone que no hay efecto (la hipótesis nula) y mide qué tan sorprendente
+      es el dato observado si esa suposición fuera cierta.
+  cs.prob.outlier_pulls_mean:
+    title: Un dato extremo arrastra la media
+    body: Un valor muy alejado del resto tira de la media hacia sí mismo, mientras que la mediana casi
+      no se mueve.
+  cs.prob.p_value:
+    title: El valor p
+    body: El valor p es la probabilidad de observar un resultado tan extremo o más, si la hipótesis nula
+      fuera cierta. Un valor p chico es evidencia en contra de la hipótesis nula.
+  cs.prob.permutations_combinations:
+    title: Permutaciones y combinaciones
+    body: Las permutaciones cuentan arreglos donde el orden importa; las combinaciones cuentan grupos
+      donde el orden no importa.
+  cs.prob.pmf_table:
+    title: Tabla de función de probabilidad
+    body: La función de probabilidad de una variable discreta lista cada valor posible junto con su probabilidad,
+      y esas probabilidades suman uno.
+  cs.prob.probability_as_fraction:
+    title: La probabilidad como fracción
+    body: La probabilidad de un evento, cuando todos los resultados son igual de posibles, es la cantidad
+      de casos favorables sobre la cantidad de casos posibles.
+  cs.prob.probability_between_0_and_1:
+    title: La probabilidad está entre 0 y 1
+    body: 'Ninguna probabilidad puede ser negativa ni mayor a uno: cero es imposible, uno es seguro.'
+  cs.prob.random_variable_definition:
+    title: Definición de variable aleatoria
+    body: Una variable aleatoria es una máquina que asigna un número a cada resultado posible de un experimento
+      al azar.
+  cs.prob.sample_mean_estimates:
+    title: El promedio muestral estima la media poblacional
+    body: El promedio calculado sobre una muestra es la mejor estimación disponible del promedio de toda
+      la población, aunque no sea exacto.
+  cs.prob.sample_space_grid_two_dice:
+    title: La grilla del espacio muestral de dos dados
+    body: Tirar dos dados tiene 36 resultados igual de posibles, que se pueden anotar en una grilla de
+      6 por 6 para contar cualquier evento.
+  cs.prob.standard_deviation:
+    title: Desvío estándar
+    body: El desvío estándar es la raíz cuadrada de la varianza; mide la dispersión típica en las mismas
+      unidades que los datos originales.
+  cs.prob.standard_error:
+    title: Error estándar
+    body: El error estándar mide cuánto varía el promedio de una muestra de un tamaño dado; se achica
+      a medida que la muestra crece.
+  cs.prob.total_probability:
+    title: Ley de la probabilidad total
+    body: La probabilidad de un evento se puede calcular sumando sus probabilidades condicionales sobre
+      cada escenario posible, pesadas por la probabilidad de cada escenario.
+  cs.prob.transition_matrix:
+    title: Matriz de transición
+    body: En una cadena de Markov, la matriz de transición guarda, en cada fila, la probabilidad de pasar
+      de un estado a cada uno de los demás en un paso.
+  cs.prob.uniform_vs_weighted_outcomes:
+    title: Resultados equiprobables o con distinto peso
+    body: No todos los experimentos tienen resultados igual de probables; hay que fijarse si cada resultado
+      pesa lo mismo antes de contar casos favorables sobre posibles.
+  cs.prob.variance_formula:
+    title: Fórmula de la varianza
+    body: La varianza es el promedio de las distancias al cuadrado entre cada valor y la media; mide qué
+      tan dispersos están los datos.
+  cs.prob.variance_of_independent_sum:
+    title: Varianza de una suma de independientes
+    body: Si dos variables aleatorias son independientes, la varianza de su suma es la suma de sus varianzas.
+  cs.prob.z_score:
+    title: Puntaje z
+    body: El puntaje z mide a cuántos desvíos estándar de la media está un dato; permite comparar valores
+      de distintas distribuciones.
+  cs.trig.amplitude_period_phase:
+    title: Amplitud, periodo y fase de una onda
+    body: La amplitud es cuánto sube y baja la onda, el periodo es cuánto tarda en repetirse, y la fase
+      es cuánto se corrió hacia el costado.
+  cs.trig.arc_length_r_theta:
+    title: Longitud de arco en radianes
+    body: Con el ángulo medido en radianes, la longitud del arco es directamente el radio multiplicado
+      por el ángulo. Es la misma idea que el arco como fracción de la vuelta, escrita con radianes.
+  cs.trig.arcsin_arccos_arctan_ranges:
+    title: Los rangos de las funciones arco
+    body: 'Como seno, coseno y tangente repiten valores, sus inversas se definen eligiendo una sola rama:
+      arcoseno y arcotangente devuelven ángulos entre -90° y 90°, arcocoseno entre 0° y 180°.'
+  cs.trig.cartesian_to_polar:
+    title: De coordenadas cartesianas a polares
+    body: Para pasar un punto (x, y) a polares, el radio sale de Pitágoras y el ángulo de la arcotangente
+      de y sobre x, cuidando el cuadrante.
+  cs.trig.cos_is_sin_shifted:
+    title: El coseno es el seno corrido
+    body: La gráfica del coseno es la del seno desplazada un cuarto de vuelta hacia la izquierda; son
+      la misma onda con distinto punto de partida.
+  cs.trig.cosine_graph_shape:
+    title: La forma de la gráfica del coseno
+    body: El coseno empieza en su valor máximo, baja hasta el mínimo y vuelve a subir, repitiendo esa
+      forma de onda cada vuelta completa.
+  cs.trig.degrees_radians_conversion:
+    title: Convertir grados a radianes
+    body: Para pasar de grados a radianes se multiplica por pi sobre 180; para el camino inverso se multiplica
+      por 180 sobre pi.
+  cs.trig.double_angle:
+    title: Identidades del ángulo doble
+    body: El seno y el coseno del doble de un ángulo se pueden escribir en términos del seno y el coseno
+      del ángulo original.
+  cs.trig.euler_formula:
+    title: Fórmula de Euler
+    body: 'La exponencial imaginaria de un ángulo es exactamente el punto del círculo unitario con ese
+      ángulo: une la exponencial, la trigonometría y los números complejos en una sola igualdad.'
+  cs.trig.half_angle_power_reduce:
+    title: Identidades de ángulo mitad y reducción de potencia
+    body: Estas identidades reescriben el cuadrado de un seno o coseno en términos del coseno del doble
+      de ángulo, sin potencias.
+  cs.trig.law_of_cosines:
+    title: Ley del coseno
+    body: En cualquier triángulo, el cuadrado de un lado es la suma de los cuadrados de los otros dos,
+      menos el doble producto por el coseno del ángulo entre ellos. Cuando ese ángulo es recto, se reduce
+      a Pitágoras.
+  cs.trig.law_of_sines:
+    title: Ley del seno
+    body: En cualquier triángulo, cada lado dividido por el seno de su ángulo opuesto da siempre el mismo
+      valor.
+  cs.trig.multiply_complex_add_angles:
+    title: Multiplicar complejos en polar suma los ángulos
+    body: Al multiplicar dos números complejos escritos en forma polar, sus módulos se multiplican y sus
+      ángulos se suman.
+  cs.trig.period_2pi_reduce_angle:
+    title: El periodo 2π permite reducir el ángulo
+    body: Seno y coseno repiten sus valores cada vuelta completa, así que cualquier ángulo se puede reducir
+      restando vueltas de 2π hasta caer en el primer giro.
+  cs.trig.polar_to_cartesian:
+    title: De coordenadas polares a cartesianas
+    body: Un punto dado por su distancia al origen y su ángulo se convierte a x e y multiplicando esa
+      distancia por el coseno y el seno del ángulo.
+  cs.trig.quadrant_signs_table:
+    title: Signos de seno y coseno por cuadrante
+    body: 'En cada cuadrante del círculo, seno y coseno tienen un signo fijo: ambos positivos en el primero,
+      y cambiando de a uno en los siguientes.'
+  cs.trig.radian_as_arc_over_radius:
+    title: El radián es arco sobre radio
+    body: Un radián es el ángulo para el cual el arco que recorta mide exactamente lo mismo que el radio.
+  cs.trig.reference_angle:
+    title: El ángulo de referencia
+    body: El ángulo de referencia es el ángulo agudo que forma un lado terminal con el eje horizontal;
+      sirve para calcular razones trigonométricas en cualquier cuadrante.
+  cs.trig.rotation_matrix_columns:
+    title: Las columnas de la matriz de rotación
+    body: 'Las columnas de la matriz que rota un ángulo θ son las imágenes de los vectores base: dónde
+      van a parar el (1,0) y el (0,1).'
+  cs.trig.sector_area_half_r_squared_theta:
+    title: Área de un sector circular
+    body: El área de un sector de círculo, con el ángulo en radianes, es la mitad del radio al cuadrado
+      multiplicado por ese ángulo.
+  cs.trig.sin2_plus_cos2:
+    title: Identidad pitagórica
+    body: Para cualquier ángulo, el cuadrado del seno más el cuadrado del coseno da siempre uno. Es Pitágoras
+      aplicado al triángulo del círculo unitario, de hipotenusa uno.
+  cs.trig.sin_cos_angle_sum:
+    title: Seno y coseno de una suma de ángulos
+    body: El seno o el coseno de la suma de dos ángulos se escriben combinando los senos y cosenos de
+      cada ángulo por separado.
+  cs.trig.sin_cos_as_coordinates:
+    title: Seno y coseno son coordenadas del círculo unitario
+    body: Para un ángulo θ medido desde el eje horizontal, el coseno es la coordenada x y el seno es la
+      coordenada y del punto sobre el círculo de radio uno.
+  cs.trig.sin_cos_values_key_angles:
+    title: Valores de seno y coseno en ángulos clave
+    body: Los ángulos 0°, 30°, 45°, 60° y 90° tienen valores de seno y coseno exactos y conviene recordarlos,
+      porque aparecen todo el tiempo.
+  cs.trig.sine_graph_shape:
+    title: La forma de la gráfica del seno
+    body: El seno arranca en cero, sube hasta el máximo, vuelve a cero, baja hasta el mínimo y vuelve
+      a cero, repitiendo esa onda cada vuelta.
+  cs.trig.sohcahtoa:
+    title: SOH-CAH-TOA
+    body: En un triángulo rectángulo, seno es opuesto sobre hipotenusa, coseno es adyacente sobre hipotenusa,
+      tangente es opuesto sobre adyacente.
+  cs.trig.special_triangles_30_45_60:
+    title: Triángulos especiales de 30-60-90 y 45-45-90
+    body: Estos dos triángulos tienen lados en proporciones fijas y conocidas, así que sus razones trigonométricas
+      se pueden calcular sin calculadora.
+  cs.trig.strategy_all_solutions_from_one:
+    title: De una solución a todas las soluciones
+    body: 'Como seno, coseno y tangente se repiten, encontrar un ángulo solución no alcanza: hay que sumar
+      o restar el periodo, o buscar el ángulo hermano en otro cuadrante, para tener todas.'
+  cs.trig.strategy_drop_altitude_two_right_triangles:
+    title: Bajar la altura para armar dos triángulos rectángulos
+    body: Trazar la altura de un triángulo cualquiera lo parte en dos triángulos rectángulos, donde sí
+      valen las razones trigonométricas simples.
+  cs.trig.strategy_pythagoras_on_unit_triangle:
+    title: Aplicar Pitágoras sobre el triángulo del círculo unitario
+    body: El triángulo que forman el radio, el seno y el coseno dentro del círculo unitario es rectángulo
+      de hipotenusa uno, así que Pitágoras da la identidad pitagórica.
+  cs.trig.strategy_rotate_twice:
+    title: Pensarlo como dos giros seguidos
+    body: Un ángulo suma se puede pensar como aplicar un giro y después otro; las fórmulas de seno y coseno
+      de la suma salen de combinar esos dos giros.
+  cs.trig.strategy_which_law:
+    title: Elegir entre ley del seno o coseno
+    body: Si se conocen dos ángulos y un lado, o dos lados y el ángulo opuesto a uno, conviene la ley
+      del seno; si se conocen los tres lados o dos lados y el ángulo entre ellos, conviene la ley del
+      coseno.
+  cs.trig.tan_as_sin_over_cos:
+    title: La tangente es seno sobre coseno
+    body: La tangente de un ángulo es siempre el cociente entre su seno y su coseno.
+  cs.trig.tan_vertical_asymptotes:
+    title: La tangente tiene asíntotas verticales
+    body: La tangente no está definida donde el coseno vale cero, y ahí su gráfica tiene una asíntota
+      vertical.
+  cs.trig.unit_circle_key_points:
+    title: Puntos clave del círculo unitario
+    body: Los ángulos múltiplos de 30° y 45° marcan puntos del círculo unitario con coordenadas exactas
+      y conocidas, que conviene tener memorizados.

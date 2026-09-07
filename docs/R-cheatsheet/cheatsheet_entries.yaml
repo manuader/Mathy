@@ -1,0 +1,6169 @@
+# Cheatsheet incremental — datos. Ver ../R-cheatsheet/R0-cheatsheet.md.
+# DATA only: sin texto visible al usuario. Nombres y cuerpos narrables en
+# ../locales/es/cheatsheet.yaml. Regla de agregado, tipos de entrada y
+# organizacion: R0-cheatsheet.md. Constantes de evaluacion: ../K-evaluacion.md.
+topics:
+  topic.numbers:
+    order: 1
+  topic.numbers.operations:
+    order: 1
+    parent: topic.numbers
+  topic.numbers.fractions:
+    order: 2
+    parent: topic.numbers
+  topic.numbers.decimals:
+    order: 3
+    parent: topic.numbers
+  topic.numbers.percent:
+    order: 4
+    parent: topic.numbers
+  topic.numbers.ratio:
+    order: 5
+    parent: topic.numbers
+  topic.numbers.integers:
+    order: 6
+    parent: topic.numbers
+  topic.numbers.powers:
+    order: 7
+    parent: topic.numbers
+  topic.numbers.primes:
+    order: 8
+    parent: topic.numbers
+  topic.numbers.order_of_operations:
+    order: 9
+    parent: topic.numbers
+  topic.numbers.units:
+    order: 10
+    parent: topic.numbers
+  topic.equations:
+    order: 2
+  topic.equations.linear:
+    order: 1
+    parent: topic.equations
+  topic.equations.quadratic:
+    order: 2
+    parent: topic.equations
+  topic.equations.systems:
+    order: 3
+    parent: topic.equations
+  topic.equations.inequalities:
+    order: 4
+    parent: topic.equations
+  topic.functions:
+    order: 3
+  topic.functions.intro:
+    order: 1
+    parent: topic.functions
+  topic.functions.linear:
+    order: 2
+    parent: topic.functions
+  topic.functions.quadratic:
+    order: 3
+    parent: topic.functions
+  topic.functions.composition_inverse:
+    order: 4
+    parent: topic.functions
+  topic.functions.exponential_log:
+    order: 5
+    parent: topic.functions
+  topic.functions.piecewise_absolute:
+    order: 6
+    parent: topic.functions
+  topic.functions.transformations:
+    order: 7
+    parent: topic.functions
+  topic.functions.sequences:
+    order: 8
+    parent: topic.functions
+  topic.functions.parametric:
+    order: 9
+    parent: topic.functions
+  topic.algebra:
+    order: 4
+  topic.algebra.expressions:
+    order: 1
+    parent: topic.algebra
+  topic.algebra.polynomials:
+    order: 2
+    parent: topic.algebra
+  topic.geometry:
+    order: 5
+  topic.geometry.angles:
+    order: 1
+    parent: topic.geometry
+  topic.geometry.triangles:
+    order: 2
+    parent: topic.geometry
+  topic.geometry.area:
+    order: 3
+    parent: topic.geometry
+  topic.geometry.circles:
+    order: 4
+    parent: topic.geometry
+  topic.geometry.solids:
+    order: 5
+    parent: topic.geometry
+  topic.geometry.similarity:
+    order: 6
+    parent: topic.geometry
+  topic.geometry.transformations:
+    order: 7
+    parent: topic.geometry
+  topic.geometry.coordinate:
+    order: 8
+    parent: topic.geometry
+  topic.geometry.constructions:
+    order: 9
+    parent: topic.geometry
+  topic.geometry.conics:
+    order: 10
+    parent: topic.geometry
+  topic.geometry.classification:
+    order: 11
+    parent: topic.geometry
+  topic.trig:
+    order: 6
+  topic.trig.ratios:
+    order: 1
+    parent: topic.trig
+  topic.trig.unit_circle:
+    order: 2
+    parent: topic.trig
+  topic.trig.angles_quadrants:
+    order: 3
+    parent: topic.trig
+  topic.trig.functions:
+    order: 4
+    parent: topic.trig
+  topic.trig.identities:
+    order: 5
+    parent: topic.trig
+  topic.trig.inverse:
+    order: 6
+    parent: topic.trig
+  topic.trig.laws:
+    order: 7
+    parent: topic.trig
+  topic.trig.polar:
+    order: 8
+    parent: topic.trig
+  topic.trig.rotation:
+    order: 9
+    parent: topic.trig
+  topic.complex_numbers:
+    order: 7
+  topic.complex_numbers.intro:
+    order: 1
+    parent: topic.complex_numbers
+  topic.complex_numbers.algebra:
+    order: 2
+    parent: topic.complex_numbers
+  topic.complex_numbers.polar_and_powers:
+    order: 3
+    parent: topic.complex_numbers
+  topic.complex_numbers.functions:
+    order: 4
+    parent: topic.complex_numbers
+  topic.calculus:
+    order: 8
+  topic.calculus.limits:
+    order: 1
+    parent: topic.calculus
+  topic.calculus.derivative:
+    order: 2
+    parent: topic.calculus
+  topic.calculus.integral:
+    order: 3
+    parent: topic.calculus
+  topic.calculus.series:
+    order: 4
+    parent: topic.calculus
+  topic.calculus.differential_equations:
+    order: 5
+    parent: topic.calculus
+  topic.multivariable_calculus:
+    order: 9
+  topic.multivariable_calculus.functions_of_several_variables:
+    order: 1
+    parent: topic.multivariable_calculus
+  topic.multivariable_calculus.partial_derivatives_and_gradient:
+    order: 2
+    parent: topic.multivariable_calculus
+  topic.multivariable_calculus.optimization:
+    order: 3
+    parent: topic.multivariable_calculus
+  topic.multivariable_calculus.multiple_integrals:
+    order: 4
+    parent: topic.multivariable_calculus
+  topic.multivariable_calculus.vector_fields:
+    order: 5
+    parent: topic.multivariable_calculus
+  topic.linear_algebra:
+    order: 10
+  topic.linear_algebra.vectors:
+    order: 1
+    parent: topic.linear_algebra
+  topic.linear_algebra.transformations:
+    order: 2
+    parent: topic.linear_algebra
+  topic.linear_algebra.systems:
+    order: 3
+    parent: topic.linear_algebra
+  topic.linear_algebra.determinants:
+    order: 4
+    parent: topic.linear_algebra
+  topic.linear_algebra.eigenvalues:
+    order: 5
+    parent: topic.linear_algebra
+  topic.linear_algebra.basis:
+    order: 6
+    parent: topic.linear_algebra
+  topic.linear_algebra.orthogonality:
+    order: 7
+    parent: topic.linear_algebra
+  topic.linear_algebra.svd_and_regression:
+    order: 8
+    parent: topic.linear_algebra
+  topic.probability:
+    order: 11
+  topic.probability.basics:
+    order: 1
+    parent: topic.probability
+  topic.probability.conditional:
+    order: 2
+    parent: topic.probability
+  topic.probability.random_variables:
+    order: 3
+    parent: topic.probability
+  topic.probability.distributions:
+    order: 4
+    parent: topic.probability
+  topic.probability.sampling_and_inference:
+    order: 5
+    parent: topic.probability
+  topic.probability.statistics:
+    order: 6
+    parent: topic.probability
+  topic.discrete:
+    order: 12
+  topic.discrete.logic:
+    order: 1
+    parent: topic.discrete
+  topic.discrete.sets:
+    order: 2
+    parent: topic.discrete
+  topic.discrete.relations:
+    order: 3
+    parent: topic.discrete
+  topic.discrete.proof:
+    order: 4
+    parent: topic.discrete
+  topic.discrete.induction:
+    order: 5
+    parent: topic.discrete
+  topic.discrete.recurrence:
+    order: 6
+    parent: topic.discrete
+  topic.discrete.counting:
+    order: 7
+    parent: topic.discrete
+  topic.discrete.modular_arithmetic:
+    order: 8
+    parent: topic.discrete
+  topic.discrete.sums:
+    order: 9
+    parent: topic.discrete
+  topic.discrete.graphs:
+    order: 10
+    parent: topic.discrete
+  topic.computer_science:
+    order: 13
+  topic.computer_science.foundations:
+    order: 1
+    parent: topic.computer_science
+  topic.computer_science.algorithms:
+    order: 2
+    parent: topic.computer_science
+  topic.computer_science.cryptography_and_modular:
+    order: 3
+    parent: topic.computer_science
+  topic.computer_science.information_and_graphics:
+    order: 4
+    parent: topic.computer_science
+  topic.advanced:
+    order: 14
+  topic.advanced.real_analysis:
+    order: 1
+    parent: topic.advanced
+  topic.advanced.abstract_algebra:
+    order: 2
+    parent: topic.advanced
+  topic.advanced.topology:
+    order: 3
+    parent: topic.advanced
+  topic.advanced.numerical_methods:
+    order: 4
+    parent: topic.advanced
+  topic.advanced.optimization:
+    order: 5
+    parent: topic.advanced
+  topic.advanced.fourier_analysis:
+    order: 6
+    parent: topic.advanced
+entries:
+- id: cs.adv.cauchy_sequence
+  topic: topic.advanced.real_analysis
+  kind: definition
+  added_by:
+  - adv.real.cauchy_terms_huddle
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.real.cauchy_terms_huddle
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.cayley_graph_generators
+  topic: topic.advanced.abstract_algebra
+  kind: definition
+  added_by:
+  - adv.alg.cayley_graph
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: adv.alg.cayley_graph
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.compactness_heine_borel
+  topic: topic.advanced.topology
+  kind: theorem
+  added_by:
+  - adv.topo.compact_finite_cover
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.topo.compact_finite_cover
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.complex_map_as_deformation
+  topic: topic.complex_numbers.functions
+  kind: definition
+  added_by:
+  - adv.cplx.function_deforms_plane
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: adv.cplx.function_deforms_plane
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.complex_multiply_polar
+  topic: topic.complex_numbers.algebra
+  kind: theorem
+  added_by:
+  - adv.cplx.multiplication_rotates_scales
+  added_at_layer: symbolic
+  display: r_1e^{i\theta_1}\cdot r_2e^{i\theta_2} = r_1r_2\,e^{i(\theta_1+\theta_2)}
+  related: []
+  play_again: adv.cplx.multiplication_rotates_scales
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.complex_plane_modulus
+  topic: topic.complex_numbers.algebra
+  kind: definition
+  added_by:
+  - adv.cplx.plane_and_modulus
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: adv.cplx.plane_and_modulus
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.connectedness
+  topic: topic.advanced.topology
+  kind: definition
+  added_by:
+  - adv.topo.connected_one_piece
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.topo.connected_one_piece
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.convexity_test
+  topic: topic.advanced.optimization
+  kind: rule
+  added_by:
+  - adv.opt.convex_bowl_one_minimum
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.opt.convex_bowl_one_minimum
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.epsilon_delta_template
+  topic: topic.advanced.real_analysis
+  kind: strategy
+  added_by:
+  - adv.real.epsilon_delta_challenge
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.real.epsilon_delta_challenge
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.euler_characteristic_surfaces
+  topic: topic.advanced.topology
+  kind: theorem
+  added_by:
+  - adv.topo.euler_characteristic_invariant
+  added_at_layer: symbolic
+  display: \chi = V-E+F
+  related:
+  - cs.geom.euler_v_minus_e_plus_f
+  play_again: adv.topo.euler_characteristic_invariant
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.euler_step
+  topic: topic.calculus.differential_equations
+  kind: formula
+  added_by:
+  - adv.ode.euler_method
+  added_at_layer: symbolic
+  display: y_{n+1} = y_n + h\cdot f(x_n,y_n)
+  related: []
+  play_again: adv.ode.euler_method
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.field_axioms_zp
+  topic: topic.advanced.abstract_algebra
+  kind: definition
+  added_by:
+  - adv.alg.field_every_nonzero_invertible
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.alg.field_every_nonzero_invertible
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.finite_difference_error
+  topic: topic.advanced.numerical_methods
+  kind: rule
+  added_by:
+  - adv.num.finite_difference_step
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.num.finite_difference_step
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.fourier_coefficients
+  topic: topic.advanced.fourier_analysis
+  kind: formula
+  added_by:
+  - adv.four.projection_onto_sines
+  added_at_layer: formal
+  display: a_n = \frac{2}{T}\int_0^T f(t)\cos\left(\frac{2\pi n t}{T}\right)dt
+  related: []
+  play_again: adv.four.projection_onto_sines
+  literacy_min: full_text
+  locale_dependent: true
+- id: cs.adv.fourier_transform_pairs
+  topic: topic.advanced.fourier_analysis
+  kind: definition
+  added_by:
+  - adv.four.transform_as_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: adv.four.transform_as_machine
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.gradient_descent_step
+  topic: topic.advanced.optimization
+  kind: formula
+  added_by:
+  - adv.opt.gradient_descent_downhill
+  added_at_layer: symbolic
+  display: x_{n+1} = x_n - \eta \nabla f(x_n)
+  related: []
+  play_again: adv.opt.gradient_descent_downhill
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.group_axioms
+  topic: topic.advanced.abstract_algebra
+  kind: definition
+  added_by:
+  - adv.alg.group_as_reversible_actions
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.alg.group_as_reversible_actions
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.homomorphism_kernel
+  topic: topic.advanced.abstract_algebra
+  kind: definition
+  added_by:
+  - adv.alg.homomorphism_preserves_structure
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.alg.homomorphism_preserves_structure
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.integrating_factor
+  topic: topic.calculus.differential_equations
+  kind: strategy
+  added_by:
+  - adv.ode.linear_first_order_factor
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.ode.linear_first_order_factor
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.inverse_fourier
+  topic: topic.advanced.fourier_analysis
+  kind: formula
+  added_by:
+  - adv.four.inverse_transform
+  added_at_layer: symbolic
+  display: f(t) = \int \hat f(\omega) e^{i\omega t}\,d\omega
+  related: []
+  play_again: adv.four.inverse_transform
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.lagrange_cosets
+  topic: topic.advanced.abstract_algebra
+  kind: theorem
+  added_by:
+  - adv.alg.cosets_partition
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.alg.cosets_partition
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.lp_corner_rule
+  topic: topic.advanced.optimization
+  kind: theorem
+  added_by:
+  - adv.opt.linear_program_corners_dual
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.opt.linear_program_corners_dual
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.lp_duality
+  topic: topic.advanced.optimization
+  kind: theorem
+  added_by:
+  - adv.opt.linear_program_corners_dual
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.opt.linear_program_corners_dual
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.monte_carlo_error
+  topic: topic.advanced.numerical_methods
+  kind: rule
+  added_by:
+  - adv.num.monte_carlo_pi
+  added_at_layer: symbolic
+  display: \text{error} \propto \frac{1}{\sqrt N}
+  related: []
+  play_again: adv.num.monte_carlo_pi
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.newton_step
+  topic: topic.advanced.numerical_methods
+  kind: formula
+  added_by:
+  - adv.num.newton_tangent_iteration
+  added_at_layer: symbolic
+  display: x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}
+  related: []
+  play_again: adv.num.newton_tangent_iteration
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.open_closed_sets
+  topic: topic.advanced.topology
+  kind: definition
+  added_by:
+  - adv.topo.open_or_closed
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.topo.open_or_closed
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.phase_portrait_equilibria
+  topic: topic.calculus.differential_equations
+  kind: definition
+  added_by:
+  - adv.ode.system_equilibrium_phase
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.ode.system_equilibrium_phase
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.riemann_sums_formal
+  topic: topic.advanced.real_analysis
+  kind: definition
+  added_by:
+  - adv.real.riemann_upper_lower_squeeze
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.real.riemann_upper_lower_squeeze
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.ring_axioms_polynomials
+  topic: topic.advanced.abstract_algebra
+  kind: definition
+  added_by:
+  - adv.alg.polynomial_arithmetic
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.alg.polynomial_arithmetic
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.roots_of_unity
+  topic: topic.complex_numbers.polar_and_powers
+  kind: formula
+  added_by:
+  - adv.cplx.roots_of_unity_polygon
+  added_at_layer: symbolic
+  display: z_k = e^{2\pi i k/n}, \; k=0,\ldots,n-1
+  related: []
+  play_again: adv.cplx.roots_of_unity_polygon
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.slope_field_reading
+  topic: topic.calculus.differential_equations
+  kind: strategy
+  added_by:
+  - adv.ode.slope_field
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: adv.ode.slope_field
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.adv.supremum_completeness
+  topic: topic.advanced.real_analysis
+  kind: theorem
+  added_by:
+  - adv.real.supremum_least_ceiling
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.real.supremum_least_ceiling
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.uniform_vs_pointwise
+  topic: topic.advanced.real_analysis
+  kind: definition
+  added_by:
+  - adv.real.uniform_continuity_one_delta
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.real.uniform_continuity_one_delta
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.adv.weierstrass_m_test
+  topic: topic.advanced.real_analysis
+  kind: rule
+  added_by:
+  - adv.real.function_series_uniform_limit
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: adv.real.function_series_uniform_limit
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.alg.abs_as_distance_from_zero
+  topic: topic.functions.piecewise_absolute
+  kind: definition
+  added_by:
+  - alg.abs.distance_two_branches
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.abs.distance_two_branches
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.abs_equation_two_cases
+  topic: topic.functions.piecewise_absolute
+  kind: strategy
+  added_by:
+  - alg.abs.distance_two_branches
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.abs.distance_two_branches
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.add_polynomials_by_degree
+  topic: topic.algebra.polynomials
+  kind: rule
+  added_by:
+  - alg.poly.coefficients_as_counts
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.poly.coefficients_as_counts
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.area_model_of_product
+  topic: topic.algebra.expressions
+  kind: definition
+  added_by:
+  - alg.expr.distributive_tiles
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.expr.distributive_tiles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.binomial_product_four_tiles
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - alg.expr.binomial_product
+  added_at_layer: symbolic
+  display: (a+b)(c+d) = ac+ad+bc+bd
+  related: []
+  play_again: alg.expr.binomial_product
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.cancel_common_factor_only
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - alg.rat.division_by_zero_hole
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.rat.division_by_zero_hole
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.change_of_base
+  topic: topic.numbers.powers
+  kind: formula
+  added_by:
+  - alg.pow.log_rules_from_stack
+  added_at_layer: symbolic
+  display: \log_b x = \frac{\log_k x}{\log_k b}
+  related: []
+  play_again: alg.pow.log_rules_from_stack
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.alg.check_by_substituting
+  topic: topic.equations.linear
+  kind: strategy
+  added_by:
+  - alg.eq.one_step
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.eq.one_step
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.collect_boxes_on_one_side
+  topic: topic.equations.linear
+  kind: strategy
+  added_by:
+  - alg.eq.variable_both_sides
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.eq.variable_both_sides
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.complete_square_recipe
+  topic: topic.algebra.expressions
+  kind: strategy
+  added_by:
+  - alg.expr.complete_square
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.expr.complete_square
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.compose_inner_first
+  topic: topic.functions.composition_inverse
+  kind: rule
+  added_by:
+  - alg.fn.composition
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.composition
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.composition_order_matters
+  topic: topic.functions.composition_inverse
+  kind: rule
+  added_by:
+  - alg.fn.composition
+  added_at_layer: symbolic
+  display: f \circ g \neq g \circ f
+  related: []
+  play_again: alg.fn.composition
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.delta_means_change
+  topic: topic.functions.linear
+  kind: definition
+  added_by:
+  - alg.fn.linear_slope
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.linear_slope
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.difference_of_squares
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - alg.expr.binomial_product
+  added_at_layer: symbolic
+  display: a^2 - b^2 = (a+b)(a-b)
+  related: []
+  play_again: alg.expr.binomial_product
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.distributive_law
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - alg.expr.distributive_tiles
+  added_at_layer: symbolic
+  display: a(b+c) = ab + ac
+  related: []
+  play_again: alg.expr.distributive_tiles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.domain_inputs_range_outputs
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - alg.fn.domain_range
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.domain_range
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.elimination_method
+  topic: topic.equations.systems
+  kind: strategy
+  added_by:
+  - alg.sys.two_by_two
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.sys.two_by_two
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.exponential_multiplies_each_step
+  topic: topic.functions.exponential_log
+  kind: definition
+  added_by:
+  - alg.fn.exponential_growth
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.exponential_growth
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.factor_out_shared_side
+  topic: topic.algebra.expressions
+  kind: strategy
+  added_by:
+  - alg.expr.factor_common
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.expr.factor_common
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.factor_trinomial_find_pair
+  topic: topic.algebra.expressions
+  kind: strategy
+  added_by:
+  - alg.expr.factor_trinomial
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.expr.factor_trinomial
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.fractional_base_decays
+  topic: topic.functions.exponential_log
+  kind: definition
+  added_by:
+  - alg.fn.exponential_growth
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.exponential_growth
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.function_notation_f_of_x
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - alg.fn.function_as_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.function_as_machine
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.inequality_same_key_both_sides
+  topic: topic.equations.inequalities
+  kind: rule
+  added_by:
+  - alg.ineq.inequality_tilts
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.ineq.inequality_tilts
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.inverse_needs_one_to_one
+  topic: topic.functions.composition_inverse
+  kind: theorem
+  added_by:
+  - alg.fn.inverse_function
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.inverse_function
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.inverse_reflects_over_diagonal
+  topic: topic.functions.composition_inverse
+  kind: theorem
+  added_by:
+  - alg.fn.inverse_function
+  added_at_layer: symbolic
+  display: y = x
+  related: []
+  play_again: alg.fn.inverse_function
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.inverse_undoes_f
+  topic: topic.functions.composition_inverse
+  kind: definition
+  added_by:
+  - alg.fn.inverse_function
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.inverse_function
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.linear_adds_exponential_multiplies
+  topic: topic.functions.exponential_log
+  kind: theorem
+  added_by:
+  - alg.fn.exponential_growth
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.exponential_growth
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.log_counts_scalings
+  topic: topic.functions.exponential_log
+  kind: definition
+  added_by:
+  - alg.fn.logarithm
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.logarithm
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.log_of_product_is_sum
+  topic: topic.functions.exponential_log
+  kind: rule
+  added_by:
+  - alg.fn.logarithm
+  added_at_layer: symbolic
+  display: \log(ab) = \log a + \log b
+  related: []
+  play_again: alg.fn.logarithm
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.alg.log_rules_mirror_exponent_rules
+  topic: topic.numbers.powers
+  kind: rule
+  added_by:
+  - alg.pow.log_rules_from_stack
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.pow.log_rules_from_stack
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.log_undoes_exponential
+  topic: topic.functions.exponential_log
+  kind: definition
+  added_by:
+  - alg.fn.logarithm
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.logarithm
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.negative_factor_flips_tilt
+  topic: topic.equations.inequalities
+  kind: rule
+  added_by:
+  - alg.ineq.inequality_tilts
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.ineq.inequality_tilts
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.one_input_one_output
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - alg.fn.function_as_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.function_as_machine
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.one_key_both_sides
+  topic: topic.equations.linear
+  kind: rule
+  added_by:
+  - alg.eq.one_step
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.eq.one_step
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.parabola_from_square_tile
+  topic: topic.functions.quadratic
+  kind: definition
+  added_by:
+  - alg.fn.quadratic_and_sqrt
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.quadratic_and_sqrt
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.point_is_input_output_pair
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - alg.fn.graph_as_picture
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.graph_as_picture
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.polynomial_degree_and_terms
+  topic: topic.algebra.polynomials
+  kind: definition
+  added_by:
+  - alg.poly.coefficients_as_counts
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.poly.coefficients_as_counts
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.power_multiplies_exponents
+  topic: topic.numbers.powers
+  kind: rule
+  added_by:
+  - alg.pow.same_base_stack
+  added_at_layer: symbolic
+  display: (a^m)^n = a^{mn}
+  related: []
+  play_again: alg.pow.same_base_stack
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.product_adds_exponents
+  topic: topic.numbers.powers
+  kind: rule
+  added_by:
+  - alg.pow.same_base_stack
+  added_at_layer: symbolic
+  display: a^m \cdot a^n = a^{m+n}
+  related: []
+  play_again: alg.pow.same_base_stack
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.quadratic_formula
+  topic: topic.equations.linear
+  kind: formula
+  added_by:
+  - alg.eq.quadratic_roots
+  added_at_layer: symbolic
+  display: x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
+  related: []
+  play_again: alg.eq.quadratic_roots
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.rational_domain_excludes_zero_denominator
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - alg.rat.division_by_zero_hole
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.rat.division_by_zero_hole
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.root_is_fractional_exponent
+  topic: topic.numbers.powers
+  kind: definition
+  added_by:
+  - alg.rad.root_as_fractional_power
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.rad.root_as_fractional_power
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.shade_the_half_plane
+  topic: topic.equations.inequalities
+  kind: strategy
+  added_by:
+  - alg.ineq.inequality_as_region
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.ineq.inequality_as_region
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.simplify_radicals_by_squares
+  topic: topic.numbers.powers
+  kind: strategy
+  added_by:
+  - alg.rad.root_as_fractional_power
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.rad.root_as_fractional_power
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.slope_rise_over_run
+  topic: topic.functions.linear
+  kind: formula
+  added_by:
+  - alg.fn.linear_slope
+  added_at_layer: symbolic
+  display: m = \frac{\Delta y}{\Delta x}
+  related: []
+  play_again: alg.fn.linear_slope
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.solution_is_crossing_point
+  topic: topic.equations.systems
+  kind: definition
+  added_by:
+  - alg.sys.lines_intersect
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.sys.lines_intersect
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.solving_steps_checklist
+  topic: topic.equations.linear
+  kind: strategy
+  added_by:
+  - alg.eq.multi_step
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.eq.multi_step
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.sqrt_two_branches
+  topic: topic.functions.quadratic
+  kind: rule
+  added_by:
+  - alg.fn.quadratic_and_sqrt
+  added_at_layer: symbolic
+  display: x^2 = a \implies x = \pm\sqrt{a}
+  related: []
+  play_again: alg.fn.quadratic_and_sqrt
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.square_of_a_sum
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - alg.expr.binomial_product
+  added_at_layer: symbolic
+  display: (a+b)^2 = a^2+2ab+b^2
+  related: []
+  play_again: alg.expr.binomial_product
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.start_value_plus_rate_times_steps
+  topic: topic.functions.linear
+  kind: formula
+  added_by:
+  - alg.fn.word_to_linear
+  added_at_layer: symbolic
+  display: y = y_0 + r \cdot x
+  related: []
+  play_again: alg.fn.word_to_linear
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.alg.substitution_method
+  topic: topic.equations.systems
+  kind: strategy
+  added_by:
+  - alg.sys.two_by_two
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.sys.two_by_two
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.unwrap_outermost_first
+  topic: topic.equations.linear
+  kind: strategy
+  added_by:
+  - alg.eq.multi_step
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.eq.multi_step
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.vertex_from_completed_square
+  topic: topic.algebra.expressions
+  kind: formula
+  added_by:
+  - alg.expr.complete_square
+  added_at_layer: symbolic
+  display: f(x) = a(x-h)^2+k, \quad \text{vértice } (h,k)
+  related: []
+  play_again: alg.expr.complete_square
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.vertical_line_test
+  topic: topic.functions.intro
+  kind: rule
+  added_by:
+  - alg.fn.graph_as_picture
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.fn.graph_as_picture
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.words_to_symbols_table
+  topic: topic.equations.linear
+  kind: strategy
+  added_by:
+  - alg.eq.word_to_equation
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.eq.word_to_equation
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.alg.y_equals_mx_plus_b
+  topic: topic.functions.linear
+  kind: formula
+  added_by:
+  - alg.fn.linear_slope
+  added_at_layer: symbolic
+  display: y = mx + b
+  related: []
+  play_again: alg.fn.linear_slope
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.zero_and_negative_exponent
+  topic: topic.numbers.powers
+  kind: rule
+  added_by:
+  - alg.pow.same_base_stack
+  added_at_layer: symbolic
+  display: a^0 = 1, \quad a^{-n} = \frac{1}{a^n}
+  related: []
+  play_again: alg.pow.same_base_stack
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.zero_or_infinite_solutions
+  topic: topic.equations.systems
+  kind: theorem
+  added_by:
+  - alg.sys.parallel_or_same_line
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: alg.sys.parallel_or_same_line
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.alg.zero_product_rule
+  topic: topic.equations.linear
+  kind: rule
+  added_by:
+  - alg.eq.quadratic_roots
+  added_at_layer: symbolic
+  display: ab = 0 \iff a=0 \text{ o } b=0
+  related: []
+  play_again: alg.eq.quadratic_roots
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.arith.add_as_join_groups
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.add.combine_groups
+  added_at_layer: symbolic
+  display: image:img.arith.add_as_join_groups
+  related: []
+  play_again: arith.add.combine_groups
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.add_as_step_forward
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.add.displacement
+  added_at_layer: symbolic
+  display: image:img.arith.add_as_step_forward
+  related: []
+  play_again: arith.add.displacement
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.add_fractions_same_unit
+  topic: topic.numbers.fractions
+  kind: rule
+  added_by:
+  - arith.frac.add_same_denominator
+  added_at_layer: symbolic
+  display: image:img.arith.add_fractions_same_unit
+  related: []
+  play_again: arith.frac.add_same_denominator
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.add_order_irrelevant
+  topic: topic.numbers.operations
+  kind: rule
+  added_by:
+  - arith.add.displacement
+  added_at_layer: symbolic
+  display: image:img.arith.add_order_irrelevant
+  related: []
+  play_again: arith.add.displacement
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.add_signed_as_net_steps
+  topic: topic.numbers.integers
+  kind: definition
+  added_by:
+  - arith.int.add_signed
+  added_at_layer: symbolic
+  display: image:img.arith.add_signed_as_net_steps
+  related: []
+  play_again: arith.int.add_signed
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.column_add_and_borrow
+  topic: topic.numbers.operations
+  kind: strategy
+  added_by:
+  - arith.place.base_ten_carry
+  added_at_layer: symbolic
+  display: image:img.arith.column_add_and_borrow
+  related: []
+  play_again: arith.place.base_ten_carry
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.column_multiply
+  topic: topic.numbers.operations
+  kind: strategy
+  added_by:
+  - arith.mul.partial_products
+  added_at_layer: symbolic
+  display: image:img.arith.column_multiply
+  related: []
+  play_again: arith.mul.partial_products
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.arith.common_denominator
+  topic: topic.numbers.fractions
+  kind: strategy
+  added_by:
+  - arith.frac.common_unit
+  added_at_layer: symbolic
+  display: image:img.arith.common_denominator
+  related: []
+  play_again: arith.frac.common_unit
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.compare_fractions_same_unit
+  topic: topic.numbers.fractions
+  kind: rule
+  added_by:
+  - arith.frac.common_unit
+  added_at_layer: symbolic
+  display: image:img.arith.compare_fractions_same_unit
+  related: []
+  play_again: arith.frac.common_unit
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.convert_units_by_scaling
+  topic: topic.numbers.units
+  kind: rule
+  added_by:
+  - arith.meas.unit_conversion
+  added_at_layer: symbolic
+  display: image:img.arith.convert_units_by_scaling
+  related: []
+  play_again: arith.meas.unit_conversion
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.arith.decimal_as_tenths_hundredths
+  topic: topic.numbers.decimals
+  kind: definition
+  added_by:
+  - arith.dec.tenths_as_place
+  added_at_layer: symbolic
+  display: image:img.arith.decimal_as_tenths_hundredths
+  related: []
+  play_again: arith.dec.tenths_as_place
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.arith.decimal_fraction_bridge
+  topic: topic.numbers.decimals
+  kind: definition
+  added_by:
+  - arith.dec.tenths_as_place
+  added_at_layer: symbolic
+  display: image:img.arith.decimal_fraction_bridge
+  related: []
+  play_again: arith.dec.tenths_as_place
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.arith.div_by_zero_no_key
+  topic: topic.numbers.operations
+  kind: rule
+  added_by:
+  - arith.div.undo_mul
+  added_at_layer: symbolic
+  display: image:img.arith.div_by_zero_no_key
+  related: []
+  play_again: arith.div.undo_mul
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.div_undoes_mul
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.div.undo_mul
+  added_at_layer: symbolic
+  display: image:img.arith.div_undoes_mul
+  related: []
+  play_again: arith.div.undo_mul
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.divide_by_fraction_flip
+  topic: topic.numbers.fractions
+  kind: rule
+  added_by:
+  - arith.frac.multiply
+  added_at_layer: symbolic
+  display: image:img.arith.divide_by_fraction_flip
+  related: []
+  play_again: arith.frac.multiply
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.divisibility_shortcuts
+  topic: topic.numbers.primes
+  kind: strategy
+  added_by:
+  - arith.num.divisible_or_not
+  added_at_layer: symbolic
+  display: image:img.arith.divisibility_shortcuts
+  related: []
+  play_again: arith.num.divisible_or_not
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.equivalent_fraction_scale_both
+  topic: topic.numbers.fractions
+  kind: rule
+  added_by:
+  - arith.frac.equivalent
+  added_at_layer: symbolic
+  display: image:img.arith.equivalent_fraction_scale_both
+  related: []
+  play_again: arith.frac.equivalent
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.exponent_counts_scalings
+  topic: topic.numbers.powers
+  kind: definition
+  added_by:
+  - arith.pow.repeated_scaling
+  added_at_layer: symbolic
+  display: image:img.arith.exponent_counts_scalings
+  related: []
+  play_again: arith.pow.repeated_scaling
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.expression_is_a_tree
+  topic: topic.numbers.order_of_operations
+  kind: definition
+  added_by:
+  - arith.expr.precedence_tree
+  added_at_layer: symbolic
+  display: image:img.arith.expression_is_a_tree
+  related: []
+  play_again: arith.expr.precedence_tree
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.factor_tree_same_leaves
+  topic: topic.numbers.primes
+  kind: theorem
+  added_by:
+  - arith.num.factor_tree
+  added_at_layer: symbolic
+  display: image:img.arith.factor_tree_same_leaves
+  related: []
+  play_again: arith.num.factor_tree
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.fraction_as_division
+  topic: topic.numbers.fractions
+  kind: definition
+  added_by:
+  - arith.frac.parts_and_ratio
+  added_at_layer: symbolic
+  display: image:img.arith.fraction_as_division
+  related: []
+  play_again: arith.frac.parts_and_ratio
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.fraction_as_parts_of_whole
+  topic: topic.numbers.fractions
+  kind: definition
+  added_by:
+  - arith.frac.parts_and_ratio
+  added_at_layer: symbolic
+  display: image:img.arith.fraction_as_parts_of_whole
+  related: []
+  play_again: arith.frac.parts_and_ratio
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.fraction_of_fraction
+  topic: topic.numbers.fractions
+  kind: rule
+  added_by:
+  - arith.frac.multiply
+  added_at_layer: symbolic
+  display: image:img.arith.fraction_of_fraction
+  related: []
+  play_again: arith.frac.multiply
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.inner_chest_first
+  topic: topic.numbers.order_of_operations
+  kind: rule
+  added_by:
+  - arith.expr.precedence_tree
+  added_at_layer: symbolic
+  display: image:img.arith.inner_chest_first
+  related: []
+  play_again: arith.expr.precedence_tree
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.mul_as_repeated_add
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.mul.repeated_groups
+  added_at_layer: symbolic
+  display: image:img.arith.mul_as_repeated_add
+  related: []
+  play_again: arith.mul.repeated_groups
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.mul_as_scaling
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.mul.scaling
+  added_at_layer: symbolic
+  display: image:img.arith.mul_as_scaling
+  related: []
+  play_again: arith.mul.scaling
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.mul_by_one_and_zero
+  topic: topic.numbers.operations
+  kind: rule
+  added_by:
+  - arith.mul.scaling
+  added_at_layer: symbolic
+  display: image:img.arith.mul_by_one_and_zero
+  related: []
+  play_again: arith.mul.scaling
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.mul_grouping_irrelevant
+  topic: topic.numbers.operations
+  kind: rule
+  added_by:
+  - arith.mul.rows_and_columns
+  added_at_layer: symbolic
+  display: image:img.arith.mul_grouping_irrelevant
+  related: []
+  play_again: arith.mul.rows_and_columns
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.mul_order_irrelevant
+  topic: topic.numbers.operations
+  kind: rule
+  added_by:
+  - arith.mul.rows_and_columns
+  added_at_layer: symbolic
+  display: image:img.arith.mul_order_irrelevant
+  related: []
+  play_again: arith.mul.rows_and_columns
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.negative_as_opposite_direction
+  topic: topic.numbers.integers
+  kind: definition
+  added_by:
+  - arith.int.negatives
+  added_at_layer: symbolic
+  display: image:img.arith.negative_as_opposite_direction
+  related: []
+  play_again: arith.int.negatives
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.percent_is_per_hundred
+  topic: topic.numbers.percent
+  kind: definition
+  added_by:
+  - arith.pct.percent_of_total
+  added_at_layer: symbolic
+  display: image:img.arith.percent_is_per_hundred
+  related: []
+  play_again: arith.pct.percent_of_total
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.arith.percent_of_amount
+  topic: topic.numbers.percent
+  kind: formula
+  added_by:
+  - arith.pct.percent_of_total
+  added_at_layer: symbolic
+  display: image:img.arith.percent_of_amount
+  related: []
+  play_again: arith.pct.percent_of_total
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.arith.prime_has_one_rectangle
+  topic: topic.numbers.primes
+  kind: definition
+  added_by:
+  - arith.num.factor_tree
+  added_at_layer: symbolic
+  display: image:img.arith.prime_has_one_rectangle
+  related: []
+  play_again: arith.num.factor_tree
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.quotient_times_divisor_plus_remainder
+  topic: topic.numbers.operations
+  kind: formula
+  added_by:
+  - arith.div.remainder
+  added_at_layer: symbolic
+  display: image:img.arith.quotient_times_divisor_plus_remainder
+  related: []
+  play_again: arith.div.remainder
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.rate_per_unit_is_division
+  topic: topic.numbers.ratio
+  kind: definition
+  added_by:
+  - arith.rate.per_unit
+  added_at_layer: symbolic
+  display: image:img.arith.rate_per_unit_is_division
+  related: []
+  play_again: arith.rate.per_unit
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.arith.running_total_is_sum_so_far
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.add.running_total
+  added_at_layer: symbolic
+  display: image:img.arith.running_total_is_sum_so_far
+  related: []
+  play_again: arith.add.running_total
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.sign_of_product
+  topic: topic.numbers.integers
+  kind: rule
+  added_by:
+  - arith.int.mul_signed
+  added_at_layer: symbolic
+  display: image:img.arith.sign_of_product
+  related: []
+  play_again: arith.int.mul_signed
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.skip_count_is_constant_step
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.mul.repeated_groups
+  added_at_layer: symbolic
+  display: image:img.arith.skip_count_is_constant_step
+  related: []
+  play_again: arith.mul.repeated_groups
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.split_factor_tens_and_ones
+  topic: topic.numbers.operations
+  kind: strategy
+  added_by:
+  - arith.mul.partial_products
+  added_at_layer: symbolic
+  display: image:img.arith.split_factor_tens_and_ones
+  related: []
+  play_again: arith.mul.partial_products
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.arith.square_and_cube_as_shapes
+  topic: topic.numbers.powers
+  kind: definition
+  added_by:
+  - arith.pow.repeated_scaling
+  added_at_layer: symbolic
+  display: image:img.arith.square_and_cube_as_shapes
+  related: []
+  play_again: arith.pow.repeated_scaling
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.sub_as_distance_between
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.sub.undo_add
+  added_at_layer: symbolic
+  display: image:img.arith.sub_as_distance_between
+  related: []
+  play_again: arith.sub.undo_add
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.sub_past_zero
+  topic: topic.numbers.integers
+  kind: definition
+  added_by:
+  - arith.int.negatives
+  added_at_layer: symbolic
+  display: image:img.arith.sub_past_zero
+  related: []
+  play_again: arith.int.negatives
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.sub_undoes_add
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.sub.undo_add
+  added_at_layer: symbolic
+  display: image:img.arith.sub_undoes_add
+  related: []
+  play_again: arith.sub.undo_add
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.subtract_is_add_opposite
+  topic: topic.numbers.integers
+  kind: rule
+  added_by:
+  - arith.int.add_signed
+  added_at_layer: symbolic
+  display: image:img.arith.subtract_is_add_opposite
+  related: []
+  play_again: arith.int.add_signed
+  literacy_min: none
+  locale_dependent: false
+- id: cs.arith.ten_ones_make_one_ten
+  topic: topic.numbers.operations
+  kind: definition
+  added_by:
+  - arith.place.base_ten_carry
+  added_at_layer: symbolic
+  display: image:img.arith.ten_ones_make_one_ten
+  related: []
+  play_again: arith.place.base_ten_carry
+  literacy_min: none
+  locale_dependent: false
+- id: cs.calc1.antiderivative_table
+  topic: topic.calculus.integral
+  kind: example
+  added_by:
+  - calc1.ftc.antiderivative_family
+  added_at_layer: symbolic
+  display: \int x^n dx = \frac{x^{n+1}}{n+1}+C, \; \int \sin x\,dx=-\cos x + C, \ldots
+  related: []
+  play_again: calc1.ftc.antiderivative_family
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.calc1.chain_rule
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.deriv.chain_as_gears
+  added_at_layer: symbolic
+  display: (f\circ g)'(x) = f'(g(x))\cdot g'(x)
+  related: []
+  play_again: calc1.deriv.chain_as_gears
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.continuity_three_conditions
+  topic: topic.calculus.limits
+  kind: theorem
+  added_by:
+  - calc1.lim.continuous_or_not
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.continuous_or_not
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.critical_points_derivative_zero
+  topic: topic.calculus.derivative
+  kind: theorem
+  added_by:
+  - calc1.apply.max_where_slope_zero
+  added_at_layer: symbolic
+  display: f'(x)=0 \text{ o no existe}
+  related: []
+  play_again: calc1.apply.max_where_slope_zero
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.derivative_as_rate_units
+  topic: topic.calculus.derivative
+  kind: definition
+  added_by:
+  - calc1.deriv.rate_as_slope_limit
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.deriv.rate_as_slope_limit
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.derivative_definition_limit
+  topic: topic.calculus.derivative
+  kind: formula
+  added_by:
+  - calc1.deriv.rate_as_slope_limit
+  added_at_layer: symbolic
+  display: f'(x) = \lim_{h\to 0} \frac{f(x+h)-f(x)}{h}
+  related: []
+  play_again: calc1.deriv.rate_as_slope_limit
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.derivative_notations
+  topic: topic.calculus.derivative
+  kind: definition
+  added_by:
+  - calc1.deriv.rate_as_slope_limit
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.deriv.rate_as_slope_limit
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.derivatives_of_basic_functions
+  topic: topic.calculus.derivative
+  kind: example
+  added_by:
+  - calc1.deriv.rules_as_structure
+  added_at_layer: symbolic
+  display: (x^n)'=nx^{n-1}, \; (\sin x)'=\cos x, \; (e^x)'=e^x
+  related: []
+  play_again: calc1.deriv.rules_as_structure
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.calc1.differential_dy
+  topic: topic.calculus.derivative
+  kind: definition
+  added_by:
+  - calc1.apply.linearization_tangent_approx
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.apply.linearization_tangent_approx
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.discontinuity_types
+  topic: topic.calculus.limits
+  kind: definition
+  added_by:
+  - calc1.lim.continuous_or_not
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.continuous_or_not
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.epsilon_delta_definition
+  topic: topic.calculus.limits
+  kind: definition
+  added_by:
+  - calc1.lim.epsilon_delta_tolerance
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc1.lim.epsilon_delta_tolerance
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.first_second_derivative_tests
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.apply.max_where_slope_zero
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.apply.max_where_slope_zero
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.ftc_part_one_accumulation_derivative
+  topic: topic.calculus.integral
+  kind: theorem
+  added_by:
+  - calc1.ftc.integral_undoes_derivative
+  added_at_layer: symbolic
+  display: \frac{d}{dx}\int_a^x f(t)\,dt = f(x)
+  related: []
+  play_again: calc1.ftc.integral_undoes_derivative
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a
+  topic: topic.calculus.integral
+  kind: theorem
+  added_by:
+  - calc1.ftc.integral_undoes_derivative
+  added_at_layer: symbolic
+  display: \int_a^b f(x)\,dx = F(b)-F(a)
+  related: []
+  play_again: calc1.ftc.integral_undoes_derivative
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.implicit_differentiation
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.deriv.implicit_as_constraint
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc1.deriv.implicit_as_constraint
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.integral_linearity
+  topic: topic.calculus.integral
+  kind: rule
+  added_by:
+  - calc1.int.split_and_scale_properties
+  added_at_layer: symbolic
+  display: \int (af+bg)\,dx = a\int f\,dx + b\int g\,dx
+  related: []
+  play_again: calc1.int.split_and_scale_properties
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.integral_notation_meaning
+  topic: topic.calculus.integral
+  kind: definition
+  added_by:
+  - calc1.int.accumulation
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.int.accumulation
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.integral_split_interval_reverse_bounds
+  topic: topic.calculus.integral
+  kind: rule
+  added_by:
+  - calc1.int.split_and_scale_properties
+  added_at_layer: symbolic
+  display: \int_a^b f = \int_a^c f + \int_c^b f, \quad \int_a^b f = -\int_b^a f
+  related: []
+  play_again: calc1.int.split_and_scale_properties
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.integral_units_rate_times_time
+  topic: topic.calculus.integral
+  kind: definition
+  added_by:
+  - calc1.int.accumulation
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.int.accumulation
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.intermediate_value_theorem
+  topic: topic.calculus.limits
+  kind: theorem
+  added_by:
+  - calc1.lim.continuous_or_not
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.continuous_or_not
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.left_right_midpoint_trapezoid
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc1.int.riemann_refines_to_limit
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc1.int.riemann_refines_to_limit
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.limit_exists_iff_sides_agree
+  topic: topic.calculus.limits
+  kind: theorem
+  added_by:
+  - calc1.lim.one_sided_and_jump
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.one_sided_and_jump
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.linear_approximation
+  topic: topic.calculus.derivative
+  kind: formula
+  added_by:
+  - calc1.apply.linearization_tangent_approx
+  added_at_layer: symbolic
+  display: f(x) \approx f(a) + f'(a)(x-a)
+  related: []
+  play_again: calc1.apply.linearization_tangent_approx
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.newton_iteration_formula
+  topic: topic.calculus.derivative
+  kind: formula
+  added_by:
+  - calc1.apply.newton_tangent_root
+  added_at_layer: symbolic
+  display: x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}
+  related: []
+  play_again: calc1.apply.newton_tangent_root
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.newton_when_it_fails
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.apply.newton_tangent_root
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.apply.newton_tangent_root
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.one_sided_limits_notation
+  topic: topic.calculus.limits
+  kind: definition
+  added_by:
+  - calc1.lim.one_sided_and_jump
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.one_sided_and_jump
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.plus_c_family_of_curves
+  topic: topic.calculus.integral
+  kind: definition
+  added_by:
+  - calc1.ftc.antiderivative_family
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.ftc.antiderivative_family
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.position_velocity_acceleration
+  topic: topic.calculus.derivative
+  kind: definition
+  added_by:
+  - calc1.apply.motion_position_velocity_accel
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.apply.motion_position_velocity_accel
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.power_rule
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.deriv.rules_as_structure
+  added_at_layer: symbolic
+  display: (x^n)' = n x^{n-1}
+  related: []
+  play_again: calc1.deriv.rules_as_structure
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.product_rule
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.deriv.product_as_growing_rectangle
+  added_at_layer: symbolic
+  display: (fg)' = f'g + fg'
+  related: []
+  play_again: calc1.deriv.product_as_growing_rectangle
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.quotient_rule
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.deriv.quotient_from_product
+  added_at_layer: symbolic
+  display: \left(\frac{f}{g}\right)' = \frac{f'g - fg'}{g^2}
+  related: []
+  play_again: calc1.deriv.quotient_from_product
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.riemann_limit_definition
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc1.int.riemann_refines_to_limit
+  added_at_layer: formal
+  display: \int_a^b f = \lim_{n\to\infty} \sum_{i=1}^n f(x_i)\Delta x
+  related: []
+  play_again: calc1.int.riemann_refines_to_limit
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.riemann_sum_notation
+  topic: topic.calculus.integral
+  kind: definition
+  added_by:
+  - calc1.int.accumulation
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.int.accumulation
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.signed_area_negative_below
+  topic: topic.calculus.integral
+  kind: rule
+  added_by:
+  - calc1.int.signed_area_below_axis
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.int.signed_area_below_axis
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.speed_vs_velocity_sign
+  topic: topic.calculus.derivative
+  kind: definition
+  added_by:
+  - calc1.apply.motion_position_velocity_accel
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.apply.motion_position_velocity_accel
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_factor_and_cancel
+  topic: topic.calculus.limits
+  kind: strategy
+  added_by:
+  - calc1.lim.zero_over_zero_cancel
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.zero_over_zero_cancel
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_find_delta_from_epsilon
+  topic: topic.calculus.limits
+  kind: strategy
+  added_by:
+  - calc1.lim.epsilon_delta_tolerance
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc1.lim.epsilon_delta_tolerance
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.strategy_guess_and_check_derivative
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc1.ftc.antiderivative_family
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.ftc.antiderivative_family
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_integral_is_a_key
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc1.ftc.integral_undoes_derivative
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.ftc.integral_undoes_derivative
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_optimization_steps
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.apply.max_where_slope_zero
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.apply.max_where_slope_zero
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_outer_inner_layers
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.deriv.chain_as_gears
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.deriv.chain_as_gears
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_point_slope_from_derivative
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.deriv.tangent_line
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.deriv.tangent_line
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_quotient_as_product_with_negative_power
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.deriv.quotient_from_product
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.deriv.quotient_from_product
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_rationalize_conjugate
+  topic: topic.calculus.limits
+  kind: strategy
+  added_by:
+  - calc1.lim.zero_over_zero_cancel
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.lim.zero_over_zero_cancel
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_related_rates_steps
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.apply.related_rates_chain
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc1.apply.related_rates_chain
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.strategy_rewrite_before_differentiating
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.deriv.rules_as_structure
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.deriv.rules_as_structure
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_split_at_zeros_for_total_area
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc1.int.signed_area_below_axis
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc1.int.signed_area_below_axis
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.strategy_treat_y_as_y_of_x
+  topic: topic.calculus.derivative
+  kind: strategy
+  added_by:
+  - calc1.deriv.implicit_as_constraint
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc1.deriv.implicit_as_constraint
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc1.sum_and_constant_multiple_rules
+  topic: topic.calculus.derivative
+  kind: rule
+  added_by:
+  - calc1.deriv.rules_as_structure
+  added_at_layer: symbolic
+  display: (f+g)'=f'+g', \quad (kf)'=kf'
+  related: []
+  play_again: calc1.deriv.rules_as_structure
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc1.tangent_line_equation
+  topic: topic.calculus.derivative
+  kind: formula
+  added_by:
+  - calc1.deriv.tangent_line
+  added_at_layer: symbolic
+  display: y = f(a) + f'(a)(x-a)
+  related: []
+  play_again: calc1.deriv.tangent_line
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc2.absolute_vs_conditional
+  topic: topic.calculus.series
+  kind: definition
+  added_by:
+  - calc2.ser.alternating_cancels
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.ser.alternating_cancels
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.alternating_series_test
+  topic: topic.calculus.series
+  kind: rule
+  added_by:
+  - calc2.ser.alternating_cancels
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.ser.alternating_cancels
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.arc_length
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc2.parpol.parametric_speed
+  added_at_layer: symbolic
+  display: L = \int_a^b \sqrt{x'(t)^2+y'(t)^2}\,dt
+  related: []
+  play_again: calc2.parpol.parametric_speed
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc2.area_between_curves
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc2.int.area_between
+  added_at_layer: symbolic
+  display: A = \int_a^b \big(f(x)-g(x)\big)\,dx
+  related: []
+  play_again: calc2.int.area_between
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.calc2.by_parts_choice_liate
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.tech.by_parts_undoes_product
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.tech.by_parts_undoes_product
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.common_maclaurin
+  topic: topic.calculus.series
+  kind: example
+  added_by:
+  - calc2.taylor.polynomial_copies_derivatives
+  added_at_layer: formal
+  display: e^x=\sum \frac{x^n}{n!}, \; \sin x=\sum \frac{(-1)^n x^{2n+1}}{(2n+1)!}
+  related: []
+  play_again: calc2.taylor.polynomial_copies_derivatives
+  literacy_min: full_text
+  locale_dependent: true
+- id: cs.calc2.comparison_tests
+  topic: topic.calculus.series
+  kind: rule
+  added_by:
+  - calc2.ser.comparison_squeeze
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.ser.comparison_squeeze
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.disc_washer_method
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.parpol.solid_of_revolution
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc2.parpol.solid_of_revolution
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.calc2.divergence_test
+  topic: topic.calculus.series
+  kind: rule
+  added_by:
+  - calc2.ser.terms_vs_sum
+  added_at_layer: formal
+  display: \lim a_n \neq 0 \implies \sum a_n \text{ diverge}
+  related: []
+  play_again: calc2.ser.terms_vs_sum
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.exponential_ode_solution
+  topic: topic.calculus.differential_equations
+  kind: formula
+  added_by:
+  - calc2.ode.rate_equation_as_rule
+  added_at_layer: symbolic
+  display: y' = ky \implies y = y_0 e^{kt}
+  related: []
+  play_again: calc2.ode.rate_equation_as_rule
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc2.geometric_series_sum
+  topic: topic.calculus.series
+  kind: formula
+  added_by:
+  - calc2.ser.geometric_sum
+  added_at_layer: symbolic
+  display: \sum_{n=0}^{\infty} ar^n = \frac{a}{1-r}, \; |r|<1
+  related: []
+  play_again: calc2.ser.geometric_sum
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.calc2.harmonic_diverges
+  topic: topic.calculus.series
+  kind: theorem
+  added_by:
+  - calc2.ser.terms_vs_sum
+  added_at_layer: formal
+  display: \sum \frac{1}{n} = \infty
+  related: []
+  play_again: calc2.ser.terms_vs_sum
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.improper_integral
+  topic: topic.calculus.integral
+  kind: definition
+  added_by:
+  - calc2.impr.limit_of_bounded_area
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.impr.limit_of_bounded_area
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.integral_test
+  topic: topic.calculus.series
+  kind: rule
+  added_by:
+  - calc2.ser.p_series_threshold
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.ser.p_series_threshold
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.integration_by_parts
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc2.tech.by_parts_undoes_product
+  added_at_layer: formal
+  display: \int u\,dv = uv - \int v\,du
+  related: []
+  play_again: calc2.tech.by_parts_undoes_product
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.ode_meaning
+  topic: topic.calculus.differential_equations
+  kind: definition
+  added_by:
+  - calc2.ode.rate_equation_as_rule
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc2.ode.rate_equation_as_rule
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc2.p_integral_threshold
+  topic: topic.calculus.integral
+  kind: theorem
+  added_by:
+  - calc2.impr.limit_of_bounded_area
+  added_at_layer: formal
+  display: \int_1^\infty \frac{1}{x^p}dx \text{ converge} \iff p>1
+  related: []
+  play_again: calc2.impr.limit_of_bounded_area
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.p_series
+  topic: topic.calculus.series
+  kind: theorem
+  added_by:
+  - calc2.ser.p_series_threshold
+  added_at_layer: formal
+  display: \sum \frac{1}{n^p} \text{ converge} \iff p>1
+  related: []
+  play_again: calc2.ser.p_series_threshold
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.parametric_derivative
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc2.parpol.parametric_speed
+  added_at_layer: symbolic
+  display: \frac{dy}{dx} = \frac{y'(t)}{x'(t)}
+  related: []
+  play_again: calc2.parpol.parametric_speed
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc2.partial_fractions
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.tech.partial_fractions_split
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.tech.partial_fractions_split
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.partial_sums_sequence
+  topic: topic.calculus.series
+  kind: definition
+  added_by:
+  - calc2.ser.partial_sums
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc2.ser.partial_sums
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.calc2.polar_area
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc2.parpol.polar_area_as_sectors
+  added_at_layer: formal
+  display: A = \int \tfrac{1}{2} r(\theta)^2 \, d\theta
+  related: []
+  play_again: calc2.parpol.polar_area_as_sectors
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.radius_of_convergence
+  topic: topic.calculus.series
+  kind: definition
+  added_by:
+  - calc2.ser.power_series_radius
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.ser.power_series_radius
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.ratio_test
+  topic: topic.calculus.series
+  kind: rule
+  added_by:
+  - calc2.ser.comparison_squeeze
+  added_at_layer: formal
+  display: '\lim \left|\frac{a_{n+1}}{a_n}\right| = L: \; L<1 \text{ converge}, \; L>1 \text{ diverge}'
+  related: []
+  play_again: calc2.ser.comparison_squeeze
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.separable_ode
+  topic: topic.calculus.differential_equations
+  kind: strategy
+  added_by:
+  - calc2.ode.separate_and_integrate
+  - adv.ode.separable_variables
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.ode.separate_and_integrate
+  literacy_min: full_text
+  locale_dependent: false
+  aliases:
+  - cs.adv.separable_ode
+- id: cs.calc2.shell_method
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.parpol.solid_of_revolution
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: calc2.parpol.solid_of_revolution
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.calc2.taylor_polynomial
+  topic: topic.calculus.series
+  kind: formula
+  added_by:
+  - calc2.taylor.polynomial_copies_derivatives
+  added_at_layer: formal
+  display: T_n(x) = \sum_{k=0}^n \frac{f^{(k)}(a)}{k!}(x-a)^k
+  related: []
+  play_again: calc2.taylor.polynomial_copies_derivatives
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.taylor_remainder
+  topic: topic.calculus.series
+  kind: theorem
+  added_by:
+  - calc2.taylor.remainder_bounds_error
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.taylor.remainder_bounds_error
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.trig_integrals_powers
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.tech.trig_substitution_as_triangle
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.tech.trig_substitution_as_triangle
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.trig_substitution
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.tech.trig_substitution_as_triangle
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.tech.trig_substitution_as_triangle
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.u_substitution
+  topic: topic.calculus.integral
+  kind: strategy
+  added_by:
+  - calc2.tech.substitution_undoes_chain
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: calc2.tech.substitution_undoes_chain
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.calc2.volume_by_cross_sections
+  topic: topic.calculus.integral
+  kind: formula
+  added_by:
+  - calc2.int.volume_by_slices
+  added_at_layer: symbolic
+  display: V = \int_a^b A(x)\,dx
+  related: []
+  play_again: calc2.int.volume_by_slices
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.automaton_transitions
+  topic: topic.computer_science.algorithms
+  kind: definition
+  added_by:
+  - csmath.alg.state_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.alg.state_machine
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.bfs_queue_invariant
+  topic: topic.computer_science.algorithms
+  kind: rule
+  added_by:
+  - csmath.alg.breadth_first_search
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.alg.breadth_first_search
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.big_o_hierarchy
+  topic: topic.computer_science.algorithms
+  kind: definition
+  added_by:
+  - csmath.cplx.big_o_as_slope
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.cplx.big_o_as_slope
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.binary_place_value
+  topic: topic.computer_science.foundations
+  kind: definition
+  added_by:
+  - csmath.bin.place_value_binary
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.bin.place_value_binary
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.binary_search_halving
+  topic: topic.computer_science.algorithms
+  kind: theorem
+  added_by:
+  - csmath.rec.base_case_and_smaller_call
+  added_at_layer: symbolic
+  display: O(\log n)
+  related: []
+  play_again: csmath.rec.base_case_and_smaller_call
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.csmath.boolean_identities
+  topic: topic.computer_science.foundations
+  kind: rule
+  added_by:
+  - csmath.bool.logic_gates
+  added_at_layer: symbolic
+  display: \lnot(\lnot p) = p, \quad \lnot(p\land q) = \lnot p \lor \lnot q
+  related: []
+  play_again: csmath.bool.logic_gates
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.csmath.caesar_shift_undo
+  topic: topic.computer_science.cryptography_and_modular
+  kind: rule
+  added_by:
+  - csmath.crypto.caesar_shift
+  added_at_layer: symbolic
+  display: x \mapsto x \pm k \pmod{26}
+  related: []
+  play_again: csmath.crypto.caesar_shift
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.complexity_classes
+  topic: topic.computer_science.algorithms
+  kind: definition
+  added_by:
+  - csmath.cplx.big_o_as_slope
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.cplx.big_o_as_slope
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.entropy_bits
+  topic: topic.computer_science.information_and_graphics
+  kind: formula
+  added_by:
+  - csmath.info.entropy_as_surprise
+  added_at_layer: symbolic
+  display: H = -\sum p_i \log_2 p_i
+  related: []
+  play_again: csmath.info.entropy_as_surprise
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.csmath.float_gaps_epsilon
+  topic: topic.computer_science.foundations
+  kind: definition
+  added_by:
+  - csmath.float.rounding_gaps
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.float.rounding_gaps
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.hash_buckets
+  topic: topic.computer_science.cryptography_and_modular
+  kind: definition
+  added_by:
+  - csmath.mod.wraparound
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.mod.wraparound
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.loop_invariant_template
+  topic: topic.computer_science.algorithms
+  kind: strategy
+  added_by:
+  - csmath.inv.loop_invariant
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.inv.loop_invariant
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.mod_wraparound
+  topic: topic.computer_science.cryptography_and_modular
+  kind: definition
+  added_by:
+  - csmath.mod.wraparound
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.mod.wraparound
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.pixel_transform_matrix
+  topic: topic.computer_science.information_and_graphics
+  kind: definition
+  added_by:
+  - csmath.gfx.transform_matrix
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.gfx.transform_matrix
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.csmath.prefix_sum
+  topic: topic.computer_science.algorithms
+  kind: strategy
+  added_by:
+  - csmath.inv.loop_invariant
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.inv.loop_invariant
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.recursion_base_case
+  topic: topic.computer_science.algorithms
+  kind: definition
+  added_by:
+  - csmath.rec.base_case_and_smaller_call
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.rec.base_case_and_smaller_call
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.csmath.rsa_keys
+  topic: topic.computer_science.cryptography_and_modular
+  kind: definition
+  added_by:
+  - csmath.crypto.rsa_trapdoor
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: csmath.crypto.rsa_trapdoor
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.csmath.sorting_invariant
+  topic: topic.computer_science.algorithms
+  kind: definition
+  added_by:
+  - csmath.alg.sorting_algorithm
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: csmath.alg.sorting_algorithm
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.closed_form_sums
+  topic: topic.discrete.sums
+  kind: formula
+  added_by:
+  - disc.sum.sigma_notation
+  added_at_layer: symbolic
+  display: \sum_{k=1}^n k = \frac{n(n+1)}{2}
+  related: []
+  play_again: disc.sum.sigma_notation
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.combinations_choose
+  topic: topic.discrete.counting
+  kind: formula
+  added_by:
+  - disc.count.choose_as_pascal_paths
+  added_at_layer: symbolic
+  display: \binom{n}{k} = \frac{n!}{k!(n-k)!}
+  related: []
+  play_again: disc.count.choose_as_pascal_paths
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.congruence_both_sides
+  topic: topic.discrete.modular_arithmetic
+  kind: rule
+  added_by:
+  - disc.mod.clock_equivalence
+  added_at_layer: symbolic
+  display: a \equiv b \pmod n \implies a+k \equiv b+k \pmod n
+  related: []
+  play_again: disc.mod.clock_equivalence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.congruence_mod_n
+  topic: topic.discrete.modular_arithmetic
+  kind: definition
+  added_by:
+  - disc.mod.clock_equivalence
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.mod.clock_equivalence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.counterexample
+  topic: topic.discrete.proof
+  kind: strategy
+  added_by:
+  - disc.proof.counterexample_breaks_forall
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: disc.proof.counterexample_breaks_forall
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.disc.direct_proof_template
+  topic: topic.discrete.proof
+  kind: strategy
+  added_by:
+  - disc.proof.chain_of_constructions
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: disc.proof.chain_of_constructions
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.disc.equivalence_relation
+  topic: topic.discrete.relations
+  kind: definition
+  added_by:
+  - disc.rel.equivalence_classes
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.rel.equivalence_classes
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.implication_converse_contrapositive
+  topic: topic.discrete.logic
+  kind: definition
+  added_by:
+  - disc.logic.if_then_direction
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.logic.if_then_direction
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.inclusion_exclusion
+  topic: topic.discrete.counting
+  kind: formula
+  added_by:
+  - disc.count.sum_rule
+  added_at_layer: symbolic
+  display: '|A\cup B| = |A|+|B|-|A\cap B|'
+  related: []
+  play_again: disc.count.sum_rule
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.induction_template
+  topic: topic.discrete.induction
+  kind: strategy
+  added_by:
+  - disc.ind.domino_induction
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: disc.ind.domino_induction
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.disc.modular_inverse_gcd
+  topic: topic.discrete.modular_arithmetic
+  kind: theorem
+  added_by:
+  - disc.mod.modular_inverse
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.mod.modular_inverse
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.pascal_triangle
+  topic: topic.discrete.counting
+  kind: theorem
+  added_by:
+  - disc.count.choose_as_pascal_paths
+  - precalc.binom.pascal_triangle_expansion
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.count.choose_as_pascal_paths
+  literacy_min: short_text
+  locale_dependent: false
+  aliases:
+  - cs.precalc.pascal_triangle
+- id: cs.disc.permutations_factorial
+  topic: topic.discrete.counting
+  kind: formula
+  added_by:
+  - disc.count.product_rule
+  added_at_layer: symbolic
+  display: n! = n\cdot(n-1)\cdots 1
+  related: []
+  play_again: disc.count.product_rule
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.product_rule
+  topic: topic.discrete.counting
+  kind: formula
+  added_by:
+  - disc.count.product_rule
+  added_at_layer: symbolic
+  display: n_1 \times n_2 \times \cdots
+  related: []
+  play_again: disc.count.product_rule
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.disc.proof_by_contradiction
+  topic: topic.discrete.proof
+  kind: strategy
+  added_by:
+  - disc.proof.contradiction_no_exit
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: disc.proof.contradiction_no_exit
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.disc.quantifiers_negation
+  topic: topic.discrete.logic
+  kind: rule
+  added_by:
+  - disc.logic.quantifiers_as_search
+  added_at_layer: formal
+  display: \lnot \forall x, P(x) \equiv \exists x, \lnot P(x)
+  related: []
+  play_again: disc.logic.quantifiers_as_search
+  literacy_min: full_text
+  locale_dependent: true
+- id: cs.disc.recurrence_notation
+  topic: topic.discrete.recurrence
+  kind: definition
+  added_by:
+  - disc.rec.recurrence_step
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.rec.recurrence_step
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.recursion_tree
+  topic: topic.discrete.recurrence
+  kind: strategy
+  added_by:
+  - disc.rec.tree_recursion
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.rec.tree_recursion
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.relation_vs_function
+  topic: topic.discrete.relations
+  kind: definition
+  added_by:
+  - disc.rel.relation_as_arrows
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.rel.relation_as_arrows
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.set_builder_notation
+  topic: topic.discrete.sets
+  kind: definition
+  added_by:
+  - disc.set.membership_rule
+  added_at_layer: symbolic
+  display: image:img.disc.set_builder_notation
+  related: []
+  play_again: disc.set.membership_rule
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.set_operations
+  topic: topic.discrete.sets
+  kind: rule
+  added_by:
+  - disc.set.union_intersection
+  added_at_layer: symbolic
+  display: A\cup B, \; A\cap B, \; A^c
+  related: []
+  play_again: disc.set.union_intersection
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.sigma_rules
+  topic: topic.discrete.sums
+  kind: rule
+  added_by:
+  - disc.sum.sigma_notation
+  added_at_layer: symbolic
+  display: \sum (a_k+b_k) = \sum a_k + \sum b_k, \quad \sum c\cdot a_k = c\sum a_k
+  related: []
+  play_again: disc.sum.sigma_notation
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.disc.sum_rule
+  topic: topic.discrete.counting
+  kind: formula
+  added_by:
+  - disc.count.sum_rule
+  added_at_layer: symbolic
+  display: n_1 + n_2
+  related: []
+  play_again: disc.count.sum_rule
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.disc.truth_tables
+  topic: topic.discrete.logic
+  kind: definition
+  added_by:
+  - disc.logic.and_or_not
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: disc.logic.and_or_not
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.angle_names_right_straight
+  topic: topic.geometry.angles
+  kind: definition
+  added_by:
+  - geom.angle.turn_as_measure
+  added_at_layer: symbolic
+  display: image:img.geom.angle_names_right_straight
+  related: []
+  play_again: geom.angle.turn_as_measure
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.arc_length_fraction_of_turn
+  topic: topic.geometry.circles
+  kind: formula
+  added_by:
+  - geom.circle.radius_and_arc
+  added_at_layer: symbolic
+  display: image:img.geom.arc_length_fraction_of_turn
+  related:
+  - cs.trig.arc_length_r_theta
+  - cs.trig.radian_as_arc_over_radius
+  play_again: geom.circle.radius_and_arc
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.area_by_proportion_of_hits
+  topic: topic.geometry.area
+  kind: strategy
+  added_by:
+  - geom.area.area_by_random_darts
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.area.area_by_random_darts
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.area_circle_pi_r_squared
+  topic: topic.geometry.area
+  kind: formula
+  added_by:
+  - geom.area.circle_by_slices
+  added_at_layer: symbolic
+  display: image:img.geom.area_circle_pi_r_squared
+  related:
+  - cs.geom.circumference_2_pi_r
+  - cs.geom.pi_as_ratio
+  play_again: geom.area.circle_by_slices
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.area_parallelogram_base_height
+  topic: topic.geometry.area
+  kind: formula
+  added_by:
+  - geom.area.shear_invariant
+  added_at_layer: symbolic
+  display: image:img.geom.area_parallelogram_base_height
+  related: []
+  play_again: geom.area.shear_invariant
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.area_rectangle
+  topic: topic.geometry.area
+  kind: formula
+  added_by:
+  - geom.area.rect_and_triangle
+  added_at_layer: symbolic
+  display: image:img.geom.area_rectangle
+  related: []
+  play_again: geom.area.rect_and_triangle
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.area_scales_by_k_squared
+  topic: topic.geometry.similarity
+  kind: theorem
+  added_by:
+  - geom.sim.similarity_as_scale
+  added_at_layer: symbolic
+  display: image:img.geom.area_scales_by_k_squared
+  related: []
+  play_again: geom.sim.similarity_as_scale
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.area_trapezoid
+  topic: topic.geometry.area
+  kind: formula
+  added_by:
+  - geom.area.trapezoid_as_two_triangles
+  added_at_layer: symbolic
+  display: image:img.geom.area_trapezoid
+  related:
+  - cs.geom.strategy_draw_diagonal
+  play_again: geom.area.trapezoid_as_two_triangles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.area_triangle_half_base_height
+  topic: topic.geometry.area
+  kind: formula
+  added_by:
+  - geom.area.rect_and_triangle
+  added_at_layer: symbolic
+  display: image:img.geom.area_triangle_half_base_height
+  related: []
+  play_again: geom.area.rect_and_triangle
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.circumference_2_pi_r
+  topic: topic.geometry.circles
+  kind: formula
+  added_by:
+  - geom.circle.radius_and_arc
+  added_at_layer: symbolic
+  display: image:img.geom.circumference_2_pi_r
+  related:
+  - cs.geom.area_circle_pi_r_squared
+  - cs.geom.pi_as_ratio
+  play_again: geom.circle.radius_and_arc
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.congruence_sss_sas_asa
+  topic: topic.geometry.triangles
+  kind: theorem
+  added_by:
+  - geom.tri.congruence_rigid_fit
+  added_at_layer: symbolic
+  display: image:img.geom.congruence_sss_sas_asa
+  related: []
+  play_again: geom.tri.congruence_rigid_fit
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.dilation_center_and_factor
+  topic: topic.geometry.transformations
+  kind: definition
+  added_by:
+  - geom.trans.dilation
+  added_at_layer: symbolic
+  display: image:img.geom.dilation_center_and_factor
+  related: []
+  play_again: geom.trans.dilation
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.distance_formula
+  topic: topic.geometry.coordinate
+  kind: formula
+  added_by:
+  - geom.coord.distance_as_pythagoras
+  added_at_layer: symbolic
+  display: d(P,Q) = \sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}
+  related:
+  - cs.geom.pythagoras
+  - cs.linalg.vector_length
+  - cs.trig.unit_circle_key_points
+  play_again: geom.coord.distance_as_pythagoras
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.euler_v_minus_e_plus_f
+  topic: topic.geometry.solids
+  kind: theorem
+  added_by:
+  - geom.top.euler_characteristic
+  - graph.planar.no_crossing_euler_formula
+  added_at_layer: symbolic
+  display: V - E + F = 2
+  related:
+  - cs.adv.euler_characteristic_surfaces
+  play_again: geom.top.euler_characteristic
+  literacy_min: icons
+  locale_dependent: false
+  aliases:
+  - cs.graph.euler_formula_planar
+- id: cs.geom.exterior_angle_completes_turn
+  topic: topic.geometry.angles
+  kind: definition
+  added_by:
+  - geom.angle.turn_as_measure
+  added_at_layer: symbolic
+  display: image:img.geom.exterior_angle_completes_turn
+  related: []
+  play_again: geom.angle.turn_as_measure
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.full_turn_360
+  topic: topic.geometry.angles
+  kind: definition
+  added_by:
+  - geom.angle.turn_as_measure
+  added_at_layer: symbolic
+  display: image:img.geom.full_turn_360
+  related: []
+  play_again: geom.angle.turn_as_measure
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.inscribed_angle_half_central
+  topic: topic.geometry.circles
+  kind: theorem
+  added_by:
+  - geom.circle.inscribed_half_central
+  added_at_layer: symbolic
+  display: \angle \text{inscripto} = \tfrac{1}{2} \angle \text{central}
+  related: []
+  play_again: geom.circle.inscribed_half_central
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.inverse_transformations_table
+  topic: topic.geometry.transformations
+  kind: definition
+  added_by:
+  - geom.trans.undo_transformation
+  added_at_layer: symbolic
+  display: image:img.geom.inverse_transformations_table
+  related: []
+  play_again: geom.trans.undo_transformation
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.midpoint_formula
+  topic: topic.geometry.coordinate
+  kind: formula
+  added_by:
+  - geom.coord.distance_as_pythagoras
+  added_at_layer: symbolic
+  display: M = \left(\frac{x_1+x_2}{2}, \frac{y_1+y_2}{2}\right)
+  related: []
+  play_again: geom.coord.distance_as_pythagoras
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.parallel_angles_equal_or_supplementary
+  topic: topic.geometry.angles
+  kind: theorem
+  added_by:
+  - geom.angle.parallel_transversal
+  added_at_layer: symbolic
+  display: image:img.geom.parallel_angles_equal_or_supplementary
+  related: []
+  play_again: geom.angle.parallel_transversal
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.parallel_same_slope
+  topic: topic.geometry.coordinate
+  kind: theorem
+  added_by:
+  - geom.line.parallel_same_slope
+  added_at_layer: symbolic
+  display: m_1 = m_2 \iff \text{rectas paralelas}
+  related: []
+  play_again: geom.line.parallel_same_slope
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.perimeter_sum_of_sides
+  topic: topic.geometry.area
+  kind: formula
+  added_by:
+  - geom.area.perimeter_vs_area
+  added_at_layer: symbolic
+  display: image:img.geom.perimeter_sum_of_sides
+  related: []
+  play_again: geom.area.perimeter_vs_area
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.perpendicular_from_center_bisects_chord
+  topic: topic.geometry.circles
+  kind: theorem
+  added_by:
+  - geom.circle.radius_bisects_chord
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.circle.radius_bisects_chord
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.perpendicular_negative_reciprocal
+  topic: topic.geometry.coordinate
+  kind: theorem
+  added_by:
+  - geom.line.parallel_same_slope
+  added_at_layer: symbolic
+  display: m_2 = -\frac{1}{m_1}
+  related: []
+  play_again: geom.line.parallel_same_slope
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.pi_as_ratio
+  topic: topic.geometry.area
+  kind: definition
+  added_by:
+  - geom.area.circle_by_slices
+  added_at_layer: symbolic
+  display: image:img.geom.pi_as_ratio
+  related:
+  - cs.geom.area_circle_pi_r_squared
+  - cs.geom.circumference_2_pi_r
+  play_again: geom.area.circle_by_slices
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.polygon_angle_sum
+  topic: topic.geometry.angles
+  kind: theorem
+  added_by:
+  - geom.angle.triangle_sum_half_turn
+  added_at_layer: symbolic
+  display: image:img.geom.polygon_angle_sum
+  related: []
+  play_again: geom.angle.triangle_sum_half_turn
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.polygons_by_sides
+  topic: topic.geometry.classification
+  kind: definition
+  added_by:
+  - geom.class.polygon_by_sides
+  added_at_layer: symbolic
+  display: image:img.geom.polygons_by_sides
+  related: []
+  play_again: geom.class.polygon_by_sides
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.pythagoras
+  topic: topic.geometry.triangles
+  kind: theorem
+  added_by:
+  - geom.tri.pythagoras_as_tiles
+  added_at_layer: symbolic
+  display: a^2 + b^2 = c^2
+  related:
+  - cs.geom.distance_formula
+  - cs.linalg.vector_length
+  - cs.trig.law_of_cosines
+  - cs.trig.sin2_plus_cos2
+  - cs.trig.special_triangles_30_45_60
+  play_again: geom.tri.pythagoras_as_tiles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.pythagorean_triples
+  topic: topic.geometry.triangles
+  kind: example
+  added_by:
+  - geom.tri.pythagoras_as_tiles
+  added_at_layer: symbolic
+  display: 3^2+4^2=5^2, \quad 5^2+12^2=13^2
+  related: []
+  play_again: geom.tri.pythagoras_as_tiles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.quadrilateral_family_tree
+  topic: topic.geometry.classification
+  kind: definition
+  added_by:
+  - geom.class.quadrilateral_hierarchy
+  added_at_layer: symbolic
+  display: image:img.geom.quadrilateral_family_tree
+  related: []
+  play_again: geom.class.quadrilateral_hierarchy
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.rigid_motions_preserve_lengths_angles
+  topic: topic.geometry.transformations
+  kind: theorem
+  added_by:
+  - geom.trans.rotation_reflection
+  added_at_layer: symbolic
+  display: image:img.geom.rigid_motions_preserve_lengths_angles
+  related: []
+  play_again: geom.trans.rotation_reflection
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.similar_ratios_equal
+  topic: topic.geometry.similarity
+  kind: theorem
+  added_by:
+  - geom.sim.similarity_as_scale
+  added_at_layer: symbolic
+  display: image:img.geom.similar_ratios_equal
+  related: []
+  play_again: geom.sim.similarity_as_scale
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.strategy_draw_altitude
+  topic: topic.geometry.area
+  kind: strategy
+  added_by:
+  - geom.area.rect_and_triangle
+  - geom.cons.auxiliary_lines
+  added_at_layer: symbolic
+  display: image:img.geom.strategy_draw_altitude
+  related: []
+  play_again: geom.area.rect_and_triangle
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.strategy_draw_diagonal
+  topic: topic.geometry.area
+  kind: strategy
+  added_by:
+  - geom.area.trapezoid_as_two_triangles
+  - geom.cons.auxiliary_lines
+  added_at_layer: symbolic
+  display: image:img.geom.strategy_draw_diagonal
+  related:
+  - cs.geom.area_trapezoid
+  play_again: geom.area.trapezoid_as_two_triangles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.strategy_draw_radii_isosceles
+  topic: topic.geometry.circles
+  kind: strategy
+  added_by:
+  - geom.circle.inscribed_half_central
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.circle.inscribed_half_central
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.strategy_drop_perpendicular_from_center
+  topic: topic.geometry.circles
+  kind: strategy
+  added_by:
+  - geom.circle.radius_bisects_chord
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.circle.radius_bisects_chord
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.strategy_extend_side
+  topic: topic.geometry.constructions
+  kind: strategy
+  added_by:
+  - geom.cons.auxiliary_lines
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.cons.auxiliary_lines
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.strategy_find_right_triangle
+  topic: topic.geometry.triangles
+  kind: strategy
+  added_by:
+  - geom.tri.pythagoras_as_tiles
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.tri.pythagoras_as_tiles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.strategy_list_what_you_know
+  topic: topic.geometry.constructions
+  kind: strategy
+  added_by:
+  - geom.cons.hidden_data_hunt
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.cons.hidden_data_hunt
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.strategy_mark_equal_parts
+  topic: topic.geometry.constructions
+  kind: strategy
+  added_by:
+  - geom.cons.auxiliary_lines
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.cons.auxiliary_lines
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.strategy_parallel_cuts_similar_triangle
+  topic: topic.geometry.similarity
+  kind: strategy
+  added_by:
+  - geom.sim.similarity_as_scale
+  added_at_layer: symbolic
+  display: image:img.geom.strategy_parallel_cuts_similar_triangle
+  related: []
+  play_again: geom.sim.similarity_as_scale
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.strategy_work_backwards_from_goal
+  topic: topic.geometry.constructions
+  kind: strategy
+  added_by:
+  - geom.cons.hidden_data_hunt
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.cons.hidden_data_hunt
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.geom.triangle_angles_180
+  topic: topic.geometry.angles
+  kind: theorem
+  added_by:
+  - geom.angle.triangle_sum_half_turn
+  added_at_layer: symbolic
+  display: image:img.geom.triangle_angles_180
+  related: []
+  play_again: geom.angle.triangle_sum_half_turn
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.triangle_inequality
+  topic: topic.geometry.triangles
+  kind: theorem
+  added_by:
+  - geom.tri.inequality_shortest_path
+  added_at_layer: symbolic
+  display: image:img.geom.triangle_inequality
+  related: []
+  play_again: geom.tri.inequality_shortest_path
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.volume_cone_third_cylinder
+  topic: topic.geometry.solids
+  kind: formula
+  added_by:
+  - geom.solid.cone_sphere_by_pouring
+  added_at_layer: symbolic
+  display: V_{cono} = \tfrac{1}{3} \pi r^2 h
+  related: []
+  play_again: geom.solid.cone_sphere_by_pouring
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.volume_cylinder
+  topic: topic.geometry.solids
+  kind: formula
+  added_by:
+  - geom.solid.volume_as_layers
+  added_at_layer: symbolic
+  display: image:img.geom.volume_cylinder
+  related: []
+  play_again: geom.solid.volume_as_layers
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.volume_prism_base_times_height
+  topic: topic.geometry.solids
+  kind: formula
+  added_by:
+  - geom.solid.volume_as_layers
+  added_at_layer: symbolic
+  display: image:img.geom.volume_prism_base_times_height
+  related: []
+  play_again: geom.solid.volume_as_layers
+  literacy_min: none
+  locale_dependent: false
+- id: cs.geom.volume_sphere_two_thirds_cylinder
+  topic: topic.geometry.solids
+  kind: formula
+  added_by:
+  - geom.solid.cone_sphere_by_pouring
+  added_at_layer: symbolic
+  display: V_{esfera} = \tfrac{2}{3} \pi r^2 (2r) = \tfrac{4}{3}\pi r^3
+  related: []
+  play_again: geom.solid.cone_sphere_by_pouring
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.bfs_dfs_order
+  topic: topic.discrete.graphs
+  kind: definition
+  added_by:
+  - graph.search.bfs_dfs_frontier
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.search.bfs_dfs_frontier
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.graph.bipartite_two_colors
+  topic: topic.discrete.graphs
+  kind: theorem
+  added_by:
+  - graph.match.bipartite_matching
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.match.bipartite_matching
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.graph.connected_components
+  topic: topic.discrete.graphs
+  kind: definition
+  added_by:
+  - graph.conn.components
+  added_at_layer: symbolic
+  display: image:img.graph.connected_components
+  related: []
+  play_again: graph.conn.components
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.dijkstra_relax
+  topic: topic.discrete.graphs
+  kind: strategy
+  added_by:
+  - graph.path.shortest_path
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.path.shortest_path
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.graph.euler_path_degree_rule
+  topic: topic.discrete.graphs
+  kind: theorem
+  added_by:
+  - graph.euler.bridges_konigsberg
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.euler.bridges_konigsberg
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.graph_vocabulary
+  topic: topic.discrete.graphs
+  kind: definition
+  added_by:
+  - graph.basic.graph_and_paths
+  added_at_layer: symbolic
+  display: image:img.graph.graph_vocabulary
+  related: []
+  play_again: graph.basic.graph_and_paths
+  literacy_min: none
+  locale_dependent: false
+- id: cs.graph.greedy_coloring
+  topic: topic.discrete.graphs
+  kind: strategy
+  added_by:
+  - graph.color.map_coloring
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.color.map_coloring
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.hamilton_vs_euler
+  topic: topic.discrete.graphs
+  kind: definition
+  added_by:
+  - graph.euler.hamilton_visits_every_node
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.euler.hamilton_visits_every_node
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.handshake_lemma
+  topic: topic.discrete.graphs
+  kind: theorem
+  added_by:
+  - graph.deg.handshake_lemma
+  added_at_layer: symbolic
+  display: image:img.graph.handshake_lemma
+  related: []
+  play_again: graph.deg.handshake_lemma
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.matching_hall
+  topic: topic.discrete.graphs
+  kind: theorem
+  added_by:
+  - graph.match.bipartite_matching
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: graph.match.bipartite_matching
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.graph.max_flow_min_cut
+  topic: topic.discrete.graphs
+  kind: theorem
+  added_by:
+  - graph.flow.max_flow_min_cut
+  added_at_layer: symbolic
+  display: \max |f| = \min |C|
+  related: []
+  play_again: graph.flow.max_flow_min_cut
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.graph.tree_edges_n_minus_1
+  topic: topic.discrete.graphs
+  kind: theorem
+  added_by:
+  - graph.tree.tree_no_cycles
+  added_at_layer: symbolic
+  display: image:img.graph.tree_edges_n_minus_1
+  related: []
+  play_again: graph.tree.tree_no_cycles
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.graph.walk_path_cycle
+  topic: topic.discrete.graphs
+  kind: definition
+  added_by:
+  - graph.walk.repeat_rules
+  added_at_layer: symbolic
+  display: image:img.graph.walk_path_cycle
+  related: []
+  play_again: graph.walk.repeat_rules
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.adjacency_matrix_powers
+  topic: topic.linear_algebra.transformations
+  kind: theorem
+  added_by:
+  - linalg.map.matrix_counts_routes
+  - graph.matrix.two_step_routes_as_product
+  added_at_layer: symbolic
+  display: (A^k)_{ij} = \text{caminos de largo } k \text{ de } i \text{ a } j
+  related: []
+  play_again: linalg.map.matrix_counts_routes
+  literacy_min: short_text
+  locale_dependent: false
+  aliases:
+  - cs.graph.adjacency_matrix_powers
+- id: cs.linalg.angle_between_vectors
+  topic: topic.linear_algebra.orthogonality
+  kind: formula
+  added_by:
+  - linalg.orth.dot_product_as_alignment
+  added_at_layer: symbolic
+  display: \cos\theta = \frac{\vec u \cdot \vec v}{\|\vec u\|\|\vec v\|}
+  related: []
+  play_again: linalg.orth.dot_product_as_alignment
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.linalg.basis_and_dimension
+  topic: topic.linear_algebra.basis
+  kind: definition
+  added_by:
+  - linalg.basis.unique_recipe
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.basis.unique_recipe
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.change_of_basis_matrix
+  topic: topic.linear_algebra.basis
+  kind: definition
+  added_by:
+  - linalg.basis.change_of_basis_as_translation
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.basis.change_of_basis_as_translation
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.characteristic_polynomial
+  topic: topic.linear_algebra.eigenvalues
+  kind: formula
+  added_by:
+  - linalg.eig.characteristic_polynomial
+  added_at_layer: formal
+  display: \det(A-\lambda I) = 0
+  related: []
+  play_again: linalg.eig.characteristic_polynomial
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.cofactor_expansion
+  topic: topic.linear_algebra.determinants
+  kind: strategy
+  added_by:
+  - linalg.det.cofactor_by_slices
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.det.cofactor_by_slices
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.coordinates_in_basis
+  topic: topic.linear_algebra.basis
+  kind: definition
+  added_by:
+  - linalg.basis.unique_recipe
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.basis.unique_recipe
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.det_of_product
+  topic: topic.linear_algebra.determinants
+  kind: rule
+  added_by:
+  - linalg.det.factor_multiplies_under_composition
+  added_at_layer: formal
+  display: \det(AB) = \det(A)\det(B)
+  related: []
+  play_again: linalg.det.factor_multiplies_under_composition
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.det_zero_singular
+  topic: topic.linear_algebra.determinants
+  kind: theorem
+  added_by:
+  - linalg.det.factor_multiplies_under_composition
+  added_at_layer: formal
+  display: \det(A) = 0 \iff A \text{ no tiene inversa}
+  related: []
+  play_again: linalg.det.factor_multiplies_under_composition
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.determinant_2x2
+  topic: topic.linear_algebra.transformations
+  kind: formula
+  added_by:
+  - linalg.map.determinant_as_area
+  added_at_layer: symbolic
+  display: \det\begin{pmatrix}a&b\\c&d\end{pmatrix} = ad-bc
+  related: []
+  play_again: linalg.map.determinant_as_area
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.determinant_3x3
+  topic: topic.linear_algebra.determinants
+  kind: formula
+  added_by:
+  - linalg.det.cofactor_by_slices
+  added_at_layer: formal
+  display: \det A = a(ei-fh)-b(di-fg)+c(dh-eg)
+  related: []
+  play_again: linalg.det.cofactor_by_slices
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.diagonalization
+  topic: topic.linear_algebra.eigenvalues
+  kind: theorem
+  added_by:
+  - linalg.eig.diagonalize_as_change_of_view
+  added_at_layer: formal
+  display: A = PDP^{-1}
+  related: []
+  play_again: linalg.eig.diagonalize_as_change_of_view
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.dot_product
+  topic: topic.linear_algebra.orthogonality
+  kind: formula
+  added_by:
+  - linalg.orth.dot_product_as_alignment
+  added_at_layer: symbolic
+  display: \vec u \cdot \vec v = u_1v_1+u_2v_2+\cdots
+  related: []
+  play_again: linalg.orth.dot_product_as_alignment
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.linalg.eigenvector_definition
+  topic: topic.linear_algebra.eigenvalues
+  kind: definition
+  added_by:
+  - linalg.eig.eigenvector_stays_on_line
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.eig.eigenvector_stays_on_line
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.linalg.free_variables
+  topic: topic.linear_algebra.systems
+  kind: definition
+  added_by:
+  - linalg.sys.solution_set_shape
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.sys.solution_set_shape
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.gaussian_elimination
+  topic: topic.linear_algebra.systems
+  kind: strategy
+  added_by:
+  - linalg.sys.elimination_to_echelon
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.sys.elimination_to_echelon
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.gram_schmidt
+  topic: topic.linear_algebra.orthogonality
+  kind: strategy
+  added_by:
+  - linalg.orth.orthonormal_makes_coordinates_easy
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.orth.orthonormal_makes_coordinates_easy
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.inverse_2x2
+  topic: topic.linear_algebra.transformations
+  kind: formula
+  added_by:
+  - linalg.map.inverse_and_systems
+  added_at_layer: symbolic
+  display: A^{-1} = \frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}
+  related: []
+  play_again: linalg.map.inverse_and_systems
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.linear_combination
+  topic: topic.linear_algebra.vectors
+  kind: definition
+  added_by:
+  - linalg.vec.span_and_combination
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.vec.span_and_combination
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.linear_independence
+  topic: topic.linear_algebra.basis
+  kind: definition
+  added_by:
+  - linalg.basis.in_span_or_not
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.basis.in_span_or_not
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.matrix_3x3_columns
+  topic: topic.linear_algebra.transformations
+  kind: definition
+  added_by:
+  - linalg.map.linear_transformation_3d
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.linear_transformation_3d
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.linalg.matrix_columns_are_basis_images
+  topic: topic.linear_algebra.transformations
+  kind: definition
+  added_by:
+  - linalg.map.linear_transformation_2d
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.linear_transformation_2d
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.matrix_powers_via_eigen
+  topic: topic.linear_algebra.eigenvalues
+  kind: strategy
+  added_by:
+  - linalg.eig.diagonalize_as_change_of_view
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.eig.diagonalize_as_change_of_view
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.matrix_product
+  topic: topic.linear_algebra.transformations
+  kind: definition
+  added_by:
+  - linalg.map.compose_as_multiply
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.compose_as_multiply
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.matrix_vector_product
+  topic: topic.linear_algebra.transformations
+  kind: formula
+  added_by:
+  - linalg.map.linear_transformation_2d
+  added_at_layer: symbolic
+  display: A\vec v
+  related: []
+  play_again: linalg.map.linear_transformation_2d
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.negative_det_flips
+  topic: topic.linear_algebra.transformations
+  kind: rule
+  added_by:
+  - linalg.map.determinant_as_area
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.determinant_as_area
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.normal_equations
+  topic: topic.linear_algebra.svd_and_regression
+  kind: formula
+  added_by:
+  - linalg.svd.least_squares_as_projection
+  added_at_layer: formal
+  display: A^TA\hat x = A^Tb
+  related: []
+  play_again: linalg.svd.least_squares_as_projection
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.orthogonal_matrix_inverse_is_transpose
+  topic: topic.linear_algebra.orthogonality
+  kind: theorem
+  added_by:
+  - linalg.orth.orthonormal_makes_coordinates_easy
+  added_at_layer: formal
+  display: Q^{-1} = Q^T
+  related: []
+  play_again: linalg.orth.orthonormal_makes_coordinates_easy
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.pivots_and_back_substitution
+  topic: topic.linear_algebra.systems
+  kind: strategy
+  added_by:
+  - linalg.sys.elimination_to_echelon
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.sys.elimination_to_echelon
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.product_not_commutative
+  topic: topic.linear_algebra.transformations
+  kind: rule
+  added_by:
+  - linalg.map.compose_as_multiply
+  added_at_layer: symbolic
+  display: AB \neq BA
+  related: []
+  play_again: linalg.map.compose_as_multiply
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.projection_formula
+  topic: topic.linear_algebra.orthogonality
+  kind: formula
+  added_by:
+  - linalg.orth.projection_as_shadow
+  added_at_layer: symbolic
+  display: \mathrm{proj}_{\vec u}\vec v = \frac{\vec u \cdot \vec v}{\vec u \cdot \vec u}\vec u
+  related: []
+  play_again: linalg.orth.projection_as_shadow
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.linalg.rank_and_solutions
+  topic: topic.linear_algebra.systems
+  kind: theorem
+  added_by:
+  - linalg.sys.solution_set_shape
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.sys.solution_set_shape
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.rotation_matrices_3d
+  topic: topic.linear_algebra.transformations
+  kind: definition
+  added_by:
+  - linalg.map.linear_transformation_3d
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.linear_transformation_3d
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.linalg.rotation_shear_reflection_matrices
+  topic: topic.linear_algebra.transformations
+  kind: example
+  added_by:
+  - linalg.map.linear_transformation_2d
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.linear_transformation_2d
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.row_operations_preserve_solutions
+  topic: topic.linear_algebra.systems
+  kind: theorem
+  added_by:
+  - linalg.sys.row_operations
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.sys.row_operations
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.linalg.scalar_multiple
+  topic: topic.linear_algebra.vectors
+  kind: definition
+  added_by:
+  - linalg.vec.scale_and_reverse
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.vec.scale_and_reverse
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.singular_no_inverse
+  topic: topic.linear_algebra.transformations
+  kind: definition
+  added_by:
+  - linalg.map.inverse_and_systems
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.map.inverse_and_systems
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.singular_values_as_stretch
+  topic: topic.linear_algebra.svd_and_regression
+  kind: definition
+  added_by:
+  - linalg.svd.rotate_stretch_rotate
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: linalg.svd.rotate_stretch_rotate
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.solve_ax_equals_b
+  topic: topic.linear_algebra.transformations
+  kind: formula
+  added_by:
+  - linalg.map.inverse_and_systems
+  added_at_layer: symbolic
+  display: \vec x = A^{-1}\vec b
+  related: []
+  play_again: linalg.map.inverse_and_systems
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.span
+  topic: topic.linear_algebra.vectors
+  kind: definition
+  added_by:
+  - linalg.vec.span_and_combination
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.vec.span_and_combination
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.svd_decomposition
+  topic: topic.linear_algebra.svd_and_regression
+  kind: formula
+  added_by:
+  - linalg.svd.rotate_stretch_rotate
+  added_at_layer: formal
+  display: A = U\Sigma V^{T}
+  related: []
+  play_again: linalg.svd.rotate_stretch_rotate
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.trace_and_det_from_eigen
+  topic: topic.linear_algebra.eigenvalues
+  kind: theorem
+  added_by:
+  - linalg.eig.characteristic_polynomial
+  added_at_layer: formal
+  display: \mathrm{tr}(A)=\textstyle\sum\lambda_i, \quad \det(A)=\textstyle\prod\lambda_i
+  related: []
+  play_again: linalg.eig.characteristic_polynomial
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.linalg.vector_addition_components
+  topic: topic.linear_algebra.vectors
+  kind: rule
+  added_by:
+  - linalg.vec.add_tip_to_tail
+  - precalc.vec.arrow_2d_intro
+  added_at_layer: symbolic
+  display: (\vec u + \vec v) = (u_1+v_1, u_2+v_2)
+  related: []
+  play_again: linalg.vec.add_tip_to_tail
+  literacy_min: icons
+  locale_dependent: false
+  aliases:
+  - cs.precalc.vector_components_add
+- id: cs.linalg.vector_components
+  topic: topic.linear_algebra.vectors
+  kind: definition
+  added_by:
+  - linalg.vec.vector_as_displacement
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: linalg.vec.vector_as_displacement
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.linalg.vector_length
+  topic: topic.linear_algebra.vectors
+  kind: formula
+  added_by:
+  - linalg.vec.vector_as_displacement
+  - precalc.vec.arrow_2d_intro
+  added_at_layer: symbolic
+  display: \|\vec v\| = \sqrt{v_1^2+v_2^2}
+  related:
+  - cs.geom.distance_formula
+  - cs.geom.pythagoras
+  play_again: linalg.vec.vector_as_displacement
+  literacy_min: icons
+  locale_dependent: false
+  aliases:
+  - cs.precalc.vector_length_pythagoras
+- id: cs.mvcalc.conservative_field_test
+  topic: topic.multivariable_calculus.vector_fields
+  kind: rule
+  added_by:
+  - mvcalc.line.conservative_path_independent
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: mvcalc.line.conservative_path_independent
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.critical_points_2d
+  topic: topic.multivariable_calculus.optimization
+  kind: theorem
+  added_by:
+  - mvcalc.opt.hessian_curvature
+  added_at_layer: formal
+  display: \nabla f = \vec 0
+  related: []
+  play_again: mvcalc.opt.hessian_curvature
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.curl
+  topic: topic.multivariable_calculus.vector_fields
+  kind: definition
+  added_by:
+  - mvcalc.divrot.curl_as_spin
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: mvcalc.divrot.curl_as_spin
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.directional_derivative
+  topic: topic.multivariable_calculus.partial_derivatives_and_gradient
+  kind: formula
+  added_by:
+  - mvcalc.grad.terrain_walker
+  added_at_layer: symbolic
+  display: D_{\vec u}f = \nabla f \cdot \vec u
+  related: []
+  play_again: mvcalc.grad.terrain_walker
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.mvcalc.divergence
+  topic: topic.multivariable_calculus.vector_fields
+  kind: definition
+  added_by:
+  - mvcalc.divrot.divergence_as_source
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: mvcalc.divrot.divergence_as_source
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.divergence_theorem
+  topic: topic.multivariable_calculus.vector_fields
+  kind: theorem
+  added_by:
+  - mvcalc.thm.divergence_flux_equals_sources
+  added_at_layer: formal
+  display: \iint_S \vec F \cdot d\vec S = \iiint_V (\nabla \cdot \vec F)\, dV
+  related: []
+  play_again: mvcalc.thm.divergence_flux_equals_sources
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.double_integral
+  topic: topic.multivariable_calculus.multiple_integrals
+  kind: formula
+  added_by:
+  - mvcalc.int.double_integral_tank
+  added_at_layer: symbolic
+  display: \iint_R f(x,y)\,dA
+  related: []
+  play_again: mvcalc.int.double_integral_tank
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.mvcalc.flux
+  topic: topic.multivariable_calculus.vector_fields
+  kind: definition
+  added_by:
+  - mvcalc.surf.flux_through_surface
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: mvcalc.surf.flux_through_surface
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.fubini_iterated
+  topic: topic.multivariable_calculus.multiple_integrals
+  kind: theorem
+  added_by:
+  - mvcalc.int.iterated_slices
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.int.iterated_slices
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.mvcalc.function_of_two_variables
+  topic: topic.multivariable_calculus.functions_of_several_variables
+  kind: definition
+  added_by:
+  - mvcalc.fn.two_inputs_one_output
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.fn.two_inputs_one_output
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.mvcalc.fundamental_theorem_line_integrals
+  topic: topic.multivariable_calculus.vector_fields
+  kind: theorem
+  added_by:
+  - mvcalc.line.conservative_path_independent
+  added_at_layer: formal
+  display: \int_C \nabla f \cdot d\vec r = f(B)-f(A)
+  related: []
+  play_again: mvcalc.line.conservative_path_independent
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.gradient_field
+  topic: topic.multivariable_calculus.vector_fields
+  kind: definition
+  added_by:
+  - mvcalc.field.arrow_at_every_point
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.field.arrow_at_every_point
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.mvcalc.gradient_vector
+  topic: topic.multivariable_calculus.partial_derivatives_and_gradient
+  kind: definition
+  added_by:
+  - mvcalc.grad.terrain_walker
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.grad.terrain_walker
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.mvcalc.green_theorem
+  topic: topic.multivariable_calculus.vector_fields
+  kind: theorem
+  added_by:
+  - mvcalc.thm.green_boundary_counts_interior
+  added_at_layer: formal
+  display: \oint_C \vec F \cdot d\vec r = \iint_R \left(\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial
+    y}\right) dA
+  related: []
+  play_again: mvcalc.thm.green_boundary_counts_interior
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.jacobian_change_of_variables
+  topic: topic.multivariable_calculus.multiple_integrals
+  kind: formula
+  added_by:
+  - mvcalc.int.change_of_variables_jacobian
+  added_at_layer: formal
+  display: dA = |J| \, du\,dv
+  related: []
+  play_again: mvcalc.int.change_of_variables_jacobian
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.jacobian_matrix
+  topic: topic.multivariable_calculus.partial_derivatives_and_gradient
+  kind: definition
+  added_by:
+  - mvcalc.jac.local_stretch
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: mvcalc.jac.local_stretch
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.lagrange_multiplier
+  topic: topic.multivariable_calculus.optimization
+  kind: formula
+  added_by:
+  - mvcalc.lagr.tangent_level_curves
+  added_at_layer: formal
+  display: \nabla f = \lambda \nabla g
+  related: []
+  play_again: mvcalc.lagr.tangent_level_curves
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.level_curves
+  topic: topic.multivariable_calculus.functions_of_several_variables
+  kind: definition
+  added_by:
+  - mvcalc.fn.two_inputs_one_output
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.fn.two_inputs_one_output
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.mvcalc.line_integral
+  topic: topic.multivariable_calculus.vector_fields
+  kind: formula
+  added_by:
+  - mvcalc.line.work_along_path
+  added_at_layer: formal
+  display: \int_C \vec F \cdot d\vec r
+  related: []
+  play_again: mvcalc.line.work_along_path
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.partial_derivative
+  topic: topic.multivariable_calculus.partial_derivatives_and_gradient
+  kind: definition
+  added_by:
+  - mvcalc.part.slice_of_surface
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.part.slice_of_surface
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.mvcalc.polar_double_integral
+  topic: topic.multivariable_calculus.multiple_integrals
+  kind: formula
+  added_by:
+  - mvcalc.int.change_of_variables_jacobian
+  added_at_layer: formal
+  display: \iint f(x,y)\,dA = \iint f(r\cos\theta,r\sin\theta)\, r\,dr\,d\theta
+  related: []
+  play_again: mvcalc.int.change_of_variables_jacobian
+  literacy_min: full_text
+  locale_dependent: true
+- id: cs.mvcalc.second_derivative_test
+  topic: topic.multivariable_calculus.optimization
+  kind: rule
+  added_by:
+  - mvcalc.opt.hessian_curvature
+  added_at_layer: formal
+  display: D = f_{xx}f_{yy}-f_{xy}^2
+  related: []
+  play_again: mvcalc.opt.hessian_curvature
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.stokes_theorem
+  topic: topic.multivariable_calculus.vector_fields
+  kind: theorem
+  added_by:
+  - mvcalc.thm.stokes_curl_through_surface
+  added_at_layer: formal
+  display: \oint_C \vec F \cdot d\vec r = \iint_S (\nabla \times \vec F) \cdot d\vec S
+  related: []
+  play_again: mvcalc.thm.stokes_curl_through_surface
+  literacy_min: full_text
+  locale_dependent: true
+- id: cs.mvcalc.surface_integral
+  topic: topic.multivariable_calculus.vector_fields
+  kind: formula
+  added_by:
+  - mvcalc.surf.flux_through_surface
+  added_at_layer: formal
+  display: \iint_S \vec F \cdot d\vec S
+  related: []
+  play_again: mvcalc.surf.flux_through_surface
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.mvcalc.triple_integral
+  topic: topic.multivariable_calculus.multiple_integrals
+  kind: formula
+  added_by:
+  - mvcalc.int.iterated_slices
+  added_at_layer: symbolic
+  display: \iiint_V f(x,y,z)\,dV
+  related: []
+  play_again: mvcalc.int.iterated_slices
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.mvcalc.vector_field
+  topic: topic.multivariable_calculus.vector_fields
+  kind: definition
+  added_by:
+  - mvcalc.field.arrow_at_every_point
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: mvcalc.field.arrow_at_every_point
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prealg.coefficient_counts_boxes
+  topic: topic.equations.linear
+  kind: definition
+  added_by:
+  - prealg.var.unknown_as_box
+  added_at_layer: symbolic
+  display: image:img.prealg.coefficient_counts_boxes
+  related: []
+  play_again: prealg.var.unknown_as_box
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.combine_like_terms_only
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - prealg.expr.like_terms
+  added_at_layer: symbolic
+  display: image:img.prealg.combine_like_terms_only
+  related: []
+  play_again: prealg.expr.like_terms
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.commutative_associative_with_letters
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - prealg.prop.order_does_not_matter
+  added_at_layer: symbolic
+  display: image:img.prealg.commutative_associative_with_letters
+  related: []
+  play_again: prealg.prop.order_does_not_matter
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.constant_step_reveals_rule
+  topic: topic.functions.intro
+  kind: strategy
+  added_by:
+  - prealg.pat.rule_from_table
+  added_at_layer: symbolic
+  display: image:img.prealg.constant_step_reveals_rule
+  related: []
+  play_again: prealg.pat.rule_from_table
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.equals_means_level_pans
+  topic: topic.equations.linear
+  kind: definition
+  added_by:
+  - prealg.eq.balance
+  added_at_layer: symbolic
+  display: image:img.prealg.equals_means_level_pans
+  related: []
+  play_again: prealg.eq.balance
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.every_operation_has_a_key
+  topic: topic.equations.linear
+  kind: definition
+  added_by:
+  - prealg.inv.operation_as_key
+  added_at_layer: symbolic
+  display: image:img.prealg.every_operation_has_a_key
+  related: []
+  play_again: prealg.inv.operation_as_key
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.fraction_bar_groups
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - prealg.expr.implicit_grouping
+  added_at_layer: symbolic
+  display: image:img.prealg.fraction_bar_groups
+  related: []
+  play_again: prealg.expr.implicit_grouping
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.identity_zero_and_one
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - prealg.prop.order_does_not_matter
+  added_at_layer: symbolic
+  display: image:img.prealg.identity_zero_and_one
+  related: []
+  play_again: prealg.prop.order_does_not_matter
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.inverse_pairs_table
+  topic: topic.equations.linear
+  kind: definition
+  added_by:
+  - prealg.inv.operation_as_key
+  added_at_layer: symbolic
+  display: image:img.prealg.inverse_pairs_table
+  related: []
+  play_again: prealg.inv.operation_as_key
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.juxtaposition_means_times
+  topic: topic.algebra.expressions
+  kind: rule
+  added_by:
+  - prealg.expr.implicit_grouping
+  added_at_layer: symbolic
+  display: image:img.prealg.juxtaposition_means_times
+  related: []
+  play_again: prealg.expr.implicit_grouping
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.letter_names_the_box
+  topic: topic.equations.linear
+  kind: definition
+  added_by:
+  - prealg.var.unknown_as_box
+  added_at_layer: symbolic
+  display: image:img.prealg.letter_names_the_box
+  related: []
+  play_again: prealg.var.unknown_as_box
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.lt_gt_as_tilt
+  topic: topic.equations.inequalities
+  kind: definition
+  added_by:
+  - prealg.ineq.compare_expressions
+  added_at_layer: symbolic
+  display: image:img.prealg.lt_gt_as_tilt
+  related: []
+  play_again: prealg.ineq.compare_expressions
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.percent_change_as_fill_delta
+  topic: topic.numbers.percent
+  kind: definition
+  added_by:
+  - prealg.pct.percent_fill
+  added_at_layer: symbolic
+  display: image:img.prealg.percent_change_as_fill_delta
+  related: []
+  play_again: prealg.pct.percent_fill
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.percent_decimal_fraction_triangle
+  topic: topic.numbers.percent
+  kind: rule
+  added_by:
+  - prealg.pct.hundredths
+  added_at_layer: symbolic
+  display: image:img.prealg.percent_decimal_fraction_triangle
+  related: []
+  play_again: prealg.pct.hundredths
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.place_value_as_power_of_ten
+  topic: topic.numbers.powers
+  kind: definition
+  added_by:
+  - prealg.exp.powers_of_ten
+  added_at_layer: symbolic
+  display: image:img.prealg.place_value_as_power_of_ten
+  related: []
+  play_again: prealg.exp.powers_of_ten
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.proportional_graph_line_through_origin
+  topic: topic.numbers.ratio
+  kind: theorem
+  added_by:
+  - prealg.ratio.proportion_as_line
+  added_at_layer: symbolic
+  display: image:img.prealg.proportional_graph_line_through_origin
+  related: []
+  play_again: prealg.ratio.proportion_as_line
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.proportional_means_constant_ratio
+  topic: topic.numbers.ratio
+  kind: definition
+  added_by:
+  - prealg.ratio.rate_per_unit
+  added_at_layer: symbolic
+  display: image:img.prealg.proportional_means_constant_ratio
+  related: []
+  play_again: prealg.ratio.rate_per_unit
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.ratio_scales_both_parts
+  topic: topic.numbers.ratio
+  kind: rule
+  added_by:
+  - prealg.ratio.scaling_recipe
+  added_at_layer: symbolic
+  display: image:img.prealg.ratio_scales_both_parts
+  related: []
+  play_again: prealg.ratio.scaling_recipe
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.same_action_both_sides
+  topic: topic.equations.linear
+  kind: rule
+  added_by:
+  - prealg.eq.balance
+  added_at_layer: symbolic
+  display: image:img.prealg.same_action_both_sides
+  related: []
+  play_again: prealg.eq.balance
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.scientific_notation
+  topic: topic.numbers.powers
+  kind: definition
+  added_by:
+  - prealg.exp.powers_of_ten
+  added_at_layer: symbolic
+  display: image:img.prealg.scientific_notation
+  related: []
+  play_again: prealg.exp.powers_of_ten
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prealg.sign_rules_four_operations
+  topic: topic.numbers.integers
+  kind: rule
+  added_by:
+  - prealg.int.sign_rules
+  added_at_layer: symbolic
+  display: image:img.prealg.sign_rules_four_operations
+  related: []
+  play_again: prealg.int.sign_rules
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.substitute_then_evaluate
+  topic: topic.algebra.expressions
+  kind: strategy
+  added_by:
+  - prealg.expr.substitute_value
+  added_at_layer: symbolic
+  display: image:img.prealg.substitute_then_evaluate
+  related: []
+  play_again: prealg.expr.substitute_value
+  literacy_min: none
+  locale_dependent: false
+- id: cs.prealg.table_records_machine
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - prealg.fn.input_output_table
+  added_at_layer: symbolic
+  display: image:img.prealg.table_records_machine
+  related: []
+  play_again: prealg.fn.input_output_table
+  literacy_min: none
+  locale_dependent: false
+- id: cs.precalc.absolute_value_as_piecewise
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - precalc.fn.piecewise_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.fn.piecewise_machine
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.arithmetic_nth_term
+  topic: topic.functions.sequences
+  kind: formula
+  added_by:
+  - precalc.seq.arithmetic_sequence
+  added_at_layer: symbolic
+  display: a_n = a_1 + (n-1)d
+  related: []
+  play_again: precalc.seq.arithmetic_sequence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.arithmetic_sum_pairing
+  topic: topic.functions.sequences
+  kind: strategy
+  added_by:
+  - precalc.seq.arithmetic_sequence
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.seq.arithmetic_sequence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.binomial_theorem
+  topic: topic.discrete.counting
+  kind: theorem
+  added_by:
+  - precalc.binom.pascal_triangle_expansion
+  added_at_layer: symbolic
+  display: (a+b)^n = \sum_{k=0}^n \binom{n}{k}a^{n-k}b^k
+  related: []
+  play_again: precalc.binom.pascal_triangle_expansion
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.complex_add_multiply
+  topic: topic.complex_numbers.intro
+  kind: rule
+  added_by:
+  - precalc.cplx.plane_intro
+  added_at_layer: symbolic
+  display: (a+bi)+(c+di), \; (a+bi)(c+di)
+  related: []
+  play_again: precalc.cplx.plane_intro
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.conic_distance_definitions
+  topic: topic.geometry.conics
+  kind: definition
+  added_by:
+  - precalc.conic.slice_of_cone
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.conic.slice_of_cone
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.conic_equations_standard
+  topic: topic.geometry.conics
+  kind: formula
+  added_by:
+  - precalc.conic.slice_of_cone
+  added_at_layer: symbolic
+  display: \frac{x^2}{a^2}+\frac{y^2}{b^2}=1, \; y^2=4px, \ldots
+  related: []
+  play_again: precalc.conic.slice_of_cone
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.continuous_means_limit_equals_value
+  topic: topic.calculus.limits
+  kind: definition
+  added_by:
+  - precalc.lim.continuity_unbroken_pen
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.lim.continuity_unbroken_pen
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.e_as_limit_compounding
+  topic: topic.functions.exponential_log
+  kind: definition
+  added_by:
+  - precalc.exp.natural_base
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: precalc.exp.natural_base
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.precalc.eliminate_parameter
+  topic: topic.functions.parametric
+  kind: strategy
+  added_by:
+  - precalc.param.time_as_hidden_input
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.param.time_as_hidden_input
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.end_behavior_by_leading_term
+  topic: topic.calculus.limits
+  kind: rule
+  added_by:
+  - precalc.lim.infinity_and_asymptote
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.lim.infinity_and_asymptote
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.even_odd_definitions
+  topic: topic.functions.transformations
+  kind: definition
+  added_by:
+  - precalc.fntr.reflect_and_symmetry
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.fntr.reflect_and_symmetry
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.exp_slope_equals_value
+  topic: topic.functions.exponential_log
+  kind: theorem
+  added_by:
+  - precalc.exp.natural_base
+  added_at_layer: formal
+  display: \frac{d}{dx}e^x = e^x
+  related: []
+  play_again: precalc.exp.natural_base
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.precalc.geometric_nth_term
+  topic: topic.functions.sequences
+  kind: formula
+  added_by:
+  - precalc.seq.geometric_sequence
+  added_at_layer: symbolic
+  display: a_n = a_1 \cdot r^{n-1}
+  related: []
+  play_again: precalc.seq.geometric_sequence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.geometric_sum_finite
+  topic: topic.functions.sequences
+  kind: formula
+  added_by:
+  - precalc.seq.geometric_sequence
+  added_at_layer: symbolic
+  display: S_n = a_1 \frac{1-r^n}{1-r}
+  related: []
+  play_again: precalc.seq.geometric_sequence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.horizontal_vertical_asymptotes
+  topic: topic.calculus.limits
+  kind: definition
+  added_by:
+  - precalc.lim.infinity_and_asymptote
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.lim.infinity_and_asymptote
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.i_squared_minus_one
+  topic: topic.complex_numbers.intro
+  kind: definition
+  added_by:
+  - precalc.cplx.plane_intro
+  - adv.cplx.i_as_new_axis
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.cplx.plane_intro
+  literacy_min: short_text
+  locale_dependent: false
+  aliases:
+  - cs.adv.i_squared_minus_one
+- id: cs.precalc.increasing_decreasing_intervals
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - precalc.fn.increasing_decreasing
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.fn.increasing_decreasing
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.infinite_geometric_sum_ratio_less_one
+  topic: topic.functions.sequences
+  kind: theorem
+  added_by:
+  - precalc.seq.sum_as_pattern
+  added_at_layer: symbolic
+  display: \sum_{n=0}^\infty ar^n = \frac{a}{1-r}, \; |r|<1
+  related: []
+  play_again: precalc.seq.sum_as_pattern
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.limit_by_table_of_values
+  topic: topic.calculus.limits
+  kind: strategy
+  added_by:
+  - precalc.lim.approach
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.lim.approach
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.limit_ignores_value_at_point
+  topic: topic.calculus.limits
+  kind: rule
+  added_by:
+  - precalc.lim.approach
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.lim.approach
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.limit_notation
+  topic: topic.calculus.limits
+  kind: definition
+  added_by:
+  - precalc.lim.approach
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.lim.approach
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.ln_inverse_of_exp
+  topic: topic.functions.exponential_log
+  kind: definition
+  added_by:
+  - precalc.exp.natural_base
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: precalc.exp.natural_base
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.precalc.local_max_min_turning_points
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - precalc.fn.increasing_decreasing
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.fn.increasing_decreasing
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.modulus_conjugate
+  topic: topic.complex_numbers.intro
+  kind: definition
+  added_by:
+  - precalc.cplx.plane_intro
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.cplx.plane_intro
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.parametric_x_t_y_t
+  topic: topic.functions.parametric
+  kind: definition
+  added_by:
+  - precalc.param.time_as_hidden_input
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.param.time_as_hidden_input
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.piecewise_notation
+  topic: topic.functions.intro
+  kind: definition
+  added_by:
+  - precalc.fn.piecewise_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.fn.piecewise_machine
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.reflection_rules_minus_f_f_minus_x
+  topic: topic.functions.transformations
+  kind: rule
+  added_by:
+  - precalc.fntr.reflect_and_symmetry
+  added_at_layer: symbolic
+  display: -f(x), \quad f(-x)
+  related: []
+  play_again: precalc.fntr.reflect_and_symmetry
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.shift_rules_f_x_minus_h_plus_k
+  topic: topic.functions.transformations
+  kind: rule
+  added_by:
+  - precalc.fntr.shift_as_displace
+  added_at_layer: symbolic
+  display: f(x-h)+k
+  related: []
+  play_again: precalc.fntr.shift_as_displace
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.precalc.sigma_notation
+  topic: topic.functions.sequences
+  kind: definition
+  added_by:
+  - precalc.seq.sum_as_pattern
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: precalc.seq.sum_as_pattern
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.precalc.stretch_rules_a_f_bx
+  topic: topic.functions.transformations
+  kind: rule
+  added_by:
+  - precalc.fntr.stretch_as_scale
+  added_at_layer: symbolic
+  display: a\,f(bx)
+  related: []
+  play_again: precalc.fntr.stretch_as_scale
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.addition_rule_inclusion_exclusion
+  topic: topic.probability.basics
+  kind: formula
+  added_by:
+  - prob.basic.union_intersection
+  added_at_layer: symbolic
+  display: P(A\cup B) = P(A)+P(B)-P(A\cap B)
+  related: []
+  play_again: prob.basic.union_intersection
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.bayes_rule
+  topic: topic.probability.conditional
+  kind: formula
+  added_by:
+  - prob.cond.bayes_reverses_condition
+  added_at_layer: symbolic
+  display: P(B\mid A) = \frac{P(A\mid B)P(B)}{P(A)}
+  related: []
+  play_again: prob.cond.bayes_reverses_condition
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.biased_sample
+  topic: topic.probability.sampling_and_inference
+  kind: definition
+  added_by:
+  - prob.samp.sample_vs_population
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.samp.sample_vs_population
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.binomial_formula
+  topic: topic.probability.distributions
+  kind: formula
+  added_by:
+  - prob.dist.binomial_counts
+  added_at_layer: symbolic
+  display: P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}
+  related: []
+  play_again: prob.dist.binomial_counts
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.binomial_mean_variance
+  topic: topic.probability.distributions
+  kind: formula
+  added_by:
+  - prob.dist.binomial_counts
+  added_at_layer: symbolic
+  display: E[X]=np, \quad \mathrm{Var}(X)=np(1-p)
+  related: []
+  play_again: prob.dist.binomial_counts
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.cdf_definition
+  topic: topic.probability.random_variables
+  kind: definition
+  added_by:
+  - prob.rv.cumulative_distribution
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.rv.cumulative_distribution
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.central_limit_theorem
+  topic: topic.probability.sampling_and_inference
+  kind: theorem
+  added_by:
+  - prob.samp.central_limit_bell
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: prob.samp.central_limit_bell
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.complement_rule
+  topic: topic.probability.basics
+  kind: formula
+  added_by:
+  - prob.basic.complement_fills_the_rest
+  added_at_layer: symbolic
+  display: P(A^c) = 1-P(A)
+  related: []
+  play_again: prob.basic.complement_fills_the_rest
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.conditional_definition
+  topic: topic.probability.conditional
+  kind: formula
+  added_by:
+  - prob.cond.conditional_and_independence
+  added_at_layer: symbolic
+  display: P(A\mid B) = \frac{P(A\cap B)}{P(B)}
+  related: []
+  play_again: prob.cond.conditional_and_independence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.confidence_interval
+  topic: topic.probability.sampling_and_inference
+  kind: formula
+  added_by:
+  - prob.inf.confidence_interval_net
+  added_at_layer: formal
+  display: \bar x \pm z\frac{s}{\sqrt n}
+  related: []
+  play_again: prob.inf.confidence_interval_net
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.confounders_and_causation
+  topic: topic.probability.statistics
+  kind: rule
+  added_by:
+  - prob.stat.correlation_vs_cause
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.stat.correlation_vs_cause
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.continuous_uniform
+  topic: topic.probability.distributions
+  kind: definition
+  added_by:
+  - prob.dist.density_area_is_probability
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: prob.dist.density_area_is_probability
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.correlation_coefficient
+  topic: topic.probability.statistics
+  kind: formula
+  added_by:
+  - prob.stat.correlation_vs_cause
+  added_at_layer: symbolic
+  display: -1 \le r \le 1
+  related: []
+  play_again: prob.stat.correlation_vs_cause
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.counting_principle
+  topic: topic.probability.basics
+  kind: rule
+  added_by:
+  - prob.basic.count_outcomes_by_structure
+  added_at_layer: symbolic
+  display: n_1 \times n_2 \times \cdots
+  related: []
+  play_again: prob.basic.count_outcomes_by_structure
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.prob.density_area
+  topic: topic.probability.distributions
+  kind: definition
+  added_by:
+  - prob.dist.density_area_is_probability
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: prob.dist.density_area_is_probability
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.expectation_variance_of_ax_plus_b
+  topic: topic.probability.random_variables
+  kind: formula
+  added_by:
+  - prob.rv.linear_change_of_variable
+  added_at_layer: formal
+  display: E[aX+b]=aE[X]+b, \quad \mathrm{Var}(aX+b)=a^2\mathrm{Var}(X)
+  related: []
+  play_again: prob.rv.linear_change_of_variable
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.expected_value_formula
+  topic: topic.probability.random_variables
+  kind: formula
+  added_by:
+  - prob.rv.expectation_as_weighted_average
+  added_at_layer: symbolic
+  display: E[X] = \sum x_i P(x_i)
+  related: []
+  play_again: prob.rv.expectation_as_weighted_average
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.frequency_and_relative_frequency
+  topic: topic.probability.statistics
+  kind: definition
+  added_by:
+  - prob.stat.frequency_table
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.stat.frequency_table
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.histogram_reading
+  topic: topic.probability.statistics
+  kind: definition
+  added_by:
+  - prob.stat.frequency_table
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.stat.frequency_table
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.independence_product_rule
+  topic: topic.probability.conditional
+  kind: formula
+  added_by:
+  - prob.cond.conditional_and_independence
+  added_at_layer: symbolic
+  display: P(A\cap B) = P(A)\cdot P(B)
+  related: []
+  play_again: prob.cond.conditional_and_independence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.least_squares_line
+  topic: topic.probability.statistics
+  kind: formula
+  added_by:
+  - prob.stat.regression_line
+  added_at_layer: symbolic
+  display: \hat y = a+bx
+  related: []
+  play_again: prob.stat.regression_line
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.linearity_of_expectation
+  topic: topic.probability.random_variables
+  kind: theorem
+  added_by:
+  - prob.rv.expectation_as_weighted_average
+  added_at_layer: symbolic
+  display: E[X+Y] = E[X]+E[Y]
+  related: []
+  play_again: prob.rv.expectation_as_weighted_average
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.long_run_proportion
+  topic: topic.probability.basics
+  kind: definition
+  added_by:
+  - prob.basic.probability_as_proportion
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.basic.probability_as_proportion
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.mean_median_mode
+  topic: topic.probability.statistics
+  kind: definition
+  added_by:
+  - prob.stat.mean_as_leveling
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.stat.mean_as_leveling
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.multiplication_rule
+  topic: topic.probability.conditional
+  kind: formula
+  added_by:
+  - prob.cond.conditional_and_independence
+  added_at_layer: symbolic
+  display: P(A\cap B) = P(A)\cdot P(B\mid A)
+  related: []
+  play_again: prob.cond.conditional_and_independence
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.normal_68_95_99
+  topic: topic.probability.distributions
+  kind: rule
+  added_by:
+  - prob.dist.normal_bell_from_sums
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: prob.dist.normal_bell_from_sums
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.null_hypothesis_test
+  topic: topic.probability.sampling_and_inference
+  kind: definition
+  added_by:
+  - prob.inf.hypothesis_test_surprise
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: prob.inf.hypothesis_test_surprise
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.outlier_pulls_mean
+  topic: topic.probability.statistics
+  kind: rule
+  added_by:
+  - prob.stat.mean_as_leveling
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.stat.mean_as_leveling
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.p_value
+  topic: topic.probability.sampling_and_inference
+  kind: definition
+  added_by:
+  - prob.inf.hypothesis_test_surprise
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: prob.inf.hypothesis_test_surprise
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.permutations_combinations
+  topic: topic.probability.basics
+  kind: formula
+  added_by:
+  - prob.basic.count_outcomes_by_structure
+  added_at_layer: symbolic
+  display: P(n,k)=\frac{n!}{(n-k)!}, \quad C(n,k)=\frac{n!}{k!(n-k)!}
+  related: []
+  play_again: prob.basic.count_outcomes_by_structure
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.pmf_table
+  topic: topic.probability.random_variables
+  kind: definition
+  added_by:
+  - prob.rv.random_variable_as_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.rv.random_variable_as_machine
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.probability_as_fraction
+  topic: topic.probability.basics
+  kind: definition
+  added_by:
+  - prob.basic.probability_as_proportion
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.basic.probability_as_proportion
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.probability_between_0_and_1
+  topic: topic.probability.basics
+  kind: rule
+  added_by:
+  - prob.basic.probability_as_proportion
+  added_at_layer: symbolic
+  display: 0 \le P(A) \le 1
+  related: []
+  play_again: prob.basic.probability_as_proportion
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.random_variable_definition
+  topic: topic.probability.random_variables
+  kind: definition
+  added_by:
+  - prob.rv.random_variable_as_machine
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.rv.random_variable_as_machine
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.sample_mean_estimates
+  topic: topic.probability.sampling_and_inference
+  kind: definition
+  added_by:
+  - prob.samp.sample_vs_population
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.samp.sample_vs_population
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.sample_space_grid_two_dice
+  topic: topic.probability.basics
+  kind: example
+  added_by:
+  - prob.basic.sample_space_grid
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.basic.sample_space_grid
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.standard_deviation
+  topic: topic.probability.random_variables
+  kind: formula
+  added_by:
+  - prob.rv.variance_as_spread
+  added_at_layer: symbolic
+  display: \sigma = \sqrt{\mathrm{Var}(X)}
+  related: []
+  play_again: prob.rv.variance_as_spread
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.standard_error
+  topic: topic.probability.sampling_and_inference
+  kind: formula
+  added_by:
+  - prob.samp.central_limit_bell
+  added_at_layer: formal
+  display: SE = \frac{\sigma}{\sqrt n}
+  related: []
+  play_again: prob.samp.central_limit_bell
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.total_probability
+  topic: topic.probability.conditional
+  kind: formula
+  added_by:
+  - prob.cond.bayes_reverses_condition
+  added_at_layer: symbolic
+  display: P(A) = \sum_i P(A\mid B_i)P(B_i)
+  related: []
+  play_again: prob.cond.bayes_reverses_condition
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.transition_matrix
+  topic: topic.probability.conditional
+  kind: definition
+  added_by:
+  - prob.cond.markov_chain_walk
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.cond.markov_chain_walk
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.uniform_vs_weighted_outcomes
+  topic: topic.probability.basics
+  kind: definition
+  added_by:
+  - prob.basic.equally_likely_or_weighted
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: prob.basic.equally_likely_or_weighted
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.prob.variance_formula
+  topic: topic.probability.random_variables
+  kind: formula
+  added_by:
+  - prob.rv.variance_as_spread
+  added_at_layer: symbolic
+  display: \mathrm{Var}(X) = E[(X-\mu)^2]
+  related: []
+  play_again: prob.rv.variance_as_spread
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.prob.variance_of_independent_sum
+  topic: topic.probability.random_variables
+  kind: theorem
+  added_by:
+  - prob.rv.linear_change_of_variable
+  added_at_layer: formal
+  display: \mathrm{Var}(X+Y) = \mathrm{Var}(X)+\mathrm{Var}(Y)
+  related: []
+  play_again: prob.rv.linear_change_of_variable
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.prob.z_score
+  topic: topic.probability.distributions
+  kind: formula
+  added_by:
+  - prob.dist.normal_bell_from_sums
+  added_at_layer: formal
+  display: z = \frac{x-\mu}{\sigma}
+  related: []
+  play_again: prob.dist.normal_bell_from_sums
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.trig.amplitude_period_phase
+  topic: topic.trig.functions
+  kind: definition
+  added_by:
+  - trig.fn.transform_wave
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.fn.transform_wave
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.arc_length_r_theta
+  topic: topic.trig.unit_circle
+  kind: formula
+  added_by:
+  - trig.circle.radian_as_arc_length
+  added_at_layer: symbolic
+  display: s = r\theta
+  related:
+  - cs.geom.arc_length_fraction_of_turn
+  play_again: trig.circle.radian_as_arc_length
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.arcsin_arccos_arctan_ranges
+  topic: topic.trig.inverse
+  kind: definition
+  added_by:
+  - trig.inv.arcsin_two_branches
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.inv.arcsin_two_branches
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.cartesian_to_polar
+  topic: topic.trig.polar
+  kind: formula
+  added_by:
+  - trig.polar.point_by_angle_and_radius
+  added_at_layer: symbolic
+  display: r=\sqrt{x^2+y^2}, \quad \theta = \arctan\left(\frac{y}{x}\right)
+  related: []
+  play_again: trig.polar.point_by_angle_and_radius
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.cos_is_sin_shifted
+  topic: topic.trig.functions
+  kind: theorem
+  added_by:
+  - trig.fn.sine_as_height
+  added_at_layer: symbolic
+  display: \cos x = \sin\left(x+\tfrac{\pi}{2}\right)
+  related: []
+  play_again: trig.fn.sine_as_height
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.trig.cosine_graph_shape
+  topic: topic.trig.functions
+  kind: definition
+  added_by:
+  - trig.fn.wave_unrolls_circle
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.fn.wave_unrolls_circle
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.degrees_radians_conversion
+  topic: topic.trig.unit_circle
+  kind: formula
+  added_by:
+  - trig.circle.unit_circle_radians
+  added_at_layer: symbolic
+  display: \text{rad} = \text{grados} \cdot \frac{\pi}{180}
+  related: []
+  play_again: trig.circle.unit_circle_radians
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.double_angle
+  topic: topic.trig.identities
+  kind: rule
+  added_by:
+  - trig.id.double_angle
+  added_at_layer: symbolic
+  display: \sin(2x) = 2\sin x \cos x, \quad \cos(2x) = \cos^2 x - \sin^2 x
+  related: []
+  play_again: trig.id.double_angle
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.trig.euler_formula
+  topic: topic.complex_numbers.polar_and_powers
+  kind: formula
+  added_by:
+  - trig.euler.cis_as_rotation
+  - adv.cplx.euler_formula_circle
+  added_at_layer: formal
+  display: e^{i\theta} = \cos\theta + i\sin\theta
+  related: []
+  play_again: trig.euler.cis_as_rotation
+  literacy_min: full_text
+  locale_dependent: true
+  aliases:
+  - cs.adv.euler_formula
+- id: cs.trig.half_angle_power_reduce
+  topic: topic.trig.identities
+  kind: rule
+  added_by:
+  - trig.id.double_angle
+  added_at_layer: symbolic
+  display: \sin^2 x = \frac{1-\cos(2x)}{2}
+  related: []
+  play_again: trig.id.double_angle
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.trig.law_of_cosines
+  topic: topic.trig.laws
+  kind: theorem
+  added_by:
+  - trig.law.cosines_extends_pythagoras
+  added_at_layer: symbolic
+  display: c^2 = a^2+b^2-2ab\cos C
+  related:
+  - cs.geom.pythagoras
+  - cs.trig.law_of_sines
+  play_again: trig.law.cosines_extends_pythagoras
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.trig.law_of_sines
+  topic: topic.trig.laws
+  kind: theorem
+  added_by:
+  - trig.law.sines_from_altitude
+  added_at_layer: symbolic
+  display: \frac{a}{\sin A} = \frac{b}{\sin B} = \frac{c}{\sin C}
+  related:
+  - cs.trig.law_of_cosines
+  play_again: trig.law.sines_from_altitude
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.trig.multiply_complex_add_angles
+  topic: topic.complex_numbers.polar_and_powers
+  kind: theorem
+  added_by:
+  - trig.euler.cis_as_rotation
+  added_at_layer: formal
+  display: text
+  related: []
+  play_again: trig.euler.cis_as_rotation
+  literacy_min: full_text
+  locale_dependent: false
+- id: cs.trig.period_2pi_reduce_angle
+  topic: topic.trig.functions
+  kind: rule
+  added_by:
+  - trig.fn.periodic_wraps
+  added_at_layer: symbolic
+  display: \sin(x+2\pi) = \sin x
+  related: []
+  play_again: trig.fn.periodic_wraps
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.trig.polar_to_cartesian
+  topic: topic.trig.polar
+  kind: formula
+  added_by:
+  - trig.polar.point_by_angle_and_radius
+  added_at_layer: symbolic
+  display: x = r\cos\theta, \quad y = r\sin\theta
+  related: []
+  play_again: trig.polar.point_by_angle_and_radius
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.trig.quadrant_signs_table
+  topic: topic.trig.angles_quadrants
+  kind: definition
+  added_by:
+  - trig.ang.quadrant_signs
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.ang.quadrant_signs
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.radian_as_arc_over_radius
+  topic: topic.trig.unit_circle
+  kind: definition
+  added_by:
+  - trig.circle.unit_circle_radians
+  added_at_layer: symbolic
+  display: text
+  related:
+  - cs.geom.arc_length_fraction_of_turn
+  play_again: trig.circle.unit_circle_radians
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.reference_angle
+  topic: topic.trig.angles_quadrants
+  kind: definition
+  added_by:
+  - trig.ang.quadrant_signs
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.ang.quadrant_signs
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.rotation_matrix_columns
+  topic: topic.trig.rotation
+  kind: definition
+  added_by:
+  - trig.rot.rotation_matrix
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.rot.rotation_matrix
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.sector_area_half_r_squared_theta
+  topic: topic.trig.unit_circle
+  kind: formula
+  added_by:
+  - trig.circle.radian_as_arc_length
+  added_at_layer: symbolic
+  display: A = \tfrac{1}{2} r^2 \theta
+  related: []
+  play_again: trig.circle.radian_as_arc_length
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.sin2_plus_cos2
+  topic: topic.trig.identities
+  kind: theorem
+  added_by:
+  - trig.id.pythagorean_identity
+  added_at_layer: symbolic
+  display: \sin^2\theta + \cos^2\theta = 1
+  related:
+  - cs.geom.pythagoras
+  - cs.trig.unit_circle_key_points
+  play_again: trig.id.pythagorean_identity
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.trig.sin_cos_angle_sum
+  topic: topic.trig.identities
+  kind: rule
+  added_by:
+  - trig.id.angle_sum
+  added_at_layer: symbolic
+  display: \sin(a+b) = \sin a\cos b+\cos a\sin b
+  related: []
+  play_again: trig.id.angle_sum
+  literacy_min: short_text
+  locale_dependent: true
+- id: cs.trig.sin_cos_as_coordinates
+  topic: topic.trig.functions
+  kind: definition
+  added_by:
+  - trig.fn.sine_as_height
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.fn.sine_as_height
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.sin_cos_values_key_angles
+  topic: topic.trig.functions
+  kind: example
+  added_by:
+  - trig.fn.sine_as_height
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.fn.sine_as_height
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.sine_graph_shape
+  topic: topic.trig.functions
+  kind: definition
+  added_by:
+  - trig.fn.wave_unrolls_circle
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.fn.wave_unrolls_circle
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.sohcahtoa
+  topic: topic.trig.ratios
+  kind: rule
+  added_by:
+  - trig.ratio.similar_shadows
+  added_at_layer: symbolic
+  display: \sin=\tfrac{op}{hip}, \; \cos=\tfrac{ady}{hip}, \; \tan=\tfrac{op}{ady}
+  related: []
+  play_again: trig.ratio.similar_shadows
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.trig.special_triangles_30_45_60
+  topic: topic.trig.ratios
+  kind: example
+  added_by:
+  - trig.ratio.similar_shadows
+  added_at_layer: symbolic
+  display: text
+  related:
+  - cs.geom.pythagoras
+  play_again: trig.ratio.similar_shadows
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.strategy_all_solutions_from_one
+  topic: topic.trig.inverse
+  kind: strategy
+  added_by:
+  - trig.inv.arcsin_two_branches
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.inv.arcsin_two_branches
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.strategy_drop_altitude_two_right_triangles
+  topic: topic.trig.laws
+  kind: strategy
+  added_by:
+  - trig.law.sines_from_altitude
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.law.sines_from_altitude
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.strategy_pythagoras_on_unit_triangle
+  topic: topic.trig.identities
+  kind: strategy
+  added_by:
+  - trig.id.pythagorean_identity
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.id.pythagorean_identity
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.strategy_rotate_twice
+  topic: topic.trig.identities
+  kind: strategy
+  added_by:
+  - trig.id.angle_sum
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.id.angle_sum
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.strategy_which_law
+  topic: topic.trig.laws
+  kind: strategy
+  added_by:
+  - trig.law.cosines_extends_pythagoras
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.law.cosines_extends_pythagoras
+  literacy_min: short_text
+  locale_dependent: false
+- id: cs.trig.tan_as_sin_over_cos
+  topic: topic.trig.functions
+  kind: rule
+  added_by:
+  - trig.fn.tangent_as_slope
+  added_at_layer: symbolic
+  display: \tan x = \frac{\sin x}{\cos x}
+  related: []
+  play_again: trig.fn.tangent_as_slope
+  literacy_min: icons
+  locale_dependent: true
+- id: cs.trig.tan_vertical_asymptotes
+  topic: topic.trig.functions
+  kind: theorem
+  added_by:
+  - trig.fn.tangent_as_slope
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: trig.fn.tangent_as_slope
+  literacy_min: icons
+  locale_dependent: false
+- id: cs.trig.unit_circle_key_points
+  topic: topic.trig.unit_circle
+  kind: example
+  added_by:
+  - trig.circle.unit_circle_radians
+  added_at_layer: symbolic
+  display: text
+  related:
+  - cs.geom.distance_formula
+  - cs.trig.sin2_plus_cos2
+  play_again: trig.circle.unit_circle_radians
+  literacy_min: icons
+  locale_dependent: false
