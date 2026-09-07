@@ -39,7 +39,7 @@ Los enums (áreas, niveles, capas, primitivas, verbos de evidencia, niveles de l
 
 ## Prosa cero dentro del YAML
 
-Los archivos de `graph/` no contienen texto visible al usuario. El nombre del nodo, los `probes`, la introducción y cualquier prompt viven en [`../locales/es/nodes.yaml`](../locales/es/nodes.yaml) bajo la clave del id (`nodes.alg.eq.one_step.name`). Dos razones: el producto es internacionalizable desde el origen ([P](../P-internacionalizacion.md)), y trescientos nodos con prosa incrustada dejan de ser mantenibles. Si hace falta explicar un nodo, el lugar es su archivo D1 o el mapa del área en [D0](../D-curriculum/D0-mapa.md).
+Los archivos de `graph/` no contienen texto visible al usuario. El nombre del nodo, los `probes`, la introducción y cualquier prompt viven en [`../locales/es/nodes/<area>.yaml`](../locales/es/nodes/) bajo la clave del id (`nodes.alg.eq.one_step.name`). Dos razones: el producto es internacionalizable desde el origen ([P](../P-internacionalizacion.md)), y trescientos nodos con prosa incrustada dejan de ser mantenibles. Si hace falta explicar un nodo, el lugar es su archivo D1 o el mapa del área en [D0](../D-curriculum/D0-mapa.md).
 
 Un nodo no-espina cabe en una o dos líneas en estilo flow:
 

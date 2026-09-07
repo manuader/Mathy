@@ -1,6 +1,8 @@
-# Espina dorsal del curriculum: 37 conceptos en orden. Cada uno depende solo de anteriores.
+# Espina dorsal del curriculum: 44 conceptos. Cada uno depende solo de anteriores en esta lista.
 # El número es el prefijo del archivo en D-curriculum/D1-espina/. Los ids son permanentes.
-# Si se quiere reducir a 35: degradar 27 y 35 a no-espina (ningún nodo de espina posterior depende de ellos).
+# Los 38–44 son la rama de geometría y trigonometría: se agregaron después de congelar los 37
+# originales y se numeraron al final para no renumerar referencias. El orden de búsqueda del
+# diagnóstico (J) es por (level, n), no por n.
 
 spine:
   - {n: 1,  id: found.count.cardinality,                 prereqs: []}
@@ -40,3 +42,10 @@ spine:
   - {n: 35, id: prob.cond.conditional_and_independence,  prereqs: [prob.basic.probability_as_proportion]}
   - {n: 36, id: prob.rv.expectation_as_weighted_average, prereqs: [prob.basic.probability_as_proportion, linalg.vec.span_and_combination]}
   - {n: 37, id: graph.basic.graph_and_paths,             prereqs: [found.count.cardinality]}
+  - {n: 38, id: geom.area.rect_and_triangle,             prereqs: [arith.mul.scaling]}
+  - {n: 39, id: geom.angle.turn_as_measure,              prereqs: [found.count.number_line, arith.frac.parts_and_ratio]}
+  - {n: 40, id: geom.sim.similarity_as_scale,            prereqs: [geom.area.rect_and_triangle, arith.frac.parts_and_ratio]}
+  - {n: 41, id: geom.tri.pythagoras_as_tiles,            prereqs: [geom.area.rect_and_triangle, alg.fn.quadratic_and_sqrt]}
+  - {n: 42, id: geom.cons.auxiliary_lines,               prereqs: [geom.tri.pythagoras_as_tiles, geom.sim.similarity_as_scale, geom.angle.turn_as_measure]}
+  - {n: 43, id: trig.circle.unit_circle_radians,         prereqs: [geom.angle.turn_as_measure, geom.tri.pythagoras_as_tiles, alg.fn.graph_as_picture]}
+  - {n: 44, id: trig.fn.sine_as_height,                  prereqs: [trig.circle.unit_circle_radians, alg.fn.function_as_machine]}

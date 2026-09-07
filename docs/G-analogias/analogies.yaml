@@ -1,0 +1,984 @@
+# Catálogo de analogías de Mathy. DATA, sin texto visible al usuario.
+# Reglas y test de aceptación: G0-reglas.md. Textos: ../locales/<lang>/analogies.yaml
+# bajo analogies.<id>.name y analogies.<id>.text.
+#
+# Campos:
+#   id              snake_case; nombra el objeto o la situación, no el concepto
+#   mechanic        una de las 12 de ../E-mecanicas/mechanics.yaml (el esqueleto)
+#   target_nodes    nodos del grafo que pueden declarar analogy: <id>
+#   structure_map   pares objeto -> concepto; el orden va de lo más visible a lo más fino
+#   breaks_at       id corto del punto donde la analogía deja de preservar estructura (obligatorio)
+#   fades_at_layer  capa a partir de la cual la analogía ya no aparece (enum layer del schema)
+#   cultural_scope  universal | adaptable | local
+#   variants        solo si adaptable/local: ids de variante por región
+#   literacy_min    none | icons | short_text (nivel de lectura que exige la analogía en sí)
+#   assets          ids de assets propios (nunca emojis de plataforma)
+
+version: 1
+
+analogies:
+
+  # ───────────────────────────── found / arith ─────────────────────────────
+
+  - id: sorting_bins
+    mechanic: sorter
+    target_nodes: [found.count.cardinality, disc.set.membership_rule]
+    structure_map:
+      - bin: set
+      - object: element
+      - dropping_object_in_bin: membership_test
+      - number_on_bin_label: cardinality
+      - rearranging_objects_inside: bijection_invariance
+    breaks_at: infinite_collections
+    fades_at_layer: visual
+    cultural_scope: universal
+    literacy_min: none
+    assets: [bin_round, bin_square, pebble, shell, leaf]
+
+  - id: fruit_bowl_count
+    mechanic: ledger
+    target_nodes: [found.count.cardinality, found.count.compare_more_less]
+    structure_map:
+      - bowl: collection
+      - fruit: unit
+      - pairing_fruit_with_fruit: one_to_one_correspondence
+      - leftover_fruit_without_pair: difference
+      - number_card_on_bowl: cardinal_number
+    breaks_at: fractional_units
+    fades_at_layer: visual
+    cultural_scope: universal
+    literacy_min: none
+    assets: [fruit_apple, fruit_pear, bowl, number_card]
+
+  - id: number_line_walk
+    mechanic: slope_walker
+    target_nodes: [found.count.number_line, arith.add.displacement]
+    structure_map:
+      - stone_on_path: integer
+      - walker_position: value
+      - one_step: unit_increment
+      - order_of_stones: order_of_numbers
+      - starting_stone: zero
+    breaks_at: position_between_stones
+    fades_at_layer: visual
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, stone_flat, path_water]
+
+  - id: walker_forward_and_back
+    mechanic: slope_walker
+    target_nodes: [arith.add.displacement, arith.sub.undo_add, arith.seq.skip_count]
+    structure_map:
+      - steps_forward: addend
+      - landing_stone: sum
+      - steps_back: subtrahend
+      - returning_to_start: inverse_operation
+      - two_hops_in_any_order: commutativity
+      - equal_hops_repeated: skip_counting
+    breaks_at: walking_past_start
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, stone_flat, footprint_forward, footprint_back]
+
+  - id: fruit_ledger
+    mechanic: ledger
+    target_nodes: [arith.add.displacement, arith.sub.undo_add, prealg.var.unknown_as_box, alg.eq.one_step, alg.expr.like_terms]
+    structure_map:
+      - fruit_kind: unit_or_variable
+      - pile_of_one_kind: term
+      - joining_piles: addition
+      - taking_fruit_away: subtraction
+      - covered_bowl: unknown
+      - only_same_fruit_merges: like_terms
+      - count_card_beside_pile: coefficient
+    breaks_at: fruit_times_fruit
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [fruit_apple, fruit_banana, fruit_orange, bowl, bowl_cover, number_card]
+
+  - id: tile_floor
+    mechanic: tiles
+    target_nodes: [arith.mul.scaling, arith.div.undo_mul, geom.area.rectangle, arith.mul.partial_products]
+    structure_map:
+      - row_of_tiles: first_factor
+      - column_of_tiles: second_factor
+      - single_tile: unit_product
+      - whole_floor: product
+      - turning_the_floor: commutativity
+      - known_floor_missing_columns: division
+      - splitting_floor_in_strips: partial_products
+    breaks_at: non_integer_sides
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [tile_square, floor_frame, tile_ghost]
+
+  - id: rubber_band_stretch
+    mechanic: grid_stretch
+    target_nodes: [arith.mul.scaling, arith.div.undo_mul, arith.frac.parts_and_ratio]
+    structure_map:
+      - marked_band: number_line
+      - mark_on_band: number
+      - stretching_k_times: multiply_by_k
+      - letting_band_shrink_back: divide_by_k
+      - pinned_end: zero_fixed
+      - stretching_less_than_original: multiply_by_fraction
+    breaks_at: negative_scaling_flips
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [rubber_band, pin, band_mark]
+
+  - id: sharing_into_plates
+    mechanic: sorter
+    target_nodes: [arith.div.undo_mul, arith.div.remainder]
+    structure_map:
+      - pile_to_share: dividend
+      - plates: divisor
+      - one_round_of_dealing: subtracting_the_divisor
+      - amount_per_plate: quotient
+      - leftover_pieces: remainder
+      - multiplying_back_to_check: inverse_of_division
+    breaks_at: divisor_not_whole
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [plate, cookie, pile_marker]
+
+  - id: elevator_floors
+    mechanic: slope_walker
+    target_nodes: [arith.int.negatives, arith.int.add_signed]
+    structure_map:
+      - floor: integer
+      - ground_floor: zero
+      - going_up_n: add_positive
+      - going_down_n: add_negative
+      - basement_floor: negative_number
+      - floors_between_two_stops: absolute_difference
+      - order_of_buttons: order_of_integers
+    breaks_at: multiplying_floors
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [floor_zero_ground, floor_one_ground]
+    literacy_min: icons
+    assets: [elevator_cab, button_panel, floor_marker]
+
+  - id: debt_ledger
+    mechanic: ledger
+    target_nodes: [arith.int.negatives, arith.int.add_signed, arith.int.mul_signed]
+    structure_map:
+      - coin: positive_unit
+      - iou_token: negative_unit
+      - coin_and_iou_cancel: additive_inverse
+      - removing_an_iou: subtracting_a_negative
+      - net_pile: signed_sum
+      - k_ious_of_the_same_size: multiply_negative_by_positive
+    breaks_at: multiplying_two_debts
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [currency_local]
+    literacy_min: icons
+    assets: [coin, iou_token, ledger_board]
+
+  - id: pizza_slices
+    mechanic: tiles
+    target_nodes: [arith.frac.parts_and_ratio, arith.frac.equivalent, arith.frac.add_same_denominator]
+    structure_map:
+      - whole_disc: unit
+      - cutting_into_n_equal_slices: denominator
+      - slices_taken: numerator
+      - cutting_every_slice_again: equivalent_fraction
+      - two_discs_cut_the_same_way: common_denominator
+      - more_slices_than_one_disc: improper_fraction
+    breaks_at: dividing_by_a_fraction
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [round_pizza, round_flatbread, round_cake]
+    literacy_min: none
+    assets: [disc_whole, disc_slice, cutter]
+
+  - id: chocolate_bar_grid
+    mechanic: tiles
+    target_nodes: [arith.frac.parts_and_ratio, arith.frac.multiply, prealg.pct.hundredths]
+    structure_map:
+      - bar: whole
+      - small_squares: equal_parts
+      - rows_times_columns: denominators_multiply
+      - shaded_part_of_a_shaded_part: product_of_fractions
+      - hundred_square_bar: percent
+      - one_row_of_ten: ten_percent
+    breaks_at: percent_of_percent_and_over_hundred
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [bar_grid, bar_square_shaded, bar_square_plain]
+
+  - id: juice_mix_ratio
+    mechanic: fill_accumulate
+    target_nodes: [arith.frac.parts_and_ratio, prealg.ratio.rate_per_unit, prealg.prop.scaling_recipe]
+    structure_map:
+      - cup_of_concentrate: part_a
+      - cup_of_water: part_b
+      - taste_strength: ratio
+      - doubling_both_cups: equivalent_ratio
+      - adding_only_water: ratio_changes
+      - cups_of_water_per_cup_of_concentrate: unit_rate
+    breaks_at: negative_ingredients
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [juice, tea, paint_mix]
+    literacy_min: none
+    assets: [jug, cup_concentrate, cup_water, color_meter]
+
+  # ───────────────────────────── prealg / alg ─────────────────────────────
+
+  - id: chest_nested
+    mechanic: chest_key
+    target_nodes: [arith.expr.precedence_tree, alg.eq.multi_step, alg.fn.composition]
+    structure_map:
+      - chest: expression
+      - chest_inside_chest: subexpression
+      - lock_shape: operation
+      - key_shape: inverse_operation
+      - opening_outer_chest_first: reverse_precedence
+      - treasure: value
+      - sequence_of_locks_added: composition
+    breaks_at: unknown_in_two_chests
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [chest_wood, chest_iron, chest_gold, lock_add, lock_sub, lock_mul, lock_div, key_add, key_sub, key_mul, key_div, treasure_gem]
+
+  - id: chest_single_lock
+    mechanic: chest_key
+    target_nodes: [prealg.inv.operation_as_key, arith.sub.undo_add, arith.div.undo_mul, alg.eq.one_step]
+    structure_map:
+      - chest: expression
+      - lock_shape: operation
+      - key_shape: inverse_operation
+      - key_that_does_not_turn: non_inverse
+      - turning_the_key: applying_inverse
+      - open_chest: identity_reached
+      - key_ring: set_of_inverses
+    breaks_at: two_branches_of_sqrt
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [chest_wood, lock_add, lock_sub, lock_mul, lock_div, key_add, key_sub, key_mul, key_div, key_ring]
+
+  - id: mystery_box
+    mechanic: chest_key
+    target_nodes: [prealg.var.unknown_as_box]
+    structure_map:
+      - closed_box: variable
+      - what_is_inside: value
+      - same_mark_same_box: same_variable
+      - different_mark: different_variable
+      - box_moves_without_opening: symbolic_manipulation
+      - opening_the_box: solving
+    breaks_at: box_with_changing_contents
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [box_closed, box_mark_a, box_mark_b, box_open]
+
+  - id: balance_pans
+    mechanic: balance
+    target_nodes: [prealg.eq.balance, alg.eq.one_step, alg.eq.multi_step]
+    structure_map:
+      - pan: side_of_equation
+      - weights_on_a_pan: terms
+      - level_beam: equality
+      - same_action_on_both_pans: equivalence_transformation
+      - closed_box_on_a_pan: unknown
+      - removing_equal_weights_from_both: cancelling
+      - reading_the_box_alone: solution
+    breaks_at: negative_weights
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [balance_beam, balance_pan, weight_1, weight_5, weight_10, box_closed]
+
+  - id: balance_tilted
+    mechanic: balance
+    target_nodes: [alg.ineq.tilted_balance, found.count.compare_more_less]
+    structure_map:
+      - lower_pan: greater_side
+      - tilt_direction: inequality_sign
+      - adding_same_weight_both_pans: inequality_preserved
+      - swapping_pans: sign_reversed
+      - level_beam: equality_case
+    breaks_at: multiplying_by_negative
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [balance_beam, balance_pan, weight_1, weight_5, box_closed]
+
+  - id: two_balances_shared_boxes
+    mechanic: balance
+    target_nodes: [alg.sys.two_by_two]
+    structure_map:
+      - two_balances: two_equations
+      - same_marked_boxes_on_both: shared_unknowns
+      - pouring_one_balance_onto_the_other: adding_equations
+      - swapping_a_box_for_its_known_weight: substitution
+      - both_level_at_once: simultaneous_solution
+    breaks_at: contradictory_or_redundant_balances
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [balance_beam, balance_pan, weight_1, weight_5, box_mark_a, box_mark_b]
+
+  - id: market_two_receipts
+    mechanic: ledger
+    target_nodes: [alg.sys.two_by_two, alg.eq.word_to_equation]
+    structure_map:
+      - receipt: equation
+      - unknown_item_price: unknown
+      - quantity_bought: coefficient
+      - total_paid: constant_term
+      - comparing_two_receipts: elimination
+      - buying_only_one_kind: isolated_unknown
+    breaks_at: negative_quantities
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [currency_local, market_items_local]
+    literacy_min: short_text
+    assets: [receipt_paper, market_item_a, market_item_b, coin]
+
+  - id: tile_floor_two_rooms
+    mechanic: tiles
+    target_nodes: [alg.expr.distributive_tiles, alg.expr.factor_common, arith.mul.partial_products]
+    structure_map:
+      - shared_width: common_factor
+      - two_room_lengths: addends_in_parenthesis
+      - wall_between_rooms: parenthesis
+      - whole_floor: product
+      - removing_the_wall: distributing
+      - putting_the_wall_back: factoring
+      - room_of_unknown_length: variable_tile
+    breaks_at: negative_lengths
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [tile_square, tile_x_strip, tile_x_square, wall_divider, floor_frame]
+
+  - id: square_garden_side
+    mechanic: tiles
+    target_nodes: [alg.fn.quadratic_and_sqrt, alg.expr.complete_square]
+    structure_map:
+      - square_plot: x_squared
+      - side_length: x
+      - known_area_find_side: square_root
+      - adding_two_equal_border_strips: completing_the_square
+      - missing_corner_tile: constant_to_add
+      - plot_that_grows_with_side: quadratic_growth
+    breaks_at: two_branches_of_sqrt
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [tile_square, tile_x_strip, tile_x_square, corner_ghost, garden_frame]
+
+  - id: function_machine
+    mechanic: machine_pipe
+    target_nodes: [alg.fn.function_as_machine, alg.fn.domain_range]
+    structure_map:
+      - machine: function
+      - input_slot: argument
+      - output_slot: value
+      - rule_plate: formula
+      - same_input_same_output: well_defined
+      - input_the_machine_rejects: outside_domain
+      - all_outputs_it_can_make: range
+    breaks_at: relations_that_are_not_functions
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [machine_body, pipe_in, pipe_out, rule_plate, token_number]
+
+  - id: machine_chain
+    mechanic: machine_pipe
+    target_nodes: [alg.fn.composition, calc1.deriv.rules_as_structure]
+    structure_map:
+      - pipe_from_output_to_input: composition
+      - order_of_machines: order_of_composition
+      - whole_chain_as_one_box: composite_function
+      - swapping_machine_order: non_commutativity
+      - stretch_factor_of_each_machine: factor_in_chain_rule
+    breaks_at: machines_with_two_inputs
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [machine_body, pipe_in, pipe_out, pipe_link, rule_plate]
+
+  - id: machine_reverse_run
+    mechanic: machine_pipe
+    target_nodes: [alg.fn.inverse_function, alg.fn.logarithm]
+    structure_map:
+      - running_the_machine_backwards: inverse_function
+      - output_fed_into_output_slot: swapping_x_and_y
+      - machine_that_merges_two_inputs: non_injective
+      - reverse_lever: inverse_notation
+      - doubling_machine_reversed: logarithm_of_exponential
+    breaks_at: non_injective_reversal
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [machine_body, pipe_in, pipe_out, reverse_lever, rule_plate]
+
+  - id: walker_height_trace
+    mechanic: slope_walker
+    target_nodes: [alg.fn.graph_as_picture, precalc.fn.increasing_decreasing, alg.fn.linear_slope]
+    structure_map:
+      - distance_walked: input_x
+      - height_of_walker: output_f_x
+      - profile_of_the_path: graph
+      - path_going_up: increasing
+      - flat_stretch: constant
+      - cliff: discontinuity
+      - walker_below_sea_level: negative_output
+    breaks_at: two_heights_at_one_place
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, terrain_profile, sea_line, height_flag]
+
+  - id: walker_on_ramp
+    mechanic: slope_walker
+    target_nodes: [alg.fn.linear_slope, prealg.ratio.rate_per_unit]
+    structure_map:
+      - straight_ramp: linear_function
+      - rise_per_step: slope
+      - height_at_start: intercept
+      - steeper_ramp: larger_slope
+      - ramp_going_down: negative_slope
+      - any_two_points_same_rise_per_step: constant_rate
+    breaks_at: vertical_ramp
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, ramp_segment, step_marker, height_flag]
+
+  - id: taxi_fare_meter
+    mechanic: ledger
+    target_nodes: [alg.fn.linear_slope, alg.fn.word_to_linear]
+    structure_map:
+      - starting_charge: intercept
+      - price_per_unit_distance: slope
+      - distance_travelled: input_x
+      - fare_shown: output_f_x
+      - two_trips_compared: rate_from_two_points
+    breaks_at: negative_distance
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [currency_local, units_metric, units_imperial]
+    literacy_min: short_text
+    assets: [taxi_meter, road_strip, coin]
+
+  - id: paper_folding_doubles
+    mechanic: gears_sequence
+    target_nodes: [alg.fn.exponential_growth, alg.fn.logarithm, calc2.seq.geometric]
+    structure_map:
+      - single_sheet: initial_value
+      - one_fold: multiply_by_two
+      - number_of_folds: exponent
+      - layers_after_folding: two_to_the_n
+      - counting_folds_to_reach_a_thickness: log_base_two
+      - unfolding_once: divide_by_two
+    breaks_at: half_a_fold
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [paper_sheet, fold_line, layer_stack]
+
+  - id: zeno_half_steps
+    mechanic: slope_walker
+    target_nodes: [precalc.lim.approach, calc2.series.geometric_sum]
+    structure_map:
+      - wall: limit
+      - each_step_half_the_remaining: sequence_term
+      - never_touching_the_wall: limit_not_attained
+      - closer_than_any_chosen_gap: epsilon_condition
+      - total_distance_walked: sum_of_series
+      - remaining_gap: error_term
+    breaks_at: limits_reached_or_oscillating
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, wall, gap_marker, footprint_forward]
+
+  - id: walker_zoom_on_hill
+    mechanic: slope_walker
+    target_nodes: [calc1.deriv.rate_as_slope_limit, calc1.deriv.tangent_line]
+    structure_map:
+      - curved_hill: function
+      - zooming_in_on_the_walker: shrinking_interval
+      - hill_looks_straight: local_linearity
+      - slope_of_that_straight_piece: derivative
+      - straight_piece_extended: tangent_line
+      - sharp_peak_never_straightens: non_differentiable_point
+      - slope_at_each_place_as_a_new_path: derivative_function
+    breaks_at: input_that_is_not_a_place
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, terrain_profile, magnifier, tangent_rod]
+
+  # ───────────────────────────── calc ─────────────────────────────
+
+  - id: tank_filling
+    mechanic: fill_accumulate
+    target_nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative, calc2.int.area_between]
+    structure_map:
+      - tap_flow_rate: integrand
+      - time_running: variable_of_integration
+      - water_level: accumulated_value
+      - thin_slice_of_time: dx
+      - adding_up_slices: riemann_sum
+      - draining_tap: negative_integrand
+      - level_gauge: antiderivative
+      - gauge_reading_at_start_unknown: constant_of_integration
+      - level_change_between_two_times: definite_integral
+    breaks_at: variable_that_is_not_time
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [tank, tap, water_column, gauge, time_strip]
+
+  - id: odometer_from_speed
+    mechanic: fill_accumulate
+    target_nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative]
+    structure_map:
+      - speedometer_reading: derivative
+      - odometer_reading: accumulated_value
+      - trip_distance: definite_integral
+      - speed_graph_area: integral_as_area
+      - reading_odometer_at_two_moments: fundamental_theorem
+    breaks_at: odometer_ignores_reversing
+    fades_at_layer: formal
+    cultural_scope: adaptable
+    variants: [units_metric, units_imperial]
+    literacy_min: icons
+    assets: [speedometer, odometer, road_strip, vehicle]
+
+  - id: growing_rectangle
+    mechanic: tiles
+    target_nodes: [calc1.deriv.rules_as_structure]
+    structure_map:
+      - two_sides: factors_u_and_v
+      - strip_added_along_first_side: v_times_du
+      - strip_added_along_second_side: u_times_dv
+      - tiny_corner_square: du_times_dv_negligible
+      - total_added_area: product_rule
+    breaks_at: shrinking_sides
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: icons
+    assets: [tile_square, tile_strip_thin, corner_ghost, floor_frame]
+
+  - id: gear_train_ratios
+    mechanic: gears_sequence
+    target_nodes: [calc1.deriv.rules_as_structure, alg.fn.composition, prealg.ratio.rate_per_unit]
+    structure_map:
+      - gear: function
+      - teeth_ratio_between_gears: rate_of_change
+      - one_turn_of_the_first_gear: dx
+      - turns_of_the_last_gear: dy
+      - product_of_ratios_along_the_train: chain_rule
+      - gear_turning_backwards: negative_rate
+    breaks_at: ratio_that_changes_with_position
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [gear_small, gear_large, axle, turn_marker]
+
+  # ───────────────────────────── linalg ─────────────────────────────
+
+  - id: treasure_map_arrows
+    mechanic: grid_stretch
+    target_nodes: [linalg.vec.vector_as_displacement, linalg.vec.add_tip_to_tail]
+    structure_map:
+      - arrow_on_map: vector
+      - steps_east_and_steps_north: components
+      - second_arrow_from_tip_of_first: vector_addition
+      - same_arrow_drawn_anywhere: free_vector
+      - arrow_turned_around: negative_vector
+      - arrow_twice_as_long: scalar_multiple
+    breaks_at: length_of_diagonal_arrow
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [map_parchment, grid_overlay, arrow, cross_mark]
+
+  - id: two_kinds_of_steps
+    mechanic: grid_stretch
+    target_nodes: [linalg.vec.span_and_combination, linalg.vec.basis]
+    structure_map:
+      - step_of_kind_a: basis_vector
+      - step_of_kind_b: basis_vector
+      - how_many_of_each: coefficients
+      - every_place_you_can_reach: span
+      - two_step_kinds_along_the_same_line: linear_dependence
+      - unique_recipe_to_reach_a_place: basis
+    breaks_at: fractional_and_backward_steps
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, grid_overlay, arrow_a, arrow_b, cross_mark]
+
+  - id: rubber_grid_with_house
+    mechanic: grid_stretch
+    target_nodes: [linalg.map.linear_transformation_2d, linalg.mat.matrix_columns]
+    structure_map:
+      - rubber_sheet: plane
+      - drawn_house: shape_to_transform
+      - pulling_the_sheet_evenly: linear_map
+      - grid_lines_stay_straight_and_evenly_spaced: linearity
+      - where_the_two_unit_pegs_land: matrix_columns
+      - pin_at_the_center: origin_fixed
+      - stretching_then_stretching_again: matrix_product
+    breaks_at: sliding_the_sheet
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [rubber_grid, house_icon, peg_unit_x, peg_unit_y, pin]
+
+  - id: rubber_grid_undo_stretch
+    mechanic: grid_stretch
+    target_nodes: [linalg.map.inverse_and_systems, linalg.det.area_scaling]
+    structure_map:
+      - pulling_the_sheet_back: inverse_matrix
+      - finding_where_a_point_came_from: solving_a_system
+      - sheet_flattened_to_a_line: singular_matrix
+      - area_of_the_house_stamp: determinant
+      - sheet_flipped_over: negative_determinant
+      - flattened_sheet_cannot_be_unflattened: no_inverse
+    breaks_at: more_than_two_dimensions
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [rubber_grid, house_icon, peg_unit_x, peg_unit_y, pin, stamp_area]
+
+  - id: shadow_and_stick
+    mechanic: grid_stretch
+    target_nodes: [trig.ratio.similar_shadows, geom.sim.scale_copies]
+    structure_map:
+      - stick_height: one_side
+      - shadow_length: other_side
+      - same_sun_for_every_stick: same_angle
+      - taller_stick_longer_shadow: proportionality
+      - shadow_divided_by_height: tangent_ratio
+      - scaling_the_whole_picture: similar_triangles
+    breaks_at: angle_without_a_sun
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [stick, shadow_strip, sun, ground_line]
+
+  - id: quarter_turn_dial
+    mechanic: grid_stretch
+    target_nodes: [adv.cplx.rotation_as_multiplication]
+    structure_map:
+      - pointer_on_dial: complex_number
+      - quarter_turn: multiply_by_i
+      - two_quarter_turns: i_squared_is_minus_one
+      - turn_and_stretch_together: complex_multiplication
+      - pointer_length: modulus
+      - pointer_angle: argument
+    breaks_at: functions_of_the_pointer
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: icons
+    assets: [dial_face, pointer, turn_marker]
+
+  # ───────────────────────────── prob ─────────────────────────────
+
+  - id: urn_of_balls
+    mechanic: urn_dice
+    target_nodes: [prob.basic.probability_as_proportion, prob.cond.conditional_and_independence]
+    structure_map:
+      - urn: sample_space
+      - ball: outcome
+      - ball_color: event
+      - share_of_balls_of_a_color: probability
+      - drawing_without_looking: random_trial
+      - putting_the_ball_back: independence_of_draws
+      - keeping_the_ball_out: dependence_of_draws
+    breaks_at: uncountable_outcomes
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [urn, ball_red, ball_blue, ball_yellow, hand_draw]
+
+  - id: spinner_wheel
+    mechanic: urn_dice
+    target_nodes: [prob.basic.probability_as_proportion, prob.dist.uniform_vs_biased]
+    structure_map:
+      - wheel: sample_space
+      - sector: event
+      - sector_angle_share: probability
+      - one_spin: trial
+      - equal_sectors: uniform_distribution
+      - one_big_sector: biased_distribution
+    breaks_at: needle_exactly_on_a_line
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [wheel_disc, sector_colored, needle]
+
+  - id: sorted_bins_then_pick
+    mechanic: sorter
+    target_nodes: [prob.cond.conditional_and_independence, prob.bayes.update]
+    structure_map:
+      - sorting_by_the_first_trait: conditioning
+      - picking_only_from_one_bin: conditional_probability
+      - bin_with_the_same_mix_as_the_whole: independence
+      - bin_with_a_different_mix: dependence
+      - learning_the_bin_then_guessing_the_ball: bayes_update
+    breaks_at: conditioning_on_an_empty_bin
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [bin_round, bin_square, ball_red, ball_blue, hand_draw]
+
+  - id: tasting_soup
+    mechanic: urn_dice
+    target_nodes: [prob.stat.sample_estimates]
+    structure_map:
+      - pot: population
+      - spoonful: sample
+      - stirring_before_tasting: random_sampling
+      - tasting_only_the_top: biased_sample
+      - two_spoonfuls_taste_slightly_different: sampling_variability
+    breaks_at: measuring_the_spread_between_spoonfuls
+    fades_at_layer: formal
+    cultural_scope: adaptable
+    variants: [soup, stew, rice_pot]
+    literacy_min: none
+    assets: [pot, spoon, ladle, ingredient_bit]
+
+  - id: balance_point_of_weights
+    mechanic: balance
+    target_nodes: [prob.rv.expectation_as_weighted_average, prob.stat.mean_as_leveling]
+    structure_map:
+      - plank_with_marks: value_axis
+      - weight_placed_at_a_mark: probability_at_a_value
+      - point_where_the_plank_balances: expected_value
+      - heavier_weight_pulls_the_point: weighting
+      - equal_weights_everywhere: plain_average
+    breaks_at: no_balance_point
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [plank, fulcrum, weight_1, weight_5, mark_tick]
+
+  - id: fair_ticket_price
+    mechanic: ledger
+    target_nodes: [prob.rv.expectation_as_weighted_average]
+    structure_map:
+      - ticket: random_variable
+      - prize_times_its_chance: term_of_expectation
+      - fair_price: expected_value
+      - many_tickets_played: long_run_average
+      - price_above_fair: expected_loss
+    breaks_at: people_do_not_pay_the_fair_price
+    fades_at_layer: formal
+    cultural_scope: adaptable
+    variants: [currency_local]
+    literacy_min: short_text
+    assets: [ticket, prize_box, coin, ledger_board]
+
+  - id: water_leveling_cups
+    mechanic: fill_accumulate
+    target_nodes: [prob.stat.mean_as_leveling, prob.stat.median_vs_mean]
+    structure_map:
+      - cup: data_point
+      - water_height: value
+      - pouring_between_cups: averaging
+      - common_height_after_leveling: mean
+      - total_water_never_changes: sum_invariant
+      - one_very_tall_cup: outlier_pulls_mean
+    breaks_at: negative_values
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [cup_glass, water_column, pour_arc]
+
+  # ───────────────────────────── disc / graph / csmath ─────────────────────────────
+
+  - id: city_routes
+    mechanic: network_routes
+    target_nodes: [graph.basic.graph_and_paths, graph.path.shortest, graph.conn.components]
+    structure_map:
+      - place: vertex
+      - road: edge
+      - trip_along_roads: path
+      - road_length: edge_weight
+      - island_with_no_bridge: disconnected_component
+      - trip_that_returns: cycle
+      - cheapest_trip: shortest_path
+    breaks_at: drawing_position_matters
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [place_marker, road_segment, walker, bridge]
+
+  - id: friends_handshakes
+    mechanic: network_routes
+    target_nodes: [graph.basic.graph_and_paths, graph.deg.handshake_lemma]
+    structure_map:
+      - person: vertex
+      - handshake: edge
+      - handshakes_of_one_person: degree
+      - total_handshakes: number_of_edges
+      - each_handshake_counted_by_two_people: sum_of_degrees_is_twice_edges
+    breaks_at: one_sided_relations
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [person_marker, handshake_link]
+
+  - id: river_tributaries
+    mechanic: network_routes
+    target_nodes: [graph.tree.no_cycles, disc.rec.tree_recursion]
+    structure_map:
+      - spring_where_a_stream_starts: leaf
+      - two_streams_joining: parent_node
+      - river_mouth: root
+      - no_stream_splits_and_rejoins: acyclic
+      - one_way_from_any_spring_to_the_sea: unique_path
+      - counting_springs_upstream: recursion_on_subtrees
+    breaks_at: river_deltas
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [stream_segment, spring_marker, sea]
+
+  - id: outfit_combinations
+    mechanic: tiles
+    target_nodes: [disc.count.multiplication_principle, prob.basic.sample_space_grid]
+    structure_map:
+      - row_of_tops: first_choice
+      - column_of_bottoms: second_choice
+      - one_cell: one_combined_outcome
+      - whole_grid: product_of_counts
+      - cells_of_a_color: event_in_sample_space
+    breaks_at: choices_that_depend_on_earlier_choices
+    fades_at_layer: symbolic
+    cultural_scope: adaptable
+    variants: [clothing_local]
+    literacy_min: none
+    assets: [garment_top, garment_bottom, grid_overlay]
+
+  - id: hula_hoops_overlap
+    mechanic: sorter
+    target_nodes: [disc.set.venn_overlap, disc.logic.and_or, prob.basic.union_intersection]
+    structure_map:
+      - hoop: set
+      - standing_inside_a_hoop: membership
+      - overlap_of_two_hoops: intersection_and
+      - inside_either_hoop: union_or
+      - outside_every_hoop: complement_not
+      - counting_the_overlap_only_once: inclusion_exclusion
+    breaks_at: infinite_sets
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [hoop_a, hoop_b, pebble, shell, leaf]
+
+  - id: odometer_dials
+    mechanic: gears_sequence
+    target_nodes: [arith.place.base_ten_carry, csmath.bin.place_value_binary]
+    structure_map:
+      - dial: digit_position
+      - ten_clicks_turn_the_next_dial: carry
+      - dial_with_only_two_faces: binary_digit
+      - reading_all_dials_left_to_right: place_value_number
+      - all_dials_back_to_zero: overflow
+    breaks_at: fractions_and_negatives_on_dials
+    fades_at_layer: symbolic
+    cultural_scope: universal
+    literacy_min: none
+    assets: [dial_drum, dial_frame, click_marker]
+
+  - id: clock_face_wrap
+    mechanic: gears_sequence
+    target_nodes: [csmath.mod.clock_arithmetic, trig.circle.periodic_wrap]
+    structure_map:
+      - clock_face: modulus
+      - hours_moved_forward: addition_mod_n
+      - same_position_after_full_turns: congruence
+      - full_turns_forgotten: quotient_discarded
+      - position_left: remainder
+      - moving_backwards: subtraction_mod_n
+    breaks_at: modulus_other_than_twelve
+    fades_at_layer: formal
+    cultural_scope: adaptable
+    variants: [clock_12h, clock_24h]
+    literacy_min: icons
+    assets: [clock_face, clock_hand, turn_marker]
+
+  - id: beads_necklace_pattern
+    mechanic: gears_sequence
+    target_nodes: [found.pat.repeat_unit, arith.seq.arithmetic]
+    structure_map:
+      - bead: term
+      - repeating_group_of_beads: period
+      - next_bead_to_thread: successor
+      - rule_card_for_the_next_bead: recurrence
+      - bead_number_n: index
+    breaks_at: sequences_without_a_repeating_rule
+    fades_at_layer: visual
+    cultural_scope: universal
+    literacy_min: none
+    assets: [bead_round, bead_square, string, rule_card]
+
+  - id: wheel_rider_height
+    mechanic: slope_walker
+    target_nodes: [trig.circle.height_on_wheel, trig.fn.sine_wave]
+    structure_map:
+      - rider_on_the_rim: point_on_unit_circle
+      - angle_the_wheel_has_turned: theta
+      - height_above_the_axle: sine
+      - sideways_distance_from_the_axle: cosine
+      - one_full_turn_repeats_everything: periodicity
+      - height_traced_over_time: sine_wave
+    breaks_at: angle_as_a_pure_number
+    fades_at_layer: formal
+    cultural_scope: adaptable
+    variants: [ferris_wheel, water_wheel, bicycle_pedal]
+    literacy_min: none
+    assets: [wheel_rim, rider, axle, height_flag]
+
+  - id: walker_on_hill_compass
+    mechanic: slope_walker
+    target_nodes: [mvcalc.grad.steepest_ascent, mvcalc.pd.partial_slope]
+    structure_map:
+      - hill_surface: function_of_two_variables
+      - slope_when_facing_east: partial_derivative_x
+      - slope_when_facing_north: partial_derivative_y
+      - direction_of_steepest_climb: gradient
+      - walking_without_changing_height: level_curve
+      - flat_top: critical_point
+    breaks_at: more_than_two_inputs
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [walker, hill_surface, compass, contour_line]
+
+  - id: stacked_slices_loaf
+    mechanic: fill_accumulate
+    target_nodes: [mvcalc.int.volume_by_slices, calc2.int.solids_of_revolution]
+    structure_map:
+      - loaf: solid
+      - one_slice: cross_section
+      - slice_area_times_thickness: volume_element
+      - stacking_all_slices: integral
+      - thinner_slices: better_approximation
+    breaks_at: slices_that_are_not_parallel
+    fades_at_layer: formal
+    cultural_scope: universal
+    literacy_min: none
+    assets: [loaf, slice, knife_line]

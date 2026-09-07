@@ -1,0 +1,269 @@
+# Misconceptions de Mathy. Taxonomía abierta: las 19 iniciales del plan más ampliaciones por área.
+# Sin texto visible: name y prompt viven en locales/<lang>/misconceptions.yaml
+# (misconceptions.<id>.name | misconceptions.<id>.prompt). Prosa, notación de detect y ejemplos
+# narrados en L0-taxonomia.md.
+#
+# Campos por entrada:
+#   id        permanente
+#   category  sign | wrong_inverse | precedence | conceptual | procedural | notation | invalid_property
+#   nodes     nodos donde la regla se evalúa; el primero es el nodo dueño (el que la lista en su YAML)
+#   detect    regla buggy {from, to, correct, guard?}. `to` puede ser una lista de resultados;
+#             `detect` puede ser una lista de reglas. Notación en L0-taxonomia.md#notacion-de-detect
+#   pattern   uno de los 7 ids de explanation_patterns.yaml
+#   mechanic  uno de los 12 ids de E-mecanicas/mechanics.yaml; debe estar en mechanics_compatible del patrón
+#   severity  1 desliz local · 2 estructural · 3 rompe el invariante central del nodo
+#   blocks_ready_after  solo se escribe si difiere del default; hoy ninguna entrada lo hace
+
+version: 1
+
+defaults:
+  blocks_ready_after: 3   # ocurrencias dentro de la ventana que bloquean `ready`; ver K-evaluacion.md (única fuente)
+  window_items: 10        # tamaño de la ventana de ítems recientes; ver K-evaluacion.md
+
+misconceptions:
+
+  # ---- sign ----------------------------------------------------------------
+
+  - id: sign_flip_on_move
+    category: sign
+    nodes: [alg.eq.one_step, alg.eq.multi_step]
+    detect: {from: "x + a = b", to: "x = b + a", correct: "x = b - a"}
+    pattern: replay_on_mechanic
+    mechanic: balance
+    severity: 2
+
+  - id: negative_times_negative
+    category: sign
+    nodes: [arith.int.negatives, arith.mul.scaling]
+    detect: {from: "(-a) * (-b)", to: "-(a * b)", correct: "a * b"}
+    pattern: double_flip
+    mechanic: slope_walker
+    severity: 2
+
+  - id: integral_ignores_sign
+    category: sign
+    nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative]
+    detect: {from: "int[a,b] f", guard: "f < 0 on part of [a,b]", to: "int[a,b] |f|", correct: "int[a,b] f"}
+    pattern: replay_on_mechanic
+    mechanic: fill_accumulate
+    severity: 2
+
+  # ---- wrong_inverse -------------------------------------------------------
+
+  - id: wrong_inverse_choice
+    category: wrong_inverse
+    nodes: [alg.eq.one_step, prealg.inv.operation_as_key]
+    detect:
+      - {from: "a * x = b", to: "x = b - a", correct: "x = b / a"}
+      - {from: "x / a = b", to: "x = b / a", correct: "x = b * a"}
+    pattern: key_mismatch
+    mechanic: chest_key
+    severity: 3
+
+  - id: sqrt_loses_negative_branch
+    category: wrong_inverse
+    nodes: [alg.fn.quadratic_and_sqrt, alg.fn.inverse_function]
+    detect: {from: "x^2 = a", guard: "a > 0", to: "x = sqrt(a)", correct: "x = sqrt(a) | x = -sqrt(a)"}
+    pattern: double_flip
+    mechanic: chest_key
+    severity: 2
+
+  # ---- precedence ----------------------------------------------------------
+
+  - id: unwrap_order_inverted
+    category: precedence
+    nodes: [alg.eq.multi_step, arith.expr.precedence_tree]
+    detect: {from: "a * x + b = c", to: "x = c / a - b", correct: "x = (c - b) / a"}
+    pattern: tree_unwrap
+    mechanic: chest_key
+    severity: 2
+
+  # ---- conceptual ----------------------------------------------------------
+
+  - id: equals_as_operator
+    category: conceptual
+    nodes: [prealg.eq.balance, arith.add.displacement]
+    detect: {from: "a + b = y + c", to: "y = a + b", correct: "y = a + b - c"}
+    pattern: replay_on_mechanic
+    mechanic: balance
+    severity: 3
+
+  - id: limit_as_reaching
+    category: conceptual
+    nodes: [precalc.lim.approach]
+    detect: {from: "lim[x->a] f(x)", guard: "f(a) != L", to: ["f(a)", "undefined"], correct: "L"}
+    pattern: counterexample_slider
+    mechanic: slope_walker
+    severity: 2
+
+  - id: conditional_reversed
+    category: conceptual
+    nodes: [prob.cond.conditional_and_independence]
+    detect: {from: "P(E | F)", to: "P(F | E)", correct: "P(E | F)"}
+    pattern: two_paths_diverge
+    mechanic: urn_dice
+    severity: 3
+
+  - id: equiprobable_assumed
+    category: conceptual
+    nodes: [prob.basic.probability_as_proportion, prob.rv.expectation_as_weighted_average]
+    detect: {from: "P(E)", guard: "outcomes not equally weighted", to: "|E| / |Omega|", correct: "sum[w in E] P(w)"}
+    pattern: counterexample_slider
+    mechanic: urn_dice
+    severity: 2
+
+  - id: series_terms_to_zero_implies_converges
+    category: conceptual
+    nodes: [calc2.ser.terms_vs_sum]
+    detect: {from: "sum[n] a_n", guard: "lim[n->inf] a_n = 0", to: "converges", correct: "undetermined"}
+    pattern: counterexample_slider
+    mechanic: fill_accumulate
+    severity: 2
+
+  - id: converse_assumed
+    category: conceptual
+    nodes: [disc.logic.if_then_direction]
+    detect: {from: "p -> q", to: "q -> p", correct: "p -> q"}
+    pattern: two_paths_diverge
+    mechanic: sorter
+    severity: 2
+
+  - id: correlation_implies_causation
+    category: conceptual
+    nodes: [prob.stat.correlation_vs_cause]
+    detect: {from: "corr(X, Y) high", to: "causes(X, Y)", correct: "undetermined"}
+    pattern: two_paths_diverge
+    mechanic: network_routes
+    severity: 2
+
+  - id: independent_means_disjoint
+    category: conceptual
+    nodes: [prob.cond.conditional_and_independence]
+    detect: {from: "P(E and F)", guard: "E, F independent", to: "0", correct: "P(E) * P(F)"}
+    pattern: replay_on_mechanic
+    mechanic: urn_dice
+    severity: 2
+
+  # ---- procedural ----------------------------------------------------------
+
+  - id: inverse_applied_one_side
+    category: procedural
+    nodes: [alg.eq.one_step, prealg.eq.balance]
+    detect: {from: "x + a = b", to: ["x = b", "x + a = b - a"], correct: "x = b - a"}
+    pattern: replay_on_mechanic
+    mechanic: balance
+    severity: 3
+
+  - id: fraction_add_across
+    category: procedural
+    nodes: [arith.frac.parts_and_ratio, arith.frac.common_unit]
+    detect: {from: "a / b + c / d", to: "(a + c) / (b + d)", correct: "(a * d + c * b) / (b * d)"}
+    pattern: missing_piece_tiles
+    mechanic: tiles
+    severity: 3
+
+  - id: exponent_rules_mixed
+    category: procedural
+    nodes: [alg.pow.same_base_stack, alg.fn.exponential_growth]
+    detect:
+      - {from: "a^m * a^n", to: "a^(m * n)", correct: "a^(m + n)"}
+      - {from: "(a^m)^n", to: "a^(m + n)", correct: "a^(m * n)"}
+    pattern: counterexample_slider
+    mechanic: gears_sequence
+    severity: 2
+
+  - id: chain_rule_missing_inner
+    category: procedural
+    nodes: [calc1.deriv.rules_as_structure, alg.fn.composition]
+    detect: {from: "d/dx[f(g(x))]", to: "f'(g(x))", correct: "f'(g(x)) * g'(x)"}
+    pattern: tree_unwrap
+    mechanic: gears_sequence
+    severity: 3
+
+  - id: area_uses_slant_side
+    category: procedural
+    nodes: [geom.area.shear_invariant, geom.area.triangle]
+    detect: {from: "area(parallelogram(b, h, s))", guard: "s > h", to: "b * s", correct: "b * h"}
+    pattern: missing_piece_tiles
+    mechanic: tiles
+    severity: 2
+
+  - id: modular_negative_remainder
+    category: procedural
+    nodes: [csmath.mod.wraparound]
+    detect: {from: "(-a) mod n", guard: "a mod n != 0", to: "-(a mod n)", correct: "n - (a mod n)"}
+    pattern: replay_on_mechanic
+    mechanic: gears_sequence
+    severity: 1
+
+  # ---- notation ------------------------------------------------------------
+
+  - id: variable_as_label
+    category: notation
+    nodes: [prealg.var.unknown_as_box, alg.expr.distributive_tiles]
+    detect: {from: "a * x + b * y", to: "(a + b) * x * y", correct: "a * x + b * y"}
+    pattern: replay_on_mechanic
+    mechanic: ledger
+    severity: 2
+
+  - id: path_vs_walk_confusion
+    category: notation
+    nodes: [graph.walk.repeat_rules, graph.basic.graph_and_paths]
+    detect: {from: "path(u, v)", to: "walk(u, v) with repeated vertex", correct: "walk(u, v) without repeated vertices"}
+    pattern: replay_on_mechanic
+    mechanic: network_routes
+    severity: 1
+
+  # ---- invalid_property ----------------------------------------------------
+
+  - id: distribute_over_wrong_op
+    category: invalid_property
+    nodes: [alg.expr.distributive_tiles, alg.fn.quadratic_and_sqrt]
+    detect:
+      - {from: "(a + b)^2", to: "a^2 + b^2", correct: "a^2 + 2 * a * b + b^2"}
+      - {from: "a * (b * c)", to: "(a * b) * (a * c)", correct: "a * b * c"}
+    pattern: missing_piece_tiles
+    mechanic: tiles
+    severity: 3
+
+  - id: log_of_sum
+    category: invalid_property
+    nodes: [alg.fn.logarithm]
+    detect:
+      - {from: "log(a + b)", to: "log(a) + log(b)", correct: "log(a + b)"}
+      - {from: "log(a * b)", to: "log(a) * log(b)", correct: "log(a) + log(b)"}
+    pattern: counterexample_slider
+    mechanic: machine_pipe
+    severity: 2
+
+  - id: derivative_of_product_as_product
+    category: invalid_property
+    nodes: [calc1.deriv.rules_as_structure]
+    detect: {from: "d/dx[f * g]", to: "f' * g'", correct: "f' * g + f * g'"}
+    pattern: missing_piece_tiles
+    mechanic: tiles
+    severity: 3
+
+  - id: matrix_multiplication_commutes
+    category: invalid_property
+    nodes: [linalg.map.linear_transformation_2d, linalg.map.compose_as_multiply]
+    detect: {from: "A * B", to: "B * A", correct: "A * B"}
+    pattern: two_paths_diverge
+    mechanic: grid_stretch
+    severity: 2
+
+  - id: sin_of_sum_distributes
+    category: invalid_property
+    nodes: [trig.ident.angle_sum, trig.circ.unit_circle]
+    detect: {from: "sin(a + b)", to: "sin(a) + sin(b)", correct: "sin(a) * cos(b) + cos(a) * sin(b)"}
+    pattern: counterexample_slider
+    mechanic: machine_pipe
+    severity: 2
+
+  - id: modulus_of_sum_adds
+    category: invalid_property
+    nodes: [adv.cplx.plane_and_modulus, linalg.vec.vector_as_displacement]
+    detect: {from: "|z + w|", to: "|z| + |w|", correct: "|z + w|"}
+    pattern: counterexample_slider
+    mechanic: slope_walker
+    severity: 2

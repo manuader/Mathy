@@ -1,0 +1,118 @@
+# Locale fuente (es) de las misconceptions. Claves referenciadas desde L-modelo-errores/misconceptions.yaml.
+# name:   nombre corto, para el perfil y las herramientas de autoría (no se muestra durante la explicación)
+# prompt: pregunta que el juego narra al final de la explicación dinámica. ICU MessageFormat.
+#         Máximo 15 palabras, apta para voz, sin la palabra "incorrecto" ni sinónimos.
+# Placeholders: los mismos metavariables de la regla detect ({a}, {b}, {n}, ...) ya instanciados.
+
+misconceptions:
+  sign_flip_on_move:
+    name: "Pasar de lado sin cambiar el signo"
+    prompt: "La balanza se inclinó. ¿Qué le hacemos al otro lado para nivelarla?"
+
+  negative_times_negative:
+    name: "Menos por menos da menos"
+    prompt: "Te diste vuelta dos veces. ¿Hacia dónde mirás ahora?"
+
+  integral_ignores_sign:
+    name: "Área sin signo"
+    prompt: "Bajo la línea el tanque se vacía. ¿Cuánto queda al final?"
+
+  wrong_inverse_choice:
+    name: "Elegir la llave equivocada"
+    prompt: "Esa llave no abre este cofre. ¿Qué operación deshace multiplicar por {a}?"
+
+  sqrt_loses_negative_branch:
+    name: "La raíz olvida la rama negativa"
+    prompt: "Otro número también da {a} al cuadrado. ¿Cuál es?"
+
+  unwrap_order_inverted:
+    name: "Desenvolver en orden invertido"
+    prompt: "La capa de afuera es sumar {b}. ¿Cuál abrimos primero?"
+
+  equals_as_operator:
+    name: "El igual como botón de resultado"
+    prompt: "Ahora un plato pesa {a} y el otro {b}. ¿Qué falta para nivelar?"
+
+  limit_as_reaching:
+    name: "El límite como llegar"
+    prompt: "El punto está vacío pero el caminante se acerca. ¿A qué valor?"
+
+  conditional_reversed:
+    name: "Condicional al revés"
+    prompt: "Miraste solo las bolas {a}. La pregunta empieza por las {b}. ¿Cuántas cumplen?"
+
+  equiprobable_assumed:
+    name: "Suponer resultados igual de probables"
+    prompt: "Después de {n} tiradas las barras no son iguales. ¿Cuál sale más?"
+
+  series_terms_to_zero_implies_converges:
+    name: "Términos a cero, suma finita"
+    prompt: "Los chorros son cada vez más finos y el tanque sigue subiendo. ¿Se detiene?"
+
+  converse_assumed:
+    name: "Dar vuelta la implicación"
+    prompt: "Todas las {p} son {q}, pero esta {q} no es {p}. ¿Vale al revés?"
+
+  correlation_implies_causation:
+    name: "Correlación como causa"
+    prompt: "Dos redes distintas producen los mismos puntos. ¿Cuál es la verdadera?"
+
+  independent_means_disjoint:
+    name: "Independiente como incompatible"
+    prompt: "Salieron {a} veces las dos juntas. ¿Independientes o incompatibles?"
+
+  inverse_applied_one_side:
+    name: "Aplicar la inversa a un solo lado"
+    prompt: "Restaste {a} solo de un lado. ¿Qué le falta al otro?"
+
+  fraction_add_across:
+    name: "Sumar numeradores y denominadores"
+    prompt: "Las piezas no son del mismo tamaño. ¿Cómo las cortamos iguales?"
+
+  exponent_rules_mixed:
+    name: "Mezclar las reglas de exponentes"
+    prompt: "Con {m} y {n} las dos ruedas coinciden. Movelas: ¿siguen coincidiendo?"
+
+  chain_rule_missing_inner:
+    name: "Olvidar la derivada de adentro"
+    prompt: "El engranaje de adentro también gira. ¿Cuánto por cada vuelta?"
+
+  area_uses_slant_side:
+    name: "Usar el lado inclinado como altura"
+    prompt: "Las baldosas sobran por el costado. ¿Qué medida va con la base?"
+
+  modular_negative_remainder:
+    name: "Resto negativo en el reloj"
+    prompt: "Giraste {a} dientes hacia atrás en una rueda de {n}. ¿Dónde quedó la marca?"
+
+  variable_as_label:
+    name: "La letra como etiqueta"
+    prompt: "Son {a} de una fruta y {b} de otra. ¿Se pueden juntar en una sola?"
+
+  path_vs_walk_confusion:
+    name: "Camino con nodos repetidos"
+    prompt: "El nodo {u} se encendió dos veces. ¿Sigue siendo un camino?"
+
+  distribute_over_wrong_op:
+    name: "Repartir sobre la operación equivocada"
+    prompt: "Al cuadrado le falta un pedazo. ¿Qué rectángulos faltan?"
+
+  log_of_sum:
+    name: "Logaritmo de una suma"
+    prompt: "Con {a} y {b} las dos máquinas dan distinto. ¿Coinciden para algún par?"
+
+  derivative_of_product_as_product:
+    name: "Derivar un producto como producto"
+    prompt: "El rectángulo creció por dos lados. ¿Qué tiras faltan en tu cuenta?"
+
+  matrix_multiplication_commutes:
+    name: "Multiplicar matrices en cualquier orden"
+    prompt: "Rotar y luego cizallar no termina donde cizallar y luego rotar. ¿Cuál pide el objetivo?"
+
+  sin_of_sum_distributes:
+    name: "Seno de una suma"
+    prompt: "Con {a} y {b} las salidas difieren. ¿Para qué ángulos coinciden?"
+
+  modulus_of_sum_adds:
+    name: "Sumar longitudes de dos pasos"
+    prompt: "Fuiste por dos tramos y el atajo es más corto. ¿Cuándo miden igual?"

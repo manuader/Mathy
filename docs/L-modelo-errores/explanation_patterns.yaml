@@ -1,0 +1,62 @@
+# Patrones de explicación dinámica de Mathy (7).
+# Cada misconception de misconceptions.yaml apunta a exactamente un patrón y una mecánica.
+# Sin texto visible: la pregunta final vive en locales/<lang>/misconceptions.yaml
+# bajo misconceptions.<id>.prompt. Prosa y ejemplos narrados en L0-taxonomia.md.
+#
+# Campos:
+#   id                    identificador permanente
+#   mechanics_compatible  mecánicas (E-mecanicas/mechanics.yaml) sobre las que el patrón puede ejecutarse;
+#                         el validador exige que misconception.mechanic pertenezca a esta lista
+#   literacy_min          nivel de lectura mínimo que exige la explicación (enum literacy del schema);
+#                         una misconception no puede activarse en un nodo con literacy menor
+#   steps                 pasos abstractos en orden; el último es siempre ask_prompt, que narra
+#                         misconceptions.<id>.prompt
+#   reopens_interaction   true: tras el prompt el control vuelve al jugador desde SU estado real
+#                         (el que produjo el error, que sigue siendo un objeto válido);
+#                         false: el estado erróneo no es un objeto válido sino una afirmación falsa;
+#                         tras el prompt el ítem se reinicia desde el estado original
+
+version: 1
+
+patterns:
+  - id: replay_on_mechanic
+    mechanics_compatible: [balance, ledger, tiles, fill_accumulate, urn_dice, network_routes, grid_stretch, slope_walker, gears_sequence, sorter]
+    literacy_min: none
+    steps: [freeze_learner_state, replay_learner_move, show_invariant_break, highlight_delta, ask_prompt]
+    reopens_interaction: true
+
+  - id: key_mismatch
+    mechanics_compatible: [chest_key, machine_pipe, gears_sequence]
+    literacy_min: none
+    steps: [show_lock_shape, try_learner_key, show_no_fit, reveal_key_silhouette, ask_prompt]
+    reopens_interaction: true
+
+  - id: tree_unwrap
+    mechanics_compatible: [chest_key, machine_pipe, gears_sequence]
+    literacy_min: icons
+    steps: [build_nesting_tree, animate_learner_order, show_layer_still_wrapped, highlight_outermost_layer, ask_prompt]
+    reopens_interaction: true
+
+  - id: missing_piece_tiles
+    mechanics_compatible: [tiles, grid_stretch, fill_accumulate]
+    literacy_min: none
+    steps: [lay_learner_tiles, overlay_true_shape, highlight_missing_piece, ask_prompt]
+    reopens_interaction: true
+
+  - id: counterexample_slider
+    mechanics_compatible: [machine_pipe, gears_sequence, slope_walker, urn_dice, fill_accumulate, ledger, grid_stretch]
+    literacy_min: icons
+    steps: [state_learner_rule, attach_slider, sweep_until_divergence, freeze_counterexample, ask_prompt]
+    reopens_interaction: false
+
+  - id: two_paths_diverge
+    mechanics_compatible: [grid_stretch, urn_dice, sorter, network_routes, machine_pipe, gears_sequence]
+    literacy_min: none
+    steps: [split_start_state, play_path_a, play_path_b, compare_endpoints, ask_prompt]
+    reopens_interaction: false
+
+  - id: double_flip
+    mechanics_compatible: [slope_walker, chest_key, grid_stretch, machine_pipe]
+    literacy_min: none
+    steps: [show_first_flip, show_second_flip, compare_landings, ask_prompt]
+    reopens_interaction: false

@@ -1,0 +1,243 @@
+# Textos fuente (es) de las analogías. Claves: analogies.<id>.name y analogies.<id>.text.
+# El id y la estructura viven en ../../G-analogias/analogies.yaml; aquí solo hay texto.
+# text: 2–3 frases que presentan la situación al jugador. Cuando la analogía declara
+# literacy_min: none, el texto se narra por voz y debe entenderlo un niño de 6 años.
+# Cantidades variables van como placeholders ICU MessageFormat.
+
+analogies:
+
+  sorting_bins:
+    name: "Las cajas para ordenar"
+    text: "Hay cosas sueltas y cajas vacías. Cada cosa va a una caja, y la caja cuenta cuántas tiene. Si las cambiás de lugar dentro de la caja, siguen siendo las mismas."
+
+  fruit_bowl_count:
+    name: "Los cuencos de fruta"
+    text: "Dos cuencos con fruta. Poné una fruta de un cuenco junto a una fruta del otro, de a pares. Si sobra alguna, ese cuenco tiene más."
+
+  number_line_walk:
+    name: "El camino de piedras"
+    text: "Un camino de piedras cruza el agua. El caminante empieza en la primera piedra y avanza de a una. Cada piedra tiene su número, siempre en el mismo orden."
+
+  walker_forward_and_back:
+    name: "Pasos adelante y atrás"
+    text: "El caminante da {n, plural, one {# paso} other {# pasos}} hacia adelante. Después puede volver caminando hacia atrás. Si da los mismos pasos hacia atrás, llega justo a donde empezó."
+
+  fruit_ledger:
+    name: "La mesa de frutas"
+    text: "Sobre la mesa hay montones de fruta. Solo se juntan las frutas iguales: manzanas con manzanas, bananas con bananas. Un cuenco tapado esconde cuántas hay adentro."
+
+  tile_floor:
+    name: "El piso de baldosas"
+    text: "Estás poniendo baldosas en un piso. Hay {rows, plural, one {# fila} other {# filas}} y en cada fila caben {cols, plural, one {# baldosa} other {# baldosas}}. Si girás el piso, la cantidad de baldosas no cambia."
+
+  rubber_band_stretch:
+    name: "La banda elástica con marcas"
+    text: "Una banda elástica tiene marcas con números. Un extremo está clavado y no se mueve. Si la estirás al doble, todas las marcas se alejan al doble; si la soltás, vuelven."
+
+  sharing_into_plates:
+    name: "Repartir en platos"
+    text: "Hay galletas para repartir entre {plates, plural, one {# plato} other {# platos}}. Ponés una galleta en cada plato, y otra, y otra, hasta que no alcancen para una vuelta más. Lo que sobra queda afuera."
+
+  elevator_floors:
+    name: "El ascensor"
+    text: "Un edificio tiene pisos arriba de la calle y pisos debajo, en el sótano. El ascensor sube y baja de a un piso. La calle es el piso cero."
+
+  debt_ledger:
+    name: "Monedas y vales"
+    text: "Tenés monedas y también vales que dicen 'debo una moneda'. Una moneda y un vale se anulan: desaparecen juntos. Lo que queda en la mesa es lo que tenés de verdad."
+
+  pizza_slices:
+    name: "Las porciones"
+    text: "Una pizza redonda se corta en {n, plural, one {# porción} other {# porciones}} iguales. Vos te llevás algunas y el resto queda en la bandeja. Si cortás cada porción al medio, hay más porciones pero la misma pizza."
+
+  chocolate_bar_grid:
+    name: "La barra de chocolate"
+    text: "Una barra de chocolate tiene cuadraditos en filas y columnas. Podés pintar una parte de la barra y después una parte de esa parte. Los cuadraditos cuentan cuánto pintaste."
+
+  juice_mix_ratio:
+    name: "El jugo mezclado"
+    text: "Para hacer jugo mezclás vasos de concentrado con vasos de agua. Si ponés el doble de cada uno, sabe igual. Si solo agregás agua, sabe más suave."
+
+  chest_nested:
+    name: "Cofres dentro de cofres"
+    text: "Un cofre tiene adentro otro cofre, y ese otro más. Cada cerradura pide su llave. Siempre se abre primero el cofre de afuera."
+
+  chest_single_lock:
+    name: "El cofre con una cerradura"
+    text: "Un cofre está cerrado con una cerradura de cierta forma. Solo la llave con la forma contraria la abre. Si la llave no gira, no es esa."
+
+  mystery_box:
+    name: "La caja misteriosa"
+    text: "Hay una caja cerrada con una marca dibujada. Adentro hay algo, pero no sabemos cuánto. Todas las cajas con la misma marca tienen lo mismo adentro."
+
+  balance_pans:
+    name: "La balanza de dos platos"
+    text: "Una balanza tiene dos platos. Cuando pesan lo mismo, la barra queda derecha. Si sacás algo de un plato, tenés que sacar lo mismo del otro para que siga derecha."
+
+  balance_tilted:
+    name: "La balanza inclinada"
+    text: "La balanza está torcida: un plato baja porque pesa más. Si ponés lo mismo en los dos platos, sigue torcida hacia el mismo lado. Si cambiás los platos de lugar, se tuerce al revés."
+
+  two_balances_shared_boxes:
+    name: "Dos balanzas con las mismas cajas"
+    text: "Hay dos balanzas derechas y en las dos aparecen las mismas cajas marcadas. Podés volcar todo lo de una balanza sobre la otra y sigue derecha. Cuando descubrís qué pesa una caja, la cambiás por pesas en las dos."
+
+  market_two_receipts:
+    name: "Dos tickets del mercado"
+    text: "Dos tickets de compra muestran cantidades y el total, pero no el precio de cada cosa. Comparando los dos tickets se puede descubrir cuánto cuesta cada una."
+
+  tile_floor_two_rooms:
+    name: "Dos habitaciones con una pared"
+    text: "Dos habitaciones tienen el mismo ancho y una pared en el medio. Podés contar las baldosas de cada una y sumar. O sacar la pared y contar el piso entero: da lo mismo."
+
+  square_garden_side:
+    name: "El jardín cuadrado"
+    text: "Un jardín cuadrado tiene el mismo largo de cada lado. Si sabés cuántas baldosas tiene en total, podés descubrir cuánto mide el lado. Para agrandarlo, agregás dos tiras iguales y falta una baldosa en la esquina."
+
+  function_machine:
+    name: "La máquina"
+    text: "Una máquina tiene una ranura para meter algo y una salida por donde sale transformado. Tiene una placa con su regla. Si metés lo mismo dos veces, sale lo mismo dos veces."
+
+  machine_chain:
+    name: "Máquinas en cadena"
+    text: "La salida de una máquina se conecta a la entrada de otra con un tubo. Lo que entra pasa por las dos, en orden. Si cambiás el orden de las máquinas, puede salir otra cosa."
+
+  machine_reverse_run:
+    name: "La máquina en reversa"
+    text: "Esta máquina tiene una palanca para andar al revés. Metés por la salida lo que había salido, y por la entrada aparece lo que habías metido. Algunas máquinas no pueden ir en reversa porque mezclan dos entradas en una sola salida."
+
+  walker_height_trace:
+    name: "El dibujo del camino"
+    text: "El caminante recorre un terreno con subidas y bajadas. Un lápiz dibuja qué tan alto está a cada paso. Ese dibujo es el perfil del camino."
+
+  walker_on_ramp:
+    name: "La rampa"
+    text: "El caminante sube por una rampa recta. En cada paso sube siempre lo mismo. Una rampa más empinada sube más por paso."
+
+  taxi_fare_meter:
+    name: "El taxímetro"
+    text: "El taxi cobra un precio fijo al arrancar y después un poco más por cada kilómetro. El marcador muestra cuánto va costando el viaje."
+
+  paper_folding_doubles:
+    name: "Doblar el papel"
+    text: "Una hoja de papel se dobla al medio. Cada doblez duplica las capas: dos, cuatro, ocho. Contar los dobleces te dice cuántas capas hay, y contar las capas te dice cuántos dobleces hiciste."
+
+  zeno_half_steps:
+    name: "La mitad del camino a la pared"
+    text: "El caminante avanza hacia una pared. En cada paso recorre la mitad de lo que falta. Nunca la toca, pero se acerca tanto como quieras."
+
+  walker_zoom_on_hill:
+    name: "La lupa sobre la colina"
+    text: "El caminante está en una colina curva. Con una lupa te acercás cada vez más a donde pisa. De cerca, el suelo se ve recto, y esa recta tiene su inclinación."
+
+  tank_filling:
+    name: "El tanque que se llena"
+    text: "Un grifo llena un tanque. Si el grifo echa más agua por segundo, el nivel sube más rápido. El medidor de nivel muestra toda el agua que entró hasta ahora."
+
+  odometer_from_speed:
+    name: "Velocímetro y cuentakilómetros"
+    text: "El velocímetro dice qué tan rápido vas ahora. El cuentakilómetros suma todo lo recorrido. Mirando el cuentakilómetros al salir y al llegar sabés cuánto fue el viaje."
+
+  growing_rectangle:
+    name: "El rectángulo que crece"
+    text: "Un rectángulo crece un poquito por sus dos lados. Se agrega una tira larga a lo ancho y otra a lo alto. En la esquina queda un cuadradito muy chico."
+
+  gear_train_ratios:
+    name: "El tren de engranajes"
+    text: "Varios engranajes están encadenados. Cuando girás el primero una vuelta, el siguiente gira más o menos según sus dientes. Al final, el último gira lo que resulta de todas las relaciones juntas."
+
+  treasure_map_arrows:
+    name: "El mapa del tesoro"
+    text: "En el mapa, una flecha dice cuántos pasos al este y cuántos al norte. Otra flecha sigue desde la punta de la primera. La flecha es la misma aunque la dibujes en otro lugar del mapa."
+
+  two_kinds_of_steps:
+    name: "Dos clases de pasos"
+    text: "El caminante solo sabe dar dos clases de pasos, cada una con su propia dirección y largo. Combinando varios de cada clase llega a distintos lugares. Con dos clases distintas puede llegar a todo el mapa."
+
+  rubber_grid_with_house:
+    name: "La lámina elástica con una casa"
+    text: "Una lámina elástica tiene una cuadrícula y una casa dibujada. Está clavada en el centro. Cuando la estirás parejo, las líneas siguen rectas y la casa se deforma con ellas."
+
+  rubber_grid_undo_stretch:
+    name: "Devolver la lámina a su forma"
+    text: "La lámina fue estirada y la casa cambió. Si tirás en sentido contrario, vuelve a su forma. Pero si la aplastaste hasta dejarla como una línea, ya no se puede recuperar."
+
+  shadow_and_stick:
+    name: "El palo y su sombra"
+    text: "Un palo parado al sol tiene una sombra. Un palo el doble de alto tiene una sombra el doble de larga, con el mismo sol. Midiendo la sombra podés saber cuánto mide el palo."
+
+  quarter_turn_dial:
+    name: "La aguja que gira un cuarto"
+    text: "Una aguja en un dial señala una dirección. Un cuarto de vuelta la lleva a otra dirección. Dos cuartos de vuelta la dejan apuntando al revés."
+
+  urn_of_balls:
+    name: "La urna con bolitas"
+    text: "Una urna tiene bolitas de colores. Metés la mano sin mirar y sacás una. Cuantas más bolitas de un color hay, más fácil es sacar ese color."
+
+  spinner_wheel:
+    name: "La ruleta"
+    text: "Una ruleta tiene sectores de colores y una aguja que gira. Cuanto más grande el sector, más veces cae ahí la aguja. Si todos los sectores son iguales, ningún color tiene ventaja."
+
+  sorted_bins_then_pick:
+    name: "Primero ordenar, después sacar"
+    text: "Las bolitas se ordenan en cajas según una cosa, por ejemplo el tamaño. Después sacás una bolita solo de una caja. Los colores de esa caja pueden ser distintos a los de toda la mesa."
+
+  tasting_soup:
+    name: "Probar la sopa"
+    text: "Hay una olla grande de sopa. Para saber cómo está, revolvés y probás una cucharada. Si no revolvés, la cucharada puede engañar."
+
+  balance_point_of_weights:
+    name: "La tabla con pesas"
+    text: "Sobre una tabla con marcas ponés pesas en distintos lugares. Hay un punto donde la tabla queda en equilibrio. Las pesas más pesadas tiran ese punto hacia ellas."
+
+  fair_ticket_price:
+    name: "El precio justo del boleto"
+    text: "Un boleto puede ganar distintos premios, cada uno con su probabilidad. Si jugás muchísimas veces, en promedio ganás cierta cantidad. Ese promedio es el precio justo del boleto."
+
+  water_leveling_cups:
+    name: "Emparejar el agua"
+    text: "Varios vasos tienen distinta cantidad de agua. Pasás agua de los más llenos a los más vacíos hasta que todos quedan iguales. El agua total no cambia."
+
+  city_routes:
+    name: "Los caminos de la ciudad"
+    text: "La ciudad tiene lugares y caminos que los unen. Para ir de un lugar a otro seguís los caminos. Si un lugar es una isla sin puente, no se puede llegar."
+
+  friends_handshakes:
+    name: "Los saludos"
+    text: "En una reunión, algunas personas se dan la mano. Cada saludo une a dos personas. Si contás los saludos de cada una y sumás, cada saludo aparece dos veces."
+
+  river_tributaries:
+    name: "Los arroyos del río"
+    text: "Muchos arroyos nacen en la montaña y se van juntando. Nunca un arroyo se separa y se vuelve a juntar. Desde cualquier arroyo hay un solo camino hasta el mar."
+
+  outfit_combinations:
+    name: "Combinar la ropa"
+    text: "Tenés {tops, plural, one {# remera} other {# remeras}} y {bottoms, plural, one {# pantalón} other {# pantalones}}. Cada remera con cada pantalón es un conjunto distinto. Puestos en una grilla, se ven todos de una vez."
+
+  hula_hoops_overlap:
+    name: "Los aros en el piso"
+    text: "Dos aros están en el piso, un poco encimados. Las cosas pueden estar dentro de uno, dentro de los dos, o fuera de todos. Lo que está en la parte encimada se cuenta una sola vez."
+
+  odometer_dials:
+    name: "Los tambores del contador"
+    text: "Un contador tiene tambores con números. Cuando un tambor da la vuelta completa, empuja al de al lado un lugar. Algunos contadores tienen tambores de solo dos caras."
+
+  clock_face_wrap:
+    name: "La vuelta del reloj"
+    text: "El reloj marca una hora y avanzás {n, plural, one {# hora} other {# horas}}. Las vueltas completas no importan: solo cuenta dónde queda la aguja. Retroceder también da vuelta."
+
+  beads_necklace_pattern:
+    name: "El collar de cuentas"
+    text: "Estás armando un collar con cuentas. Hay una regla que dice qué cuenta va después. Si conocés la regla, sabés cómo sigue el collar."
+
+  wheel_rider_height:
+    name: "La rueda gigante"
+    text: "Una persona va en una rueda que gira. Sube, pasa por arriba, baja y vuelve a empezar. Si dibujás su altura mientras la rueda gira, sale una ola."
+
+  walker_on_hill_compass:
+    name: "La brújula en la colina"
+    text: "El caminante está en una colina y tiene una brújula. Mirando al este, la subida tiene una inclinación; mirando al norte, otra. Hay una dirección donde la subida es la más empinada."
+
+  stacked_slices_loaf:
+    name: "El pan en rebanadas"
+    text: "Un pan se corta en rebanadas. Cada rebanada tiene su forma y su grosor. Si apilás todas, vuelve a ser el pan entero."
