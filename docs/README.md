@@ -36,7 +36,7 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 - **Ids.** Nodos: `area.cluster.slug`. Mecánicas, misconceptions, analogías, patrones, escenas, operaciones de calculadora, entradas de cheatsheet (`cs.area.slug`) y desafíos (`ch.area.slug`) tienen ids permanentes; renombrar exige `aliases`.
 - **Prosa y datos.** Lo que se referencia por id desde más de un lugar es YAML. Los YAML no contienen texto visible al usuario: ese texto vive en `locales/<lang>/`.
 - **Constantes.** Todo umbral, peso o tiempo vive en [K](K-evaluacion.md). Los demás documentos los citan por nombre.
-- **Manim.** Los nombres de clases y métodos de ManimGL solo aparecen en [I](I-manim/); el resto describe visualizaciones en el lenguaje de la gramática visual de [H](H-progresion-abstraccion.md).
+- **Manim.** Los nombres de clases y métodos de ManimGL solo aparecen en [I](I-manim/), que tiene el mapping, y en [O](O-arquitectura-tecnica.md), que define el mini-Manim que los replica. El resto describe visualizaciones en el lenguaje de la gramática visual de [H](H-progresion-abstraccion.md).
 - **Idioma.** Español neutro con términos técnicos consolidados en inglés.
 
 ## Glosario

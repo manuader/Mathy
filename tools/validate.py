@@ -327,6 +327,126 @@ def check_mechanics_reuse(nodes, catalogs, rep: Report) -> None:
             )
 
 
+def check_mechanic_coherence(nodes, catalogs, rep: Report) -> None:
+    """`areas` y `reused_by` de E se derivan del grafo; hoy se escriben a mano.
+
+    E0 afirma que "las listas completas de reúso están en el YAML", así que la
+    comprobación es de igualdad, no de inclusión.
+    """
+    doc = load(DOCS / "E-mecanicas/mechanics.yaml", rep)
+    if not doc:
+        return
+    for mechanic in doc.get("mechanics") or []:
+        mid = mechanic.get("id")
+        users = {n_id for n_id, n in nodes.items() if mid in as_list(n.get("mechanics"))}
+        areas = {nodes[n].get("area") for n in users}
+
+        declared_areas = set(as_list(mechanic.get("areas")))
+        if declared_areas - areas:
+            rep.warn(
+                "mecanicas-derivadas",
+                f"`{mid}`: declara las áreas {sorted(declared_areas - areas)}, "
+                "donde ningún nodo la usa",
+            )
+        if areas - declared_areas:
+            rep.warn(
+                "mecanicas-derivadas",
+                f"`{mid}`: se usa en {sorted(areas - declared_areas)} y no figura en `areas`",
+            )
+
+        declared_users = set(as_list(mechanic.get("reused_by")))
+        if declared_users - users:
+            rep.warn(
+                "mecanicas-derivadas",
+                f"`{mid}`: `reused_by` nombra {sorted(declared_users - users)}, "
+                "que no la declaran",
+            )
+        if users - declared_users:
+            rep.warn(
+                "mecanicas-derivadas",
+                f"`{mid}`: {len(users - declared_users)} nodo(s) la usan y no están "
+                f"en `reused_by` (declara {len(declared_users)} de {len(users)})",
+            )
+
+
+def check_skin_mechanics(nodes, rep: Report) -> None:
+    """Una analogía o una misconception corre sobre una mecánica del nodo que la declara.
+
+    `scenes.yaml` admite `mechanic_exception: true` para los casos deliberados; G y L
+    todavía no tienen esa válvula, así que acá son avisos.
+    """
+    analogies = load(DOCS / "G-analogias/analogies.yaml", rep) or {}
+    for analogy in analogies.get("analogies") or []:
+        mechanic = analogy.get("mechanic")
+        if not mechanic:
+            continue
+        for node_id in as_list(analogy.get("target_nodes")):
+            node = nodes.get(node_id)
+            if node and mechanic not in as_list(node.get("mechanics")):
+                rep.warn(
+                    "piel-mecanica",
+                    f"analogía `{analogy['id']}` corre sobre `{mechanic}`, que "
+                    f"`{node_id}` no lista en sus mechanics",
+                )
+
+    misconceptions = load(DOCS / "L-modelo-errores/misconceptions.yaml", rep) or {}
+    for record in misconceptions.get("misconceptions") or []:
+        mechanic = record.get("mechanic")
+        if not mechanic:
+            continue
+        for node_id in as_list(record.get("nodes")):
+            node = nodes.get(node_id)
+            if node and mechanic not in as_list(node.get("mechanics")):
+                rep.warn(
+                    "piel-mecanica",
+                    f"misconception `{record['id']}` se explica sobre `{mechanic}`, que "
+                    f"`{node_id}` no lista en sus mechanics",
+                )
+        # la misconception se declara en nodos que no la listan, y viceversa
+        for node_id in as_list(record.get("nodes")):
+            node = nodes.get(node_id)
+            if node and record["id"] not in as_list(node.get("misconceptions")):
+                rep.warn(
+                    "errores",
+                    f"misconception `{record['id']}` dice pertenecer a `{node_id}`, "
+                    "que no la declara",
+                )
+
+
+def check_transfer_mechanics(nodes, rep: Report) -> None:
+    """K exige que un ítem `transfer` corra sobre una mecánica ajena a la del origen."""
+    for node_id, node in sorted(nodes.items()):
+        source = set(as_list(node.get("mechanics")))
+        if not source:
+            continue
+        for ref in as_list(node.get("transfer_to")):
+            target = nodes.get(ref)
+            if not target:
+                continue
+            shared = set(as_list(target.get("mechanics")))
+            if shared and shared <= source:
+                rep.warn(
+                    "transfer",
+                    f"`{node_id}` → `{ref}`: el destino no aporta ninguna mecánica nueva "
+                    f"({sorted(shared)}); K pide una mecánica ajena",
+                )
+
+
+def check_probe_distractors(nodes, spine, rep: Report) -> None:
+    """F0: los distractores de `explain` son misconceptions del nodo, así que clasifican."""
+    spine_ids = {entry["id"] for entry in spine if isinstance(entry, dict)}
+    for node_id in sorted(spine_ids):
+        node = nodes.get(node_id)
+        if node and node.get("level") == 0:
+            continue  # en nivel 0 el error todavía no es conceptual
+        if node and not as_list(node.get("misconceptions")):
+            rep.warn(
+                "probes",
+                f"`{node_id}` es de espina y no declara misconceptions: sus distractores "
+                "de `explain` no pueden clasificar (F0)",
+            )
+
+
 def check_spine(nodes, spine, rep: Report) -> None:
     """spine ⇒ probes completas, doc existente, y orden compatible con prereqs."""
     position = {entry["id"]: entry["n"] for entry in spine if isinstance(entry, dict)}
@@ -567,12 +687,18 @@ def check_markdown_links(rep: Report) -> None:
 
 
 def check_prose_hygiene(rep: Report) -> None:
-    """Reglas transversales de la prosa: sin ManimGL fuera de I, sin constantes fuera de K."""
+    """Sin nombres de ManimGL fuera de I y de O.
+
+    I es donde vive el mapping; O los nombra porque define el mini-Manim que los
+    replica. En cualquier otro documento la visualización se describe con la
+    gramática visual de H.
+    """
     manim_class = re.compile(r"\b(?:VMobject|Mobject|Scene|Tex|MathTex|Transform|"
                              r"ReplacementTransform|FadeIn|FadeOut|NumberPlane|Axes|"
                              r"ValueTracker|always_redraw|play\(|self\.add)\b")
+    exempt = {"I-manim", "O-arquitectura-tecnica.md"}
     for path in sorted(DOCS.rglob("*.md")):
-        if path.parent.name == "I-manim":
+        if path.parent.name in exempt or path.name in exempt:
             continue
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             if manim_class.search(line):
@@ -644,6 +770,10 @@ def main() -> int:
     check_acyclic(nodes, aliases, rep)
     check_redundant_prereqs(nodes, aliases, rep)
     check_mechanics_reuse(nodes, catalogs, rep)
+    check_mechanic_coherence(nodes, catalogs, rep)
+    check_skin_mechanics(nodes, rep)
+    check_transfer_mechanics(nodes, rep)
+    check_probe_distractors(nodes, spine, rep)
     check_spine(nodes, spine, rep)
     check_cheatsheet(nodes, catalogs, rep)
     check_challenges(nodes, aliases, catalogs, rep)
