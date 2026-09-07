@@ -712,6 +712,8 @@ def check_prose_ids(nodes, aliases, catalogs, rep: Report) -> None:
         catalog_aliases[name] = mapping
 
     node_ref = re.compile(r"`([a-z0-9]+\.[a-z0-9]{2,6}\.[a-z0-9_]+)`")
+    # placeholders con los que la prosa documenta la convención de ids
+    placeholders = {"cs.area.slug", "ch.area.slug", "area.cluster.slug"}
 
     for path in sorted(DOCS.rglob("*.md")):
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -722,7 +724,7 @@ def check_prose_ids(nodes, aliases, catalogs, rep: Report) -> None:
                 if known is None:
                     continue
                 for ref in pattern.findall(line):
-                    if ref in known:
+                    if ref in known or ref in placeholders:
                         continue
                     canonical = catalog_aliases.get(catalog, {}).get(ref)
                     if canonical:
