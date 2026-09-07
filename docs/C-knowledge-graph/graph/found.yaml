@@ -49,7 +49,7 @@ nodes:
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [geom.angle.turn_as_measure, linalg.vec.vector_as_displacement, trig.circle.unit_circle_radians]
-    calc_unlocks: [op_number_line]
+    calc_unlocks: [op_count]
     manim: [gear_track_numbers_in_order, gear_one_step_one_number]
     next: arith.add.displacement
     doc: docs/D-curriculum/D1-espina/02-found.count.number_line.md

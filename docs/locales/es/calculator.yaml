@@ -1,0 +1,391 @@
+# Locale fuente (es) de la calculadora evolutiva. Claves: calculator.<op>.{label, hint}.
+# Los ids vienen de ../../M-calculadora/calculator_ops.yaml; este archivo no agrega ni quita operaciones.
+# `label` es la etiqueta corta del botón (máximo doce caracteres; la notación sigue MathLocale es: sen, cos, tg, log).
+# `hint` es una frase narrable: dice qué hace la operación y, cuando existe, cuál es su llave inversa.
+# Se lee en voz alta en perfiles sin lectura; sin la palabra "incorrecto", sin jerga que no se haya jugado.
+
+calculator:
+
+  # ---- t0: las cuatro operaciones y los números
+
+  op_count:
+    label: "contar"
+    hint: "Cuenta cuántas cosas hay y las pone en la pista de números."
+  op_add:
+    label: "+"
+    hint: "Suma: avanza en la pista. Su llave es restar."
+  op_sub:
+    label: "−"
+    hint: "Resta: vuelve atrás en la pista. Es la llave de sumar."
+  op_mul:
+    label: "×"
+    hint: "Multiplica: estira una cantidad tantas veces como diga el número. Su llave es dividir."
+  op_div:
+    label: "÷"
+    hint: "Divide: reparte en partes iguales. Es la llave de multiplicar."
+  op_mod:
+    label: "resto"
+    hint: "Reparte y muestra lo que sobra; con un reloj de n horas, dice en qué hora cae."
+  op_neg:
+    label: "−a"
+    hint: "Da vuelta el número hacia el otro lado del cero. Aplicarlo dos veces devuelve el original."
+  op_paren:
+    label: "( )"
+    hint: "Agrupa una parte de la cuenta para que se haga primero."
+  op_compare:
+    label: "= < >"
+    hint: "Pone dos cantidades en la balanza y dice si pesan igual o cuál pesa más."
+  op_frac:
+    label: "a/b"
+    hint: "Arma una fracción: partes de un entero. Puede simplificarla sin cambiar cuánto vale."
+  op_frac_arith:
+    label: "a/b ± c/d"
+    hint: "Suma, resta, compara o multiplica fracciones buscando la misma unidad de partes."
+  op_decimal:
+    label: ","
+    hint: "Escribe décimos y centésimos después de la coma, como una rueda más del contador."
+  op_percent:
+    label: "%"
+    hint: "Toma una parte de cada cien: calcula el porcentaje de un total, lo convierte o mide cuánto cambió."
+  op_ratio:
+    label: "a : b"
+    hint: "Compara dos cantidades como una receta y encuentra la que falta para mantener la misma proporción."
+  op_unit_convert:
+    label: "m → cm"
+    hint: "Cambia la unidad de una medida sin cambiar la medida."
+  op_prime_factor:
+    label: "primos"
+    hint: "Descompone un número en sus primos y con eso encuentra el mayor divisor común y el menor múltiplo común."
+  op_inverse_op:
+    label: "llave"
+    hint: "Muestra la llave de la última operación: la que la deshace y devuelve lo que había antes."
+
+  # ---- t1: potencias, raíces y medida
+
+  op_pow:
+    label: "xⁿ"
+    hint: "Multiplica un número por sí mismo n veces. Su llave es la raíz."
+  op_sqrt:
+    label: "√"
+    hint: "Busca el número que elevado da lo que hay adentro. Es la llave de la potencia; para el cuadrado hay dos respuestas, una positiva y una negativa."
+  op_sci_notation:
+    label: "×10ⁿ"
+    hint: "Escribe un número muy grande o muy chico como una cifra por una potencia de diez."
+  op_pythagoras:
+    label: "a²+b²"
+    hint: "En un triángulo con un ángulo recto, encuentra el lado que falta a partir de los otros dos."
+  op_distance:
+    label: "distancia"
+    hint: "Mide la distancia entre dos puntos y encuentra el punto medio."
+  op_area:
+    label: "área"
+    hint: "Cuenta las baldosas que cubren una figura: rectángulo, triángulo, paralelogramo, trapecio o una figura armada con ellos."
+  op_perimeter:
+    label: "perímetro"
+    hint: "Recorre el borde de una figura y suma lo que mide."
+  op_circle:
+    label: "π r"
+    hint: "Trabaja con el círculo: el número pi, el contorno, el área y un arco."
+  op_volume:
+    label: "volumen"
+    hint: "Apila capas de área para llenar un cuerpo: prisma, cilindro, cono o esfera."
+  op_angle:
+    label: "ángulo"
+    hint: "Mide un giro en grados o como fracción de vuelta y encuentra el ángulo que falta en un triángulo."
+  op_transform_point:
+    label: "girar"
+    hint: "Gira, refleja o agranda un punto o una figura y muestra adónde va cada parte."
+
+  # ---- t2: exponencial y logaritmo
+
+  op_exp:
+    label: "eˣ"
+    hint: "Crece multiplicando en cada paso. Su llave es el logaritmo."
+  op_ln:
+    label: "ln"
+    hint: "Cuenta cuántos pasos de crecimiento natural hacen falta para llegar a un número. Es la llave de e elevado a x y solo entra en números positivos."
+  op_log:
+    label: "log"
+    hint: "Cuenta cuántas veces hay que multiplicar la base para llegar al número. Es la llave de la potencia con esa base."
+
+  # ---- t3: álgebra y funciones
+
+  op_variable:
+    label: "x"
+    hint: "Pone una caja con un valor desconocido dentro de la cuenta."
+  op_evaluate_expr:
+    label: "f(a)"
+    hint: "Reemplaza la caja por un número y hace la cuenta; con dos cajas, reemplaza las dos."
+  op_simplify:
+    label: "simplificar"
+    hint: "Junta lo que es igual en la misma fila y deja la expresión más corta que vale lo mismo."
+  op_expand:
+    label: "expandir"
+    hint: "Reparte un producto sobre una suma, como cortar un rectángulo de baldosas. Su llave es factorizar."
+  op_factor:
+    label: "factorizar"
+    hint: "Vuelve a armar el rectángulo: escribe la suma como un producto. Es la llave de expandir."
+  op_solve_linear:
+    label: "resolver"
+    hint: "Aplica llaves a los dos lados de la balanza hasta dejar la caja sola."
+  op_solve_quadratic:
+    label: "x² = 0"
+    hint: "Encuentra los dos valores que hacen cero una ecuación de segundo grado."
+  op_solve_system:
+    label: "sistema"
+    hint: "Encuentra el punto donde varias ecuaciones se cumplen a la vez."
+  op_solve_inequality:
+    label: "x <"
+    hint: "Encuentra todos los valores que inclinan la balanza hacia un lado y los muestra como región."
+  op_define_function:
+    label: "f(x) ="
+    hint: "Arma una máquina con una regla: a cada entrada le corresponde una salida, aunque la regla cambie por tramos."
+  op_compose:
+    label: "f ∘ g"
+    hint: "Encadena dos máquinas: lo que sale de una entra en la otra. El orden importa."
+  op_inverse_function:
+    label: "f⁻¹"
+    hint: "Construye la máquina llave: la que devuelve la entrada a partir de la salida. No todas las máquinas la tienen."
+  op_abs:
+    label: "|x|"
+    hint: "Mide la distancia al cero sin importar el lado. Al abrirla aparecen dos ramas."
+  op_slope:
+    label: "pendiente"
+    hint: "Mide cuánto sube una recta por cada paso hacia adelante."
+  op_plot:
+    label: "graficar"
+    hint: "Dibuja una función, una curva o un campo, y marca dónde sube, dónde baja y dónde da la vuelta."
+  op_transform_graph:
+    label: "mover f"
+    hint: "Desplaza, estira o refleja el gráfico de una función y muestra qué cambia en la fórmula."
+  op_nth_term:
+    label: "aₙ"
+    hint: "Da el término que ocupa el lugar n en una sucesión que suma o multiplica siempre lo mismo."
+  op_sigma_sum:
+    label: "Σ"
+    hint: "Suma todos los términos de una lista, de uno hasta n, o hasta el infinito cuando la suma se estabiliza."
+
+  # ---- t4: trigonometría
+
+  op_trig:
+    label: "sen cos tg"
+    hint: "Convierte un ángulo en la altura, el ancho o la pendiente del giro. Su llave es la arco función."
+  op_arc_trig:
+    label: "arcsen"
+    hint: "Recupera el ángulo a partir de la altura, el ancho o la pendiente. Es la llave de seno, coseno y tangente, y devuelve una rama entre muchas."
+  op_unit_circle:
+    label: "θ ↔ rad"
+    hint: "Pasa de grados a radianes y de vuelta, ubica el ángulo en el círculo unitario y lo reduce a la primera vuelta."
+  op_arc_and_sector:
+    label: "r θ"
+    hint: "Con el radio y el ángulo en radianes calcula el largo del arco y el área de la porción."
+  op_trig_identity:
+    label: "identidad"
+    hint: "Reescribe una expresión con seno y coseno usando las identidades: la pitagórica, el ángulo doble y la suma de ángulos."
+  op_solve_triangle:
+    label: "triángulo"
+    hint: "Con algunos lados y ángulos de un triángulo encuentra los que faltan."
+  op_polar_convert:
+    label: "(r, θ)"
+    hint: "Describe un punto por su ángulo y su distancia al centro, y vuelve a las coordenadas de siempre."
+
+  # ---- t5: límites, derivadas e integrales
+
+  op_limit:
+    label: "lím"
+    hint: "Se acerca a un valor sin tocarlo y dice adónde tiende la función, por un lado, por el otro o en el infinito."
+  op_derivative:
+    label: "d/dx"
+    hint: "Mide cuán rápido cambia una función en cada punto. Su llave es integrar."
+  op_tangent_line:
+    label: "tangente"
+    hint: "Dibuja la recta que toca la curva en un punto y la usa para aproximar o para buscar un cero."
+  op_integral:
+    label: "∫ₐᵇ"
+    hint: "Acumula el área bajo la curva entre dos puntos, con signo, sumando rectángulos cada vez más finos."
+  op_antiderivative:
+    label: "∫ + C"
+    hint: "Encuentra la función cuya pendiente es la dada. Es la llave de derivar y devuelve una familia: falta un dato para elegir una."
+  op_integral_geometry:
+    label: "∫ área"
+    hint: "Usa la integral para medir el área entre curvas o el volumen de un cuerpo cortado en rebanadas."
+  op_gradient:
+    label: "∇"
+    hint: "En un terreno con dos entradas mide la cuesta en cada dirección y apunta hacia donde sube más rápido."
+  op_jacobian:
+    label: "J"
+    hint: "Mide cuánto estira y gira una transformación cerca de un punto."
+  op_optimize_multivar:
+    label: "máx mín"
+    hint: "Busca el punto más alto o más bajo de un terreno, libre o sobre un camino obligado."
+  op_multiple_integral:
+    label: "∬"
+    hint: "Acumula sobre una región del plano o del espacio, rebanada por rebanada, y cambia de coordenadas si conviene."
+  op_field_integral:
+    label: "∫ F·dr"
+    hint: "Suma lo que un campo empuja a lo largo de un camino o lo que atraviesa una superficie."
+  op_div_curl:
+    label: "div rot"
+    hint: "Dice cuánto un campo brota de un punto y cuánto gira alrededor de él."
+
+  # ---- t6: vectores y matrices
+
+  op_vector_arith:
+    label: "u + v"
+    hint: "Suma flechas punta con cola, las estira o las combina."
+  op_vector_length:
+    label: "‖v‖"
+    hint: "Mide el largo de una flecha."
+  op_dot_product:
+    label: "u · v"
+    hint: "Mide cuánto apuntan dos flechas en la misma dirección y proyecta la sombra de una sobre la otra."
+  op_matrix_vector:
+    label: "A v"
+    hint: "Aplica una deformación del espacio a un punto o a una figura. Su llave es la matriz inversa."
+  op_matrix_multiply:
+    label: "A B"
+    hint: "Encadena dos deformaciones en una sola, o repite la misma varias veces."
+  op_determinant:
+    label: "det"
+    hint: "Mide cuánto agranda el área o el volumen una deformación; si da cero, la deformación no tiene llave."
+  op_matrix_inverse:
+    label: "A⁻¹"
+    hint: "Construye la deformación que devuelve la cuadrícula a su lugar. Es la llave de aplicar la matriz."
+  op_row_reduce:
+    label: "filas"
+    hint: "Aplica operaciones de fila hasta la forma escalonada y muestra el rango y la forma del conjunto solución."
+  op_change_of_basis:
+    label: "[v]ᴮ"
+    hint: "Escribe una flecha como receta de otras flechas y dice si se puede armar con ellas."
+  op_eigen:
+    label: "λ"
+    hint: "Encuentra las direcciones que una deformación no tuerce y cuánto las estira."
+  op_svd:
+    label: "UΣVᵀ"
+    hint: "Descompone una deformación en un giro, un estiramiento y otro giro."
+  op_linear_program:
+    label: "máx cᵀx"
+    hint: "Busca el mejor punto de una región con bordes rectos, mirando sus esquinas."
+
+  # ---- t7: complejos, series, ecuaciones diferenciales y análisis
+
+  op_complex:
+    label: "a + bi"
+    hint: "Arma un número con parte real y parte imaginaria, y los suma o multiplica como puntos del plano."
+  op_complex_polar:
+    label: "r e^(iθ)"
+    hint: "Describe un número complejo por su tamaño y su giro; multiplicar es girar y escalar, y las raíces forman un polígono."
+  op_slope_field:
+    label: "y' ="
+    hint: "Dibuja en cada punto la pendiente que manda la ecuación y sigue una solución paso a paso."
+  op_solve_ode:
+    label: "y(x) ="
+    hint: "Encuentra la función que cumple la ecuación de su pendiente. Es la llave del campo de pendientes."
+  op_fourier_transform:
+    label: "𝓕"
+    hint: "Descompone una señal en las ondas que la forman. Su llave es la transformada inversa."
+  op_inverse_fourier:
+    label: "𝓕⁻¹"
+    hint: "Vuelve a armar la señal a partir de sus ondas. Es la llave de la transformada."
+  op_taylor:
+    label: "Tₙ"
+    hint: "Aproxima una función con un polinomio que copia sus derivadas y acota cuánto se equivoca."
+  op_convergence_test:
+    label: "converge"
+    hint: "Dice si una sucesión o una serie se estabiliza y hasta dónde vale una serie de potencias."
+
+  # ---- t_disc: lógica, conjuntos, modular, combinatoria, grafos, algoritmos, estructuras
+
+  op_truth_table:
+    label: "p ∧ q"
+    hint: "Arma la tabla con todos los casos de una afirmación con y, o, no y si entonces."
+  op_proof_check:
+    label: "∀ ∃"
+    hint: "Comprueba una afirmación para todos o para alguno: busca un contraejemplo o verifica los dominós de la inducción."
+  op_set_ops:
+    label: "∪ ∩"
+    hint: "Une, intersecta y pregunta si algo pertenece a un conjunto; para un conjunto de números, encuentra su techo y su piso."
+  op_relation_check:
+    label: "a ∼ b"
+    hint: "Dibuja las flechas de una relación, dice si es una función y parte el conjunto en clases."
+  op_mod_arith:
+    label: "mod⁻¹"
+    hint: "En el reloj de n horas encuentra la llave de multiplicar y eleva a potencias grandes sin salirse del reloj."
+  op_caesar:
+    label: "césar"
+    hint: "Corre cada letra k lugares en el alfabeto. Su llave es correrlas k lugares hacia atrás."
+  op_choose:
+    label: "C(n,k)"
+    hint: "Cuenta de cuántas formas se eligen k cosas entre n, y cuántos órdenes tienen n cosas."
+  op_count_outcomes:
+    label: "contar casos"
+    hint: "Cuenta los resultados posibles multiplicando etapas o sumando casos separados."
+  op_recurrence:
+    label: "aₙ₋₁"
+    hint: "Sigue una regla que usa el paso anterior, desde el caso base, y muestra cada llamada."
+  op_graph_properties:
+    label: "grafo"
+    hint: "Cuenta aristas, grados y componentes de un grafo, dice si es un árbol y si tiene recorridos de Euler o de Hamilton."
+  op_graph_search:
+    label: "buscar"
+    hint: "Recorre un grafo por frentes o por profundidad y encuentra el camino más corto."
+  op_euler_characteristic:
+    label: "V − E + F"
+    hint: "Cuenta vértices, aristas y caras; el resultado dice si el grafo se puede dibujar sin cruces."
+  op_graph_coloring:
+    label: "colorear"
+    hint: "Pinta un mapa con la menor cantidad de colores sin que dos vecinos compartan color."
+  op_max_flow:
+    label: "flujo"
+    hint: "Encuentra cuánto puede pasar por una red y el corte que la limita; también empareja dos lados."
+  op_machine_numbers:
+    label: "binario"
+    hint: "Escribe un número en base dos y muestra dónde una máquina redondea."
+  op_algorithm_trace:
+    label: "algoritmo"
+    hint: "Ejecuta paso a paso un ordenamiento, un autómata o un bucle, y cuenta cuántos pasos crecen con el tamaño."
+  op_group_table:
+    label: "grupo"
+    hint: "Compone acciones reversibles en una tabla, dibuja su grafo y parte el grupo en clases."
+  op_field_arith:
+    label: "cuerpo"
+    hint: "Opera en un cuerpo finito donde todo lo distinto de cero tiene llave, también con polinomios."
+  op_topology_check:
+    label: "abierto"
+    hint: "Dice si un conjunto es abierto o cerrado, si está en una sola pieza y si alcanza con finitas cubiertas."
+
+  # ---- t_prob: probabilidad y estadística
+
+  op_probability:
+    label: "P(A)"
+    hint: "Mide la proporción de casos favorables, el complemento y la unión de dos sucesos."
+  op_conditional_probability:
+    label: "P(A|B)"
+    hint: "Mide la probabilidad sabiendo que otra cosa ya pasó, paso a paso en una cadena. Su llave es Bayes."
+  op_bayes:
+    label: "Bayes"
+    hint: "Da vuelta la condición: de P(A dado B) obtiene P(B dado A). Es la llave de condicionar."
+  op_distribution:
+    label: "P(X = k)"
+    hint: "Muestra cómo se reparte una variable al azar: tabla, acumulada, binomial o campana."
+  op_expected_value:
+    label: "E[X]"
+    hint: "Calcula el promedio ponderado por probabilidad: dónde se equilibra la distribución."
+  op_variance:
+    label: "Var"
+    hint: "Mide cuánto se dispersa una variable y la reescribe en unidades de desvío."
+  op_descriptive_stats:
+    label: "promedio"
+    hint: "Nivela los datos para hallar el promedio, la mediana y la tabla de frecuencias."
+  op_regression_line:
+    label: "recta"
+    hint: "Ajusta la recta que mejor sigue una nube de puntos y mide cuánto se alinean."
+  op_inference:
+    label: "muestra"
+    hint: "A partir de una muestra estima el promedio, arma un intervalo de confianza y mide cuán sorprendente es un resultado."
+  op_monte_carlo:
+    label: "simular"
+    hint: "Tira muchos puntos al azar y estima con la proporción que cae adentro."
+  op_entropy:
+    label: "bits"
+    hint: "Mide la sorpresa promedio de una fuente de mensajes en bits."

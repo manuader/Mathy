@@ -37,8 +37,8 @@ nodes:
     next: linalg.vec.add_tip_to_tail
     doc: docs/D-curriculum/D1-espina/30-linalg.vec.vector_as_displacement.md
 
-  - {id: linalg.vec.add_tip_to_tail, area: linalg, level: 6, prereqs: [linalg.vec.vector_as_displacement], grammar: displace, mechanics: [grid_stretch, gears_sequence], literacy: icons, analogy: treasure_map_arrows, misconceptions: [modulus_of_sum_adds], cheatsheet: [cs.linalg.vector_addition_components], calc_unlocks: [op_vector_add]}
-  - {id: linalg.vec.scale_and_reverse, area: linalg, level: 6, prereqs: [linalg.vec.vector_as_displacement, arith.mul.scaling], grammar: scale, mechanics: [grid_stretch], literacy: icons, analogy: treasure_map_arrows, cheatsheet: [cs.linalg.scalar_multiple], calc_unlocks: [op_vector_scale]}
+  - {id: linalg.vec.add_tip_to_tail, area: linalg, level: 6, prereqs: [linalg.vec.vector_as_displacement], grammar: displace, mechanics: [grid_stretch, gears_sequence], literacy: icons, analogy: treasure_map_arrows, misconceptions: [modulus_of_sum_adds], cheatsheet: [cs.linalg.vector_addition_components], calc_unlocks: [op_vector_arith]}
+  - {id: linalg.vec.scale_and_reverse, area: linalg, level: 6, prereqs: [linalg.vec.vector_as_displacement, arith.mul.scaling], grammar: scale, mechanics: [grid_stretch], literacy: icons, analogy: treasure_map_arrows, cheatsheet: [cs.linalg.scalar_multiple], calc_unlocks: [op_vector_arith]}
 
   - id: linalg.vec.span_and_combination
     area: linalg
@@ -53,7 +53,7 @@ nodes:
     misconceptions: [variable_as_label]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [prob.rv.expectation_as_weighted_average, mvcalc.field.arrow_at_every_point, adv.alg.polynomial_arithmetic]
-    calc_unlocks: [op_linear_combination]
+    calc_unlocks: [op_vector_arith]
     cheatsheet: [cs.linalg.linear_combination, cs.linalg.span]
     manim: [grid_scene_two_kinds_of_steps, ledger_scene_recipe_of_steps]
     next: linalg.map.linear_transformation_2d
@@ -73,7 +73,7 @@ nodes:
     misconceptions: [matrix_multiplication_commutes]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [geom.trans.dilation, trig.rot.rotation_matrix, csmath.gfx.transform_matrix, adv.cplx.multiplication_rotates_scales]
-    calc_unlocks: [op_matrix_vector, op_matrix_from_basis_images]
+    calc_unlocks: [op_matrix_vector]
     cheatsheet: [cs.linalg.matrix_columns_are_basis_images, cs.linalg.matrix_vector_product, cs.linalg.rotation_shear_reflection_matrices]
     t_star: 45
     manim: [grid_scene_rubber_sheet_house, grid_scene_basis_arrows_land, pipe_scene_vector_in_vector_out]
@@ -82,7 +82,7 @@ nodes:
     aliases: [linalg.mat.matrix_columns]
 
   - {id: linalg.map.compose_as_multiply, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, alg.fn.composition], grammar: compose, mechanics: [grid_stretch, machine_pipe], literacy: icons, analogy: rubber_grid_with_house, misconceptions: [matrix_multiplication_commutes], cheatsheet: [cs.linalg.matrix_product, cs.linalg.product_not_commutative], calc_unlocks: [op_matrix_multiply]}
-  - {id: linalg.map.determinant_as_area, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, geom.area.rect_and_triangle], grammar: deform, mechanics: [grid_stretch, tiles, construct], literacy: icons, analogy: rubber_grid_undo_stretch, cheatsheet: [cs.linalg.determinant_2x2, cs.linalg.negative_det_flips], calc_unlocks: [op_determinant_2x2], aliases: [linalg.det.area_scaling, linalg.map.determinant_as_area_factor]}
+  - {id: linalg.map.determinant_as_area, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, geom.area.rect_and_triangle], grammar: deform, mechanics: [grid_stretch, tiles, construct], literacy: icons, analogy: rubber_grid_undo_stretch, cheatsheet: [cs.linalg.determinant_2x2, cs.linalg.negative_det_flips], calc_unlocks: [op_determinant], aliases: [linalg.det.area_scaling, linalg.map.determinant_as_area_factor]}
 
   - id: linalg.map.inverse_and_systems
     area: linalg
@@ -97,40 +97,40 @@ nodes:
     misconceptions: [wrong_inverse_choice, matrix_multiplication_commutes]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [mvcalc.int.change_of_variables_jacobian, csmath.gfx.transform_matrix, adv.four.inverse_transform]
-    calc_unlocks: [op_matrix_inverse_2x2, op_solve_linear_system]
+    calc_unlocks: [op_matrix_inverse, op_solve_system]
     cheatsheet: [cs.linalg.inverse_2x2, cs.linalg.solve_ax_equals_b, cs.linalg.singular_no_inverse]
     t_star: 45
     manim: [grid_scene_undo_stretch, chest_scene_matrix_as_key, balance_scene_two_equations_one_grid]
     next: linalg.sys.row_operations
     doc: docs/D-curriculum/D1-espina/33-linalg.map.inverse_and_systems.md
 
-  - {id: linalg.map.linear_transformation_3d, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, linalg.map.determinant_as_area], grammar: deform, mechanics: [grid_stretch, machine_pipe], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.matrix_3x3_columns, cs.linalg.rotation_matrices_3d], calc_unlocks: [op_matrix_vector_3d]}
-  - {id: linalg.map.matrix_counts_routes, area: linalg, level: 6, prereqs: [linalg.map.compose_as_multiply, graph.basic.graph_and_paths], grammar: relate, mechanics: [network_routes, ledger], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.adjacency_matrix_powers], calc_unlocks: [op_matrix_power]}
+  - {id: linalg.map.linear_transformation_3d, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, linalg.map.determinant_as_area], grammar: deform, mechanics: [grid_stretch, machine_pipe], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.matrix_3x3_columns, cs.linalg.rotation_matrices_3d], calc_unlocks: [op_matrix_vector]}
+  - {id: linalg.map.matrix_counts_routes, area: linalg, level: 6, prereqs: [linalg.map.compose_as_multiply, graph.basic.graph_and_paths], grammar: relate, mechanics: [network_routes, ledger], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.adjacency_matrix_powers], calc_unlocks: [op_matrix_multiply]}
 
   # ---- sys -----------------------------------------------------------------
   - {id: linalg.sys.row_operations, area: linalg, level: 6, prereqs: [linalg.map.inverse_and_systems, alg.sys.two_by_two], grammar: invariant, mechanics: [balance, ledger], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [inverse_applied_one_side], cheatsheet: [cs.linalg.row_operations_preserve_solutions], calc_unlocks: [op_row_reduce]}
-  - {id: linalg.sys.elimination_to_echelon, area: linalg, level: 6, prereqs: [linalg.sys.row_operations], grammar: invariant, mechanics: [ledger, balance], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [unwrap_order_inverted], cheatsheet: [cs.linalg.gaussian_elimination, cs.linalg.pivots_and_back_substitution], calc_unlocks: [op_rref]}
-  - {id: linalg.sys.solution_set_shape, area: linalg, level: 6, prereqs: [linalg.sys.elimination_to_echelon, linalg.vec.span_and_combination], grammar: partition, mechanics: [sorter, ledger, grid_stretch], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.rank_and_solutions, cs.linalg.free_variables], calc_unlocks: [op_rank]}
+  - {id: linalg.sys.elimination_to_echelon, area: linalg, level: 6, prereqs: [linalg.sys.row_operations], grammar: invariant, mechanics: [ledger, balance], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [unwrap_order_inverted], cheatsheet: [cs.linalg.gaussian_elimination, cs.linalg.pivots_and_back_substitution], calc_unlocks: [op_row_reduce]}
+  - {id: linalg.sys.solution_set_shape, area: linalg, level: 6, prereqs: [linalg.sys.elimination_to_echelon, linalg.vec.span_and_combination], grammar: partition, mechanics: [sorter, ledger, grid_stretch], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.rank_and_solutions, cs.linalg.free_variables], calc_unlocks: [op_row_reduce]}
 
   # ---- det -----------------------------------------------------------------
-  - {id: linalg.det.cofactor_by_slices, area: linalg, level: 6, prereqs: [linalg.map.determinant_as_area, linalg.map.linear_transformation_3d], grammar: deform, mechanics: [construct, tiles], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.determinant_3x3, cs.linalg.cofactor_expansion], calc_unlocks: [op_determinant_3x3]}
+  - {id: linalg.det.cofactor_by_slices, area: linalg, level: 6, prereqs: [linalg.map.determinant_as_area, linalg.map.linear_transformation_3d], grammar: deform, mechanics: [construct, tiles], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.determinant_3x3, cs.linalg.cofactor_expansion], calc_unlocks: [op_determinant]}
   - {id: linalg.det.factor_multiplies_under_composition, area: linalg, level: 6, prereqs: [linalg.map.determinant_as_area, linalg.map.compose_as_multiply], grammar: compose, mechanics: [grid_stretch, tiles], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.det_of_product, cs.linalg.det_zero_singular]}
 
   # ---- eig -----------------------------------------------------------------
-  - {id: linalg.eig.eigenvector_stays_on_line, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, linalg.det.factor_multiplies_under_composition], grammar: invariant, mechanics: [grid_stretch, construct], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.eigenvector_definition], calc_unlocks: [op_eigen_2x2]}
-  - {id: linalg.eig.characteristic_polynomial, area: linalg, level: 6, prereqs: [linalg.eig.eigenvector_stays_on_line, alg.fn.quadratic_and_sqrt], grammar: invert, mechanics: [chest_key, balance], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [sqrt_loses_negative_branch], cheatsheet: [cs.linalg.characteristic_polynomial, cs.linalg.trace_and_det_from_eigen], calc_unlocks: [op_characteristic_polynomial]}
-  - {id: linalg.eig.diagonalize_as_change_of_view, area: linalg, level: 6, prereqs: [linalg.eig.characteristic_polynomial, linalg.basis.change_of_basis_as_translation], grammar: compose, mechanics: [grid_stretch, machine_pipe, gears_sequence], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.diagonalization, cs.linalg.matrix_powers_via_eigen], calc_unlocks: [op_diagonalize]}
+  - {id: linalg.eig.eigenvector_stays_on_line, area: linalg, level: 6, prereqs: [linalg.map.linear_transformation_2d, linalg.det.factor_multiplies_under_composition], grammar: invariant, mechanics: [grid_stretch, construct], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.eigenvector_definition], calc_unlocks: [op_eigen]}
+  - {id: linalg.eig.characteristic_polynomial, area: linalg, level: 6, prereqs: [linalg.eig.eigenvector_stays_on_line, alg.fn.quadratic_and_sqrt], grammar: invert, mechanics: [chest_key, balance], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [sqrt_loses_negative_branch], cheatsheet: [cs.linalg.characteristic_polynomial, cs.linalg.trace_and_det_from_eigen], calc_unlocks: [op_eigen]}
+  - {id: linalg.eig.diagonalize_as_change_of_view, area: linalg, level: 6, prereqs: [linalg.eig.characteristic_polynomial, linalg.basis.change_of_basis_as_translation], grammar: compose, mechanics: [grid_stretch, machine_pipe, gears_sequence], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.diagonalization, cs.linalg.matrix_powers_via_eigen], calc_unlocks: [op_eigen]}
 
   # ---- basis ---------------------------------------------------------------
-  - {id: linalg.basis.in_span_or_not, area: linalg, level: 6, prereqs: [linalg.vec.span_and_combination], grammar: partition, mechanics: [sorter, grid_stretch], literacy: icons, analogy: two_kinds_of_steps, cheatsheet: [cs.linalg.linear_independence], calc_unlocks: [op_check_in_span], aliases: [linalg.space.in_span_or_not]}
-  - {id: linalg.basis.unique_recipe, area: linalg, level: 6, prereqs: [linalg.basis.in_span_or_not], grammar: invariant, mechanics: [ledger, grid_stretch], literacy: icons, analogy: two_kinds_of_steps, cheatsheet: [cs.linalg.basis_and_dimension, cs.linalg.coordinates_in_basis], calc_unlocks: [op_coordinates_in_basis], aliases: [linalg.vec.basis]}
+  - {id: linalg.basis.in_span_or_not, area: linalg, level: 6, prereqs: [linalg.vec.span_and_combination], grammar: partition, mechanics: [sorter, grid_stretch], literacy: icons, analogy: two_kinds_of_steps, cheatsheet: [cs.linalg.linear_independence], calc_unlocks: [op_change_of_basis], aliases: [linalg.space.in_span_or_not]}
+  - {id: linalg.basis.unique_recipe, area: linalg, level: 6, prereqs: [linalg.basis.in_span_or_not], grammar: invariant, mechanics: [ledger, grid_stretch], literacy: icons, analogy: two_kinds_of_steps, cheatsheet: [cs.linalg.basis_and_dimension, cs.linalg.coordinates_in_basis], calc_unlocks: [op_change_of_basis], aliases: [linalg.vec.basis]}
   - {id: linalg.basis.change_of_basis_as_translation, area: linalg, level: 6, prereqs: [linalg.basis.unique_recipe, linalg.map.inverse_and_systems], grammar: compose, mechanics: [machine_pipe, grid_stretch], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.change_of_basis_matrix], calc_unlocks: [op_change_of_basis]}
 
   # ---- orth ----------------------------------------------------------------
   - {id: linalg.orth.dot_product_as_alignment, area: linalg, level: 6, prereqs: [linalg.vec.add_tip_to_tail, geom.tri.pythagoras_as_tiles], grammar: scale, mechanics: [construct, grid_stretch], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.dot_product, cs.linalg.angle_between_vectors], calc_unlocks: [op_dot_product]}
-  - {id: linalg.orth.projection_as_shadow, area: linalg, level: 6, prereqs: [linalg.orth.dot_product_as_alignment], grammar: scale, mechanics: [construct, grid_stretch], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.projection_formula], calc_unlocks: [op_project_vector], aliases: [linalg.vec.projection_as_shadow]}
-  - {id: linalg.orth.orthonormal_makes_coordinates_easy, area: linalg, level: 6, prereqs: [linalg.orth.projection_as_shadow, linalg.basis.unique_recipe], grammar: compose, mechanics: [construct, ledger], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.gram_schmidt, cs.linalg.orthogonal_matrix_inverse_is_transpose], calc_unlocks: [op_gram_schmidt]}
+  - {id: linalg.orth.projection_as_shadow, area: linalg, level: 6, prereqs: [linalg.orth.dot_product_as_alignment], grammar: scale, mechanics: [construct, grid_stretch], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.projection_formula], calc_unlocks: [op_dot_product], aliases: [linalg.vec.projection_as_shadow]}
+  - {id: linalg.orth.orthonormal_makes_coordinates_easy, area: linalg, level: 6, prereqs: [linalg.orth.projection_as_shadow, linalg.basis.unique_recipe], grammar: compose, mechanics: [construct, ledger], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.gram_schmidt, cs.linalg.orthogonal_matrix_inverse_is_transpose], calc_unlocks: [op_dot_product]}
 
   # ---- svd -----------------------------------------------------------------
-  - {id: linalg.svd.least_squares_as_projection, area: linalg, level: 6, prereqs: [linalg.orth.projection_as_shadow, linalg.sys.solution_set_shape], grammar: invariant, mechanics: [construct, balance], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.normal_equations], calc_unlocks: [op_least_squares]}
+  - {id: linalg.svd.least_squares_as_projection, area: linalg, level: 6, prereqs: [linalg.orth.projection_as_shadow, linalg.sys.solution_set_shape], grammar: invariant, mechanics: [construct, balance], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.normal_equations], calc_unlocks: [op_regression_line]}
   - {id: linalg.svd.rotate_stretch_rotate, area: linalg, level: 6, prereqs: [linalg.eig.diagonalize_as_change_of_view, linalg.orth.orthonormal_makes_coordinates_easy], grammar: compose, mechanics: [grid_stretch, machine_pipe], literacy: full_text, layers: [intuition, visual, symbolic, formal, transfer], cheatsheet: [cs.linalg.svd_decomposition, cs.linalg.singular_values_as_stretch], calc_unlocks: [op_svd]}

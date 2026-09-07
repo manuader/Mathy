@@ -1,0 +1,1292 @@
+# Desafíos de Mathy (problemas estilo olimpíada). DATA, sin texto visible:
+# título, enunciado, pistas y solución narrada viven en ../locales/es/challenges.yaml
+# bajo challenges.<id>.{title, statement, hints[n], solution_steps[n]}.
+# Prosa, ejemplo canónico y tabla en S0-desafios.md. Constantes (créditos por estado,
+# mínimo de desafíos para mastered) solo en ../K-evaluacion.md.
+#
+# Campos por desafío:
+#   id                      ch.<area>.<slug>; el slug nombra la idea del problema
+#   area                    geom | alg | arith | disc | prob | trig | calc | linalg
+#                           (calc agrupa nodos calc1 y calc2)
+#   tier                    training | regional | international
+#   requires                nodos del grafo que deben estar en `ready` para desbloquear;
+#                           el validador deriva de acá el campo `challenges` de cada nodo
+#   mechanics               la primera es la mecánica dominante; construct cuando hay figura
+#   literacy_min            enum literacy del schema; none = jugable sin leer (niveles 0–2)
+#   figure                  id de asset SVG (svg.ch.*) o generated:<generador>
+#   hidden_data             qué dato falta, qué construcción u operación lo descubre y qué
+#                           entrada de cheatsheet lo justifica
+#   expected_constructions  lista de caminos válidos; cada camino es una lista ordenada
+#   cheatsheet_refs         entradas cs.* declaradas por nodos del grafo (siempre visibles)
+#   strategy_misconceptions ids de la sección strategy_misconceptions de este archivo;
+#                           las misconceptions de L se heredan del vecindario de `requires`
+#   hints                   los tres niveles fijos; el texto de cada nivel es por desafío
+#   solution_steps          pasos abstractos como ids de operación para el modo "visto"
+#   answer_kind             number | expression | set | proof_sketch
+#   generator               generador de variantes con semilla y sus parámetros; null si
+#                           el desafío es una figura fija
+
+version: 1
+
+defaults:
+  hint_levels: 3
+  hint_ids: [what_is_missing, which_line_reveals_it, show_construction]
+  tiers: [training, regional, international]
+  states: [locked, available, solved_no_hints, solved_hints, seen]
+  cheatsheet_open_on_start: true
+
+# Misconceptions de estrategia. Complementan la taxonomía de L (../L-modelo-errores/misconceptions.yaml):
+# no describen una regla algebraica mal aplicada sino una decisión de plan equivocada.
+# `signal` es el evento del motor sintético o del StepEngine que las dispara (O-arquitectura-tecnica.md).
+# Patrón y mecánica siguen el contrato de explanation_patterns.yaml; replay_on_mechanic debe
+# declarar construct en mechanics_compatible (cambio pendiente en L, ver S0).
+strategy_misconceptions:
+  - id: strategy_missing_auxiliary_line
+    category: strategy
+    signal: answer_or_mark_attempted_while_required_fact_underived
+    pattern: replay_on_mechanic
+    mechanic: construct
+    severity: 2
+  - id: assumed_right_angle
+    category: strategy
+    signal: mark_angle_equal_90_numerically_false
+    pattern: replay_on_mechanic
+    mechanic: construct
+    severity: 3
+  - id: assumed_equal_segments
+    category: strategy
+    signal: mark_segments_equal_numerically_false
+    pattern: replay_on_mechanic
+    mechanic: construct
+    severity: 3
+  - id: assumed_parallel
+    category: strategy
+    signal: mark_lines_parallel_numerically_false
+    pattern: replay_on_mechanic
+    mechanic: construct
+    severity: 2
+  - id: assumed_same_whole
+    category: strategy
+    signal: fraction_applied_to_original_whole_after_whole_changed
+    pattern: missing_piece_tiles
+    mechanic: tiles
+    severity: 2
+  - id: counted_twice
+    category: strategy
+    signal: same_object_in_two_rows_of_ledger
+    pattern: replay_on_mechanic
+    mechanic: ledger
+    severity: 2
+  - id: ignored_case
+    category: strategy
+    signal: answer_set_misses_branch_or_bin
+    pattern: two_paths_diverge
+    mechanic: sorter
+    severity: 2
+  - id: assumed_uniform_space
+    category: strategy
+    signal: sample_space_built_from_outcome_values_not_from_draws
+    pattern: replay_on_mechanic
+    mechanic: urn_dice
+    severity: 3
+  - id: ignored_base_rate
+    category: strategy
+    signal: conditional_computed_without_prior_row
+    pattern: replay_on_mechanic
+    mechanic: sorter
+    severity: 3
+  - id: ignored_constraint
+    category: strategy
+    signal: objective_optimized_with_two_free_variables
+    pattern: replay_on_mechanic
+    mechanic: slope_walker
+    severity: 3
+  - id: tracked_wrong_basis_arrow
+    category: strategy
+    signal: matrix_column_read_from_image_of_wrong_vector
+    pattern: replay_on_mechanic
+    mechanic: grid_stretch
+    severity: 2
+
+challenges:
+
+  # =========================================================================
+  # GEOMETRÍA
+  # =========================================================================
+
+  - id: ch.geom.trapezoid_hidden_height
+    area: geom
+    tier: training
+    requires: [geom.area.trapezoid_as_two_triangles, geom.tri.pythagoras_as_tiles, geom.cons.auxiliary_lines]
+    mechanics: [construct, tiles]
+    literacy_min: icons
+    figure: generated:gen_trapezoid_hidden_height
+    hidden_data:
+      - {missing: height, discovered_by: drop_altitude_from_c, uses: cs.geom.pythagoras}
+      - {missing: segment_bh, discovered_by: subtract_bases, uses: cs.geom.strategy_draw_altitude}
+    expected_constructions:
+      - [drop_altitude_from_c, mark_right_angle_at_h, apply_pythagoras_on_cbh]
+      - [drop_altitude_from_d, mark_right_angle_at_h, apply_pythagoras_on_dah]
+      - [draw_diagonal_ac, drop_altitude_from_c, apply_pythagoras_on_cbh]
+    cheatsheet_refs: [cs.geom.area_trapezoid, cs.geom.pythagoras, cs.geom.strategy_draw_altitude, cs.geom.strategy_find_right_triangle]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_right_angle, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [drop_altitude, subtract_bases_for_leg, apply_pythagoras, compute_area]
+    answer_kind: number
+    generator:
+      name: gen_trapezoid_hidden_height
+      params: {triples: [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]], long_base_range: [8, 24], right_angle_at_base: true}
+
+  - id: ch.geom.l_shape_missing_side
+    area: geom
+    tier: training
+    requires: [geom.area.rect_and_triangle, geom.area.perimeter_vs_area, geom.cons.auxiliary_lines]
+    mechanics: [construct, tiles]
+    literacy_min: icons
+    figure: generated:gen_l_shape_missing_side
+    hidden_data:
+      - {missing: inner_vertical_side, discovered_by: extend_side_to_bounding_rectangle, uses: cs.geom.strategy_extend_side}
+    expected_constructions:
+      - [extend_side_to_bounding_rectangle, mark_equal_opposite_sides, subtract_corner_rectangle]
+      - [draw_line_splitting_into_two_rectangles, mark_equal_opposite_sides, add_two_rectangles]
+    cheatsheet_refs: [cs.geom.area_rectangle, cs.geom.perimeter_sum_of_sides, cs.geom.strategy_extend_side]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [extend_side, mark_equal_segments, compute_area, subtract_areas]
+    answer_kind: number
+    generator:
+      name: gen_l_shape_missing_side
+      params: {outer_range: [6, 20], notch_fraction_range: [0.2, 0.6], ask: [area, perimeter]}
+
+  - id: ch.geom.chord_distance_from_center
+    area: geom
+    tier: regional
+    requires: [geom.circle.radius_bisects_chord, geom.tri.pythagoras_as_tiles, geom.cons.auxiliary_lines]
+    mechanics: [construct, tiles]
+    literacy_min: short_text
+    figure: generated:gen_chord_in_circle
+    hidden_data:
+      - {missing: half_chord, discovered_by: drop_perpendicular_from_center, uses: cs.geom.perpendicular_from_center_bisects_chord}
+      - {missing: distance_center_to_chord, discovered_by: apply_pythagoras_on_radius_triangle, uses: cs.geom.pythagoras}
+    expected_constructions:
+      - [draw_radius_to_chord_end, drop_perpendicular_from_center, mark_equal_half_chords, apply_pythagoras]
+      - [draw_radii_to_both_chord_ends, mark_isosceles, drop_altitude_from_center, apply_pythagoras]
+    cheatsheet_refs: [cs.geom.perpendicular_from_center_bisects_chord, cs.geom.strategy_drop_perpendicular_from_center, cs.geom.pythagoras, cs.geom.strategy_draw_radii_isosceles]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments, assumed_right_angle]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_radius, drop_perpendicular, mark_equal_segments, apply_pythagoras]
+    answer_kind: number
+    generator:
+      name: gen_chord_in_circle
+      params: {triples: [[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]], ask: [distance_to_center, radius, chord_length]}
+
+  - id: ch.geom.inscribed_right_angle_area
+    area: geom
+    tier: regional
+    requires: [geom.circle.inscribed_half_central, geom.tri.pythagoras_as_tiles, geom.area.rect_and_triangle]
+    mechanics: [construct, tiles]
+    literacy_min: short_text
+    figure: generated:gen_triangle_on_diameter
+    hidden_data:
+      - {missing: right_angle_at_c, discovered_by: draw_radius_to_c_and_compare_central_angle, uses: cs.geom.inscribed_angle_half_central}
+      - {missing: leg_bc, discovered_by: apply_pythagoras, uses: cs.geom.pythagoras}
+    expected_constructions:
+      - [draw_radius_oc, mark_central_angle_straight, mark_right_angle_at_c, apply_pythagoras, compute_area]
+      - [draw_radius_oc, mark_two_isosceles_triangles, sum_angles_to_half_turn, mark_right_angle_at_c, apply_pythagoras, compute_area]
+    cheatsheet_refs: [cs.geom.inscribed_angle_half_central, cs.geom.strategy_draw_radii_isosceles, cs.geom.pythagoras, cs.geom.area_triangle_half_base_height]
+    strategy_misconceptions: [assumed_right_angle, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_radius, inscribed_angle_half_central, mark_right_angle, apply_pythagoras, compute_area]
+    answer_kind: number
+    generator:
+      name: gen_triangle_on_diameter
+      params: {triples: [[3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15]], hide: [one_leg]}
+
+  - id: ch.geom.parallel_cut_missing_length
+    area: geom
+    tier: regional
+    requires: [geom.sim.similarity_as_scale, geom.angle.parallel_transversal, geom.cons.auxiliary_lines]
+    mechanics: [construct, grid_stretch]
+    literacy_min: short_text
+    figure: generated:gen_parallel_cut_triangle
+    hidden_data:
+      - {missing: equal_angles_at_parallel, discovered_by: mark_corresponding_angles, uses: cs.geom.parallel_angles_equal_or_supplementary}
+      - {missing: scale_factor, discovered_by: similar_triangles_ratio, uses: cs.geom.similar_ratios_equal}
+    expected_constructions:
+      - [mark_corresponding_angles_on_transversal, mark_shared_angle, declare_similar, similar_triangles_ratio]
+      - [lift_copy_of_small_triangle, scale_onto_big_triangle, similar_triangles_ratio]
+    cheatsheet_refs: [cs.geom.similar_ratios_equal, cs.geom.strategy_parallel_cuts_similar_triangle, cs.geom.parallel_angles_equal_or_supplementary]
+    strategy_misconceptions: [assumed_parallel, assumed_equal_segments, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [mark_equal_angles, declare_similar, similar_triangles_ratio, solve_proportion]
+    answer_kind: number
+    generator:
+      name: gen_parallel_cut_triangle
+      params: {scale_factors: [1.5, 2, 2.5, 3], side_range: [4, 18], ask: [whole_side, cut_segment]}
+
+  - id: ch.geom.altitude_hypotenuse_three_similar
+    area: geom
+    tier: international
+    requires: [geom.tri.pythagoras_as_tiles, geom.sim.similarity_as_scale, geom.cons.hidden_data_hunt]
+    mechanics: [construct, tiles]
+    literacy_min: short_text
+    figure: generated:gen_right_triangle_altitude_hypotenuse
+    hidden_data:
+      - {missing: hypotenuse, discovered_by: apply_pythagoras, uses: cs.geom.pythagoras}
+      - {missing: altitude, discovered_by: equate_two_area_formulas, uses: cs.geom.area_triangle_half_base_height}
+      - {missing: foot_segments, discovered_by: similar_triangles_ratio, uses: cs.geom.similar_ratios_equal}
+    expected_constructions:
+      - [apply_pythagoras, drop_altitude_to_hypotenuse, equate_two_area_formulas, similar_triangles_ratio]
+      - [drop_altitude_to_hypotenuse, mark_three_similar_triangles, similar_triangles_ratio, similar_triangles_ratio]
+    cheatsheet_refs: [cs.geom.pythagoras, cs.geom.strategy_find_right_triangle, cs.geom.similar_ratios_equal, cs.geom.area_triangle_half_base_height, cs.geom.strategy_list_what_you_know, cs.geom.strategy_work_backwards_from_goal]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments, assumed_right_angle]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [apply_pythagoras, drop_altitude, equate_two_area_formulas, similar_triangles_ratio]
+    answer_kind: number
+    generator:
+      name: gen_right_triangle_altitude_hypotenuse
+      params: {triples: [[3, 4, 5], [5, 12, 13], [8, 15, 17]], ask: [altitude, foot_segment, product_of_foot_segments]}
+
+  - id: ch.geom.frustum_volume_by_extension
+    area: geom
+    tier: international
+    requires: [geom.solid.cone_sphere_by_pouring, geom.sim.similarity_as_scale, geom.cons.auxiliary_lines]
+    mechanics: [construct, fill_accumulate]
+    literacy_min: short_text
+    figure: generated:gen_cone_frustum
+    hidden_data:
+      - {missing: apex_height, discovered_by: extend_slant_sides_to_apex, uses: cs.geom.strategy_extend_side}
+      - {missing: small_cone_height, discovered_by: similar_triangles_ratio, uses: cs.geom.similar_ratios_equal}
+    expected_constructions:
+      - [draw_axis_cross_section, extend_slant_sides_to_apex, similar_triangles_ratio, compute_volume_big_cone, compute_volume_small_cone, subtract_volumes]
+      - [draw_axis_cross_section, extend_slant_sides_to_apex, similar_triangles_ratio, scale_volume_by_k_cubed, subtract_volumes]
+    cheatsheet_refs: [cs.geom.volume_cone_third_cylinder, cs.geom.similar_ratios_equal, cs.geom.strategy_extend_side, cs.geom.area_scales_by_k_squared]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_cross_section, extend_side, similar_triangles_ratio, compute_volume, subtract_volumes]
+    answer_kind: expression
+    generator:
+      name: gen_cone_frustum
+      params: {radius_pairs: [[2, 4], [3, 6], [2, 6], [3, 9]], frustum_height_range: [3, 12], answer_in_terms_of_pi: true}
+
+  - id: ch.geom.reflect_shortest_path_river
+    area: geom
+    tier: international
+    requires: [geom.trans.rotation_reflection, geom.tri.inequality_shortest_path, geom.coord.distance_as_pythagoras]
+    mechanics: [construct, grid_stretch]
+    literacy_min: short_text
+    figure: generated:gen_two_points_one_line
+    hidden_data:
+      - {missing: touch_point_on_line, discovered_by: reflect_point_across_line_and_join, uses: cs.geom.rigid_motions_preserve_lengths_angles}
+      - {missing: total_length, discovered_by: apply_distance_formula, uses: cs.geom.distance_formula}
+    expected_constructions:
+      - [reflect_b_across_line, draw_segment_a_to_b_reflected, mark_intersection_with_line, apply_distance_formula]
+      - [reflect_a_across_line, draw_segment_a_reflected_to_b, mark_intersection_with_line, apply_distance_formula]
+    cheatsheet_refs: [cs.geom.rigid_motions_preserve_lengths_angles, cs.geom.triangle_inequality, cs.geom.distance_formula]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [reflect_point, draw_straight_segment, triangle_inequality_justifies_minimum, apply_distance_formula]
+    answer_kind: number
+    generator:
+      name: gen_two_points_one_line
+      params: {grid_range: [0, 12], force_integer_answer: true}
+
+  # ---- rompecabezas de baldosas, jugables sin leer (niveles 0–2) ----------
+
+  - id: ch.geom.tiles_hidden_corner
+    area: geom
+    tier: training
+    requires: [geom.area.rect_and_triangle, arith.mul.rows_and_columns]
+    mechanics: [tiles, construct]
+    literacy_min: none
+    figure: generated:gen_tiles_covered_corner
+    hidden_data:
+      - {missing: tiles_under_cover, discovered_by: extend_row_and_column_lines_under_cover, uses: cs.geom.area_rectangle}
+    expected_constructions:
+      - [extend_row_lines_under_cover, extend_column_lines_under_cover, count_rows_times_columns]
+      - [drag_visible_row_as_copy_under_cover, count_rows_times_columns]
+    cheatsheet_refs: [cs.geom.area_rectangle, cs.arith.mul_order_irrelevant]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [extend_side, count_rows, count_columns, compute_area]
+    answer_kind: number
+    generator:
+      name: gen_tiles_covered_corner
+      params: {rows_range: [2, 6], cols_range: [3, 8], cover_fraction_range: [0.2, 0.5]}
+
+  - id: ch.geom.tiles_l_shape_split
+    area: geom
+    tier: training
+    requires: [geom.area.rect_and_triangle, arith.add.combine_groups]
+    mechanics: [tiles, construct]
+    literacy_min: none
+    figure: generated:gen_tiles_l_shape_covered
+    hidden_data:
+      - {missing: tiles_in_covered_arm, discovered_by: draw_line_splitting_into_two_rectangles, uses: cs.geom.area_rectangle}
+    expected_constructions:
+      - [draw_line_splitting_into_two_rectangles, count_each_rectangle, add_two_rectangles]
+      - [extend_side_to_bounding_rectangle, count_bounding_rectangle, subtract_corner_rectangle]
+    cheatsheet_refs: [cs.geom.area_rectangle, cs.arith.add_as_join_groups]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_splitting_line, compute_area, compute_area, add_areas]
+    answer_kind: number
+    generator:
+      name: gen_tiles_l_shape_covered
+      params: {outer_range: [4, 9], covered_arm: [horizontal, vertical]}
+
+  - id: ch.geom.tiles_triangle_half_rectangle
+    area: geom
+    tier: training
+    requires: [geom.area.rect_and_triangle, geom.area.shear_invariant]
+    mechanics: [tiles, construct]
+    literacy_min: none
+    figure: generated:gen_tiles_triangle_on_grid
+    hidden_data:
+      - {missing: tiles_inside_triangle, discovered_by: complete_rectangle_around_triangle, uses: cs.geom.area_triangle_half_base_height}
+    expected_constructions:
+      - [drop_altitude_from_apex, complete_rectangle_around_each_half, halve_each_rectangle, add_halves]
+      - [complete_rectangle_around_triangle, halve_rectangle]
+    cheatsheet_refs: [cs.geom.area_triangle_half_base_height, cs.geom.area_rectangle, cs.geom.strategy_draw_altitude]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [drop_altitude, complete_rectangle, halve_rectangle, compute_area]
+    answer_kind: number
+    generator:
+      name: gen_tiles_triangle_on_grid
+      params: {base_range: [4, 10], height_range: [2, 6], apex_position: [inside, over_end]}
+
+  - id: ch.geom.tiles_slanted_same_as_straight
+    area: geom
+    tier: regional
+    requires: [geom.area.shear_invariant, geom.area.rect_and_triangle]
+    mechanics: [tiles, construct]
+    literacy_min: none
+    figure: generated:gen_tiles_parallelogram_covered
+    hidden_data:
+      - {missing: tiles_in_slanted_figure, discovered_by: cut_triangle_and_slide_to_other_side, uses: cs.geom.area_parallelogram_base_height}
+    expected_constructions:
+      - [drop_altitude_from_corner, lift_copy_of_cut_triangle, slide_copy_to_other_side, count_rows_times_columns]
+      - [drop_altitude_from_corner, mark_equal_segments_base_and_top, count_rows_times_columns]
+    cheatsheet_refs: [cs.geom.area_parallelogram_base_height, cs.geom.area_rectangle]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [drop_altitude, cut_and_slide, compute_area]
+    answer_kind: number
+    generator:
+      name: gen_tiles_parallelogram_covered
+      params: {base_range: [3, 8], height_range: [2, 5], shear_range: [1, 3]}
+
+  - id: ch.geom.tiles_hidden_layers_volume
+    area: geom
+    tier: regional
+    requires: [geom.solid.volume_as_layers, geom.area.rect_and_triangle]
+    mechanics: [fill_accumulate, tiles, construct]
+    literacy_min: none
+    figure: generated:gen_cubes_box_partly_hidden
+    hidden_data:
+      - {missing: cubes_in_hidden_layers, discovered_by: extend_edge_lines_to_count_layers, uses: cs.geom.volume_prism_base_times_height}
+    expected_constructions:
+      - [count_base_layer_tiles, extend_vertical_edges_to_count_layers, multiply_base_by_layers]
+      - [lift_copy_of_visible_layer, stack_copies_to_top, count_stacked]
+    cheatsheet_refs: [cs.geom.volume_prism_base_times_height, cs.geom.area_rectangle]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [compute_area, count_layers, compute_volume]
+    answer_kind: number
+    generator:
+      name: gen_cubes_box_partly_hidden
+      params: {base_range: [2, 4], layers_range: [2, 5], hidden_fraction_range: [0.3, 0.6]}
+
+  # =========================================================================
+  # ÁLGEBRA
+  # =========================================================================
+
+  - id: ch.alg.hidden_equation_ages
+    area: alg
+    tier: training
+    requires: [alg.eq.word_to_equation, alg.eq.variable_both_sides]
+    mechanics: [balance, ledger]
+    literacy_min: short_text
+    figure: svg.ch.alg.two_people_timeline
+    hidden_data:
+      - {missing: the_equation, discovered_by: name_unknown_and_translate_both_moments, uses: cs.alg.words_to_symbols_table}
+    expected_constructions:
+      - [name_unknown_box, write_first_moment_as_expression, write_second_moment_as_expression, put_both_on_balance, collect_boxes_one_side, solve_linear]
+    cheatsheet_refs: [cs.alg.words_to_symbols_table, cs.alg.collect_boxes_on_one_side, cs.alg.check_by_substituting]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_unknown, translate_to_equation, collect_like_terms, solve_linear, check_by_substituting]
+    answer_kind: number
+    generator:
+      name: gen_age_relation
+      params: {ratio_now: [2, 3, 4], years_shift_range: [3, 12], integer_solutions_only: true}
+
+  - id: ch.alg.two_receipts_system
+    area: alg
+    tier: training
+    requires: [alg.sys.two_by_two, alg.eq.word_to_equation]
+    mechanics: [balance, ledger]
+    literacy_min: short_text
+    figure: svg.ch.alg.two_market_receipts
+    hidden_data:
+      - {missing: second_equation, discovered_by: read_second_receipt_as_balance, uses: cs.alg.words_to_symbols_table}
+      - {missing: one_unknown_isolated, discovered_by: eliminate_by_scaling_one_balance, uses: cs.alg.elimination_method}
+    expected_constructions:
+      - [write_receipt_one_as_balance, write_receipt_two_as_balance, scale_one_balance_to_match, subtract_balances, solve_linear, substitute_back]
+      - [write_receipt_one_as_balance, write_receipt_two_as_balance, isolate_one_box, substitute_into_other_balance, solve_linear]
+    cheatsheet_refs: [cs.alg.elimination_method, cs.alg.substitution_method, cs.alg.words_to_symbols_table]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [translate_to_equation, translate_to_equation, eliminate_one_unknown, solve_linear, substitute_back]
+    answer_kind: set
+    generator:
+      name: gen_two_receipts
+      params: {price_range: [1, 12], quantity_range: [1, 6], integer_prices_only: true}
+
+  - id: ch.alg.rectangle_perimeter_area_quadratic
+    area: alg
+    tier: regional
+    requires: [alg.eq.quadratic_roots, alg.expr.factor_trinomial, geom.area.rect_and_triangle]
+    mechanics: [tiles, chest_key]
+    literacy_min: short_text
+    figure: generated:gen_rectangle_from_sum_and_product
+    hidden_data:
+      - {missing: second_side_in_terms_of_first, discovered_by: half_perimeter_minus_side, uses: cs.geom.area_rectangle}
+      - {missing: the_quadratic, discovered_by: area_as_product_of_side_and_complement, uses: cs.alg.zero_product_rule}
+    expected_constructions:
+      - [name_one_side, write_other_side_from_perimeter, write_area_as_product, factor_trinomial, zero_product_rule]
+      - [name_one_side, write_other_side_from_perimeter, write_area_as_product, quadratic_formula]
+      - [guess_pair_with_given_sum_and_product, check_by_substituting]
+    cheatsheet_refs: [cs.alg.zero_product_rule, cs.alg.quadratic_formula, cs.alg.factor_trinomial_find_pair, cs.geom.area_rectangle]
+    strategy_misconceptions: [ignored_constraint, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_unknown, translate_to_equation, expand_or_factor, solve_quadratic, discard_invalid_root]
+    answer_kind: set
+    generator:
+      name: gen_rectangle_from_sum_and_product
+      params: {side_range: [2, 15], distinct_sides: true}
+
+  - id: ch.alg.doublings_until_overflow
+    area: alg
+    tier: regional
+    requires: [alg.fn.logarithm, alg.fn.exponential_growth]
+    mechanics: [gears_sequence, chest_key]
+    literacy_min: short_text
+    figure: svg.ch.alg.doubling_gear_track
+    hidden_data:
+      - {missing: number_of_turns, discovered_by: read_log_as_count_of_scalings, uses: cs.alg.log_counts_scalings}
+    expected_constructions:
+      - [write_growth_as_power, put_target_on_other_pan, apply_log_key_both_sides, round_up_to_whole_turn]
+      - [turn_gear_until_track_passes_target, count_turns]
+    cheatsheet_refs: [cs.alg.log_counts_scalings, cs.alg.exponential_multiplies_each_step, cs.alg.log_undoes_exponential]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [translate_to_equation, apply_inverse_key, interpret_as_count, round_to_context]
+    answer_kind: number
+    generator:
+      name: gen_doubling_until_target
+      params: {base: [2, 3], start_range: [1, 50], target_range: [500, 100000]}
+
+  - id: ch.alg.absolute_value_two_cases
+    area: alg
+    tier: regional
+    requires: [alg.abs.distance_two_branches, alg.eq.multi_step]
+    mechanics: [chest_key, gears_sequence, sorter]
+    literacy_min: short_text
+    figure: generated:gen_two_distances_on_line
+    hidden_data:
+      - {missing: sign_regions, discovered_by: mark_where_each_expression_changes_sign, uses: cs.alg.abs_equation_two_cases}
+    expected_constructions:
+      - [mark_zero_points_on_track, split_track_into_regions, open_abs_in_each_region, solve_linear_per_region, keep_solutions_inside_region]
+      - [read_abs_as_distance, walk_track_until_total_distance_matches, mark_both_endpoints]
+    cheatsheet_refs: [cs.alg.abs_as_distance_from_zero, cs.alg.abs_equation_two_cases, cs.alg.unwrap_outermost_first]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [mark_sign_regions, split_into_cases, solve_linear, check_case_validity, collect_solution_set]
+    answer_kind: set
+    generator:
+      name: gen_two_distances_on_line
+      params: {anchor_range: [-8, 8], total_distance_range: [4, 20], two_solutions: true}
+
+  - id: ch.alg.symmetric_sum_of_squares
+    area: alg
+    tier: international
+    requires: [alg.expr.binomial_product, alg.sys.two_by_two]
+    mechanics: [tiles, balance]
+    literacy_min: short_text
+    figure: generated:gen_square_of_sum_tiles
+    hidden_data:
+      - {missing: identity_linking_sum_product_and_squares, discovered_by: lay_square_of_sum_as_four_tiles, uses: cs.alg.square_of_a_sum}
+    expected_constructions:
+      - [lay_square_with_side_x_plus_y, split_into_four_tiles, mark_two_rectangles_as_product, remove_product_tiles_from_square, read_remaining_area]
+      - [square_both_sides_of_sum_balance, subtract_twice_product_from_both_pans]
+    cheatsheet_refs: [cs.alg.square_of_a_sum, cs.alg.binomial_product_four_tiles, cs.alg.substitution_method]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [lay_square_of_sum, split_into_tiles, subtract_product_tiles, compute_expression]
+    answer_kind: number
+    generator:
+      name: gen_sum_and_product_given
+      params: {sum_range: [3, 20], product_range: [2, 90], ask: [sum_of_squares, sum_of_cubes, difference]}
+
+  # =========================================================================
+  # ARITMÉTICA Y TEORÍA DE NÚMEROS
+  # =========================================================================
+
+  - id: ch.arith.plates_hidden_remainder
+    area: arith
+    tier: training
+    requires: [arith.div.remainder, arith.mul.rows_and_columns]
+    mechanics: [tiles, sorter]
+    literacy_min: none
+    figure: generated:gen_plates_partly_covered
+    hidden_data:
+      - {missing: marbles_under_cover, discovered_by: complete_rows_of_equal_plates, uses: cs.arith.quotient_times_divisor_plus_remainder}
+    expected_constructions:
+      - [extend_row_lines_under_cover, count_full_plates, count_leftover]
+      - [drag_visible_plate_as_copy_under_cover, count_full_plates, count_leftover]
+    cheatsheet_refs: [cs.arith.quotient_times_divisor_plus_remainder, cs.arith.mul_order_irrelevant]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [extend_side, count_groups, count_leftover]
+    answer_kind: number
+    generator:
+      name: gen_plates_partly_covered
+      params: {plate_size_range: [2, 5], plates_range: [3, 7], remainder_range: [0, 4]}
+
+  - id: ch.arith.two_clocks_same_position
+    area: arith
+    tier: training
+    requires: [arith.div.remainder, arith.num.divisible_or_not, disc.mod.clock_equivalence]
+    mechanics: [gears_sequence, sorter]
+    literacy_min: icons
+    figure: svg.ch.arith.two_gears_two_marks
+    hidden_data:
+      - {missing: first_common_position, discovered_by: list_positions_of_each_gear_and_align, uses: cs.disc.congruence_mod_n}
+    expected_constructions:
+      - [list_multiples_plus_remainder_gear_a, list_multiples_plus_remainder_gear_b, mark_first_shared_number]
+      - [turn_both_gears_together_until_marks_align, count_turns]
+    cheatsheet_refs: [cs.disc.congruence_mod_n, cs.arith.quotient_times_divisor_plus_remainder, cs.arith.divisibility_shortcuts]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [list_candidates_first_modulus, filter_by_second_modulus, take_smallest]
+    answer_kind: number
+    generator:
+      name: gen_two_remainders
+      params: {moduli_pairs: [[3, 5], [4, 7], [5, 6], [3, 7]], answer_max: 60}
+
+  - id: ch.arith.count_rectangles_divisors
+    area: arith
+    tier: regional
+    requires: [arith.num.factor_tree, arith.mul.rows_and_columns]
+    mechanics: [tiles, network_routes]
+    literacy_min: icons
+    figure: generated:gen_area_fixed_rectangles
+    hidden_data:
+      - {missing: prime_factorization, discovered_by: build_factor_tree, uses: cs.arith.factor_tree_same_leaves}
+      - {missing: number_of_divisors, discovered_by: count_ways_to_pick_each_prime_power, uses: cs.arith.prime_has_one_rectangle}
+    expected_constructions:
+      - [build_factor_tree, count_exponent_choices_per_prime, multiply_choices, pair_divisors_into_rectangles]
+      - [lay_rectangles_by_increasing_width, stop_at_square_root, count_distinct]
+    cheatsheet_refs: [cs.arith.prime_has_one_rectangle, cs.arith.factor_tree_same_leaves, cs.arith.mul_order_irrelevant]
+    strategy_misconceptions: [counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [factor_into_primes, count_divisors_from_exponents, pair_into_rectangles, count_distinct]
+    answer_kind: number
+    generator:
+      name: gen_area_fixed_rectangles
+      params: {area_candidates: [36, 48, 60, 72, 100, 120, 144], count_square_once: true}
+
+  - id: ch.arith.hidden_digit_divisibility
+    area: arith
+    tier: regional
+    requires: [arith.num.divisible_or_not, arith.place.base_ten_carry]
+    mechanics: [sorter, gears_sequence]
+    literacy_min: icons
+    figure: generated:gen_number_with_hidden_digit
+    hidden_data:
+      - {missing: digit_sum_condition, discovered_by: apply_divisibility_by_nine_shortcut, uses: cs.arith.divisibility_shortcuts}
+      - {missing: last_two_digits_condition, discovered_by: apply_divisibility_by_four_shortcut, uses: cs.arith.divisibility_shortcuts}
+    expected_constructions:
+      - [sort_candidate_digits_by_first_rule, sort_survivors_by_second_rule, read_survivors]
+      - [try_each_digit_on_odometer, check_both_rules, read_survivors]
+    cheatsheet_refs: [cs.arith.divisibility_shortcuts, cs.arith.ten_ones_make_one_ten]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [apply_first_shortcut, apply_second_shortcut, intersect_candidates]
+    answer_kind: set
+    generator:
+      name: gen_number_with_hidden_digit
+      params: {digits: [4, 5], rule_pairs: [[9, 4], [3, 8], [9, 2], [11, 5]], allow_two_answers: true}
+
+  - id: ch.arith.fraction_of_the_rest
+    area: arith
+    tier: regional
+    requires: [arith.frac.multiply, arith.frac.common_unit]
+    mechanics: [tiles, ledger]
+    literacy_min: icons
+    figure: generated:gen_chocolate_bar_successive_bites
+    hidden_data:
+      - {missing: new_whole_after_first_bite, discovered_by: shade_remaining_bar_and_regrid, uses: cs.arith.fraction_of_fraction}
+      - {missing: common_unit, discovered_by: regrid_bar_into_common_denominator, uses: cs.arith.common_denominator}
+    expected_constructions:
+      - [shade_first_fraction, regrid_remaining_part, shade_second_fraction_of_remaining, count_unshaded_in_common_unit]
+    cheatsheet_refs: [cs.arith.fraction_of_fraction, cs.arith.common_denominator, cs.arith.mul_as_scaling]
+    strategy_misconceptions: [assumed_same_whole]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [take_first_fraction, name_new_whole, take_fraction_of_rest, express_in_common_unit]
+    answer_kind: expression
+    generator:
+      name: gen_successive_fractions
+      params: {first_fraction: [[1, 3], [1, 4], [2, 5]], second_fraction: [[1, 2], [1, 4], [2, 3]], ask: [what_remains, what_second_person_ate]}
+
+  - id: ch.arith.parity_invariant_coins
+    area: arith
+    tier: international
+    requires: [arith.num.divisible_or_not, arith.int.add_signed, disc.mod.clock_equivalence]
+    mechanics: [gears_sequence, sorter]
+    literacy_min: short_text
+    figure: generated:gen_coins_flip_pairs
+    hidden_data:
+      - {missing: the_invariant, discovered_by: track_count_of_heads_modulo_two_after_each_move, uses: cs.disc.congruence_mod_n}
+    expected_constructions:
+      - [count_heads_at_start, apply_one_move_and_recount, mark_parity_unchanged, compare_parity_with_target]
+      - [color_coins_by_state, sort_moves_by_effect_on_count, mark_every_move_changes_count_by_even]
+    cheatsheet_refs: [cs.arith.divisibility_shortcuts, cs.disc.congruence_mod_n, cs.arith.add_signed_as_net_steps]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [find_quantity_preserved_by_every_move, compute_it_at_start, compute_it_at_target, conclude_by_mismatch]
+    answer_kind: proof_sketch
+    generator:
+      name: gen_coins_flip_pairs
+      params: {coins_range: [5, 9], flip_per_move: [2, 4], start_heads: odd, target_heads: even}
+
+  # =========================================================================
+  # MATEMÁTICA DISCRETA (COMBINATORIA)
+  # =========================================================================
+
+  - id: ch.disc.handshakes_at_the_table
+    area: disc
+    tier: training
+    requires: [disc.count.choose_as_pascal_paths, disc.count.product_rule]
+    mechanics: [network_routes, ledger]
+    literacy_min: icons
+    figure: generated:gen_people_around_table
+    hidden_data:
+      - {missing: each_pair_counted_once, discovered_by: draw_bridges_and_merge_duplicates, uses: cs.disc.combinations_choose}
+    expected_constructions:
+      - [draw_bridge_from_each_person_to_every_other, count_bridges_per_person, multiply_by_people, halve_for_double_count]
+      - [read_choose_two_from_pascal_row]
+    cheatsheet_refs: [cs.disc.combinations_choose, cs.disc.permutations_factorial, cs.disc.product_rule, cs.disc.pascal_triangle]
+    strategy_misconceptions: [counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [count_ordered_pairs, divide_by_order_duplicates, compute_count]
+    answer_kind: number
+    generator:
+      name: gen_people_around_table
+      params: {people_range: [4, 12], variant: [handshakes, diagonals_of_polygon, matches_in_league]}
+
+  - id: ch.disc.two_clubs_overlap
+    area: disc
+    tier: regional
+    requires: [disc.count.sum_rule, disc.set.union_intersection]
+    mechanics: [sorter, ledger]
+    literacy_min: short_text
+    figure: svg.ch.disc.two_hoops_students
+    hidden_data:
+      - {missing: students_in_both, discovered_by: sort_into_overlapping_hoops_and_compare_totals, uses: cs.disc.inclusion_exclusion}
+    expected_constructions:
+      - [sort_into_hoop_a, sort_into_hoop_b, notice_total_exceeds_class, move_excess_into_overlap]
+      - [write_union_as_sum_minus_overlap, put_on_balance, solve_linear]
+    cheatsheet_refs: [cs.disc.inclusion_exclusion, cs.disc.set_operations, cs.disc.sum_rule]
+    strategy_misconceptions: [counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [add_both_groups, compare_with_total, overlap_is_excess]
+    answer_kind: number
+    generator:
+      name: gen_two_sets_overlap
+      params: {total_range: [20, 40], ask: [overlap, neither, exactly_one]}
+
+  - id: ch.disc.grid_paths_avoiding_corner
+    area: disc
+    tier: regional
+    requires: [disc.count.choose_as_pascal_paths, disc.count.sum_rule]
+    mechanics: [network_routes, tiles]
+    literacy_min: short_text
+    figure: generated:gen_grid_with_blocked_corner
+    hidden_data:
+      - {missing: paths_through_blocked_point, discovered_by: split_path_at_blocked_point_and_multiply, uses: cs.disc.combinations_choose}
+    expected_constructions:
+      - [count_all_paths_by_pascal, count_paths_start_to_block, count_paths_block_to_end, multiply_two_legs, subtract_from_all]
+      - [fill_pascal_numbers_skipping_blocked_cell, read_end_cell]
+    cheatsheet_refs: [cs.disc.combinations_choose, cs.disc.pascal_triangle, cs.disc.sum_rule, cs.disc.product_rule]
+    strategy_misconceptions: [counted_twice, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [count_all_paths, count_bad_paths_via_point, subtract_bad_from_all]
+    answer_kind: number
+    generator:
+      name: gen_grid_with_blocked_corner
+      params: {grid_range: [[3, 3], [6, 6]], blocked_interior_only: true}
+
+  - id: ch.disc.socks_in_the_dark
+    area: disc
+    tier: regional
+    requires: [disc.count.sum_rule, disc.set.membership_rule]
+    mechanics: [sorter, urn_dice]
+    literacy_min: short_text
+    figure: svg.ch.disc.drawer_of_socks
+    hidden_data:
+      - {missing: worst_case_sequence, discovered_by: sort_draws_into_color_bins_one_per_bin_first, uses: cs.disc.sum_rule}
+    expected_constructions:
+      - [set_up_one_bin_per_color, fill_each_bin_with_one_sock, add_one_more_sock, read_count]
+    cheatsheet_refs: [cs.disc.sum_rule, cs.disc.set_operations]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_bins, fill_worst_case, add_one, compute_count]
+    answer_kind: number
+    generator:
+      name: gen_pigeonhole_draws
+      params: {colors_range: [2, 5], required_same: [2, 3], variant: [socks, gloves_with_hands]}
+
+  - id: ch.disc.domino_board_missing_corners
+    area: disc
+    tier: international
+    requires: [disc.proof.contradiction_no_exit, disc.mod.clock_equivalence, disc.count.sum_rule]
+    mechanics: [tiles, construct, sorter]
+    literacy_min: full_text
+    figure: svg.ch.disc.chessboard_two_corners_removed
+    hidden_data:
+      - {missing: the_invariant, discovered_by: color_board_in_two_colors_and_count_each, uses: cs.disc.proof_by_contradiction}
+    expected_constructions:
+      - [color_squares_alternately, count_squares_per_color, place_one_domino_and_mark_one_of_each, compare_counts, conclude_impossible]
+    cheatsheet_refs: [cs.disc.proof_by_contradiction, cs.disc.congruence_mod_n, cs.disc.sum_rule]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [color_the_board, count_each_color, each_domino_covers_one_of_each, counts_differ_so_impossible]
+    answer_kind: proof_sketch
+    generator: null
+
+  - id: ch.disc.odd_numbers_make_squares
+    area: disc
+    tier: international
+    requires: [disc.ind.domino_induction, disc.sum.sigma_notation]
+    mechanics: [tiles, gears_sequence, construct]
+    literacy_min: full_text
+    figure: generated:gen_growing_l_shapes
+    hidden_data:
+      - {missing: inductive_step_as_figure, discovered_by: add_l_shaped_border_to_square, uses: cs.disc.induction_template}
+    expected_constructions:
+      - [lay_first_square, add_l_border_of_next_odd_count, mark_new_square_side, generalize_border_size, write_induction_step]
+    cheatsheet_refs: [cs.disc.induction_template, cs.disc.closed_form_sums, cs.disc.sigma_rules]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [check_base_case, assume_square_of_side_n, add_next_odd_as_border, obtain_square_of_side_n_plus_one]
+    answer_kind: proof_sketch
+    generator:
+      name: gen_growing_l_shapes
+      params: {n_range: [3, 7], variant: [sum_of_odds, triangular_numbers]}
+
+  # =========================================================================
+  # PROBABILIDAD
+  # =========================================================================
+
+  - id: ch.prob.two_dice_hidden_grid
+    area: prob
+    tier: training
+    requires: [prob.basic.sample_space_grid, prob.basic.probability_as_proportion]
+    mechanics: [tiles, urn_dice]
+    literacy_min: icons
+    figure: generated:gen_two_dice_target_sum
+    hidden_data:
+      - {missing: true_sample_space, discovered_by: lay_six_by_six_grid_of_pairs, uses: cs.prob.sample_space_grid_two_dice}
+    expected_constructions:
+      - [lay_grid_of_all_pairs, shade_cells_with_target_sum, count_shaded_over_total]
+      - [hold_to_roll_many_times, read_stabilized_proportion, confirm_with_grid]
+    cheatsheet_refs: [cs.prob.sample_space_grid_two_dice, cs.prob.probability_as_fraction, cs.prob.long_run_proportion]
+    strategy_misconceptions: [assumed_uniform_space]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [build_sample_space, count_favorable, compute_proportion]
+    answer_kind: expression
+    generator:
+      name: gen_two_dice_target_sum
+      params: {target_sum_range: [3, 11], ask: [exact_sum, sum_at_least, difference_equals]}
+
+  - id: ch.prob.at_least_one_by_complement
+    area: prob
+    tier: training
+    requires: [prob.basic.complement_fills_the_rest, prob.cond.conditional_and_independence]
+    mechanics: [urn_dice, chest_key]
+    literacy_min: short_text
+    figure: svg.ch.prob.four_dice_in_a_row
+    hidden_data:
+      - {missing: the_easier_event, discovered_by: flip_to_complement_none_at_all, uses: cs.prob.complement_rule}
+      - {missing: product_of_independent_draws, discovered_by: multiply_along_the_chain, uses: cs.prob.independence_product_rule}
+    expected_constructions:
+      - [flip_event_to_complement, multiply_failure_probabilities, subtract_from_one]
+      - [draw_tree_of_all_outcomes, sum_branches_with_at_least_one]
+    cheatsheet_refs: [cs.prob.complement_rule, cs.prob.independence_product_rule, cs.prob.multiplication_rule]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_complement, multiply_independent, apply_complement]
+    answer_kind: expression
+    generator:
+      name: gen_at_least_one
+      params: {trials_range: [2, 5], single_success: [[1, 6], [1, 4], [1, 2]]}
+
+  - id: ch.prob.shared_month_small_group
+    area: prob
+    tier: regional
+    requires: [prob.basic.complement_fills_the_rest, prob.basic.count_outcomes_by_structure, prob.cond.conditional_and_independence]
+    mechanics: [urn_dice, ledger, chest_key]
+    literacy_min: short_text
+    figure: svg.ch.prob.calendar_twelve_months
+    hidden_data:
+      - {missing: complement_all_different, discovered_by: flip_to_complement, uses: cs.prob.complement_rule}
+      - {missing: shrinking_choices, discovered_by: count_free_months_for_each_next_person, uses: cs.prob.counting_principle}
+    expected_constructions:
+      - [flip_event_to_complement, chain_of_shrinking_fractions, multiply_chain, subtract_from_one]
+    cheatsheet_refs: [cs.prob.complement_rule, cs.prob.counting_principle, cs.prob.independence_product_rule]
+    strategy_misconceptions: [ignored_case, assumed_uniform_space]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_complement, count_all_different_arrangements, divide_by_all_arrangements, apply_complement]
+    answer_kind: expression
+    generator:
+      name: gen_shared_slot
+      params: {slots: [12, 7, 30], people_range: [3, 6]}
+
+  - id: ch.prob.three_doors_switch
+    area: prob
+    tier: regional
+    requires: [prob.cond.bayes_reverses_condition, prob.cond.conditional_and_independence]
+    mechanics: [sorter, network_routes, urn_dice]
+    literacy_min: short_text
+    figure: svg.ch.prob.three_doors_host
+    hidden_data:
+      - {missing: what_the_host_knows, discovered_by: draw_tree_with_host_forced_branch, uses: cs.prob.total_probability}
+    expected_constructions:
+      - [draw_tree_prize_location, add_host_branch_per_case, mark_forced_branches, sum_switch_wins]
+      - [hold_to_simulate_many_games, compare_switch_and_stay_proportions, explain_with_tree]
+    cheatsheet_refs: [cs.prob.bayes_rule, cs.prob.total_probability, cs.prob.conditional_definition]
+    strategy_misconceptions: [assumed_uniform_space, ignored_base_rate]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_tree, restrict_to_observed_branch, compare_conditional_probabilities]
+    answer_kind: expression
+    generator: null
+
+  - id: ch.prob.test_positive_base_rate
+    area: prob
+    tier: international
+    requires: [prob.cond.bayes_reverses_condition, prob.basic.sample_space_grid]
+    mechanics: [sorter, tiles]
+    literacy_min: full_text
+    figure: generated:gen_population_grid_test
+    hidden_data:
+      - {missing: the_population_row, discovered_by: sort_population_by_condition_first, uses: cs.prob.total_probability}
+      - {missing: reversed_conditional, discovered_by: restrict_to_positive_column, uses: cs.prob.bayes_rule}
+    expected_constructions:
+      - [lay_population_grid, sort_by_condition, sort_each_row_by_test_result, restrict_to_positive_column, read_proportion_with_condition]
+    cheatsheet_refs: [cs.prob.bayes_rule, cs.prob.total_probability, cs.prob.conditional_definition]
+    strategy_misconceptions: [ignored_base_rate]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [build_contingency_grid, count_true_positives, count_all_positives, compute_proportion]
+    answer_kind: expression
+    generator:
+      name: gen_population_grid_test
+      params: {population: [1000, 10000], prevalence: [0.01, 0.02, 0.05], sensitivity: [0.9, 0.95, 0.99], false_positive: [0.05, 0.1]}
+
+  - id: ch.prob.expected_rolls_until_six
+    area: prob
+    tier: international
+    requires: [prob.rv.expectation_as_weighted_average, prob.cond.conditional_and_independence, disc.rec.recurrence_step]
+    mechanics: [balance, ledger, urn_dice]
+    literacy_min: full_text
+    figure: svg.ch.prob.die_and_restart_arrow
+    hidden_data:
+      - {missing: self_referential_equation, discovered_by: write_expectation_after_first_roll_as_restart, uses: cs.disc.recurrence_notation}
+    expected_constructions:
+      - [split_first_roll_into_success_and_restart, write_expectation_with_itself_on_both_pans, solve_linear]
+      - [hold_to_simulate_many_runs, read_stabilized_average, confirm_with_equation]
+    cheatsheet_refs: [cs.prob.expected_value_formula, cs.prob.linearity_of_expectation, cs.disc.recurrence_notation, cs.prob.independence_product_rule]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [condition_on_first_trial, write_recurrence, solve_linear]
+    answer_kind: number
+    generator:
+      name: gen_geometric_wait
+      params: {success_probability: [[1, 6], [1, 4], [1, 3]], ask: [expected_trials, expected_failures_before]}
+
+  # =========================================================================
+  # TRIGONOMETRÍA
+  # =========================================================================
+
+  - id: ch.trig.tower_from_two_angles
+    area: trig
+    tier: training
+    requires: [trig.ratio.similar_shadows, trig.fn.tangent_as_slope, geom.cons.auxiliary_lines]
+    mechanics: [construct, slope_walker, balance]
+    literacy_min: short_text
+    figure: generated:gen_tower_two_observers
+    hidden_data:
+      - {missing: distance_to_base, discovered_by: drop_altitude_and_write_two_tangents, uses: cs.trig.sohcahtoa}
+    expected_constructions:
+      - [drop_altitude_from_top, name_unknown_distance, write_tangent_near_observer, write_tangent_far_observer, equate_heights, solve_linear]
+    cheatsheet_refs: [cs.trig.sohcahtoa, cs.trig.tan_as_sin_over_cos, cs.trig.special_triangles_30_45_60]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_right_angle]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [drop_altitude, name_unknown, write_two_tangent_ratios, solve_system, compute_height]
+    answer_kind: expression
+    generator:
+      name: gen_tower_two_observers
+      params: {angle_pairs: [[30, 60], [45, 60], [30, 45]], separation_range: [10, 100]}
+
+  - id: ch.trig.unit_circle_hidden_cosine
+    area: trig
+    tier: training
+    requires: [trig.id.pythagorean_identity, trig.ang.quadrant_signs]
+    mechanics: [construct, tiles, sorter]
+    literacy_min: icons
+    figure: generated:gen_unit_circle_point_hidden_x
+    hidden_data:
+      - {missing: horizontal_coordinate, discovered_by: drop_height_from_radius_tip_and_apply_pythagoras, uses: cs.trig.sin2_plus_cos2}
+      - {missing: sign_of_cosine, discovered_by: sort_point_into_quadrant, uses: cs.trig.quadrant_signs_table}
+    expected_constructions:
+      - [draw_radius_to_point, drop_height_to_horizontal_axis, apply_pythagoras_on_unit_triangle, sort_into_quadrant_for_sign]
+    cheatsheet_refs: [cs.trig.sin2_plus_cos2, cs.trig.strategy_pythagoras_on_unit_triangle, cs.trig.quadrant_signs_table, cs.trig.reference_angle]
+    strategy_misconceptions: [ignored_case, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_radius, drop_altitude, apply_pythagoras, choose_sign_by_quadrant, compute_expression]
+    answer_kind: expression
+    generator:
+      name: gen_unit_circle_point_hidden_x
+      params: {sine_values: [[3, 5], [5, 13], [8, 17], [1, 2]], quadrants: [1, 2, 3, 4], ask: [cosine, tangent]}
+
+  - id: ch.trig.triangle_area_from_included_angle
+    area: trig
+    tier: regional
+    requires: [trig.law.sines_from_altitude, trig.ratio.similar_shadows, geom.area.rect_and_triangle]
+    mechanics: [construct, tiles]
+    literacy_min: short_text
+    figure: generated:gen_two_sides_included_angle
+    hidden_data:
+      - {missing: height, discovered_by: drop_altitude_and_read_sine, uses: cs.trig.strategy_drop_altitude_two_right_triangles}
+    expected_constructions:
+      - [drop_altitude_from_vertex_off_the_angle, mark_right_angle_at_foot, write_height_as_side_times_sine, compute_area]
+    cheatsheet_refs: [cs.trig.strategy_drop_altitude_two_right_triangles, cs.trig.sohcahtoa, cs.geom.area_triangle_half_base_height, cs.trig.law_of_sines]
+    strategy_misconceptions: [assumed_right_angle, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [drop_altitude, height_as_side_times_sine, compute_area]
+    answer_kind: expression
+    generator:
+      name: gen_two_sides_included_angle
+      params: {angles: [30, 45, 60, 120, 135, 150], side_range: [4, 20]}
+
+  - id: ch.trig.which_law_hidden_side
+    area: trig
+    tier: regional
+    requires: [trig.law.cosines_extends_pythagoras, trig.law.sines_from_altitude]
+    mechanics: [construct, tiles, sorter]
+    literacy_min: short_text
+    figure: generated:gen_triangle_sas_or_asa
+    hidden_data:
+      - {missing: which_law_applies, discovered_by: sort_given_data_into_sas_or_asa, uses: cs.trig.strategy_which_law}
+      - {missing: third_side, discovered_by: apply_law_of_cosines_or_drop_altitude, uses: cs.trig.law_of_cosines}
+    expected_constructions:
+      - [sort_data_pattern, apply_law_of_cosines]
+      - [drop_altitude_from_vertex_off_the_angle, apply_pythagoras_twice, add_foot_segments]
+      - [sort_data_pattern, find_third_angle_by_half_turn, apply_law_of_sines]
+    cheatsheet_refs: [cs.trig.law_of_cosines, cs.trig.law_of_sines, cs.trig.strategy_which_law, cs.geom.pythagoras]
+    strategy_misconceptions: [assumed_right_angle, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [classify_given_data, choose_law, apply_law, compute_side]
+    answer_kind: expression
+    generator:
+      name: gen_triangle_sas_or_asa
+      params: {patterns: [sas, asa, ssa_unambiguous], angles: [30, 45, 60, 120], side_range: [3, 15]}
+
+  - id: ch.trig.regular_polygon_area_by_radii
+    area: trig
+    tier: regional
+    requires: [trig.circle.radian_as_arc_length, trig.fn.sine_as_height, geom.area.rect_and_triangle]
+    mechanics: [construct, tiles, gears_sequence]
+    literacy_min: short_text
+    figure: generated:gen_regular_polygon_in_circle
+    hidden_data:
+      - {missing: central_angle, discovered_by: draw_radii_to_vertices_and_divide_full_turn, uses: cs.trig.sector_area_half_r_squared_theta}
+      - {missing: apothem, discovered_by: drop_altitude_in_one_isosceles_slice, uses: cs.trig.sin_cos_values_key_angles}
+    expected_constructions:
+      - [draw_radii_to_all_vertices, mark_equal_central_angles, drop_altitude_in_one_slice, compute_slice_area_with_sine, multiply_by_slices]
+    cheatsheet_refs: [cs.trig.sector_area_half_r_squared_theta, cs.trig.sin_cos_values_key_angles, cs.geom.area_triangle_half_base_height, cs.geom.strategy_draw_radii_isosceles]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_radii, divide_full_turn, drop_altitude, compute_area, multiply_by_count]
+    answer_kind: expression
+    generator:
+      name: gen_regular_polygon_in_circle
+      params: {sides: [3, 4, 6, 8, 12], radius_range: [1, 10], ask: [polygon_area, gap_between_circle_and_polygon]}
+
+  - id: ch.trig.two_slopes_add_to_quarter_turn
+    area: trig
+    tier: international
+    requires: [trig.id.angle_sum, trig.inv.arcsin_two_branches, trig.fn.tangent_as_slope]
+    mechanics: [construct, grid_stretch, balance]
+    literacy_min: full_text
+    figure: generated:gen_two_ramps_on_grid
+    hidden_data:
+      - {missing: sum_of_the_two_angles, discovered_by: rotate_twice_and_read_composed_slope, uses: cs.trig.sin_cos_angle_sum}
+    expected_constructions:
+      - [draw_both_ramps_from_origin, lift_copy_of_second_ramp_onto_first, read_composed_slope_by_angle_sum, identify_angle_from_slope]
+      - [build_grid_rectangle_with_both_slopes, mark_congruent_right_triangles, mark_isosceles_right_triangle]
+    cheatsheet_refs: [cs.trig.sin_cos_angle_sum, cs.trig.tan_as_sin_over_cos, cs.trig.arcsin_arccos_arctan_ranges, cs.trig.strategy_rotate_twice]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_right_angle]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_each_angle_from_slope, apply_angle_sum_to_tangent, identify_angle, verify_with_grid_construction]
+    answer_kind: expression
+    generator:
+      name: gen_two_ramps_on_grid
+      params: {slope_pairs: [[[1, 2], [1, 3]], [[1, 1], [1, 2]], [[2, 3], [1, 5]]], ask: [angle_sum, tangent_of_sum]}
+
+  - id: ch.trig.all_solutions_on_the_wheel
+    area: trig
+    tier: international
+    requires: [trig.inv.arcsin_two_branches, trig.fn.periodic_wraps, alg.eq.quadratic_roots]
+    mechanics: [chest_key, construct, sorter]
+    literacy_min: full_text
+    figure: generated:gen_trig_equation_wheel
+    hidden_data:
+      - {missing: factored_form, discovered_by: factor_common_sine, uses: cs.alg.zero_product_rule}
+      - {missing: second_solution_of_each_branch, discovered_by: reflect_reference_angle_on_wheel, uses: cs.trig.strategy_all_solutions_from_one}
+    expected_constructions:
+      - [factor_common_sine, zero_product_rule, mark_one_solution_on_wheel, reflect_to_partner_angle, sort_solutions_into_interval]
+    cheatsheet_refs: [cs.trig.strategy_all_solutions_from_one, cs.trig.period_2pi_reduce_angle, cs.trig.arcsin_arccos_arctan_ranges, cs.alg.zero_product_rule]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [factor, zero_product_rule, find_reference_angle, add_partner_angles, collect_solution_set]
+    answer_kind: set
+    generator:
+      name: gen_trig_equation_wheel
+      params: {forms: [k_sin2_minus_sin, cos2_minus_cos, two_sin_cos_minus_sin], interval: [0, two_pi]}
+
+  # =========================================================================
+  # CÁLCULO (calc1 y calc2)
+  # =========================================================================
+
+  - id: ch.calc.fence_along_the_river
+    area: calc
+    tier: training
+    requires: [calc1.apply.max_where_slope_zero, alg.fn.quadratic_and_sqrt, geom.area.rect_and_triangle]
+    mechanics: [construct, slope_walker, tiles]
+    literacy_min: short_text
+    figure: generated:gen_fence_three_sides
+    hidden_data:
+      - {missing: constraint_between_sides, discovered_by: write_fence_length_as_sum_of_three_sides, uses: cs.calc1.strategy_optimization_steps}
+      - {missing: single_variable_objective, discovered_by: substitute_constraint_into_area, uses: cs.geom.area_rectangle}
+    expected_constructions:
+      - [name_two_sides, write_constraint_from_fence, substitute_into_area, differentiate, set_derivative_zero, check_maximum]
+      - [name_two_sides, write_constraint_from_fence, substitute_into_area, complete_square_to_read_vertex]
+    cheatsheet_refs: [cs.calc1.strategy_optimization_steps, cs.calc1.critical_points_derivative_zero, cs.geom.area_rectangle, cs.calc1.first_second_derivative_tests]
+    strategy_misconceptions: [ignored_constraint]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_unknowns, write_constraint, substitute_constraint, differentiate, set_derivative_zero, verify_max]
+    answer_kind: number
+    generator:
+      name: gen_fence_three_sides
+      params: {fence_length: [40, 60, 100, 120], variant: [river_side_free, two_pens_shared_wall]}
+
+  - id: ch.calc.box_from_a_sheet
+    area: calc
+    tier: regional
+    requires: [calc1.apply.max_where_slope_zero, calc1.deriv.rules_as_structure, geom.solid.volume_as_layers]
+    mechanics: [construct, slope_walker, fill_accumulate]
+    literacy_min: short_text
+    figure: generated:gen_sheet_with_corner_squares
+    hidden_data:
+      - {missing: base_dimensions_in_terms_of_cut, discovered_by: fold_flaps_and_read_base, uses: cs.geom.volume_prism_base_times_height}
+      - {missing: valid_range_of_cut, discovered_by: mark_where_base_becomes_zero, uses: cs.calc1.strategy_optimization_steps}
+    expected_constructions:
+      - [name_cut_size, mark_base_after_folding, write_volume_as_product, expand, differentiate, set_derivative_zero, discard_root_outside_range, check_maximum]
+    cheatsheet_refs: [cs.calc1.strategy_optimization_steps, cs.geom.volume_prism_base_times_height, cs.calc1.power_rule, cs.calc1.critical_points_derivative_zero]
+    strategy_misconceptions: [ignored_constraint, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_unknown, write_objective, differentiate, set_derivative_zero, discard_invalid_root, verify_max]
+    answer_kind: number
+    generator:
+      name: gen_sheet_with_corner_squares
+      params: {sheet_sizes: [[12, 12], [20, 20], [16, 10], [24, 18]], integer_critical_point: true}
+
+  - id: ch.calc.sliding_ladder_rates
+    area: calc
+    tier: regional
+    requires: [calc1.apply.related_rates_chain, geom.tri.pythagoras_as_tiles]
+    mechanics: [construct, gears_sequence]
+    literacy_min: full_text
+    figure: generated:gen_ladder_against_wall
+    hidden_data:
+      - {missing: relation_between_positions, discovered_by: draw_right_triangle_wall_floor_ladder, uses: cs.geom.pythagoras}
+      - {missing: other_leg_at_that_instant, discovered_by: apply_pythagoras, uses: cs.geom.pythagoras}
+    expected_constructions:
+      - [draw_right_triangle, write_pythagoras_with_both_legs_as_functions_of_time, differentiate_both_sides_with_chain, apply_pythagoras_for_missing_leg, substitute_known_rate, solve_linear]
+    cheatsheet_refs: [cs.calc1.strategy_related_rates_steps, cs.geom.pythagoras, cs.calc1.chain_rule, cs.calc1.strategy_treat_y_as_y_of_x]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, ignored_constraint]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_right_triangle, write_constraint, differentiate_implicitly, apply_pythagoras, substitute_and_solve]
+    answer_kind: number
+    generator:
+      name: gen_ladder_against_wall
+      params: {ladder_lengths: [5, 10, 13, 25], foot_distance_from_triple: true, rate_range: [1, 3]}
+
+  - id: ch.calc.area_between_hidden_crossings
+    area: calc
+    tier: training
+    requires: [calc2.int.area_between, alg.eq.quadratic_roots, calc1.ftc.integral_undoes_derivative]
+    mechanics: [fill_accumulate, tiles, chest_key]
+    literacy_min: short_text
+    figure: generated:gen_parabola_and_line
+    hidden_data:
+      - {missing: integration_limits, discovered_by: solve_where_curves_meet, uses: cs.alg.zero_product_rule}
+      - {missing: which_curve_is_on_top, discovered_by: test_a_point_between_crossings, uses: cs.calc2.area_between_curves}
+    expected_constructions:
+      - [equate_curves, factor_or_quadratic_formula, mark_crossings_on_axis, test_point_for_top_curve, integrate_top_minus_bottom, evaluate_with_ftc]
+    cheatsheet_refs: [cs.calc2.area_between_curves, cs.alg.zero_product_rule, cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a, cs.calc1.antiderivative_table]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [find_intersections, determine_top_curve, set_up_integral, evaluate_integral]
+    answer_kind: expression
+    generator:
+      name: gen_parabola_and_line
+      params: {integer_roots_range: [-4, 5], leading_coeff: [1, -1, 2], line_slope_range: [-3, 3]}
+
+  - id: ch.calc.washer_with_hidden_hole
+    area: calc
+    tier: regional
+    requires: [calc2.parpol.solid_of_revolution, calc2.int.area_between]
+    mechanics: [fill_accumulate, construct]
+    literacy_min: full_text
+    figure: generated:gen_region_to_revolve
+    hidden_data:
+      - {missing: inner_radius, discovered_by: draw_cross_section_perpendicular_to_axis, uses: cs.calc2.disc_washer_method}
+      - {missing: limits, discovered_by: solve_where_curves_meet, uses: cs.calc2.area_between_curves}
+    expected_constructions:
+      - [draw_cross_section_slice, mark_outer_and_inner_radius_from_axis, equate_curves_for_limits, write_washer_integral, evaluate_integral]
+      - [draw_vertical_shell_slice, mark_shell_radius_and_height, write_shell_integral, evaluate_integral]
+    cheatsheet_refs: [cs.calc2.disc_washer_method, cs.calc2.shell_method, cs.calc2.area_between_curves, cs.calc2.volume_by_cross_sections]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_cross_section, identify_radii, find_limits, set_up_integral, evaluate_integral]
+    answer_kind: expression
+    generator:
+      name: gen_region_to_revolve
+      params: {curve_pairs: [[sqrt_x, x_squared], [x, x_squared], [two_x, x_squared]], axis: [x_axis, y_axis, shifted_line]}
+
+  - id: ch.calc.cylinder_inside_a_cone
+    area: calc
+    tier: international
+    requires: [calc1.apply.max_where_slope_zero, geom.sim.similarity_as_scale, geom.solid.volume_as_layers]
+    mechanics: [construct, slope_walker, fill_accumulate]
+    literacy_min: full_text
+    figure: generated:gen_cylinder_in_cone
+    hidden_data:
+      - {missing: height_in_terms_of_radius, discovered_by: draw_axial_cross_section_and_use_similar_triangles, uses: cs.geom.similar_ratios_equal}
+    expected_constructions:
+      - [draw_axial_cross_section, mark_similar_triangles_above_cylinder, similar_triangles_ratio, substitute_into_volume, differentiate, set_derivative_zero, discard_endpoints, check_maximum]
+    cheatsheet_refs: [cs.geom.similar_ratios_equal, cs.geom.volume_cylinder, cs.calc1.strategy_optimization_steps, cs.calc1.critical_points_derivative_zero]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, ignored_constraint, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_cross_section, similar_triangles_ratio, write_constraint, substitute_constraint, differentiate, set_derivative_zero, verify_max]
+    answer_kind: expression
+    generator:
+      name: gen_cylinder_in_cone
+      params: {cone_radius_range: [3, 9], cone_height_range: [6, 15], ask: [max_volume, optimal_radius]}
+
+  - id: ch.calc.telescoping_sum_hidden_split
+    area: calc
+    tier: international
+    requires: [calc2.ser.partial_sums, calc2.tech.partial_fractions_split, precalc.lim.approach]
+    mechanics: [fill_accumulate, ledger, gears_sequence]
+    literacy_min: full_text
+    figure: generated:gen_telescoping_terms
+    hidden_data:
+      - {missing: each_term_as_a_difference, discovered_by: split_into_partial_fractions, uses: cs.calc2.partial_fractions}
+      - {missing: what_survives_cancellation, discovered_by: write_partial_sum_and_cancel_pairs, uses: cs.calc2.partial_sums_sequence}
+    expected_constructions:
+      - [split_term_into_two_fractions, list_first_terms_in_ledger, cancel_matching_rows, read_partial_sum, take_limit]
+      - [fill_bucket_term_by_term, read_stabilizing_level, confirm_with_partial_fractions]
+    cheatsheet_refs: [cs.calc2.partial_sums_sequence, cs.calc2.partial_fractions, cs.calc2.geometric_series_sum]
+    strategy_misconceptions: [strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [split_into_partial_fractions, write_partial_sum, cancel_pairs, take_limit]
+    answer_kind: number
+    generator:
+      name: gen_telescoping_terms
+      params: {forms: [one_over_n_n_plus_one, one_over_n_n_plus_two, one_over_2n_minus_one_2n_plus_one], start_index: [1, 2]}
+
+  # =========================================================================
+  # ÁLGEBRA LINEAL
+  # =========================================================================
+
+  - id: ch.linalg.matrix_of_a_composed_move
+    area: linalg
+    tier: training
+    requires: [linalg.map.compose_as_multiply, linalg.map.linear_transformation_2d]
+    mechanics: [grid_stretch, machine_pipe]
+    literacy_min: icons
+    figure: generated:gen_house_before_after
+    hidden_data:
+      - {missing: where_each_basis_arrow_lands, discovered_by: track_basis_arrows_through_both_moves, uses: cs.linalg.matrix_columns_are_basis_images}
+      - {missing: order_of_the_two_moves, discovered_by: play_both_orders_and_compare, uses: cs.linalg.product_not_commutative}
+    expected_constructions:
+      - [apply_first_move_to_basis_arrows, apply_second_move_to_results, write_columns_from_landings]
+      - [write_each_move_as_matrix, multiply_in_application_order, check_on_house]
+    cheatsheet_refs: [cs.linalg.matrix_columns_are_basis_images, cs.linalg.matrix_product, cs.linalg.product_not_commutative, cs.linalg.rotation_shear_reflection_matrices]
+    strategy_misconceptions: [tracked_wrong_basis_arrow]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [track_basis_arrows, write_columns, compose_matrices, verify_on_figure]
+    answer_kind: expression
+    generator:
+      name: gen_house_before_after
+      params: {moves: [rotate_90, shear_x, reflect_y, scale_2], compose_count: 2, order_matters_required: true}
+
+  - id: ch.linalg.undo_the_unknown_stretch
+    area: linalg
+    tier: regional
+    requires: [linalg.map.inverse_and_systems, linalg.map.determinant_as_area]
+    mechanics: [grid_stretch, chest_key, balance]
+    literacy_min: short_text
+    figure: generated:gen_two_vectors_and_images
+    hidden_data:
+      - {missing: the_matrix, discovered_by: read_columns_from_images_of_basis, uses: cs.linalg.matrix_columns_are_basis_images}
+      - {missing: whether_it_can_be_undone, discovered_by: compute_area_factor, uses: cs.linalg.singular_no_inverse}
+      - {missing: original_point, discovered_by: apply_inverse_key, uses: cs.linalg.inverse_2x2}
+    expected_constructions:
+      - [solve_for_images_of_basis_from_given_pairs, write_matrix_columns, compute_determinant, build_inverse, apply_inverse_to_image_point]
+      - [put_unknown_original_on_balance_with_matrix, solve_linear_system]
+    cheatsheet_refs: [cs.linalg.inverse_2x2, cs.linalg.singular_no_inverse, cs.linalg.determinant_2x2, cs.linalg.solve_ax_equals_b]
+    strategy_misconceptions: [tracked_wrong_basis_arrow, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [recover_matrix_from_images, compute_determinant, invert_matrix, apply_inverse]
+    answer_kind: expression
+    generator:
+      name: gen_two_vectors_and_images
+      params: {entry_range: [-3, 3], determinant_nonzero: true, integer_inverse_preferred: true}
+
+  - id: ch.linalg.shadow_gives_the_height
+    area: linalg
+    tier: international
+    requires: [linalg.orth.projection_as_shadow, linalg.map.determinant_as_area, geom.tri.pythagoras_as_tiles]
+    mechanics: [construct, grid_stretch]
+    literacy_min: full_text
+    figure: generated:gen_parallelogram_from_two_vectors
+    hidden_data:
+      - {missing: height_of_parallelogram, discovered_by: project_one_vector_onto_the_other_and_take_the_rest, uses: cs.linalg.projection_formula}
+      - {missing: distance_point_to_line, discovered_by: apply_pythagoras_to_vector_minus_shadow, uses: cs.geom.pythagoras}
+    expected_constructions:
+      - [draw_both_vectors_from_origin, drop_perpendicular_from_tip_to_other_vector, compute_projection_by_dot_product, apply_pythagoras_for_height, compare_with_determinant_area]
+      - [compute_determinant_as_area, divide_by_base_length_for_height]
+    cheatsheet_refs: [cs.linalg.projection_formula, cs.linalg.dot_product, cs.linalg.determinant_2x2, cs.geom.pythagoras, cs.linalg.vector_length]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_right_angle]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [drop_perpendicular, compute_projection, apply_pythagoras, compute_area, cross_check_two_methods]
+    answer_kind: expression
+    generator:
+      name: gen_parallelogram_from_two_vectors
+      params: {entry_range: [-5, 6], ask: [height, distance_point_to_line, area_two_ways]}

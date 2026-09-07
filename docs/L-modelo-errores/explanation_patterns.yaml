@@ -20,7 +20,7 @@ version: 1
 
 patterns:
   - id: replay_on_mechanic
-    mechanics_compatible: [balance, ledger, tiles, fill_accumulate, urn_dice, network_routes, grid_stretch, slope_walker, gears_sequence, sorter]
+    mechanics_compatible: [balance, ledger, tiles, fill_accumulate, urn_dice, network_routes, grid_stretch, slope_walker, gears_sequence, sorter, construct]
     literacy_min: none
     steps: [freeze_learner_state, replay_learner_move, show_invariant_break, highlight_delta, ask_prompt]
     reopens_interaction: true

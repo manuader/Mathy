@@ -53,7 +53,7 @@ nodes:
     misconceptions: [equals_as_operator, inverse_applied_one_side]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [alg.eq.one_step, trig.id.double_angle, disc.mod.clock_equivalence, linalg.sys.row_operations]
-    calc_unlocks: [op_equals]
+    calc_unlocks: [op_compare]
     cheatsheet: [cs.prealg.equals_means_level_pans, cs.prealg.same_action_both_sides]
     manim: [balance_equal_pans_stay_level, balance_remove_one_side_tilts]
     next: prealg.inv.operation_as_key
@@ -79,25 +79,25 @@ nodes:
 
   # ---- expr / prop ---------------------------------------------------------------------------
   - {id: prealg.expr.substitute_value, area: prealg, level: 2, prereqs: [prealg.var.unknown_as_box], grammar: compose, mechanics: [machine_pipe, ledger], literacy: none, analogy: mystery_box, cheatsheet: [cs.prealg.substitute_then_evaluate], calc_unlocks: [op_evaluate_expr]}
-  - {id: prealg.expr.like_terms, area: prealg, level: 2, prereqs: [prealg.var.unknown_as_box], grammar: partition, mechanics: [ledger, sorter], literacy: none, analogy: fruit_ledger, aliases: [alg.expr.like_terms], cheatsheet: [cs.prealg.combine_like_terms_only], calc_unlocks: [op_simplify_terms]}
+  - {id: prealg.expr.like_terms, area: prealg, level: 2, prereqs: [prealg.var.unknown_as_box], grammar: partition, mechanics: [ledger, sorter], literacy: none, analogy: fruit_ledger, aliases: [alg.expr.like_terms], cheatsheet: [cs.prealg.combine_like_terms_only], calc_unlocks: [op_simplify]}
   - {id: prealg.expr.implicit_grouping, area: prealg, level: 2, prereqs: [prealg.var.unknown_as_box, arith.frac.parts_and_ratio], grammar: compose, mechanics: [chest_key, machine_pipe], literacy: icons, analogy: chest_nested, cheatsheet: [cs.prealg.juxtaposition_means_times, cs.prealg.fraction_bar_groups]}
   - {id: prealg.prop.order_does_not_matter, area: prealg, level: 2, prereqs: [arith.mul.rows_and_columns, arith.add.combine_groups, prealg.var.unknown_as_box], grammar: invariant, mechanics: [ledger, tiles, balance], literacy: none, analogy: fruit_ledger, cheatsheet: [cs.prealg.commutative_associative_with_letters, cs.prealg.identity_zero_and_one]}
 
   # ---- int / exp -----------------------------------------------------------------------------
-  - {id: prealg.int.sign_rules, area: prealg, level: 2, prereqs: [arith.int.add_signed, arith.int.mul_signed], grammar: scale, mechanics: [gears_sequence, grid_stretch, sorter], literacy: none, analogy: debt_ledger, cheatsheet: [cs.prealg.sign_rules_four_operations], calc_unlocks: [op_signed_arith]}
+  - {id: prealg.int.sign_rules, area: prealg, level: 2, prereqs: [arith.int.add_signed, arith.int.mul_signed], grammar: scale, mechanics: [gears_sequence, grid_stretch, sorter], literacy: none, analogy: debt_ledger, cheatsheet: [cs.prealg.sign_rules_four_operations], calc_unlocks: [op_mul]}
   - {id: prealg.exp.powers_of_ten, area: prealg, level: 2, prereqs: [arith.pow.repeated_scaling, arith.dec.tenths_as_place], grammar: nonlinear, mechanics: [gears_sequence, ledger], literacy: icons, analogy: odometer_dials, cheatsheet: [cs.prealg.place_value_as_power_of_ten, cs.prealg.scientific_notation], calc_unlocks: [op_sci_notation]}
 
   # ---- ratio / pct ---------------------------------------------------------------------------
-  - {id: prealg.ratio.scaling_recipe, area: prealg, level: 2, prereqs: [arith.frac.equivalent], grammar: scale, mechanics: [ledger, tiles], literacy: none, analogy: juice_mix_ratio, aliases: [prealg.prop.scaling_recipe], cheatsheet: [cs.prealg.ratio_scales_both_parts], calc_unlocks: [op_ratio_scale]}
-  - {id: prealg.ratio.rate_per_unit, area: prealg, level: 2, prereqs: [prealg.ratio.scaling_recipe, arith.rate.per_unit], grammar: rate, mechanics: [slope_walker, machine_pipe], literacy: icons, analogy: walker_on_ramp, cheatsheet: [cs.prealg.proportional_means_constant_ratio], calc_unlocks: [op_proportion_solve]}
+  - {id: prealg.ratio.scaling_recipe, area: prealg, level: 2, prereqs: [arith.frac.equivalent], grammar: scale, mechanics: [ledger, tiles], literacy: none, analogy: juice_mix_ratio, aliases: [prealg.prop.scaling_recipe], cheatsheet: [cs.prealg.ratio_scales_both_parts], calc_unlocks: [op_ratio]}
+  - {id: prealg.ratio.rate_per_unit, area: prealg, level: 2, prereqs: [prealg.ratio.scaling_recipe, arith.rate.per_unit], grammar: rate, mechanics: [slope_walker, machine_pipe], literacy: icons, analogy: walker_on_ramp, cheatsheet: [cs.prealg.proportional_means_constant_ratio], calc_unlocks: [op_ratio]}
   - {id: prealg.ratio.proportion_as_line, area: prealg, level: 2, prereqs: [prealg.ratio.rate_per_unit, prealg.coord.grid_position], grammar: rate, mechanics: [slope_walker], literacy: icons, analogy: walker_on_ramp, cheatsheet: [cs.prealg.proportional_graph_line_through_origin]}
-  - {id: prealg.pct.hundredths, area: prealg, level: 2, prereqs: [arith.pct.percent_of_total, arith.dec.tenths_as_place], grammar: partition, mechanics: [tiles], literacy: icons, analogy: chocolate_bar_grid, cheatsheet: [cs.prealg.percent_decimal_fraction_triangle], calc_unlocks: [op_percent_convert]}
-  - {id: prealg.pct.percent_fill, area: prealg, level: 2, prereqs: [prealg.pct.hundredths, prealg.ratio.scaling_recipe], grammar: accumulate, mechanics: [fill_accumulate], literacy: icons, analogy: tank_filling, cheatsheet: [cs.prealg.percent_change_as_fill_delta], calc_unlocks: [op_percent_change]}
+  - {id: prealg.pct.hundredths, area: prealg, level: 2, prereqs: [arith.pct.percent_of_total, arith.dec.tenths_as_place], grammar: partition, mechanics: [tiles], literacy: icons, analogy: chocolate_bar_grid, cheatsheet: [cs.prealg.percent_decimal_fraction_triangle], calc_unlocks: [op_percent]}
+  - {id: prealg.pct.percent_fill, area: prealg, level: 2, prereqs: [prealg.pct.hundredths, prealg.ratio.scaling_recipe], grammar: accumulate, mechanics: [fill_accumulate], literacy: icons, analogy: tank_filling, cheatsheet: [cs.prealg.percent_change_as_fill_delta], calc_unlocks: [op_percent]}
 
   # ---- coord / ineq --------------------------------------------------------------------------
   - {id: prealg.coord.grid_position, area: prealg, level: 2, prereqs: [found.count.number_line], grammar: displace, mechanics: [slope_walker, network_routes], literacy: none, layers: [real, intuition, concrete, visual], analogy: treasure_map_arrows}
   - {id: prealg.ineq.compare_expressions, area: prealg, level: 2, prereqs: [prealg.eq.balance, found.cmp.bigger_smaller], grammar: invariant, mechanics: [balance, sorter], literacy: none, analogy: balance_tilted, cheatsheet: [cs.prealg.lt_gt_as_tilt], calc_unlocks: [op_compare]}
 
   # ---- fn / pat ------------------------------------------------------------------------------
-  - {id: prealg.fn.input_output_table, area: prealg, level: 2, prereqs: [found.pat.rule_machine, prealg.expr.substitute_value], grammar: compose, mechanics: [machine_pipe, ledger], literacy: none, analogy: function_machine, cheatsheet: [cs.prealg.table_records_machine], calc_unlocks: [op_table_from_rule]}
+  - {id: prealg.fn.input_output_table, area: prealg, level: 2, prereqs: [found.pat.rule_machine, prealg.expr.substitute_value], grammar: compose, mechanics: [machine_pipe, ledger], literacy: none, analogy: function_machine, cheatsheet: [cs.prealg.table_records_machine], calc_unlocks: [op_define_function]}
   - {id: prealg.pat.rule_from_table, area: prealg, level: 2, prereqs: [prealg.fn.input_output_table], grammar: displace, mechanics: [gears_sequence, machine_pipe], literacy: none, analogy: function_machine, cheatsheet: [cs.prealg.constant_step_reveals_rule]}

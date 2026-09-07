@@ -1,0 +1,707 @@
+# Locale fuente (es) de los desafíos. Claves: challenges.<id>.{title, statement, hints, solution_steps}.
+# Los ids vienen de ../../S-desafios/challenges.yaml; este archivo no agrega ni quita desafíos.
+# statement: 2–4 frases narrables. En desafíos con literacy_min none, una sola frase apta para voz.
+# hints: exactamente 3, graduadas. Nunca dan la respuesta. La tercera describe la construcción.
+# solution_steps: pasos breves para el modo "visto"; misma cantidad en todos los locales.
+# Placeholders ICU con los parámetros del generador ({a}, {b}, {n}...) ya instanciados.
+
+challenges:
+
+  # ---- geom ---------------------------------------------------------------
+
+  ch.geom.trapezoid_hidden_height:
+    title: "El trapecio sin altura"
+    statement: "Este trapecio tiene un ángulo recto en la base. Conocés la base larga {b1}, la base corta {b2} y el lado inclinado {c}. Nadie te dijo cuánto mide la altura. Calculá el área."
+    hints:
+      - "¿Qué dato necesita la fórmula del área que todavía no tenés?"
+      - "¿Qué línea, trazada desde un vértice de arriba, formaría un triángulo rectángulo con el lado inclinado?"
+      - "Bajá la altura desde el vértice superior derecho hasta la base larga. Marcá el ángulo recto. El triángulo que aparece tiene la hipotenusa que ya conocés."
+    solution_steps:
+      - "Bajar la altura desde el vértice superior hasta la base larga."
+      - "El pie de la altura parte la base larga: el tramo sobrante mide la diferencia entre las bases."
+      - "En el triángulo rectángulo, Pitágoras da la altura a partir del lado inclinado y ese tramo."
+      - "Área del trapecio: suma de las bases por la altura, dividido dos."
+
+  ch.geom.l_shape_missing_side:
+    title: "La figura en L"
+    statement: "Esta figura en forma de L tiene los ángulos rectos y casi todos los lados marcados. Falta uno de los lados interiores. Calculá el área y el perímetro."
+    hints:
+      - "¿Cuál de los lados no tiene medida? ¿De qué otros lados depende?"
+      - "¿Qué pasa si prolongás un lado hasta cerrar un rectángulo grande alrededor de toda la figura?"
+      - "Prolongá el lado corto hasta que toque el lado opuesto. Ahora tenés un rectángulo grande y una esquina recortada; los lados opuestos de un rectángulo miden lo mismo."
+    solution_steps:
+      - "Prolongar un lado para encerrar la figura en un rectángulo."
+      - "Los lados opuestos del rectángulo son iguales: eso da el lado que faltaba."
+      - "Área: el rectángulo grande menos la esquina recortada."
+      - "Perímetro: sumar todos los lados; el rodeo por la esquina mide lo mismo que el lado recto que reemplaza."
+
+  ch.geom.chord_distance_from_center:
+    title: "La cuerda y el centro"
+    statement: "Un círculo de radio {r} tiene una cuerda de longitud {c}. ¿A qué distancia del centro está la cuerda?"
+    hints:
+      - "¿Qué segmento une lo que sabés (el radio) con lo que buscás (la distancia al centro)?"
+      - "¿Qué pasa con la cuerda cuando bajás una perpendicular desde el centro?"
+      - "Trazá un radio hasta un extremo de la cuerda y bajá la perpendicular desde el centro. La perpendicular corta la cuerda por la mitad y forma un triángulo rectángulo con el radio."
+    solution_steps:
+      - "Trazar el radio hasta un extremo de la cuerda."
+      - "Bajar la perpendicular desde el centro; parte la cuerda en dos mitades iguales."
+      - "Triángulo rectángulo: hipotenusa el radio, un cateto la mitad de la cuerda."
+      - "Pitágoras da el otro cateto, que es la distancia buscada."
+
+  ch.geom.inscribed_right_angle_area:
+    title: "El triángulo sobre el diámetro"
+    statement: "Un triángulo tiene sus tres vértices sobre un círculo, y uno de sus lados es el diámetro, que mide {d}. Otro lado mide {a}. Calculá el área del triángulo."
+    hints:
+      - "Para el área necesitás una base y una altura. ¿Qué ángulo del triángulo todavía no conocés?"
+      - "¿Qué relación hay entre un ángulo inscripto y el ángulo central que abarca el mismo arco?"
+      - "Trazá el radio hasta el vértice que no está sobre el diámetro. El ángulo central es un giro de media vuelta, así que el ángulo inscripto es la mitad: recto. Ahora tenés un triángulo rectángulo."
+    solution_steps:
+      - "Trazar el radio al vértice opuesto al diámetro."
+      - "El ángulo central sobre el diámetro es de media vuelta; el inscripto es la mitad: recto."
+      - "Con la hipotenusa y un cateto, Pitágoras da el otro cateto."
+      - "Área: los dos catetos multiplicados, dividido dos."
+
+  ch.geom.parallel_cut_missing_length:
+    title: "El corte paralelo"
+    statement: "Dentro de un triángulo se trazó un segmento paralelo a uno de los lados. Conocés {a}, {b} y {c}, pero falta la longitud {x}. Calculala."
+    hints:
+      - "¿Qué figura chica dentro de la grande tiene la misma forma?"
+      - "¿Qué ángulos quedan iguales cuando una recta atraviesa dos paralelas?"
+      - "Marcá los ángulos correspondientes que forma cada lado con las dos paralelas, y el ángulo que los dos triángulos comparten. Con los ángulos iguales, los dos triángulos son semejantes y sus lados guardan la misma proporción."
+    solution_steps:
+      - "Marcar los ángulos correspondientes entre las paralelas y el ángulo compartido."
+      - "Los dos triángulos tienen los mismos ángulos: son semejantes."
+      - "Escribir la proporción entre lados correspondientes."
+      - "Despejar la longitud que faltaba."
+
+  ch.geom.altitude_hypotenuse_three_similar:
+    title: "La altura sobre la hipotenusa"
+    statement: "Un triángulo rectángulo tiene catetos {a} y {b}. Se baja la altura desde el ángulo recto hasta la hipotenusa. ¿Cuánto mide esa altura, y en qué dos tramos queda partida la hipotenusa?"
+    hints:
+      - "Hay tres datos escondidos: la hipotenusa, la altura y los dos tramos. ¿Cuál podés calcular primero con lo que ya tenés?"
+      - "El área del triángulo se puede escribir de dos maneras. ¿Qué pasa si las igualás?"
+      - "Calculá la hipotenusa con Pitágoras. Bajá la altura y escribí el área dos veces: con los catetos y con la hipotenusa por la altura. Igualarlas da la altura. Después, cada triángulo chico es semejante al grande."
+    solution_steps:
+      - "Pitágoras da la hipotenusa."
+      - "Bajar la altura desde el ángulo recto."
+      - "Igualar las dos expresiones del área para obtener la altura."
+      - "Cada tramo de la hipotenusa sale de la semejanza entre el triángulo chico y el grande, o de Pitágoras en cada triángulo chico."
+
+  ch.geom.frustum_volume_by_extension:
+    title: "El cono sin punta"
+    statement: "Un cono fue cortado por un plano paralelo a la base y le quitaron la punta. Quedó un tronco con radio inferior {R}, radio superior {r} y altura {h}. Calculá su volumen."
+    hints:
+      - "La fórmula que tenés es la del cono completo. ¿Qué cono completo se esconde acá?"
+      - "¿Qué pasa si prolongás los lados inclinados hasta que se junten?"
+      - "Dibujá el corte por el eje: es un trapecio. Prolongá los lados inclinados hasta el vértice. Aparecen dos triángulos semejantes, uno por cada radio, y su proporción da la altura del cono completo."
+    solution_steps:
+      - "Cortar por el eje y prolongar los lados inclinados hasta el vértice."
+      - "Los dos triángulos formados con cada radio son semejantes: la proporción da la altura del cono completo y la del cono chico."
+      - "Calcular el volumen del cono grande y el del cono chico."
+      - "Restar: el tronco es la diferencia."
+
+  ch.geom.reflect_shortest_path_river:
+    title: "Al río y de vuelta"
+    statement: "Un campamento está en {A} y una cabaña en {B}, del mismo lado de un río recto. Hay que ir del campamento al río a buscar agua y seguir hasta la cabaña. ¿En qué punto del río conviene parar para caminar lo menos posible, y cuánto se camina?"
+    hints:
+      - "Si los dos puntos estuvieran en lados opuestos del río, ¿cuál sería el camino más corto?"
+      - "¿Qué movimiento rígido lleva un punto al otro lado del río sin cambiar ninguna distancia?"
+      - "Reflejá la cabaña al otro lado del río. Uní el campamento con la cabaña reflejada con un segmento recto: donde cruza el río está el punto buscado, y la longitud del segmento es la distancia total."
+    solution_steps:
+      - "Reflejar uno de los puntos respecto de la recta del río."
+      - "Unir el otro punto con el reflejado: cualquier camino por el río mide lo mismo con el punto original o con el reflejado."
+      - "El segmento recto es el más corto por la desigualdad triangular; su cruce con el río es el punto de parada."
+      - "La distancia total se calcula con la fórmula de distancia entre los dos puntos."
+
+  ch.geom.tiles_hidden_corner:
+    title: "La esquina tapada"
+    statement: "Una hoja tapa una esquina del piso: descubrí cuántas baldosas hay en total."
+    hints:
+      - "Mirá una fila entera que se vea completa. ¿Cuántas baldosas tiene?"
+      - "Las líneas de las filas siguen debajo de la hoja. ¿Qué pasa si las prolongás?"
+      - "Prolongá las líneas de las filas y de las columnas por debajo de la hoja. Contá filas, contá columnas, y multiplicá."
+    solution_steps:
+      - "Prolongar las líneas de filas y columnas bajo la hoja."
+      - "Contar las filas y las columnas."
+      - "Multiplicar filas por columnas."
+
+  ch.geom.tiles_l_shape_split:
+    title: "El piso en L"
+    statement: "Este piso tiene forma de L y una parte tapada: descubrí cuántas baldosas hay."
+    hints:
+      - "¿Se puede partir esta figura en dos pedazos más fáciles de contar?"
+      - "¿Qué línea recta convierte la L en dos rectángulos?"
+      - "Trazá una línea recta donde la L dobla. Quedan dos rectángulos. Contá cada uno y sumá."
+    solution_steps:
+      - "Trazar una línea donde la figura dobla."
+      - "Contar las baldosas de cada rectángulo."
+      - "Sumar los dos rectángulos."
+
+  ch.geom.tiles_triangle_half_rectangle:
+    title: "El triángulo sobre la grilla"
+    statement: "Este triángulo está dibujado sobre baldosas: descubrí cuántas baldosas cubre."
+    hints:
+      - "Algunas baldosas están cortadas por la mitad. ¿Hay una figura más fácil que contiene al triángulo?"
+      - "¿Qué línea, bajada desde la punta, parte el triángulo en dos partes que se pueden encerrar en rectángulos?"
+      - "Bajá una línea recta desde la punta hasta la base. Encerrá cada mitad en un rectángulo: cada triángulo es justo la mitad de su rectángulo."
+    solution_steps:
+      - "Bajar la altura desde la punta hasta la base."
+      - "Encerrar cada mitad en un rectángulo."
+      - "Cada triángulo es la mitad de su rectángulo; sumar las dos mitades."
+
+  ch.geom.tiles_slanted_same_as_straight:
+    title: "El piso inclinado"
+    statement: "Este piso está inclinado y tiene una parte tapada: descubrí cuántas baldosas hay."
+    hints:
+      - "¿Se parece a un rectángulo? ¿Qué le sobra de un lado y qué le falta del otro?"
+      - "¿Qué línea recta corta el pedazo que sobra?"
+      - "Bajá una línea recta desde una esquina de arriba hasta la base. Levantá el triángulo que se corta y deslizalo al otro lado. Ahora es un rectángulo y se cuenta por filas."
+    solution_steps:
+      - "Bajar una línea recta desde una esquina."
+      - "Mover el triángulo cortado al otro lado."
+      - "Contar el rectángulo por filas y columnas."
+
+  ch.geom.tiles_hidden_layers_volume:
+    title: "La caja de cubos"
+    statement: "Esta caja está hecha de cubos y una parte no se ve: descubrí cuántos cubos hay."
+    hints:
+      - "Mirá la capa de abajo. ¿Cuántos cubos tiene?"
+      - "Las aristas verticales siguen hacia arriba. ¿Cuántas capas hay?"
+      - "Contá los cubos de la capa de abajo. Prolongá las aristas verticales para contar cuántas capas iguales hay apiladas. Multiplicá."
+    solution_steps:
+      - "Contar los cubos de una capa."
+      - "Contar las capas prolongando las aristas."
+      - "Multiplicar cubos por capa por cantidad de capas."
+
+  # ---- alg ----------------------------------------------------------------
+
+  ch.alg.hidden_equation_ages:
+    title: "Las edades escondidas"
+    statement: "Hoy, {name_a} tiene {k} veces la edad de {name_b}. Dentro de {t} años, la edad de {name_a} será el doble de la de {name_b}. ¿Cuántos años tiene cada uno hoy?"
+    hints:
+      - "Hay una igualdad escondida en la frase. ¿Qué dos cosas van a pesar lo mismo dentro de {t} años?"
+      - "Poné una caja para la edad más chica. ¿Cómo se escribe la otra edad con esa caja?"
+      - "Escribí las dos edades de hoy con una sola caja. Sumale {t} a cada una y armá la balanza: una edad futura de un lado, el doble de la otra del otro lado. Juntá las cajas de un solo lado."
+    solution_steps:
+      - "Llamar x a la edad menor; la mayor es k veces x."
+      - "Escribir las dos edades dentro de t años."
+      - "Igualar según el enunciado y juntar las cajas de un lado."
+      - "Resolver y comprobar sustituyendo en la frase original."
+
+  ch.alg.two_receipts_system:
+    title: "Dos tickets, dos precios"
+    statement: "En un puesto, {qa1} manzanas y {qb1} bananas costaron {p1}. En otro ticket, {qa2} manzanas y {qb2} bananas costaron {p2}. ¿Cuánto cuesta cada fruta?"
+    hints:
+      - "Cada ticket es una balanza. ¿Cuántas balanzas tenés y cuántas cajas desconocidas?"
+      - "¿Qué pasa si multiplicás un ticket entero para que la cantidad de una fruta coincida con la del otro?"
+      - "Escribí cada ticket como una balanza con dos cajas. Escalá una balanza hasta que una fruta aparezca igual en las dos, y restá balanza contra balanza: esa fruta desaparece y queda una ecuación de una caja."
+    solution_steps:
+      - "Escribir cada ticket como una ecuación con dos incógnitas."
+      - "Escalar una ecuación para igualar el coeficiente de una fruta."
+      - "Restar las ecuaciones para eliminar esa fruta y resolver la otra."
+      - "Sustituir en cualquier ticket para hallar el precio restante."
+
+  ch.alg.rectangle_perimeter_area_quadratic:
+    title: "El rectángulo que solo dice dos números"
+    statement: "Un rectángulo tiene perímetro {p} y área {s}. ¿Cuánto miden sus lados?"
+    hints:
+      - "Tenés dos datos y dos lados desconocidos. ¿Qué relación da el perímetro entre los dos lados?"
+      - "Si un lado es x, ¿cómo se escribe el otro usando el perímetro? ¿Y el área con esa expresión?"
+      - "Escribí el otro lado como la mitad del perímetro menos x. El área se vuelve x por esa expresión: una ecuación cuadrática. Factorizala o usá la fórmula; las dos raíces son los dos lados."
+    solution_steps:
+      - "Llamar x a un lado; el otro es la mitad del perímetro menos x."
+      - "El área es el producto de ambos: ecuación cuadrática en x."
+      - "Resolver la cuadrática."
+      - "Las dos raíces son los dos lados; descartar valores no positivos."
+
+  ch.alg.doublings_until_overflow:
+    title: "¿Cuántas vueltas?"
+    statement: "Una ficha arranca en {start} y cada vuelta de la manivela multiplica su posición por {base}. ¿Cuántas vueltas hacen falta para pasar de {target}?"
+    hints:
+      - "Lo que buscás no es una posición sino una cantidad de vueltas. ¿Qué operación cuenta vueltas de un engranaje que multiplica?"
+      - "Escribí la posición después de n vueltas. ¿Qué llave deshace la potencia?"
+      - "Escribí la posición como el inicio por la base elevada a n, y ponela en una balanza contra el objetivo. Aplicá la llave logaritmo a los dos platos: n queda solo. Como las vueltas son enteras, redondeá hacia arriba."
+    solution_steps:
+      - "Posición tras n vueltas: inicio por base a la n."
+      - "Igualar al objetivo y aplicar logaritmo a ambos lados."
+      - "Despejar n."
+      - "Redondear hacia arriba: la primera vuelta entera que supera el objetivo."
+
+  ch.alg.absolute_value_two_cases:
+    title: "Dos distancias en la recta"
+    statement: "Un punto x está en la recta numérica. Su distancia a {a} más su distancia a {b} suma {d}. ¿Qué valores puede tener x?"
+    hints:
+      - "Un valor absoluto se abre de dos maneras distintas según el signo de lo que hay adentro. ¿En qué puntos cambia cada signo?"
+      - "Marcá {a} y {b} en la recta. ¿En cuántas zonas queda dividida?"
+      - "Marcá los dos puntos y partí la recta en tres zonas. En cada zona, abrí los valores absolutos con el signo que corresponde y resolvé la ecuación lineal. Quedate solo con las soluciones que caen dentro de su zona."
+    solution_steps:
+      - "Marcar los puntos donde cada expresión cambia de signo."
+      - "Partir la recta en zonas y abrir los valores absolutos en cada una."
+      - "Resolver la ecuación lineal de cada zona."
+      - "Descartar las soluciones que no caen en su zona; reunir las válidas."
+
+  ch.alg.symmetric_sum_of_squares:
+    title: "La suma y el producto"
+    statement: "Dos números suman {s} y su producto es {p}. Sin averiguar cuáles son, calculá la suma de sus cuadrados."
+    hints:
+      - "No te piden los números. ¿Qué expresión con la suma y el producto contiene a los cuadrados?"
+      - "Armá un cuadrado de lado x más y con baldosas. ¿Qué piezas aparecen adentro?"
+      - "El cuadrado de lado x más y se parte en cuatro baldosas: dos cuadrados y dos rectángulos iguales. Los rectángulos son el producto. Sacá los dos rectángulos del cuadrado grande y lo que queda es lo que buscás."
+    solution_steps:
+      - "Armar el cuadrado de lado x más y con cuatro baldosas."
+      - "El cuadrado grande vale la suma al cuadrado."
+      - "Los dos rectángulos valen dos veces el producto."
+      - "Restar los rectángulos al cuadrado grande: suma de cuadrados."
+
+  # ---- arith --------------------------------------------------------------
+
+  ch.arith.plates_hidden_remainder:
+    title: "Los platos tapados"
+    statement: "Repartimos bolitas en platos iguales y una hoja tapa algunos: descubrí cuántas bolitas sobran."
+    hints:
+      - "Mirá un plato que se vea completo. ¿Cuántas bolitas tiene?"
+      - "Las filas de platos siguen debajo de la hoja. ¿Qué pasa si las prolongás?"
+      - "Prolongá las filas por debajo de la hoja y completá cada plato con la misma cantidad. Lo que no alcanza para un plato entero es lo que sobra."
+    solution_steps:
+      - "Prolongar las filas bajo la hoja."
+      - "Contar los platos completos."
+      - "Contar las bolitas que no llenan un plato."
+
+  ch.arith.two_clocks_same_position:
+    title: "Dos engranajes, una marca"
+    statement: "Un engranaje de {m} dientes está en la posición {a} y otro de {n} dientes está en la posición {b}. Los dos giran un diente por vuelta de manivela. ¿Cuál es el menor número de vueltas para que los dos vuelvan a marcar cero a la vez?"
+    hints:
+      - "Cada engranaje marca cero cada cierta cantidad de vueltas. ¿Cuáles son esas cantidades para cada uno?"
+      - "Escribí la lista de vueltas en las que el primero marca cero, y la del segundo. ¿Qué buscás en esas listas?"
+      - "Listá las vueltas del primer engranaje: su distancia a cero, y luego de a {m}. Listá las del segundo: su distancia a cero, y luego de a {n}. El primer número que aparece en las dos listas es la respuesta."
+    solution_steps:
+      - "Vueltas que llevan el primer engranaje a cero: una lista con paso m."
+      - "Vueltas que llevan el segundo a cero: una lista con paso n."
+      - "El primer número común a ambas listas."
+
+  ch.arith.count_rectangles_divisors:
+    title: "Rectángulos de la misma área"
+    statement: "¿Cuántos rectángulos distintos con lados enteros tienen área {n}? Un rectángulo girado no cuenta como otro."
+    hints:
+      - "Cada rectángulo es un par de números que multiplicados dan {n}. ¿Cómo se llaman esos números?"
+      - "¿Qué te dice el árbol de factores de {n} sobre cuántos divisores tiene?"
+      - "Armá el árbol de factores. Para cada primo, podés usarlo desde cero veces hasta su exponente. Multiplicá las opciones: es la cantidad de divisores. Cada rectángulo usa dos divisores, así que apareá y no cuentes dos veces el mismo par."
+    solution_steps:
+      - "Factorizar n en primos."
+      - "Cantidad de divisores: multiplicar cada exponente más uno."
+      - "Cada rectángulo es un par de divisores; aparearlos."
+      - "Si n es cuadrado perfecto, el cuadrado se cuenta una sola vez."
+
+  ch.arith.hidden_digit_divisibility:
+    title: "La cifra borrada"
+    statement: "En el número {digits} se borró una cifra. Se sabe que el número es divisible por {p} y por {q}. ¿Qué cifra puede ser?"
+    hints:
+      - "Tenés dos condiciones. ¿Qué regla rápida sirve para cada una?"
+      - "Probá primero con la regla que mira todo el número, y después con la que solo mira el final."
+      - "Aplicá el atajo de divisibilidad por {p} para descartar cifras. Con las que sobreviven, aplicá el atajo por {q}. Puede quedar más de una: la respuesta es el conjunto."
+    solution_steps:
+      - "Aplicar el atajo de divisibilidad por p a las diez cifras posibles."
+      - "Aplicar el atajo por q a las que sobrevivieron."
+      - "Las cifras que pasan ambas pruebas son la respuesta."
+
+  ch.arith.fraction_of_the_rest:
+    title: "El chocolate de a pedazos"
+    statement: "De una barra de chocolate, {name_a} come {f1}. Después {name_b} come {f2} de lo que quedó. ¿Qué parte de la barra entera queda?"
+    hints:
+      - "Cuando {name_b} come, ¿de qué está tomando la fracción: de la barra entera o de lo que quedó?"
+      - "Sombreá lo que comió {name_a}. ¿Cómo dividís lo que quedó para tomar {f2}?"
+      - "Sombreá la primera fracción. Volvé a cuadricular solo la parte que quedó y sombreá {f2} de esa parte. Para responder sobre la barra entera, llevá todo a una misma cuadrícula común."
+    solution_steps:
+      - "Sombrear la primera fracción de la barra."
+      - "Lo que queda es el nuevo entero para la segunda persona."
+      - "Tomar la segunda fracción solo de esa parte."
+      - "Expresar el resto con un denominador común respecto de la barra entera."
+
+  ch.arith.parity_invariant_coins:
+    title: "Las monedas que no se dejan"
+    statement: "Sobre la mesa hay {n} monedas, {h} de ellas con cara hacia arriba. En cada jugada das vuelta exactamente {k} monedas. ¿Se puede llegar a que todas muestren cruz? Explicá por qué."
+    hints:
+      - "Probá algunas jugadas y contá las caras después de cada una. ¿Notás algo que no cambia?"
+      - "Cada jugada cambia la cantidad de caras en cierto número. ¿Ese número es par o impar?"
+      - "Contá las caras al principio. Cada jugada cambia ese conteo en un número par, así que su paridad nunca cambia. Compará la paridad inicial con la del objetivo: si no coinciden, no hay camino."
+    solution_steps:
+      - "Buscar una cantidad que ninguna jugada altere: la paridad del número de caras."
+      - "Calcularla al inicio y en el objetivo."
+      - "Si difieren, ninguna secuencia de jugadas puede conectar los dos estados."
+
+  # ---- disc ---------------------------------------------------------------
+
+  ch.disc.handshakes_at_the_table:
+    title: "Saludos en la mesa"
+    statement: "En una mesa hay {n} personas y cada una saluda a todas las demás una sola vez. ¿Cuántos saludos hay en total?"
+    hints:
+      - "Si cada persona saluda a las demás, ¿cuántos saludos da cada una? ¿Y si sumás todos, qué estás contando de más?"
+      - "Un saludo une a dos personas. ¿Cuántas veces aparece el mismo saludo en tu cuenta?"
+      - "Trazá un puente de cada persona a cada otra. Cada persona tiene n menos uno puentes; multiplicá por n. Cada puente lo contaste desde sus dos extremos, así que dividí por dos."
+    solution_steps:
+      - "Cada persona saluda a n menos uno."
+      - "Multiplicar por n cuenta cada saludo dos veces."
+      - "Dividir por dos."
+
+  ch.disc.two_clubs_overlap:
+    title: "Los dos clubes"
+    statement: "En una clase de {total} estudiantes, {a} están en el club de ajedrez y {b} en el de teatro. {neither} no están en ninguno. ¿Cuántos están en los dos clubes?"
+    hints:
+      - "Sumá los dos clubes. ¿Cómo se compara con la cantidad de estudiantes que están en al menos uno?"
+      - "Los que están en los dos clubes, ¿cuántas veces los contaste al sumar?"
+      - "Poné dos aros que se cruzan. Los que están en algún club son el total menos los que no están en ninguno. Si la suma de los dos clubes supera ese número, el exceso son los que contaste dos veces: los que están en ambos."
+    solution_steps:
+      - "Estudiantes en al menos un club: total menos los que no están en ninguno."
+      - "Sumar los dos clubes cuenta dos veces a los que están en ambos."
+      - "La diferencia entre la suma y el 'al menos uno' es la intersección."
+
+  ch.disc.grid_paths_avoiding_corner:
+    title: "Caminos que esquivan una esquina"
+    statement: "En una cuadrícula de {w} por {h} querés ir de la esquina inferior izquierda a la superior derecha, moviéndote solo hacia la derecha o hacia arriba. Una esquina interior está bloqueada. ¿Cuántos caminos posibles quedan?"
+    hints:
+      - "¿Cuántos caminos habría sin el bloqueo? ¿Y qué habría que restar?"
+      - "Un camino que pasa por la esquina bloqueada tiene dos tramos. ¿Cómo se cuentan caminos que hacen dos cosas seguidas?"
+      - "Contá todos los caminos con el triángulo de Pascal. Contá los caminos del inicio a la esquina bloqueada y los de la esquina bloqueada al final; multiplicalos. Restá ese producto del total."
+    solution_steps:
+      - "Total de caminos sin bloqueo: combinaciones de pasos."
+      - "Caminos que pasan por el bloqueo: producto de los dos tramos."
+      - "Restar los malos del total."
+
+  ch.disc.socks_in_the_dark:
+    title: "Medias a oscuras"
+    statement: "En un cajón hay medias de {c} colores, muchas de cada uno, todas mezcladas. Está oscuro y no podés ver. ¿Cuántas medias tenés que sacar para estar seguro de tener {k} del mismo color?"
+    hints:
+      - "No se trata de suerte sino de seguridad. ¿Cuál es el peor caso posible?"
+      - "Imaginá un cajón por color. ¿Cuántas medias podés sacar sin que ningún cajón llegue a {k}?"
+      - "Armá un cajón por color y llenalo con la mayor cantidad posible sin llegar a {k}. Sumá lo que hay en todos los cajones. Una media más obliga a que algún cajón llegue."
+    solution_steps:
+      - "Un cajón por color."
+      - "Peor caso: cada cajón con k menos uno."
+      - "Una media más garantiza k en algún color."
+
+  ch.disc.domino_board_missing_corners:
+    title: "El tablero mutilado"
+    statement: "A un tablero de ajedrez de 8 por 8 se le quitaron dos esquinas opuestas. ¿Se puede cubrir lo que queda con fichas de dominó de 2 por 1, sin superponer ni dejar huecos? Justificá."
+    hints:
+      - "Probá cubrirlo. Cuando falle, preguntate qué tienen en común todos los intentos fallidos."
+      - "Pintá el tablero como un tablero de ajedrez. ¿De qué color son las esquinas que faltan?"
+      - "Pintá las casillas alternadas. Cada dominó cubre siempre una casilla de cada color. Contá cuántas casillas quedan de cada color después de quitar las esquinas: si no hay la misma cantidad, ningún cubrimiento es posible."
+    solution_steps:
+      - "Colorear el tablero alternando dos colores."
+      - "Las dos esquinas opuestas son del mismo color: quedan 32 de uno y 30 del otro."
+      - "Cada dominó cubre exactamente una casilla de cada color."
+      - "Un cubrimiento necesitaría cantidades iguales; como difieren, es imposible."
+
+  ch.disc.odd_numbers_make_squares:
+    title: "Los impares forman cuadrados"
+    statement: "Sumá los primeros números impares: 1, luego 1 más 3, luego 1 más 3 más 5. Aparece un patrón. Enunciá qué da la suma de los primeros n impares y demostralo para todo n."
+    hints:
+      - "Armá las primeras sumas con baldosas. ¿Qué forma tiene cada una?"
+      - "Si ya tenés un cuadrado, ¿qué figura hay que agregarle para obtener el cuadrado siguiente? ¿Cuántas baldosas tiene esa figura?"
+      - "Colocá un cuadrado de lado n. Agregale un borde en forma de L por dos lados: tiene dos veces n más uno baldosas, el siguiente impar. El resultado es un cuadrado de lado n más uno. Ese es el paso inductivo; el caso base es una sola baldosa."
+    solution_steps:
+      - "Caso base: la suma del primer impar es un cuadrado de lado uno."
+      - "Suponer que la suma de los primeros n impares es un cuadrado de lado n."
+      - "Agregar un borde en L con el siguiente impar: dos n más uno baldosas."
+      - "Se obtiene un cuadrado de lado n más uno, que es lo que había que probar."
+
+  # ---- prob ---------------------------------------------------------------
+
+  ch.prob.two_dice_hidden_grid:
+    title: "La suma de dos dados"
+    statement: "Tirás dos dados y sumás. ¿Cuál es la probabilidad de que la suma sea {target}?"
+    hints:
+      - "¿Cuántos resultados posibles hay al tirar dos dados? Cuidado: no es la cantidad de sumas distintas."
+      - "Armá una cuadrícula con un dado por fila y otro por columna. ¿Cuántas casillas tiene?"
+      - "Colocá las 36 casillas de todos los pares. Sombreá las que suman {target} y contá. La probabilidad es sombreadas sobre 36. Si dudás, mantené apretado el dado y mirá a qué proporción se estabiliza."
+    solution_steps:
+      - "Espacio muestral: cuadrícula de 6 por 6 pares, todos igual de probables."
+      - "Contar las casillas cuya suma es la buscada."
+      - "Dividir por 36."
+
+  ch.prob.at_least_one_by_complement:
+    title: "Al menos un seis"
+    statement: "Tirás un dado {n} veces. ¿Cuál es la probabilidad de sacar al menos un seis?"
+    hints:
+      - "'Al menos uno' tiene muchos casos. ¿Cuál es el único caso en que no pasa?"
+      - "¿Cuál es la probabilidad de no sacar seis en una tirada? ¿Y en {n} tiradas seguidas e independientes?"
+      - "Pasá al evento contrario: ningún seis. Multiplicá la probabilidad de fallar por sí misma {n} veces, porque cada tirada es independiente. Restá ese resultado a uno."
+    solution_steps:
+      - "El contrario de 'al menos uno' es 'ninguno'."
+      - "Probabilidad de ninguno: la de fallar en una tirada elevada a n."
+      - "Uno menos eso."
+
+  ch.prob.shared_month_small_group:
+    title: "El mismo mes"
+    statement: "En un grupo de {k} personas, cada una nació en un mes cualquiera del año con la misma probabilidad. ¿Cuál es la probabilidad de que al menos dos cumplan años el mismo mes?"
+    hints:
+      - "Contar las maneras en que dos o más coinciden es enredado. ¿Cuál es el evento contrario?"
+      - "Para que todos tengan meses distintos, ¿cuántas opciones le quedan a la segunda persona? ¿Y a la tercera?"
+      - "Pasá al contrario: todos en meses distintos. La primera persona tiene 12 opciones de 12, la segunda 11 de 12, y así. Multiplicá esa cadena de fracciones y restá el resultado a uno."
+    solution_steps:
+      - "Contrario: todos los meses distintos."
+      - "Cadena de fracciones decrecientes: 12 de 12, 11 de 12, 10 de 12..."
+      - "Multiplicar la cadena."
+      - "Uno menos el producto."
+
+  ch.prob.three_doors_switch:
+    title: "Las tres puertas"
+    statement: "Detrás de una de tres puertas hay un premio. Elegís una. El presentador, que sabe dónde está el premio, abre otra puerta vacía y te ofrece cambiar. ¿Conviene cambiar? ¿Con qué probabilidad ganás en cada caso?"
+    hints:
+      - "Cuando el presentador abre una puerta, ¿elige al azar o está obligado por lo que sabe?"
+      - "Dibujá un árbol: dónde está el premio, qué elegiste, y qué puerta puede abrir el presentador en cada caso."
+      - "Armá el árbol con el premio en cada puerta. En cada rama marcá qué puerta puede abrir el presentador; en dos de tres ramas no tiene opción. Sumá las ramas en las que cambiar gana y compará con las de quedarse."
+    solution_steps:
+      - "Tu primera elección acierta una vez de cada tres."
+      - "Si acertaste, cambiar pierde; si no, el presentador te muestra la única puerta vacía restante y cambiar gana."
+      - "Cambiar gana dos de cada tres; quedarse, una de cada tres."
+
+  ch.prob.test_positive_base_rate:
+    title: "El resultado positivo"
+    statement: "Una condición afecta a {prev} de cada {pop} personas. Una prueba detecta la condición el {sens} de las veces y da falso positivo el {fp} de las veces en personas sanas. Alguien da positivo. ¿Cuál es la probabilidad de que tenga la condición?"
+    hints:
+      - "La pregunta invierte la condición: no es 'positivo dado enfermo' sino 'enfermo dado positivo'. ¿Qué grupo hay que mirar?"
+      - "Imaginá {pop} personas. ¿Cuántas tienen la condición? De esas, ¿cuántas dan positivo? Y de las sanas, ¿cuántas dan positivo?"
+      - "Armá una cuadrícula de {pop} personas. Ordenalas primero por condición y luego por resultado. Quedate solo con la columna de los positivos y mirá qué parte de esa columna tiene la condición."
+    solution_steps:
+      - "Ordenar la población por condición: enfermos y sanos."
+      - "Dentro de cada grupo, contar los positivos."
+      - "Restringirse a todos los positivos."
+      - "Proporción de enfermos dentro de los positivos."
+
+  ch.prob.expected_rolls_until_six:
+    title: "¿Cuántas tiradas hasta el seis?"
+    statement: "Tirás un dado hasta que salga un seis. En promedio, ¿cuántas tiradas hacen falta?"
+    hints:
+      - "Después de la primera tirada pasan dos cosas posibles. ¿Cuáles, y con qué probabilidad?"
+      - "Si la primera tirada falla, ¿en qué situación quedás? ¿Se parece a la del principio?"
+      - "Llamá E al promedio buscado. Con probabilidad un sexto terminás en una tirada. Con probabilidad cinco sextos gastaste una tirada y volvés a empezar: te esperan E más. Poné E en la balanza contra uno más cinco sextos de E, y despejá."
+    solution_steps:
+      - "Condicionar en la primera tirada: éxito o reinicio."
+      - "Escribir E igual a uno más cinco sextos de E."
+      - "Despejar E."
+
+  # ---- trig ---------------------------------------------------------------
+
+  ch.trig.tower_from_two_angles:
+    title: "La torre vista desde dos lugares"
+    statement: "Dos personas miran la punta de una torre desde el mismo lado, alineadas con ella y separadas {d} metros. La más cercana la ve con un ángulo de elevación de {beta} y la más lejana con {alpha}. ¿Cuánto mide la torre?"
+    hints:
+      - "Para usar una razón trigonométrica necesitás un triángulo rectángulo. ¿Cuál falta y qué dato desconocido comparten los dos triángulos?"
+      - "Llamá x a la distancia de la persona cercana a la base. ¿Cómo se escribe la altura en cada triángulo?"
+      - "Bajá la altura de la torre y marcá el ángulo recto. Escribí la altura como x por la tangente del ángulo cercano, y también como x más {d} por la tangente del ángulo lejano. Igualá las dos y despejá x."
+    solution_steps:
+      - "Bajar la altura de la torre: dos triángulos rectángulos que la comparten."
+      - "Llamar x a la distancia desde la persona cercana a la base."
+      - "Altura igual a x por tangente del ángulo cercano, e igual a x más d por tangente del lejano."
+      - "Igualar, despejar x y calcular la altura."
+
+  ch.trig.unit_circle_hidden_cosine:
+    title: "La otra coordenada"
+    statement: "Un punto del círculo unitario tiene altura {sin} y está en el cuadrante {q}. ¿Cuánto vale su coordenada horizontal, y cuánto vale la tangente del ángulo?"
+    hints:
+      - "Conocés una coordenada y el radio. ¿Qué triángulo escondido las une?"
+      - "Bajá la altura desde el extremo del radio. ¿Qué mide la hipotenusa?"
+      - "Trazá el radio y bajá la altura hasta el eje horizontal: triángulo rectángulo con hipotenusa uno. Pitágoras da el cateto horizontal. El cuadrante decide el signo."
+    solution_steps:
+      - "Trazar el radio al punto y bajar la altura."
+      - "Pitágoras en el triángulo de hipotenusa uno da el cateto horizontal."
+      - "Elegir el signo según el cuadrante."
+      - "Tangente: altura sobre coordenada horizontal."
+
+  ch.trig.triangle_area_from_included_angle:
+    title: "Área con un ángulo en medio"
+    statement: "Un triángulo tiene dos lados de {a} y {b} que forman un ángulo de {theta}. Calculá su área."
+    hints:
+      - "La fórmula del área pide una altura. ¿Desde qué vértice conviene bajarla?"
+      - "Si bajás la altura desde el vértice que no está en el ángulo dado, ¿en qué triángulo rectángulo queda ese ángulo?"
+      - "Bajá la altura desde el extremo del lado {b} hasta la recta del lado {a}. En el triángulo rectángulo que aparece, la altura es {b} por el seno del ángulo. Área: base {a} por esa altura, dividido dos."
+    solution_steps:
+      - "Bajar la altura desde el extremo de un lado sobre la recta del otro."
+      - "En el triángulo rectángulo, la altura es el lado por el seno del ángulo."
+      - "Área: base por altura sobre dos."
+
+  ch.trig.which_law_hidden_side:
+    title: "¿Qué ley conviene?"
+    statement: "De un triángulo se conocen {given}. Falta el lado {x}. Calculalo."
+    hints:
+      - "¿Qué patrón tienen los datos: dos lados y el ángulo entre ellos, o dos ángulos y un lado?"
+      - "Si el ángulo dado está entre los dos lados, ¿qué ley lo relaciona con el lado opuesto? Si no, ¿qué ángulo podés calcular primero?"
+      - "Con dos lados y el ángulo incluido, aplicá la ley del coseno directamente; o bajá una altura y usá Pitágoras dos veces. Con dos ángulos y un lado, hallá el tercer ángulo con la media vuelta y aplicá la ley del seno."
+    solution_steps:
+      - "Clasificar los datos: lado-ángulo-lado o ángulo-lado-ángulo."
+      - "Elegir la ley que corresponde al patrón."
+      - "Aplicarla y despejar el lado."
+
+  ch.trig.regular_polygon_area_by_radii:
+    title: "El polígono dentro del círculo"
+    statement: "Un polígono regular de {n} lados está inscripto en un círculo de radio {r}. Calculá su área."
+    hints:
+      - "El polígono es difícil de medir entero. ¿En qué piezas iguales se puede partir desde el centro?"
+      - "Cada pieza es un triángulo con dos radios. ¿Qué ángulo tiene en el centro?"
+      - "Trazá los radios a todos los vértices: {n} triángulos isósceles iguales, cada uno con ángulo central de una vuelta dividida {n}. Bajá la altura en uno de ellos, calculá su área con el seno del ángulo central, y multiplicá por {n}."
+    solution_steps:
+      - "Trazar los radios a los vértices: n triángulos isósceles iguales."
+      - "Ángulo central: la vuelta completa dividida n."
+      - "Área de un triángulo: mitad del radio al cuadrado por el seno del ángulo central."
+      - "Multiplicar por n."
+
+  ch.trig.two_slopes_add_to_quarter_turn:
+    title: "Dos rampas, un giro"
+    statement: "Una rampa tiene pendiente {m1} y otra pendiente {m2}. Si ponés una rampa sobre la otra, sumando los ángulos, ¿qué ángulo total se forma?"
+    hints:
+      - "Cada pendiente es la tangente de un ángulo. ¿Qué fórmula da la tangente de la suma?"
+      - "Levantá una copia de la segunda rampa y apoyala sobre la primera. ¿Qué pendiente tiene el giro compuesto?"
+      - "Escribí la tangente de la suma con las dos tangentes conocidas. El resultado es la pendiente del giro compuesto; identificá qué ángulo tiene esa pendiente. Podés confirmarlo armando en la grilla un rectángulo donde las dos rampas encierren un triángulo rectángulo isósceles."
+    solution_steps:
+      - "Cada pendiente es la tangente de un ángulo."
+      - "Aplicar la fórmula de la tangente de la suma."
+      - "Reconocer el ángulo por su tangente."
+      - "Verificar en la grilla con triángulos congruentes."
+
+  ch.trig.all_solutions_on_the_wheel:
+    title: "Todas las soluciones en la rueda"
+    statement: "Resolvé la ecuación {equation} para todos los ángulos entre 0 y una vuelta completa."
+    hints:
+      - "La ecuación tiene un factor repetido. ¿Qué pasa si lo sacás de factor común?"
+      - "Cada factor igualado a cero da una altura sobre la rueda. ¿Cuántos ángulos tienen esa misma altura en una vuelta?"
+      - "Factorizá y aplicá la regla del producto cero. Para cada valor del seno, marcá un ángulo en la rueda y reflejalo respecto del eje vertical: su compañero tiene la misma altura. Reuní todos los ángulos dentro de la vuelta."
+    solution_steps:
+      - "Sacar factor común y aplicar producto cero."
+      - "Para cada factor, hallar el ángulo de referencia."
+      - "Agregar el ángulo compañero con la misma altura en la rueda."
+      - "Reunir todas las soluciones dentro de una vuelta."
+
+  # ---- calc ---------------------------------------------------------------
+
+  ch.calc.fence_along_the_river:
+    title: "El cerco junto al río"
+    statement: "Tenés {L} metros de cerco para armar un corral rectangular junto a un río recto. El lado del río no necesita cerco. ¿Qué medidas dan el corral más grande?"
+    hints:
+      - "El área depende de dos lados. ¿Qué dato del enunciado los ata entre sí?"
+      - "Escribí cuánto cerco usan los tres lados. ¿Cómo queda un lado en función del otro?"
+      - "Llamá x al lado perpendicular al río; el lado paralelo usa lo que queda del cerco: {L} menos dos x. El área es x por esa expresión. Derivá, igualá a cero y comprobá que es un máximo."
+    solution_steps:
+      - "Nombrar los dos lados y escribir la restricción del cerco: dos x más y igual a L."
+      - "Sustituir y en el área: una función de x sola."
+      - "Derivar e igualar a cero."
+      - "Verificar que es máximo y calcular las medidas."
+
+  ch.calc.box_from_a_sheet:
+    title: "La caja de una hoja"
+    statement: "De una hoja de cartón de {w} por {h} se recortan cuadrados iguales en las cuatro esquinas y se doblan los bordes para armar una caja sin tapa. ¿De qué lado hay que cortar los cuadrados para que la caja tenga el mayor volumen?"
+    hints:
+      - "Si el corte mide x, ¿cuánto miden la base y la altura de la caja?"
+      - "El volumen es base por altura. ¿Entre qué valores puede estar x para que la caja exista?"
+      - "Marcá la base después de doblar: {w} menos dos x por {h} menos dos x, con altura x. Expandí, derivá, igualá a cero. Salen dos raíces; descartá la que deja la base sin lado."
+    solution_steps:
+      - "Volumen en función del corte x: base recortada por altura x."
+      - "Expandir y derivar."
+      - "Resolver la derivada igual a cero."
+      - "Descartar la raíz fuera del rango válido y verificar el máximo."
+
+  ch.calc.sliding_ladder_rates:
+    title: "La escalera que resbala"
+    statement: "Una escalera de {L} metros está apoyada contra una pared. Su base se aleja de la pared a {v} metros por segundo. Cuando la base está a {x0} metros de la pared, ¿a qué velocidad baja la punta?"
+    hints:
+      - "Hay dos cantidades que cambian a la vez. ¿Qué relación geométrica las ata en todo momento?"
+      - "Dibujá el triángulo pared, piso, escalera. ¿Qué teorema lo describe? ¿Y qué pasa si derivás esa relación respecto del tiempo?"
+      - "Escribí Pitágoras con las dos posiciones como funciones del tiempo. Derivá los dos lados con la regla de la cadena. Calculá la altura en ese instante con Pitágoras, sustituí la velocidad conocida y despejá la otra."
+    solution_steps:
+      - "Triángulo rectángulo: x al cuadrado más y al cuadrado igual a L al cuadrado, para todo instante."
+      - "Derivar respecto del tiempo con la regla de la cadena."
+      - "Hallar y en ese instante con Pitágoras."
+      - "Sustituir y despejar la velocidad de la punta."
+
+  ch.calc.area_between_hidden_crossings:
+    title: "El área entre dos curvas"
+    statement: "Calculá el área encerrada entre la parábola {f} y la recta {g}."
+    hints:
+      - "Para integrar necesitás los límites. ¿Dónde se cruzan las dos curvas?"
+      - "Entre los cruces, ¿cuál de las dos está arriba? Probá con un punto en el medio."
+      - "Igualá las dos expresiones y resolvé la cuadrática: son los límites. Elegí un punto entre ellos para saber cuál curva va arriba. Integrá la de arriba menos la de abajo y evaluá con el teorema fundamental."
+    solution_steps:
+      - "Igualar las curvas y resolver: los cruces son los límites."
+      - "Determinar cuál curva está arriba en el intervalo."
+      - "Integrar arriba menos abajo entre los límites."
+      - "Evaluar con la antiderivada en los extremos."
+
+  ch.calc.washer_with_hidden_hole:
+    title: "El sólido con agujero"
+    statement: "La región entre las curvas {f} y {g} gira alrededor de {axis}. Calculá el volumen del sólido que se forma."
+    hints:
+      - "Al girar, cada rebanada es un disco. ¿Es un disco lleno o tiene un agujero?"
+      - "Dibujá una rebanada perpendicular al eje. ¿Cuál es el radio exterior y cuál el interior?"
+      - "Trazá una rebanada perpendicular al eje y marcá los dos radios medidos desde el eje: el de la curva lejana y el de la cercana. Hallá los límites igualando las curvas. Integrá pi por radio exterior al cuadrado menos radio interior al cuadrado."
+    solution_steps:
+      - "Trazar una rebanada perpendicular al eje de giro."
+      - "Identificar radio exterior e interior desde el eje."
+      - "Hallar los límites donde se cruzan las curvas."
+      - "Integrar pi por la diferencia de cuadrados de los radios."
+
+  ch.calc.cylinder_inside_a_cone:
+    title: "El cilindro dentro del cono"
+    statement: "Un cono tiene radio {R} y altura {H}. Dentro se apoya un cilindro con la base sobre la base del cono. ¿Qué radio del cilindro da el mayor volumen?"
+    hints:
+      - "El volumen del cilindro depende de su radio y de su altura. ¿Qué los ata?"
+      - "Cortá el cono por el eje. ¿Qué triángulos aparecen por encima del cilindro?"
+      - "Dibujá el corte axial: un triángulo grande con un rectángulo adentro. El triángulo chico que queda sobre el cilindro es semejante al grande, y esa proporción da la altura en función del radio. Sustituí en el volumen, derivá y buscá el máximo."
+    solution_steps:
+      - "Cortar por el eje: triángulo grande y rectángulo inscripto."
+      - "Semejanza entre el triángulo chico superior y el grande da la altura en función del radio."
+      - "Sustituir en el volumen del cilindro."
+      - "Derivar, igualar a cero, descartar extremos y verificar el máximo."
+
+  ch.calc.telescoping_sum_hidden_split:
+    title: "La suma que se cancela"
+    statement: "Sumá infinitos términos de la forma {term}, empezando en n igual a {start}. ¿Cuánto vale la suma?"
+    hints:
+      - "Ninguna fórmula conocida da esta suma directamente. ¿Se puede escribir cada término como una diferencia de dos fracciones simples?"
+      - "Escribí los primeros términos partidos. ¿Qué se cancela entre uno y el siguiente?"
+      - "Partí cada término en fracciones parciales: una fracción menos la siguiente. Anotá los primeros términos en filas: casi todo se cancela y sobrevive solo el primero y el último. Tomá el límite cuando el último se va a cero."
+    solution_steps:
+      - "Escribir el término como diferencia de dos fracciones parciales."
+      - "Escribir la suma parcial y cancelar los pares."
+      - "Sobreviven el primer término y uno que tiende a cero."
+      - "Tomar el límite."
+
+  # ---- linalg -------------------------------------------------------------
+
+  ch.linalg.matrix_of_a_composed_move:
+    title: "La matriz del doble movimiento"
+    statement: "Una casita fue movida dos veces seguidas: primero {move_a} y después {move_b}. Encontrá la única matriz que hace las dos cosas de una vez."
+    hints:
+      - "Una matriz se conoce por dónde manda a las dos flechas base. ¿Adónde va cada una después de los dos movimientos?"
+      - "Aplicá el primer movimiento a las flechas base y después el segundo a lo que salió. ¿Importa el orden?"
+      - "Seguí la flecha horizontal por los dos movimientos y anotá dónde cae: es la primera columna. Repetí con la flecha vertical: segunda columna. Comprobá multiplicando las matrices en el orden de aplicación."
+    solution_steps:
+      - "Seguir cada flecha base por los dos movimientos."
+      - "Los puntos de llegada son las columnas de la matriz."
+      - "Equivale a multiplicar las dos matrices, la segunda por la primera."
+      - "Verificar sobre la casita."
+
+  ch.linalg.undo_the_unknown_stretch:
+    title: "Deshacer la deformación desconocida"
+    statement: "Una deformación lineal mandó el punto {p1} a {q1} y el punto {p2} a {q2}. Otro punto terminó en {q3}. ¿De dónde salió? ¿Y hay alguna deformación así que no se pueda deshacer?"
+    hints:
+      - "Para deshacer necesitás la llave: la matriz inversa. Pero primero, ¿cuál es la matriz?"
+      - "Con dos puntos y sus imágenes podés averiguar adónde fueron las flechas base. ¿Qué te dice el área de la baldosa deformada sobre si existe la llave?"
+      - "Recuperá la matriz a partir de las imágenes de las flechas base. Calculá el determinante: si es cero la baldosa se aplastó y no hay llave. Si no, armá la inversa y aplicala al punto final."
+    solution_steps:
+      - "Recuperar las columnas de la matriz desde las imágenes dadas."
+      - "Calcular el determinante para saber si la deformación se puede deshacer."
+      - "Construir la inversa."
+      - "Aplicarla al punto final para hallar el original."
+
+  ch.linalg.shadow_gives_the_height:
+    title: "La sombra da la altura"
+    statement: "Dos vectores {u} y {v} salen del origen y forman un paralelogramo. Calculá la altura del paralelogramo sobre el lado {u} y comprobá el área de dos maneras distintas."
+    hints:
+      - "La altura es una perpendicular. ¿Desde qué punto hasta qué recta?"
+      - "Si proyectás {v} sobre {u}, ¿qué parte de {v} queda sin proyectar?"
+      - "Bajá la perpendicular desde la punta de {v} hasta la recta de {u}. La sombra se calcula con el producto punto; la altura es lo que sobra, por Pitágoras. Compará base por altura con el determinante."
+    solution_steps:
+      - "Bajar la perpendicular desde la punta de v a la recta de u."
+      - "Calcular la sombra de v sobre u con el producto punto."
+      - "Pitágoras entre v y su sombra da la altura."
+      - "Área: base por altura, y también el determinante; deben coincidir."

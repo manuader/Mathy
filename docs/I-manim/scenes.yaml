@@ -1,0 +1,1181 @@
+# Escenas de Manim de Mathy. DATA. La prosa que explica este archivo está en I0-mapping.md.
+#
+# Reglas:
+# - `families`: una por mecánica de ../E-mecanicas/mechanics.yaml (13). `mechanic` es el id de la mecánica;
+#   `base_primitives` son los nombres de ManimGL que toda escena de la familia hereda de su clase base.
+# - `scenes`: cada escena que un nodo del grafo declara en su campo `manim` (92 ids congelados) más las
+#   escenas agregadas por I (marcadas con `added_by_i: true`). Los ids son permanentes.
+# - `primitives`: SOLO nombres confirmados en el código fuente de ManimGL (3b1b/manim). El validador
+#   los compara contra el inventario de I0-mapping.md §8 y rechaza cualquier nombre de ManimCE.
+# - `native_equivalents`: ids del mini-Manim nativo (viz-core, ../O-arquitectura-tecnica.md §3),
+#   tomados de `native_vocabulary` más abajo.
+# - `route`: prerender | native | both. `prerender` = clip de 3–10 s renderizado en CI, sin interacción.
+#   `native` = corre en viz-core en el dispositivo. `both` = clip de introducción con handoff.json a la
+#   escena nativa del mismo id. Equivale al campo `route: nativo | pre-render` de O: native → nativo,
+#   prerender → pre-render, both → pre-render (clip) + nativo (escena).
+# - `params`: lista "nombre: Tipo" con los tipos de `param_types`. Ningún parámetro contiene texto
+#   visible; las etiquetas se resuelven por clave de locale en la app (../P-internacionalizacion.md).
+# - `text_free`: true en toda escena. Un clip con símbolos universales embebidos declararía
+#   `text_free: false` más `embedded_symbols: [...]` (P §7); ninguna escena de esta versión lo necesita.
+# - `duration_s`: solo en prerender y both (duración del clip). `threed`: true solo si el clip usa
+#   ThreeDScene con cámara real. Ninguna escena de la espina lo necesita; las escenas 3D interactivas
+#   quedan restringidas a la lista de espera de ../D-curriculum/D0-mapa.md.
+# - Este archivo no contiene texto visible al usuario.
+
+version: 1
+
+native_vocabulary:
+  # Mobjects de viz-core (O §3). ConcreteToken = ficha iconográfica (fruta, cofre, llave) con la caja
+  # del símbolo al que morfa (O §4). SvgAsset = asset propio estático sin ids internos.
+  - Group
+  - Line
+  - Arrow
+  - Vector
+  - Dot
+  - Circle
+  - Arc
+  - Angle
+  - Polygon
+  - Brace
+  - DecimalNumber
+  - NumberLine
+  - Axes
+  - NumberPlane
+  - ComplexPlane
+  - ThreeDAxes
+  - FunctionGraph
+  - RiemannRects
+  - AreaUnderGraph
+  - TangentLineAt
+  - VectorField
+  - StreamLines
+  - MatrixMobject
+  - SurfaceWire
+  - TracedPath
+  - BarChart
+  - MathMobject
+  - Text
+  - ConcreteToken
+  - SvgAsset
+  # Animaciones (O §3, tabla). Tween cubre ApplyMethod, ScaleInPlace, FadeToColor, Swap,
+  # ChangeDecimalToValue y Restore (interpolación de propiedades hacia un estado guardado).
+  - Transform
+  - TransformMatchingIds
+  - Write
+  - FadeIn
+  - FadeOut
+  - Indicate
+  - Flash
+  - CircleIndicate
+  - PassingFlash
+  - Wiggle
+  - LaggedStart
+  - Succession
+  - MoveAlongPath
+  - Rotate
+  - Tween
+  # Motor
+  - SharedValue
+  - AlwaysRedraw
+  - GridDeform
+  - Projection2_5D
+  - Timeline
+  - RateFunctions
+
+param_types:
+  - int
+  - float
+  - bool
+  - MathTree        # árbol MathJSON con ids estables (O §4)
+  - NodeId          # id de un nodo del MathTree
+  - IdMap           # correspondencia NodeId → NodeId entre dos MathTree (morph)
+  - Op              # add | sub | mul | div | pow | root | exp | log | neg
+  - Fn              # función de una variable como MathTree
+  - Rule            # regla de derivación: sum | const_mult | power | chain | product
+  - Point           # [x, y]
+  - Vector2         # [x, y]
+  - Matrix2         # [[a, b], [c, d]]
+  - Interval        # [a, b]
+  - Angle           # radianes
+  - Ratio           # [num, den]
+  - Segment         # [Point, Point]
+  - Edge            # [i, j] índices de nodos
+  - Graph           # lista de aristas Edge sobre n nodos
+  - Composition     # conteo por color: int[]
+  - TilingId        # id de un despiece de baldosas predefinido
+  - Side            # lhs | rhs
+  - Seed            # semilla determinista del generador aleatorio
+  - "int[]"
+  - "float[]"
+  - "float[][]"
+  - "Op[]"
+  - "Rule[]"
+  - "Point[]"
+  - "Vector2[]"
+  - "MathTree[]"
+  - "NodeId[]"
+  - "Segment[]"
+  - "Edge[]"
+  - "Composition[]"
+
+families:
+  balance_scene:
+    mechanic: balance
+    base_primitives: [Line, Dot, Rectangle, Square, VGroup, Rotate, ValueTracker, always_redraw, Transform, Indicate, there_and_back, smooth]
+  chest_scene:
+    mechanic: chest_key
+    base_primitives: [RoundedRectangle, SVGMobject, Tex, Rotate, Succession, save_state, Restore, FadeIn, Flash, smooth]
+  pipe_scene:
+    mechanic: machine_pipe
+    base_primitives: [Rectangle, Arrow, Dot, MoveAlongPath, Tex, TransformMatchingTex, DecimalNumber, ChangeDecimalToValue, Succession, linear]
+  ledger_scene:
+    mechanic: ledger
+    base_primitives: [SVGMobject, Rectangle, VGroup, Tex, Integer, CountInFrom, LaggedStartMap, TransformMatchingParts, TransformMatchingShapes, FadeIn]
+  tile_scene:
+    mechanic: tiles
+    base_primitives: [Square, Rectangle, VGroup, LaggedStartMap, ApplyMethod, Brace, BraceLabel, Tex, TransformMatchingTex, Integer, smooth]
+  slope_scene:
+    mechanic: slope_walker
+    base_primitives: [Axes, get_graph, Dot, TracedPath, ValueTracker, always_redraw, get_tangent_line, slope_of_tangent, get_v_line_to_graph, get_h_line_to_graph, Polygon, DecimalNumber, ChangeDecimalToValue, MoveAlongPath, linear]
+  fill_scene:
+    mechanic: fill_accumulate
+    base_primitives: [Axes, get_graph, get_riemann_rectangles, get_area_under_graph, Rectangle, ValueTracker, always_redraw, Transform, DecimalNumber, ChangeDecimalToValue, linear]
+  grid_scene:
+    mechanic: grid_stretch
+    base_primitives: [NumberPlane, Vector, Polygon, Matrix, prepare_for_nonlinear_transform, ApplyMatrix, apply_matrix, save_state, Restore, TransformMatchingTex, smooth]
+  network_scene:
+    mechanic: network_routes
+    base_primitives: [Dot, Line, Arrow, VGroup, ShowCreation, LaggedStartMap, MoveAlongPath, ShowPassingFlash, Indicate, Transform]
+  urn_scene:
+    mechanic: urn_dice
+    base_primitives: [Circle, Dot, VGroup, MoveAlongPath, BarChart, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Sector, FadeToColor]
+  gear_scene:
+    mechanic: gears_sequence
+    base_primitives: [Circle, Annulus, Rotate, NumberLine, Dot, Arrow, GrowArrow, ValueTracker, always_redraw, Integer, ChangeDecimalToValue, MoveAlongPath, linear]
+  sorter_scene:
+    mechanic: sorter
+    base_primitives: [Rectangle, Dot, SVGMobject, VGroup, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, FadeIn, Indicate]
+  construction_scene:
+    mechanic: construct
+    base_primitives: [Polygon, Line, DashedLine, Dot, Arc, Square, ShowCreation, Brace, BraceLabel, Indicate, FlashAround, TransformFromCopy]
+
+scenes:
+
+  # ---------------------------------------------------------------- balance_scene
+  - id: balance_equal_pans_stay_level
+    family: balance_scene
+    nodes: [prealg.eq.balance]
+    route: native
+    primitives: [Line, Dot, Rectangle, Square, VGroup, Rotate, ValueTracker, always_redraw, Transform, Indicate, there_and_back, smooth]
+    native_equivalents: [Group, Line, Polygon, ConcreteToken, SharedValue, AlwaysRedraw, Rotate, Transform, Indicate, MathMobject]
+    params: ["lhs: MathTree", "rhs: MathTree", "tokens_left: int", "tokens_right: int"]
+    text_free: true
+    threed: false
+
+  - id: balance_remove_one_side_tilts
+    family: balance_scene
+    nodes: [prealg.eq.balance]
+    route: native
+    primitives: [Line, Dot, Square, VGroup, Rotate, ValueTracker, always_redraw, FadeOut, Indicate, WiggleOutThenIn, rush_into]
+    native_equivalents: [Group, Line, ConcreteToken, SharedValue, AlwaysRedraw, Rotate, FadeOut, Wiggle, Indicate]
+    params: ["lhs: MathTree", "rhs: MathTree", "removed: MathTree", "side: Side"]
+    text_free: true
+    threed: false
+
+  - id: balance_key_both_sides
+    family: balance_scene
+    nodes: [alg.eq.one_step]
+    route: native
+    primitives: [Line, Dot, Square, SVGMobject, VGroup, ValueTracker, always_redraw, Rotate, TransformMatchingTex, FadeOut, Indicate, Succession, smooth]
+    native_equivalents: [Group, Line, ConcreteToken, SvgAsset, SharedValue, AlwaysRedraw, Rotate, TransformMatchingIds, FadeOut, Indicate, Succession, MathMobject]
+    params: ["equation: MathTree", "key_op: Op", "key_value: MathTree"]
+    text_free: true
+    threed: false
+
+  - id: balance_two_keys_in_order
+    family: balance_scene
+    nodes: [alg.eq.multi_step]
+    route: native
+    primitives: [Line, Dot, Square, SVGMobject, VGroup, ValueTracker, always_redraw, Rotate, TransformMatchingTex, Succession, save_state, Restore, Indicate, smooth]
+    native_equivalents: [Group, Line, ConcreteToken, SvgAsset, SharedValue, AlwaysRedraw, Rotate, TransformMatchingIds, Succession, Tween, Indicate, MathMobject]
+    params: ["equation: MathTree", "keys: Op[]", "expected_order: Op[]"]
+    text_free: true
+    threed: false
+
+  - id: balance_two_scales_shared_boxes
+    family: balance_scene
+    nodes: [alg.sys.two_by_two]
+    route: native
+    primitives: [Line, Dot, Square, VGroup, TransformFromCopy, TransformMatchingTex, Indicate, FlashAround, Succession, ValueTracker, always_redraw, Rotate]
+    native_equivalents: [Group, Line, ConcreteToken, Transform, TransformMatchingIds, Indicate, Flash, Succession, SharedValue, AlwaysRedraw, Rotate, MathMobject]
+    params: ["eq1: MathTree", "eq2: MathTree", "shared_var: NodeId"]
+    text_free: true
+    threed: false
+
+  - id: balance_scene_two_equations_one_grid
+    family: balance_scene
+    nodes: [linalg.map.inverse_and_systems]
+    route: both
+    primitives: [Line, Square, VGroup, NumberPlane, Vector, Matrix, Transform, TransformMatchingShapes, ApplyMatrix, ShowCreation, Dot, FadeIn, smooth]
+    native_equivalents: [Group, Line, ConcreteToken, NumberPlane, Vector, MatrixMobject, Transform, TransformMatchingIds, GridDeform, Write, Dot, FadeIn]
+    params: ["matrix: Matrix2", "rhs: Vector2", "solution: Vector2"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: balance_scene_plank_with_weights
+    family: balance_scene
+    nodes: [prob.rv.expectation_as_weighted_average]
+    route: native
+    primitives: [Line, Dot, Circle, VGroup, ValueTracker, always_redraw, Rotate, DecimalNumber, ChangeDecimalToValue, NumberLine, Brace, Indicate]
+    native_equivalents: [Group, Line, Dot, Circle, SharedValue, AlwaysRedraw, Rotate, DecimalNumber, Tween, NumberLine, Brace, Indicate]
+    params: ["outcomes: float[]", "weights: float[]", "pivot_guess: float"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- chest_scene
+  - id: chest_box_as_tree_leaf
+    family: chest_scene
+    nodes: [prealg.var.unknown_as_box]
+    route: native
+    primitives: [RoundedRectangle, Square, Line, Dot, VGroup, Tex, Transform, TransformMatchingTex, FadeIn, GrowFromCenter, Indicate, LaggedStart]
+    native_equivalents: [Polygon, ConcreteToken, Line, Dot, Group, MathMobject, Transform, TransformMatchingIds, FadeIn, Tween, Indicate, LaggedStart]
+    params: ["expression: MathTree", "unknown_id: NodeId"]
+    text_free: true
+    threed: false
+
+  - id: chest_key_matches_lock
+    family: chest_scene
+    nodes: [prealg.inv.operation_as_key]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Tex, Rotate, Succession, save_state, Restore, FadeIn, Flash, smooth, rush_from]
+    native_equivalents: [Polygon, SvgAsset, MathMobject, Rotate, Succession, Tween, FadeIn, Flash, RateFunctions]
+    params: ["op: Op", "value: MathTree", "candidates: Op[]"]
+    text_free: true
+    threed: false
+
+  - id: chest_log_key_counts_turns
+    family: chest_scene
+    nodes: [alg.fn.logarithm]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Tex, Integer, CountInFrom, Rotate, Succession, save_state, Restore, NumberLine, Dot, Arc]
+    native_equivalents: [Polygon, SvgAsset, MathMobject, DecimalNumber, Tween, Rotate, Succession, NumberLine, Dot, Arc]
+    params: ["base: int", "result: MathTree", "turns: int"]
+    text_free: true
+    threed: false
+
+  - id: chest_nested_open_inside_first
+    family: chest_scene
+    nodes: [arith.expr.precedence_tree]
+    route: native
+    primitives: [RoundedRectangle, VGroup, Tex, TransformMatchingTex, Succession, FadeOut, GrowFromCenter, Indicate, Line, Dot]
+    native_equivalents: [Polygon, Group, MathMobject, TransformMatchingIds, Succession, FadeOut, Tween, Indicate, Line, Dot]
+    params: ["expression: MathTree", "open_order: NodeId[]"]
+    text_free: true
+    threed: false
+
+  - id: chest_one_key_two_chests
+    family: chest_scene
+    nodes: [alg.fn.quadratic_and_sqrt]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Tex, Rotate, Succession, TransformFromCopy, FadeIn, Flash, Line, Dot, NumberLine]
+    native_equivalents: [Polygon, SvgAsset, MathMobject, Rotate, Succession, Transform, FadeIn, Flash, Line, Dot, NumberLine]
+    params: ["square_value: MathTree", "roots: MathTree[]"]
+    text_free: true
+    threed: false
+
+  - id: chest_pick_key_for_lock
+    family: chest_scene
+    nodes: [alg.eq.one_step]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Tex, TransformMatchingTex, Rotate, Succession, WiggleOutThenIn, Flash, FadeOut]
+    native_equivalents: [Polygon, SvgAsset, MathMobject, TransformMatchingIds, Rotate, Succession, Wiggle, Flash, FadeOut]
+    params: ["equation: MathTree", "candidates: Op[]", "key_op: Op"]
+    text_free: true
+    threed: false
+
+  - id: chest_scene_integral_key_opens_derivative
+    family: chest_scene
+    nodes: [calc1.ftc.integral_undoes_derivative]
+    route: both
+    primitives: [RoundedRectangle, SVGMobject, Axes, get_graph, get_area_under_graph, get_tangent_line, Tex, TransformMatchingTex, Rotate, Succession, save_state, Restore, FadeIn, smooth]
+    native_equivalents: [Polygon, SvgAsset, Axes, FunctionGraph, AreaUnderGraph, TangentLineAt, MathMobject, TransformMatchingIds, Rotate, Succession, Tween, FadeIn]
+    params: ["f: Fn", "interval: Interval"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: chest_scene_matrix_as_key
+    family: chest_scene
+    nodes: [linalg.map.inverse_and_systems]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Matrix, NumberPlane, Vector, ApplyMatrix, save_state, Restore, Succession, TransformMatchingTex, Rotate, Flash]
+    native_equivalents: [Polygon, SvgAsset, MatrixMobject, NumberPlane, Vector, GridDeform, Tween, Succession, TransformMatchingIds, Rotate, Flash]
+    params: ["matrix: Matrix2", "inverse: Matrix2", "target: Vector2"]
+    text_free: true
+    threed: false
+
+  - id: chest_shrink_key_undoes_stretch
+    family: chest_scene
+    nodes: [arith.div.undo_mul]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Line, Brace, ScaleInPlace, ApplyMethod, save_state, Restore, Succession, Rotate, DecimalNumber, ChangeDecimalToValue, Indicate]
+    native_equivalents: [Polygon, SvgAsset, Line, Brace, Tween, Succession, Rotate, DecimalNumber, Indicate]
+    params: ["factor: int", "length: int"]
+    text_free: true
+    threed: false
+
+  - id: chest_step_back_undoes_step
+    family: chest_scene
+    nodes: [arith.sub.undo_add]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, NumberLine, Dot, ApplyMethod, save_state, Restore, Succession, Rotate, Arrow, GrowArrow, Integer, Flash]
+    native_equivalents: [Polygon, SvgAsset, NumberLine, Dot, Tween, Succession, Rotate, Arrow, Write, DecimalNumber, Flash]
+    params: ["start: int", "step: int"]
+    text_free: true
+    threed: false
+
+  - id: chest_unwrap_outer_to_inner
+    family: chest_scene
+    nodes: [alg.eq.multi_step]
+    route: native
+    primitives: [RoundedRectangle, VGroup, Tex, TransformMatchingTex, Succession, FadeOut, SVGMobject, Rotate, Indicate, Line, Dot]
+    native_equivalents: [Polygon, Group, MathMobject, TransformMatchingIds, Succession, FadeOut, SvgAsset, Rotate, Indicate, Line, Dot]
+    params: ["equation: MathTree", "keys: Op[]", "expected_order: Op[]"]
+    text_free: true
+    threed: false
+
+  - id: chest_wrong_key_stays_shut
+    family: chest_scene
+    nodes: [prealg.inv.operation_as_key]
+    route: native
+    primitives: [RoundedRectangle, SVGMobject, Tex, Rotate, WiggleOutThenIn, ApplyWave, there_and_back, Succession, Flash, Cross]
+    native_equivalents: [Polygon, SvgAsset, MathMobject, Rotate, Wiggle, RateFunctions, Succession, Flash, Group]
+    params: ["op: Op", "wrong_op: Op", "value: MathTree"]
+    text_free: true
+    threed: false
+
+  - id: chest_scene_key_intro
+    family: chest_scene
+    nodes: [prealg.inv.operation_as_key, arith.sub.undo_add]
+    route: prerender
+    added_by_i: true
+    primitives: [RoundedRectangle, SVGMobject, Rotate, Succession, save_state, Restore, FadeIn, FadeOut, Flash, smooth, there_and_back_with_pause]
+    native_equivalents: [Polygon, SvgAsset, Rotate, Succession, Tween, FadeIn, FadeOut, Flash, RateFunctions]
+    params: ["op: Op", "value: MathTree"]
+    text_free: true
+    duration_s: 7
+    threed: false
+
+  # ---------------------------------------------------------------- pipe_scene
+  - id: pipe_chain_two_machines
+    family: pipe_scene
+    nodes: [alg.fn.composition]
+    route: native
+    primitives: [Rectangle, Arrow, Line, Dot, MoveAlongPath, Tex, DecimalNumber, ChangeDecimalToValue, Succession, TransformMatchingTex, Swap, linear]
+    native_equivalents: [Polygon, Arrow, Line, Dot, MoveAlongPath, MathMobject, DecimalNumber, Tween, Succession, TransformMatchingIds]
+    params: ["f: Fn", "g: Fn", "input: MathTree"]
+    text_free: true
+    threed: false
+
+  - id: pipe_machine_named_f
+    family: pipe_scene
+    nodes: [alg.fn.function_as_machine]
+    route: native
+    primitives: [Rectangle, Arrow, Dot, MoveAlongPath, Tex, TransformMatchingTex, FadeIn, Write, Indicate, Succession, linear]
+    native_equivalents: [Polygon, Arrow, Dot, MoveAlongPath, MathMobject, TransformMatchingIds, FadeIn, Write, Indicate, Succession]
+    params: ["f: Fn", "inputs: MathTree[]"]
+    text_free: true
+    threed: false
+
+  - id: pipe_run_machine_backwards
+    family: pipe_scene
+    nodes: [alg.fn.inverse_function]
+    route: native
+    primitives: [Rectangle, Arrow, Dot, MoveAlongPath, Tex, TransformMatchingTex, Rotate, save_state, Restore, Succession, SVGMobject, linear]
+    native_equivalents: [Polygon, Arrow, Dot, MoveAlongPath, MathMobject, TransformMatchingIds, Rotate, Tween, Succession, SvgAsset]
+    params: ["f: Fn", "f_inverse: Fn", "input: MathTree"]
+    text_free: true
+    threed: false
+
+  - id: pipe_scene_angle_to_height
+    family: pipe_scene
+    nodes: [trig.fn.sine_as_height]
+    route: native
+    primitives: [Rectangle, Arrow, Circle, Line, DashedLine, Dot, Arc, ValueTracker, always_redraw, MoveAlongPath, DecimalNumber, ChangeDecimalToValue, linear]
+    native_equivalents: [Polygon, Arrow, Circle, Line, Dot, Arc, SharedValue, AlwaysRedraw, MoveAlongPath, DecimalNumber, Tween]
+    params: ["angle: Angle", "radius: float"]
+    text_free: true
+    threed: false
+
+  - id: pipe_scene_rules_as_pipeline
+    family: pipe_scene
+    nodes: [calc1.deriv.rules_as_structure]
+    route: native
+    primitives: [Rectangle, Arrow, Dot, MoveAlongPath, Tex, TransformMatchingTex, Succession, LaggedStart, Brace, Indicate, linear]
+    native_equivalents: [Polygon, Arrow, Dot, MoveAlongPath, MathMobject, TransformMatchingIds, Succession, LaggedStart, Brace, Indicate]
+    params: ["expression: MathTree", "rules: Rule[]"]
+    text_free: true
+    threed: false
+
+  - id: pipe_scene_vector_in_vector_out
+    family: pipe_scene
+    nodes: [linalg.map.linear_transformation_2d]
+    route: native
+    primitives: [Rectangle, Arrow, NumberPlane, Vector, Matrix, ApplyMatrix, MoveAlongPath, TransformMatchingTex, Succession, Dot, linear]
+    native_equivalents: [Polygon, Arrow, NumberPlane, Vector, MatrixMobject, GridDeform, MoveAlongPath, TransformMatchingIds, Succession, Dot]
+    params: ["matrix: Matrix2", "input: Vector2"]
+    text_free: true
+    threed: false
+
+  - id: pipe_two_machines_order_matters
+    family: pipe_scene
+    nodes: [arith.expr.precedence_tree]
+    route: native
+    primitives: [Rectangle, Arrow, Dot, MoveAlongPath, Tex, Swap, DecimalNumber, ChangeDecimalToValue, Succession, Cross, linear]
+    native_equivalents: [Polygon, Arrow, Dot, MoveAlongPath, MathMobject, Tween, DecimalNumber, Succession, Group]
+    params: ["ops: Op[]", "input: MathTree"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- ledger_scene
+  - id: ledger_a_times_sum
+    family: ledger_scene
+    nodes: [alg.expr.distributive_tiles]
+    route: native
+    primitives: [Rectangle, Square, VGroup, Tex, TransformMatchingTex, TransformFromCopy, LaggedStartMap, FadeIn, Brace, BraceLabel, Indicate]
+    native_equivalents: [Polygon, ConcreteToken, Group, MathMobject, TransformMatchingIds, Transform, LaggedStart, FadeIn, Brace, Indicate]
+    params: ["a: MathTree", "b: MathTree", "c: MathTree"]
+    text_free: true
+    threed: false
+
+  - id: ledger_box_hides_tokens
+    family: ledger_scene
+    nodes: [prealg.var.unknown_as_box]
+    route: native
+    primitives: [Rectangle, Square, Dot, VGroup, Tex, FadeOut, FadeIn, Transform, TransformMatchingShapes, Integer, Indicate, GrowFromCenter]
+    native_equivalents: [Polygon, ConcreteToken, Dot, Group, MathMobject, FadeOut, FadeIn, Transform, TransformMatchingIds, DecimalNumber, Indicate, Tween]
+    params: ["visible_count: int", "hidden_count: int", "total: int"]
+    text_free: true
+    threed: false
+
+  - id: ledger_debt_tokens
+    family: ledger_scene
+    nodes: [arith.int.negatives]
+    route: native
+    primitives: [Dot, VGroup, Rectangle, Tex, Integer, CountInFrom, FadeOutToPoint, FadeInFromPoint, LaggedStart, NumberLine, Transform]
+    native_equivalents: [ConcreteToken, Group, Polygon, MathMobject, DecimalNumber, Tween, FadeOut, FadeIn, LaggedStart, NumberLine, Transform]
+    params: ["credits: int", "debts: int"]
+    text_free: true
+    threed: false
+
+  - id: ledger_join_two_piles
+    family: ledger_scene
+    nodes: [arith.add.displacement]
+    route: native
+    primitives: [SVGMobject, VGroup, Rectangle, ApplyMethod, LaggedStartMap, Integer, CountInFrom, ShowIncreasingSubsets, NumberLine, Dot, Transform]
+    native_equivalents: [ConcreteToken, Group, Polygon, Tween, LaggedStart, DecimalNumber, NumberLine, Dot, Transform]
+    params: ["a: int", "b: int"]
+    text_free: true
+    threed: false
+
+  - id: ledger_pair_fruit_to_fruit
+    family: ledger_scene
+    nodes: [found.count.cardinality]
+    route: native
+    primitives: [SVGMobject, VGroup, Line, DashedLine, LaggedStartMap, ShowCreation, Integer, CountInFrom, Indicate, FadeIn]
+    native_equivalents: [ConcreteToken, Group, Line, LaggedStart, Write, DecimalNumber, Tween, Indicate, FadeIn]
+    params: ["count_a: int", "count_b: int"]
+    text_free: true
+    threed: false
+
+  - id: ledger_scene_prize_ledger
+    family: ledger_scene
+    nodes: [prob.rv.expectation_as_weighted_average]
+    route: native
+    primitives: [Rectangle, Tex, DecimalNumber, ChangeDecimalToValue, VGroup, TransformMatchingTex, Brace, BraceLabel, LaggedStart, BarChart, Indicate]
+    native_equivalents: [Polygon, MathMobject, DecimalNumber, Tween, Group, TransformMatchingIds, Brace, LaggedStart, BarChart, Indicate]
+    params: ["prizes: float[]", "probs: float[]"]
+    text_free: true
+    threed: false
+
+  - id: ledger_scene_recipe_of_steps
+    family: ledger_scene
+    nodes: [linalg.vec.span_and_combination]
+    route: native
+    primitives: [Rectangle, Tex, Integer, CountInFrom, Vector, NumberPlane, TransformMatchingTex, TransformFromCopy, Succession, Arrow, Indicate]
+    native_equivalents: [Polygon, MathMobject, DecimalNumber, Tween, Vector, NumberPlane, TransformMatchingIds, Transform, Succession, Arrow, Indicate]
+    params: ["basis: Vector2[]", "coefficients: int[]", "target: Vector2"]
+    text_free: true
+    threed: false
+
+  - id: ledger_morph_fruit_to_symbol
+    family: ledger_scene
+    nodes: [prealg.var.unknown_as_box, alg.expr.distributive_tiles]
+    route: native
+    added_by_i: true
+    primitives: [SVGMobject, Tex, VGroup, TransformMatchingParts, TransformMatchingShapes, TransformMatchingTex, FadeIn, FadeOut, Succession, smooth]
+    native_equivalents: [ConcreteToken, MathMobject, Group, TransformMatchingIds, FadeIn, FadeOut, Succession, Timeline]
+    params: ["stages: MathTree[]", "identity_map: IdMap"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- tile_scene
+  - id: tile_bar_cut_into_equal_parts
+    family: tile_scene
+    nodes: [arith.frac.parts_and_ratio]
+    route: native
+    primitives: [Rectangle, Square, VGroup, Line, DashedLine, ShowCreation, ApplyMethod, LaggedStartMap, Tex, TransformMatchingTex, Brace, FadeToColor, Indicate]
+    native_equivalents: [Polygon, Group, Line, Write, Tween, LaggedStart, MathMobject, TransformMatchingIds, Brace, Indicate]
+    params: ["parts: int", "shaded: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_rows_become_rectangle
+    family: tile_scene
+    nodes: [arith.mul.scaling]
+    route: native
+    primitives: [Square, VGroup, Rectangle, ApplyMethod, LaggedStartMap, Brace, BraceLabel, Integer, CountInFrom, Tex, TransformMatchingTex, Indicate]
+    native_equivalents: [Polygon, Group, Tween, LaggedStart, Brace, DecimalNumber, MathMobject, TransformMatchingIds, Indicate]
+    params: ["rows: int", "cols: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_scene_growing_square_power_rule
+    family: tile_scene
+    nodes: [calc1.deriv.rules_as_structure]
+    route: both
+    primitives: [Square, Rectangle, VGroup, ValueTracker, always_redraw, Brace, BraceLabel, Tex, TransformMatchingTex, FadeIn, FadeOut, Indicate, FlashAround, smooth]
+    native_equivalents: [Polygon, Group, SharedValue, AlwaysRedraw, Brace, MathMobject, TransformMatchingIds, FadeIn, FadeOut, Indicate, Flash]
+    params: ["side: MathTree", "delta: float"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: tile_scene_pythagoras_rearrangement
+    family: tile_scene
+    nodes: [geom.tri.pythagoras_as_tiles]
+    route: both
+    primitives: [Polygon, Square, VGroup, Rotate, ApplyMethod, MoveAlongPath, LaggedStart, Succession, FadeToColor, Indicate, Brace, smooth]
+    native_equivalents: [Polygon, Group, Rotate, Tween, MoveAlongPath, LaggedStart, Succession, Indicate, Brace]
+    params: ["legs: float[]", "tiling: TilingId"]
+    text_free: true
+    duration_s: 10
+    threed: false
+
+  - id: tile_scene_rectangle_rows
+    family: tile_scene
+    nodes: [geom.area.rect_and_triangle]
+    route: native
+    primitives: [Square, Rectangle, VGroup, LaggedStartMap, FadeIn, Brace, BraceLabel, Integer, CountInFrom, Tex, TransformMatchingTex, ShowIncreasingSubsets]
+    native_equivalents: [Polygon, Group, LaggedStart, FadeIn, Brace, DecimalNumber, Tween, MathMobject, TransformMatchingIds]
+    params: ["width: int", "height: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_scene_riemann_refine
+    family: tile_scene
+    nodes: [calc1.int.accumulation]
+    route: native
+    primitives: [Axes, get_graph, get_riemann_rectangles, Transform, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Brace, Tex, TransformMatchingTex, smooth]
+    native_equivalents: [Axes, FunctionGraph, RiemannRects, Transform, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Brace, MathMobject, TransformMatchingIds]
+    params: ["f: Fn", "interval: Interval", "n_rects: int", "n_max: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_split_rectangle_into_rows
+    family: tile_scene
+    nodes: [arith.div.undo_mul]
+    route: native
+    primitives: [Square, Rectangle, VGroup, Line, DashedLine, ShowCreation, ApplyMethod, LaggedStartMap, Brace, BraceLabel, Integer, Tex, TransformMatchingTex]
+    native_equivalents: [Polygon, Group, Line, Write, Tween, LaggedStart, Brace, DecimalNumber, MathMobject, TransformMatchingIds]
+    params: ["total: int", "rows: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_square_from_area
+    family: tile_scene
+    nodes: [alg.fn.quadratic_and_sqrt]
+    route: native
+    primitives: [Square, VGroup, LaggedStartMap, Brace, BraceLabel, Tex, TransformMatchingTex, Integer, CountInFrom, Indicate, ValueTracker, always_redraw]
+    native_equivalents: [Polygon, Group, LaggedStart, Brace, MathMobject, TransformMatchingIds, DecimalNumber, Tween, Indicate, SharedValue, AlwaysRedraw]
+    params: ["area: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_two_rooms_one_width
+    family: tile_scene
+    nodes: [alg.expr.distributive_tiles]
+    route: native
+    primitives: [Rectangle, Square, VGroup, Line, DashedLine, Brace, BraceLabel, Tex, TransformMatchingTex, TransformFromCopy, FadeToColor, Indicate]
+    native_equivalents: [Polygon, Group, Line, Brace, MathMobject, TransformMatchingIds, Transform, Tween, Indicate]
+    params: ["width: MathTree", "length_a: MathTree", "length_b: MathTree"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- slope_scene
+  - id: slope_intercept_is_start_height
+    family: slope_scene
+    nodes: [alg.fn.linear_slope]
+    route: native
+    primitives: [Axes, get_graph, Dot, ValueTracker, always_redraw, get_h_line_to_graph, get_v_line_to_graph, Line, DecimalNumber, ChangeDecimalToValue, Tex, TransformMatchingTex, MoveAlongPath]
+    native_equivalents: [Axes, FunctionGraph, Dot, SharedValue, AlwaysRedraw, Line, DecimalNumber, Tween, MathMobject, TransformMatchingIds, MoveAlongPath]
+    params: ["slope: float", "intercept: float"]
+    text_free: true
+    threed: false
+
+  - id: slope_linear_vs_exponential_race
+    family: slope_scene
+    nodes: [alg.fn.exponential_growth]
+    route: both
+    primitives: [Axes, get_graph, Dot, TracedPath, MoveAlongPath, ValueTracker, always_redraw, get_v_line_to_graph, Line, Flash, linear, smooth]
+    native_equivalents: [Axes, FunctionGraph, Dot, TracedPath, MoveAlongPath, SharedValue, AlwaysRedraw, Line, Flash, RateFunctions]
+    params: ["slope: float", "base: float", "crossing_x: float"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: slope_reflect_graph_over_diagonal
+    family: slope_scene
+    nodes: [alg.fn.inverse_function]
+    route: native
+    primitives: [Axes, get_graph, DashedLine, Dot, TransformFromCopy, ApplyMatrix, apply_matrix, Rotate, Succession, Indicate, ShowCreation]
+    native_equivalents: [Axes, FunctionGraph, Line, Dot, Transform, GridDeform, Rotate, Succession, Indicate, Write]
+    params: ["f: Fn", "f_inverse: Fn", "domain: Interval"]
+    text_free: true
+    threed: false
+
+  - id: slope_same_steepness_any_step
+    family: slope_scene
+    nodes: [alg.fn.linear_slope]
+    route: native
+    primitives: [Axes, get_graph, Dot, Polygon, Line, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Brace, BraceLabel, Indicate, Tex]
+    native_equivalents: [Axes, FunctionGraph, Dot, Polygon, Line, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Brace, Indicate, MathMobject]
+    params: ["slope: float", "intercept: float", "step: float"]
+    text_free: true
+    threed: false
+
+  - id: slope_scene_secants_collapse_to_tangent
+    family: slope_scene
+    nodes: [calc1.deriv.rate_as_slope_limit]
+    route: both
+    primitives: [Axes, get_graph, Dot, Line, get_tangent_line, slope_of_tangent, ValueTracker, always_redraw, Polygon, DecimalNumber, ChangeDecimalToValue, Transform, LaggedStart, smooth, slow_into]
+    native_equivalents: [Axes, FunctionGraph, Dot, Line, TangentLineAt, SharedValue, AlwaysRedraw, Polygon, DecimalNumber, Tween, Transform, LaggedStart, RateFunctions]
+    params: ["f: Fn", "x0: float", "dx_sequence: float[]"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: slope_scene_walker_approaches_wall
+    family: slope_scene
+    nodes: [precalc.lim.approach]
+    route: native
+    primitives: [Axes, get_graph, Dot, DashedLine, Circle, ValueTracker, always_redraw, get_v_line_to_graph, get_h_line_to_graph, DecimalNumber, ChangeDecimalToValue, MoveAlongPath, slow_into]
+    native_equivalents: [Axes, FunctionGraph, Dot, Line, Circle, SharedValue, AlwaysRedraw, DecimalNumber, Tween, MoveAlongPath, RateFunctions]
+    params: ["f: Fn", "a: float", "limit: float", "hole: bool"]
+    text_free: true
+    threed: false
+
+  - id: slope_scene_wheel_rider_trace
+    family: slope_scene
+    nodes: [trig.fn.sine_as_height]
+    route: both
+    primitives: [Circle, Dot, Line, DashedLine, Axes, get_graph, TracedPath, ValueTracker, always_redraw, Rotate, get_h_line_to_graph, MoveAlongPath, linear]
+    native_equivalents: [Circle, Dot, Line, Axes, FunctionGraph, TracedPath, SharedValue, AlwaysRedraw, Rotate, MoveAlongPath, RateFunctions]
+    params: ["radius: float", "turns: float"]
+    text_free: true
+    duration_s: 10
+    threed: false
+
+  - id: slope_walker_leaves_trace
+    family: slope_scene
+    nodes: [alg.fn.graph_as_picture]
+    route: native
+    primitives: [Axes, NumberPlane, Dot, TracedPath, MoveAlongPath, ValueTracker, always_redraw, get_v_line_to_graph, get_h_line_to_graph, get_graph, Indicate, linear]
+    native_equivalents: [Axes, NumberPlane, Dot, TracedPath, MoveAlongPath, SharedValue, AlwaysRedraw, Line, FunctionGraph, Indicate]
+    params: ["f: Fn", "domain: Interval", "sample_points: float[]"]
+    text_free: true
+    threed: false
+
+  - id: slope_scene_hill_intro
+    family: slope_scene
+    nodes: [alg.fn.linear_slope, calc1.deriv.rate_as_slope_limit]
+    route: prerender
+    added_by_i: true
+    primitives: [Axes, get_graph, Dot, MoveAlongPath, TracedPath, Arrow, get_tangent_line, ValueTracker, always_redraw, FadeIn, linear, smooth]
+    native_equivalents: [Axes, FunctionGraph, Dot, MoveAlongPath, TracedPath, Arrow, TangentLineAt, SharedValue, AlwaysRedraw, FadeIn]
+    params: ["terrain: Fn", "domain: Interval"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  # ---------------------------------------------------------------- fill_scene
+  - id: fill_scene_rectangles_under_curve
+    family: fill_scene
+    nodes: [calc1.int.accumulation]
+    route: both
+    primitives: [Axes, get_graph, get_riemann_rectangles, get_area_under_graph, Rectangle, ValueTracker, always_redraw, Transform, DecimalNumber, ChangeDecimalToValue, FadeIn, linear, smooth]
+    native_equivalents: [Axes, FunctionGraph, RiemannRects, AreaUnderGraph, Polygon, SharedValue, AlwaysRedraw, Transform, DecimalNumber, Tween, FadeIn]
+    params: ["rate_fn: Fn", "interval: Interval", "n_rects: int"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: fill_scene_accumulation_rate_equals_height
+    family: fill_scene
+    nodes: [calc1.ftc.integral_undoes_derivative]
+    route: native
+    primitives: [Axes, get_graph, get_area_under_graph, get_tangent_line, slope_of_tangent, Dot, ValueTracker, always_redraw, get_v_line_to_graph, DecimalNumber, ChangeDecimalToValue, Line, Indicate]
+    native_equivalents: [Axes, FunctionGraph, AreaUnderGraph, TangentLineAt, Dot, SharedValue, AlwaysRedraw, Line, DecimalNumber, Tween, Indicate]
+    params: ["rate_fn: Fn", "level_fn: Fn", "t: float"]
+    text_free: true
+    threed: false
+
+  - id: fill_scene_tank_intro
+    family: fill_scene
+    nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative]
+    route: prerender
+    added_by_i: true
+    primitives: [Rectangle, Axes, get_graph, get_area_under_graph, ValueTracker, always_redraw, FadeIn, ShowCreation, linear, smooth]
+    native_equivalents: [Polygon, Axes, FunctionGraph, AreaUnderGraph, SharedValue, AlwaysRedraw, FadeIn, Write]
+    params: ["rate_fn: Fn", "interval: Interval"]
+    text_free: true
+    duration_s: 7
+    threed: false
+
+  # ---------------------------------------------------------------- gear_scene
+  - id: gear_doubling_track
+    family: gear_scene
+    nodes: [alg.fn.exponential_growth]
+    route: native
+    primitives: [Circle, Annulus, Rotate, Rotating, NumberLine, Dot, ValueTracker, always_redraw, Integer, ChangeDecimalToValue, Arrow, GrowArrow, Succession, linear]
+    native_equivalents: [Circle, Rotate, NumberLine, Dot, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Arrow, Write, Succession]
+    params: ["base: int", "turns: int"]
+    text_free: true
+    threed: false
+
+  - id: gear_one_step_one_number
+    family: gear_scene
+    nodes: [found.count.number_line]
+    route: native
+    primitives: [Circle, Annulus, Rotate, NumberLine, Dot, ValueTracker, always_redraw, Integer, MoveAlongPath, Indicate, linear]
+    native_equivalents: [Circle, Rotate, NumberLine, Dot, SharedValue, AlwaysRedraw, DecimalNumber, MoveAlongPath, Indicate]
+    params: ["start: int", "steps: int"]
+    text_free: true
+    threed: false
+
+  - id: gear_scene_steps_east_then_north
+    family: gear_scene
+    nodes: [linalg.vec.vector_as_displacement]
+    route: native
+    primitives: [NumberPlane, Dot, Arrow, Vector, GrowArrow, Succession, MoveAlongPath, TracedPath, Circle, Rotate, Integer, ChangeDecimalToValue, linear]
+    native_equivalents: [NumberPlane, Dot, Arrow, Vector, Write, Succession, MoveAlongPath, TracedPath, Circle, Rotate, DecimalNumber, Tween]
+    params: ["east: int", "north: int"]
+    text_free: true
+    threed: false
+
+  - id: gear_scene_turn_as_angle
+    family: gear_scene
+    nodes: [geom.angle.turn_as_measure]
+    route: native
+    primitives: [Circle, Annulus, Arc, Sector, Line, Rotate, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, NumberLine, Dot, linear]
+    native_equivalents: [Circle, Arc, Angle, Line, Rotate, SharedValue, AlwaysRedraw, DecimalNumber, Tween, NumberLine, Dot]
+    params: ["target_deg: float", "show_track: bool"]
+    text_free: true
+    threed: false
+
+  - id: gear_scene_unroll_radius_on_arc
+    family: gear_scene
+    nodes: [trig.circle.unit_circle_radians]
+    route: both
+    primitives: [Circle, Line, Arc, Dot, ValueTracker, always_redraw, Transform, ShowCreation, MoveAlongPath, NumberLine, DecimalNumber, ChangeDecimalToValue, smooth]
+    native_equivalents: [Circle, Line, Arc, Dot, SharedValue, AlwaysRedraw, Transform, Write, MoveAlongPath, NumberLine, DecimalNumber, Tween]
+    params: ["angle: Angle", "radius: float"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: gear_scene_zeno_halving
+    family: gear_scene
+    nodes: [precalc.lim.approach]
+    route: native
+    primitives: [NumberLine, Dot, Arrow, GrowArrow, Succession, LaggedStart, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Line, DashedLine, exponential_decay]
+    native_equivalents: [NumberLine, Dot, Arrow, Write, Succession, LaggedStart, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Line, RateFunctions]
+    params: ["target: float", "n_steps: int", "ratio: float"]
+    text_free: true
+    threed: false
+
+  - id: gear_step_forward_adds
+    family: gear_scene
+    nodes: [arith.add.displacement]
+    route: native
+    primitives: [Circle, Annulus, Rotate, NumberLine, Dot, Arrow, GrowArrow, ValueTracker, always_redraw, Integer, ChangeDecimalToValue, MoveAlongPath, linear]
+    native_equivalents: [Circle, Rotate, NumberLine, Dot, Arrow, Write, SharedValue, AlwaysRedraw, DecimalNumber, Tween, MoveAlongPath]
+    params: ["start: int", "step: int"]
+    text_free: true
+    threed: false
+
+  - id: gear_track_numbers_in_order
+    family: gear_scene
+    nodes: [found.count.number_line]
+    route: native
+    primitives: [NumberLine, Dot, Integer, LaggedStartMap, FadeIn, Circle, Rotate, MoveAlongPath, Indicate, linear]
+    native_equivalents: [NumberLine, Dot, DecimalNumber, LaggedStart, FadeIn, Circle, Rotate, MoveAlongPath, Indicate]
+    params: ["range: Interval", "missing: int[]"]
+    text_free: true
+    threed: false
+
+  - id: gear_track_read_backwards
+    family: gear_scene
+    nodes: [alg.fn.logarithm]
+    route: native
+    primitives: [NumberLine, Dot, Arrow, Integer, CountInFrom, Rotate, Circle, Succession, MoveAlongPath, Brace, BraceLabel, Indicate, linear]
+    native_equivalents: [NumberLine, Dot, Arrow, DecimalNumber, Tween, Rotate, Circle, Succession, MoveAlongPath, Brace, Indicate]
+    params: ["base: int", "from_value: int", "to_value: int"]
+    text_free: true
+    threed: false
+
+  - id: gear_train_composed_ratio
+    family: gear_scene
+    nodes: [alg.fn.composition]
+    route: native
+    primitives: [Circle, Annulus, Rotating, Rotate, always_rotate, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Line, Dot, Tex, TransformMatchingTex, linear]
+    native_equivalents: [Circle, Rotate, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Line, Dot, MathMobject, TransformMatchingIds]
+    params: ["ratio_a: Ratio", "ratio_b: Ratio"]
+    text_free: true
+    threed: false
+
+  - id: gear_walk_back_same_count
+    family: gear_scene
+    nodes: [arith.sub.undo_add]
+    route: native
+    primitives: [Circle, Annulus, Rotate, NumberLine, Dot, Arrow, GrowArrow, save_state, Restore, Succession, Integer, ChangeDecimalToValue, linear]
+    native_equivalents: [Circle, Rotate, NumberLine, Dot, Arrow, Write, Tween, Succession, DecimalNumber]
+    params: ["start: int", "step: int"]
+    text_free: true
+    threed: false
+
+  - id: gear_walk_past_zero
+    family: gear_scene
+    nodes: [arith.int.negatives]
+    route: native
+    primitives: [NumberLine, Dot, Arrow, GrowArrow, Rotate, Circle, ValueTracker, always_redraw, Integer, ChangeDecimalToValue, MoveAlongPath, Line, FadeToColor, linear]
+    native_equivalents: [NumberLine, Dot, Arrow, Write, Rotate, Circle, SharedValue, AlwaysRedraw, DecimalNumber, Tween, MoveAlongPath, Line]
+    params: ["start: int", "step: int"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- grid_scene
+  - id: grid_four_quadrants_with_signs
+    family: grid_scene
+    nodes: [alg.fn.graph_as_picture]
+    route: native
+    # Id congelado por el grafo: el nodo no declara la mecánica grid_stretch (usa slope_walker y
+    # machine_pipe). La escena es un plano de coordenadas sin deformación; se mantiene en grid_scene
+    # por su id y el validador la acepta por esta marca. Reconciliar en la fase 3 del plan.
+    mechanic_exception: true
+    primitives: [NumberPlane, Dot, Line, DashedLine, Tex, FadeIn, Indicate, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, MoveAlongPath, FadeToColor]
+    native_equivalents: [NumberPlane, Dot, Line, MathMobject, FadeIn, Indicate, SharedValue, AlwaysRedraw, DecimalNumber, Tween, MoveAlongPath]
+    params: ["points: Point[]"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_arrow_on_map
+    family: grid_scene
+    nodes: [linalg.vec.vector_as_displacement]
+    route: native
+    primitives: [NumberPlane, Vector, Arrow, GrowArrow, Dot, ApplyMethod, TransformFromCopy, Integer, Line, DashedLine, Indicate, smooth]
+    native_equivalents: [NumberPlane, Vector, Arrow, Write, Dot, Tween, Transform, DecimalNumber, Line, Indicate]
+    params: ["vector: Vector2", "start_points: Point[]"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_basis_arrows_land
+    family: grid_scene
+    nodes: [linalg.map.linear_transformation_2d]
+    route: native
+    primitives: [NumberPlane, Vector, ApplyMatrix, apply_matrix, Matrix, TransformMatchingTex, TransformFromCopy, save_state, Restore, GrowArrow, Indicate, smooth]
+    native_equivalents: [NumberPlane, Vector, GridDeform, MatrixMobject, TransformMatchingIds, Transform, Tween, Write, Indicate]
+    params: ["matrix: Matrix2"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_dilate_triangle
+    family: grid_scene
+    nodes: [geom.sim.similarity_as_scale]
+    route: native
+    primitives: [NumberPlane, Polygon, ScaleInPlace, ApplyMethod, TransformFromCopy, Line, DashedLine, Brace, BraceLabel, DecimalNumber, ChangeDecimalToValue, ValueTracker, always_redraw]
+    native_equivalents: [NumberPlane, Polygon, Tween, Transform, Line, Brace, DecimalNumber, SharedValue, AlwaysRedraw]
+    params: ["vertices: Point[]", "center: Point", "factor: float"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_rubber_sheet_house
+    family: grid_scene
+    nodes: [linalg.map.linear_transformation_2d]
+    route: both
+    primitives: [NumberPlane, Polygon, Vector, prepare_for_nonlinear_transform, ApplyMatrix, apply_matrix, Matrix, save_state, Restore, FadeIn, Transform, smooth]
+    native_equivalents: [NumberPlane, Polygon, Vector, GridDeform, MatrixMobject, Tween, FadeIn, Transform]
+    params: ["matrix: Matrix2", "house: Point[]"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: grid_scene_two_kinds_of_steps
+    family: grid_scene
+    nodes: [linalg.vec.span_and_combination]
+    route: native
+    primitives: [NumberPlane, Vector, Arrow, GrowArrow, Succession, LaggedStart, Dot, DotCloud, TransformFromCopy, Integer, ChangeDecimalToValue, Polygon, FadeIn, Indicate]
+    native_equivalents: [NumberPlane, Vector, Arrow, Write, Succession, LaggedStart, Dot, Transform, DecimalNumber, Tween, Polygon, FadeIn, Indicate]
+    params: ["basis: Vector2[]", "target: Vector2", "coefficients: int[]"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_undo_stretch
+    family: grid_scene
+    nodes: [linalg.map.inverse_and_systems]
+    route: native
+    primitives: [NumberPlane, Polygon, Vector, ApplyMatrix, apply_matrix, Matrix, save_state, Restore, Succession, TransformMatchingTex, Dot, Indicate, smooth]
+    native_equivalents: [NumberPlane, Polygon, Vector, GridDeform, MatrixMobject, Tween, Succession, TransformMatchingIds, Dot, Indicate]
+    params: ["matrix: Matrix2", "inverse: Matrix2", "house: Point[]"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_zoom_curve_looks_straight
+    family: grid_scene
+    nodes: [calc1.deriv.rate_as_slope_limit]
+    route: both
+    primitives: [NumberPlane, Axes, get_graph, Dot, get_tangent_line, ValueTracker, always_redraw, ScaleInPlace, ApplyMethod, FadeIn, smooth, slow_into]
+    native_equivalents: [NumberPlane, Axes, FunctionGraph, Dot, TangentLineAt, SharedValue, AlwaysRedraw, Tween, FadeIn, RateFunctions]
+    params: ["f: Fn", "x0: float", "zoom_levels: float[]"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: grid_stretch_by_factor
+    family: grid_scene
+    nodes: [arith.mul.scaling]
+    route: native
+    primitives: [NumberLine, NumberPlane, Line, Brace, BraceLabel, ApplyMatrix, apply_matrix, ScaleInPlace, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Dot, Indicate]
+    native_equivalents: [NumberLine, NumberPlane, Line, Brace, GridDeform, Tween, SharedValue, AlwaysRedraw, DecimalNumber, Dot, Indicate]
+    params: ["factor: float", "length: int"]
+    text_free: true
+    threed: false
+
+  - id: grid_two_lines_cross
+    family: grid_scene
+    nodes: [alg.sys.two_by_two]
+    route: native
+    primitives: [NumberPlane, Axes, get_graph, Dot, ShowCreation, Line, DashedLine, get_v_line_to_graph, get_h_line_to_graph, Flash, DecimalNumber, TransformMatchingTex, Indicate]
+    native_equivalents: [NumberPlane, Axes, FunctionGraph, Dot, Write, Line, Flash, DecimalNumber, TransformMatchingIds, Indicate]
+    params: ["eq1: MathTree", "eq2: MathTree", "solution: Point"]
+    text_free: true
+    threed: false
+
+  - id: grid_scene_sheet_intro
+    family: grid_scene
+    nodes: [linalg.map.linear_transformation_2d, linalg.map.inverse_and_systems]
+    route: prerender
+    added_by_i: true
+    primitives: [NumberPlane, Polygon, Vector, prepare_for_nonlinear_transform, ApplyMatrix, save_state, Restore, FadeIn, Succession, smooth, there_and_back_with_pause]
+    native_equivalents: [NumberPlane, Polygon, Vector, GridDeform, Tween, FadeIn, Succession, RateFunctions]
+    params: ["matrix: Matrix2", "house: Point[]"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  # ---------------------------------------------------------------- network_scene
+  - id: network_each_input_one_arrow
+    family: network_scene
+    nodes: [alg.fn.function_as_machine]
+    route: native
+    primitives: [Dot, Arrow, GrowArrow, VGroup, Line, LaggedStartMap, Indicate, Cross, FadeOut, ShowPassingFlash, Tex]
+    native_equivalents: [Dot, Arrow, Write, Group, Line, LaggedStart, Indicate, FadeOut, PassingFlash, MathMobject]
+    params: ["inputs: MathTree[]", "f: Fn", "distractor_arrows: Edge[]"]
+    text_free: true
+    threed: false
+
+  - id: network_scene_islands_to_dots
+    family: network_scene
+    nodes: [graph.basic.graph_and_paths]
+    route: both
+    primitives: [SVGMobject, Dot, Line, VGroup, Transform, TransformMatchingShapes, FadeOut, FadeIn, LaggedStartMap, ShowCreation, smooth]
+    native_equivalents: [SvgAsset, Dot, Line, Group, Transform, TransformMatchingIds, FadeOut, FadeIn, LaggedStart, Write]
+    params: ["graph: Graph", "layout: Point[]"]
+    text_free: true
+    duration_s: 8
+    threed: false
+
+  - id: network_scene_same_graph_redrawn
+    family: network_scene
+    nodes: [graph.basic.graph_and_paths]
+    route: native
+    primitives: [Dot, Line, VGroup, ApplyFunction, Transform, MoveAlongPath, LaggedStart, Indicate, ShowPassingFlash, Homotopy, smooth]
+    native_equivalents: [Dot, Line, Group, Tween, Transform, MoveAlongPath, LaggedStart, Indicate, PassingFlash, GridDeform]
+    params: ["graph: Graph", "layout_a: Point[]", "layout_b: Point[]"]
+    text_free: true
+    threed: false
+
+  - id: network_scene_tree_of_draws
+    family: network_scene
+    nodes: [prob.cond.conditional_and_independence]
+    route: native
+    primitives: [Dot, Line, Arrow, VGroup, LaggedStartMap, ShowCreation, DecimalNumber, Circle, ShowPassingFlash, FadeToColor, Brace, BraceLabel, Indicate]
+    native_equivalents: [Dot, Line, Arrow, Group, LaggedStart, Write, DecimalNumber, Circle, PassingFlash, Tween, Brace, Indicate]
+    params: ["stage_probs: float[][]", "highlighted_path: int[]"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- sorter_scene
+  - id: sorter_number_card_on_bin
+    family: sorter_scene
+    nodes: [found.count.cardinality]
+    route: native
+    primitives: [Rectangle, SVGMobject, VGroup, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, FadeIn, Indicate, ShowIncreasingSubsets]
+    native_equivalents: [Polygon, ConcreteToken, Group, MoveAlongPath, LaggedStart, DecimalNumber, Tween, FadeIn, Indicate]
+    params: ["bins: int[]", "cards: int[]"]
+    text_free: true
+    threed: false
+
+  - id: sorter_scene_bins_then_pick
+    family: sorter_scene
+    nodes: [prob.cond.conditional_and_independence]
+    route: native
+    primitives: [Rectangle, Dot, VGroup, MoveAlongPath, LaggedStartMap, Sector, BarChart, DecimalNumber, ChangeDecimalToValue, FadeOut, FadeToColor, Indicate, Brace]
+    native_equivalents: [Polygon, Dot, Group, MoveAlongPath, LaggedStart, Arc, BarChart, DecimalNumber, Tween, FadeOut, Indicate, Brace]
+    params: ["bins: Composition[]", "picked_bin: int"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- urn_scene
+  - id: urn_fraction_of_balls
+    family: urn_scene
+    nodes: [arith.frac.parts_and_ratio]
+    route: native
+    primitives: [Circle, Dot, VGroup, Rectangle, LaggedStartMap, ApplyMethod, Tex, TransformMatchingTex, Brace, BraceLabel, Integer, FadeToColor]
+    native_equivalents: [Circle, Dot, Group, Polygon, LaggedStart, Tween, MathMobject, TransformMatchingIds, Brace, DecimalNumber]
+    params: ["composition: Composition", "highlighted: int"]
+    text_free: true
+    threed: false
+
+  - id: urn_scene_draw_and_tally
+    family: urn_scene
+    nodes: [prob.basic.probability_as_proportion]
+    route: native
+    primitives: [Circle, Dot, VGroup, MoveAlongPath, Succession, BarChart, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Integer, Line, DashedLine, FadeOutToPoint]
+    native_equivalents: [Circle, Dot, Group, MoveAlongPath, Succession, BarChart, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Line, FadeOut]
+    params: ["composition: Composition", "n_draws: int", "seed: Seed"]
+    text_free: true
+    threed: false
+
+  - id: urn_scene_fraction_of_total
+    family: urn_scene
+    nodes: [prob.basic.probability_as_proportion]
+    route: native
+    primitives: [Circle, Dot, VGroup, ApplyMethod, LaggedStartMap, Rectangle, Sector, Tex, TransformMatchingTex, Brace, DecimalNumber, FadeToColor]
+    native_equivalents: [Circle, Dot, Group, Tween, LaggedStart, Polygon, Arc, MathMobject, TransformMatchingIds, Brace, DecimalNumber]
+    params: ["composition: Composition", "target_color: int"]
+    text_free: true
+    threed: false
+
+  - id: urn_scene_restricted_urn
+    family: urn_scene
+    nodes: [prob.cond.conditional_and_independence]
+    route: native
+    primitives: [Circle, Dot, VGroup, Rectangle, FadeOut, FadeToColor, ApplyMethod, LaggedStartMap, Sector, DecimalNumber, ChangeDecimalToValue, Tex, TransformMatchingTex, SurroundingRectangle]
+    native_equivalents: [Circle, Dot, Group, Polygon, FadeOut, Tween, LaggedStart, Arc, DecimalNumber, MathMobject, TransformMatchingIds]
+    params: ["composition: Composition[]", "condition_bin: int"]
+    text_free: true
+    threed: false
+
+  - id: urn_scene_frequency_bar_stabilizes
+    family: urn_scene
+    nodes: [prob.basic.probability_as_proportion, prob.rv.expectation_as_weighted_average]
+    route: native
+    added_by_i: true
+    primitives: [Circle, Dot, BarChart, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, DashedLine, Axes, get_graph, TracedPath, linear]
+    native_equivalents: [Circle, Dot, BarChart, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Line, Axes, FunctionGraph, TracedPath]
+    params: ["p: float", "n_draws: int", "seed: Seed"]
+    text_free: true
+    threed: false
+
+  # ---------------------------------------------------------------- construction_scene
+  - id: construction_scene_altitude_to_hypotenuse
+    family: construction_scene
+    nodes: [geom.tri.pythagoras_as_tiles]
+    route: native
+    primitives: [Polygon, Line, DashedLine, Dot, Arc, Square, ShowCreation, Indicate, FlashAround, Brace, BraceLabel, TransformFromCopy, FadeToColor]
+    native_equivalents: [Polygon, Line, Dot, Angle, Write, Indicate, Flash, Brace, Transform, Tween]
+    params: ["vertices: Point[]", "right_vertex: int"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_choose_the_line
+    family: construction_scene
+    nodes: [geom.cons.auxiliary_lines]
+    route: native
+    primitives: [Polygon, Line, DashedLine, Dot, ShowCreation, Uncreate, Indicate, FlashAround, Cross, Succession, Arc, Brace]
+    native_equivalents: [Polygon, Line, Dot, Write, FadeOut, Indicate, Flash, Group, Succession, Angle, Brace]
+    params: ["figure: Point[]", "candidates: Segment[]", "correct: int"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_composite_figure_altitude
+    family: construction_scene
+    nodes: [geom.cons.auxiliary_lines]
+    route: native
+    primitives: [Polygon, Line, DashedLine, Dot, Arc, Square, ShowCreation, Brace, BraceLabel, Indicate, TransformFromCopy, FadeToColor, Succession]
+    native_equivalents: [Polygon, Line, Dot, Angle, Write, Brace, Indicate, Transform, Tween, Succession]
+    params: ["figure: Point[]", "unknown_edge: int", "altitude_from: int"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_extend_side_exterior_angle
+    family: construction_scene
+    nodes: [geom.angle.turn_as_measure]
+    route: native
+    primitives: [Polygon, Line, DashedLine, Arc, Sector, Dot, ShowCreation, Rotate, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Indicate]
+    native_equivalents: [Polygon, Line, Arc, Angle, Dot, Write, Rotate, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Indicate]
+    params: ["vertices: Point[]", "vertex: int"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_height_from_radius_tip
+    family: construction_scene
+    nodes: [trig.fn.sine_as_height]
+    route: native
+    primitives: [Circle, Line, DashedLine, Dot, Arc, Square, Polygon, ShowCreation, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Brace, Indicate]
+    native_equivalents: [Circle, Line, Dot, Angle, Polygon, Write, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Brace, Indicate]
+    params: ["angle: Angle", "radius: float"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_parallel_cut_similar
+    family: construction_scene
+    nodes: [geom.sim.similarity_as_scale]
+    route: native
+    primitives: [Polygon, Line, DashedLine, Dot, ShowCreation, TransformFromCopy, ScaleInPlace, Brace, BraceLabel, DecimalNumber, FadeToColor, Indicate, Arc]
+    native_equivalents: [Polygon, Line, Dot, Write, Transform, Tween, Brace, DecimalNumber, Indicate, Angle]
+    params: ["vertices: Point[]", "cut_ratio: float"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_radius_and_dropped_height
+    family: construction_scene
+    nodes: [trig.circle.unit_circle_radians]
+    route: native
+    primitives: [Circle, NumberPlane, Line, DashedLine, Dot, Arc, Polygon, ShowCreation, Rotate, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, Indicate]
+    native_equivalents: [Circle, NumberPlane, Line, Dot, Angle, Polygon, Write, Rotate, SharedValue, AlwaysRedraw, DecimalNumber, Tween, Indicate]
+    params: ["angle: Angle"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_triangle_half_rectangle
+    family: construction_scene
+    nodes: [geom.area.rect_and_triangle]
+    route: native
+    primitives: [Polygon, Rectangle, Square, Line, DashedLine, Dot, ShowCreation, TransformFromCopy, Rotate, ApplyMethod, FadeToColor, Brace, BraceLabel, Indicate]
+    native_equivalents: [Polygon, Line, Dot, Write, Transform, Rotate, Tween, Brace, Indicate]
+    params: ["base: float", "height: float", "apex_x: float"]
+    text_free: true
+    threed: false

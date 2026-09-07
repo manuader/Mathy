@@ -1,0 +1,1254 @@
+# Calculadora evolutiva. DATA. Sin texto visible al jugador.
+# Prosa y reglas: M0-progresion.md. Etiquetas y pistas: ../locales/es/calculator.yaml
+# (claves calculator.<op>.label y calculator.<op>.hint).
+#
+# Campos por op:
+#   id               op_<slug>, id canónico (el que citan calc_unlocks en el grafo)
+#   tier             fila de la calculadora (ver `tiers`)
+#   unlocked_by      nodos del grafo; el op se habilita cuando CUALQUIERA llega a `ready` (K)
+#   kind             arithmetic | algebraic | function | symbolic | numeric | structural | logical | statistical
+#   input_kind       number | expression | function | matrix | vector | set | graph | distribution
+#   display          forma de display (LaTeX corto o MathJSON-ish); la notación final la decide MathLocale (P)
+#   locale_dependent true si el símbolo o el nombre cambian con MathLocale (más allá del separador decimal)
+#   sandbox          true si el op existe en el sandbox libre; false si solo vive en modo operar
+#   aliases          ids op_* históricos que este op absorbe; cada alias aparece exactamente una vez en el archivo
+#
+# Regla global: un op nunca se revoca. Si todos sus nodos de unlocked_by están en `decayed`, se dibuja con óxido.
+
+unlock_rule: any_ready
+never_revoked: true
+rust_when: all_unlockers_decayed
+
+tiers:
+  - id: t0
+    order: 0
+    pairs: [[op_add, op_sub], [op_mul, op_div]]
+  - id: t1
+    order: 1
+    pairs: [[op_pow, op_sqrt]]
+  - id: t2
+    order: 2
+    pairs: [[op_exp, op_ln], [op_pow, op_log]]
+  - id: t3
+    order: 3
+    pairs: [[op_expand, op_factor], [op_define_function, op_inverse_function]]
+  - id: t4
+    order: 4
+    pairs: [[op_trig, op_arc_trig]]
+  - id: t5
+    order: 5
+    pairs: [[op_derivative, op_antiderivative]]
+  - id: t6
+    order: 6
+    pairs: [[op_matrix_vector, op_matrix_inverse]]
+  - id: t7
+    order: 7
+    pairs: [[op_fourier_transform, op_inverse_fourier], [op_slope_field, op_solve_ode]]
+  - id: t_disc
+    order: 8
+    pairs: [[op_mod, op_mod_arith]]
+  - id: t_prob
+    order: 9
+    pairs: [[op_conditional_probability, op_bayes]]
+
+ops:
+
+  # ---------------------------------------------------------------- t0: las cuatro operaciones y los números
+
+  - id: op_count
+    tier: t0
+    unlocked_by: [found.count.cardinality, found.count.number_line]
+    kind: arithmetic
+    input_kind: number
+    display: "1, 2, 3, \\ldots"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_number_line]
+
+  - id: op_add
+    tier: t0
+    unlocked_by: [arith.add.displacement, arith.place.base_ten_carry, arith.int.add_signed]
+    kind: arithmetic
+    input_kind: number
+    display: "a + b"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_add_multidigit, op_add_signed]
+
+  - id: op_sub
+    tier: t0
+    unlocked_by: [arith.sub.undo_add, arith.place.base_ten_carry]
+    kind: arithmetic
+    input_kind: number
+    display: "a - b"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_sub_multidigit]
+
+  - id: op_mul
+    tier: t0
+    unlocked_by: [arith.mul.scaling, arith.mul.rows_and_columns, arith.mul.partial_products, arith.int.mul_signed, prealg.int.sign_rules]
+    kind: arithmetic
+    input_kind: number
+    display: "a \\times b"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_mul_table, op_mul_multidigit, op_mul_signed, op_signed_arith]
+
+  - id: op_div
+    tier: t0
+    unlocked_by: [arith.div.undo_mul]
+    kind: arithmetic
+    input_kind: number
+    display: "a \\div b"
+    locale_dependent: true
+    sandbox: true
+    aliases: []
+
+  - id: op_mod
+    tier: t0
+    unlocked_by: [arith.div.remainder, arith.num.divisible_or_not, disc.mod.clock_equivalence, csmath.mod.wraparound]
+    kind: arithmetic
+    input_kind: number
+    display: "a \\bmod n"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_div_remainder, op_mod_signed, op_hash_bucket, op_congruence_check]
+
+  - id: op_neg
+    tier: t0
+    unlocked_by: [arith.int.negatives]
+    kind: arithmetic
+    input_kind: number
+    display: "-a"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_paren
+    tier: t0
+    unlocked_by: [arith.expr.precedence_tree]
+    kind: structural
+    input_kind: expression
+    display: "(\\,\\cdot\\,)"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_compare
+    tier: t0
+    unlocked_by: [prealg.eq.balance, prealg.ineq.compare_expressions]
+    kind: logical
+    input_kind: expression
+    display: "=, <, >"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_equals]
+
+  - id: op_frac
+    tier: t0
+    unlocked_by: [arith.frac.parts_and_ratio, arith.frac.equivalent]
+    kind: arithmetic
+    input_kind: number
+    display: "\\frac{a}{b}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_frac_simplify]
+
+  - id: op_frac_arith
+    tier: t0
+    unlocked_by: [arith.frac.common_unit, arith.frac.multiply]
+    kind: arithmetic
+    input_kind: number
+    display: "\\frac{a}{b} \\pm \\frac{c}{d}, \\; \\frac{a}{b} \\cdot \\frac{c}{d}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_frac_add, op_frac_compare, op_frac_mul, op_frac_div]
+
+  - id: op_decimal
+    tier: t0
+    unlocked_by: [arith.dec.tenths_as_place]
+    kind: structural
+    input_kind: number
+    display: "0{,}1"
+    locale_dependent: true
+    sandbox: true
+    aliases: []
+
+  - id: op_percent
+    tier: t0
+    unlocked_by: [arith.pct.percent_of_total, prealg.pct.hundredths, prealg.pct.percent_fill]
+    kind: arithmetic
+    input_kind: number
+    display: "a\\,\\%"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_percent_convert, op_percent_change]
+
+  - id: op_ratio
+    tier: t0
+    unlocked_by: [arith.rate.per_unit, prealg.ratio.rate_per_unit, prealg.ratio.scaling_recipe]
+    kind: arithmetic
+    input_kind: number
+    display: "a : b = c : x"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_unit_rate, op_proportion_solve, op_ratio_scale]
+
+  - id: op_unit_convert
+    tier: t0
+    unlocked_by: [arith.meas.unit_conversion]
+    kind: numeric
+    input_kind: number
+    display: "\\mathrm{m} \\to \\mathrm{cm}"
+    locale_dependent: true
+    sandbox: true
+    aliases: []
+
+  - id: op_prime_factor
+    tier: t0
+    unlocked_by: [arith.num.factor_tree]
+    kind: numeric
+    input_kind: number
+    display: "n = p_1^{a_1} p_2^{a_2} \\cdots"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_gcd_lcm]
+
+  - id: op_inverse_op
+    tier: t0
+    unlocked_by: [prealg.inv.operation_as_key]
+    kind: structural
+    input_kind: expression
+    display: "\\circlearrowleft"
+    locale_dependent: false
+    sandbox: false
+    aliases: []
+
+  # ---------------------------------------------------------------- t1: potencias, raíces y medida
+
+  - id: op_pow
+    tier: t1
+    unlocked_by: [arith.pow.repeated_scaling, alg.pow.same_base_stack]
+    kind: arithmetic
+    input_kind: number
+    display: "x^{n}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_pow_rules]
+
+  - id: op_sqrt
+    tier: t1
+    unlocked_by: [alg.fn.quadratic_and_sqrt, alg.rad.root_as_fractional_power]
+    kind: arithmetic
+    input_kind: number
+    display: "\\sqrt{x}, \\; \\sqrt[n]{x}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_nth_root]
+
+  - id: op_sci_notation
+    tier: t1
+    unlocked_by: [prealg.exp.powers_of_ten]
+    kind: structural
+    input_kind: number
+    display: "a \\times 10^{n}"
+    locale_dependent: true
+    sandbox: true
+    aliases: []
+
+  - id: op_pythagoras
+    tier: t1
+    unlocked_by: [geom.tri.pythagoras_as_tiles, geom.circle.radius_bisects_chord]
+    kind: numeric
+    input_kind: number
+    display: "a^2 + b^2 = c^2"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_pythagoras_hypotenuse, op_pythagoras_leg, op_chord_length]
+
+  - id: op_distance
+    tier: t1
+    unlocked_by: [geom.coord.distance_as_pythagoras]
+    kind: numeric
+    input_kind: vector
+    display: "d(P, Q), \\; M_{PQ}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_distance_between_points, op_midpoint]
+
+  - id: op_area
+    tier: t1
+    unlocked_by: [geom.area.rect_and_triangle, geom.area.shear_invariant, geom.area.trapezoid_as_two_triangles, geom.cons.auxiliary_lines]
+    kind: numeric
+    input_kind: number
+    display: "A = b \\cdot h"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_area_rectangle, op_area_triangle, op_area_parallelogram, op_area_trapezoid, op_composite_area]
+
+  - id: op_perimeter
+    tier: t1
+    unlocked_by: [geom.area.perimeter_vs_area]
+    kind: numeric
+    input_kind: number
+    display: "P = \\sum \\ell_i"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_circle
+    tier: t1
+    unlocked_by: [geom.area.circle_by_slices, geom.circle.radius_and_arc, calc2.parpol.parametric_speed]
+    kind: numeric
+    input_kind: number
+    display: "\\pi, \\; 2\\pi r, \\; \\pi r^2"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_pi, op_area_circle, op_circumference, op_arc_length]
+
+  - id: op_volume
+    tier: t1
+    unlocked_by: [geom.solid.volume_as_layers, geom.solid.cone_sphere_by_pouring]
+    kind: numeric
+    input_kind: number
+    display: "V = A_{base} \\cdot h"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_volume_prism, op_volume_cylinder, op_volume_cone, op_volume_sphere]
+
+  - id: op_angle
+    tier: t1
+    unlocked_by: [geom.angle.turn_as_measure, geom.angle.triangle_sum_half_turn]
+    kind: numeric
+    input_kind: number
+    display: "\\angle, \\; 180^{\\circ}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_angle_degrees, op_fraction_of_turn, op_missing_angle]
+
+  - id: op_transform_point
+    tier: t1
+    unlocked_by: [geom.trans.rotation_reflection, geom.trans.dilation, geom.sim.similarity_as_scale]
+    kind: function
+    input_kind: vector
+    display: "P \\mapsto P'"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_rotate_point_90, op_reflect_point_axis, op_dilate_point, op_scale_factor, op_missing_side_by_ratio]
+
+  # ---------------------------------------------------------------- t2: exponencial y logaritmo
+
+  - id: op_exp
+    tier: t2
+    unlocked_by: [alg.fn.exponential_growth, precalc.exp.natural_base]
+    kind: function
+    input_kind: number
+    display: "e^{x}, \\; a^{x}"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_ln
+    tier: t2
+    unlocked_by: [precalc.exp.natural_base]
+    kind: function
+    input_kind: number
+    display: "\\ln x"
+    locale_dependent: true
+    sandbox: true
+    aliases: []
+
+  - id: op_log
+    tier: t2
+    unlocked_by: [alg.fn.logarithm, alg.pow.log_rules_from_stack]
+    kind: function
+    input_kind: number
+    display: "\\log_{b} x"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_log_any_base]
+
+  # ---------------------------------------------------------------- t3: álgebra y funciones
+
+  - id: op_variable
+    tier: t3
+    unlocked_by: [prealg.var.unknown_as_box]
+    kind: structural
+    input_kind: expression
+    display: "x"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_evaluate_expr
+    tier: t3
+    unlocked_by: [prealg.expr.substitute_value, mvcalc.fn.two_inputs_one_output]
+    kind: algebraic
+    input_kind: expression
+    display: "f(a), \\; f(a, b)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_evaluate_two_variables]
+
+  - id: op_simplify
+    tier: t3
+    unlocked_by: [prealg.expr.like_terms, alg.poly.coefficients_as_counts, alg.rat.division_by_zero_hole]
+    kind: algebraic
+    input_kind: expression
+    display: "\\simeq"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_simplify_terms, op_poly_add, op_simplify_rational]
+
+  - id: op_expand
+    tier: t3
+    unlocked_by: [alg.expr.distributive_tiles, alg.expr.binomial_product, precalc.binom.pascal_triangle_expansion]
+    kind: algebraic
+    input_kind: expression
+    display: "a(b + c) \\to ab + ac"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_expand_binomial, op_binomial_expand]
+
+  - id: op_factor
+    tier: t3
+    unlocked_by: [alg.expr.factor_common, alg.expr.factor_trinomial]
+    kind: algebraic
+    input_kind: expression
+    display: "ab + ac \\to a(b + c)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_factor_common]
+
+  - id: op_solve_linear
+    tier: t3
+    unlocked_by: [alg.eq.one_step, alg.eq.multi_step]
+    kind: algebraic
+    input_kind: expression
+    display: "x = \\ldots"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_solve_linear_1var, op_solve_linear_multi]
+
+  - id: op_solve_quadratic
+    tier: t3
+    unlocked_by: [alg.fn.quadratic_and_sqrt, alg.eq.quadratic_roots]
+    kind: algebraic
+    input_kind: expression
+    display: "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_quadratic_formula]
+
+  - id: op_solve_system
+    tier: t3
+    unlocked_by: [alg.sys.two_by_two, linalg.map.inverse_and_systems]
+    kind: algebraic
+    input_kind: expression
+    display: "\\begin{cases} \\ldots \\end{cases}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_solve_system_2x2, op_solve_linear_system]
+
+  - id: op_solve_inequality
+    tier: t3
+    unlocked_by: [alg.ineq.inequality_tilts, alg.ineq.inequality_as_region]
+    kind: algebraic
+    input_kind: expression
+    display: "x \\in [a, b)"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_plot_inequality]
+
+  - id: op_define_function
+    tier: t3
+    unlocked_by: [prealg.fn.input_output_table, alg.fn.function_as_machine, precalc.fn.piecewise_machine]
+    kind: structural
+    input_kind: function
+    display: "f(x) = \\ldots"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_table_from_rule, op_piecewise_eval]
+
+  - id: op_compose
+    tier: t3
+    unlocked_by: [alg.fn.composition]
+    kind: function
+    input_kind: function
+    display: "f \\circ g"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_inverse_function
+    tier: t3
+    unlocked_by: [alg.fn.inverse_function]
+    kind: function
+    input_kind: function
+    display: "f^{-1}"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_abs
+    tier: t3
+    unlocked_by: [alg.abs.distance_two_branches]
+    kind: function
+    input_kind: number
+    display: "|x|"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_slope
+    tier: t3
+    unlocked_by: [geom.line.parallel_same_slope, alg.fn.linear_slope]
+    kind: numeric
+    input_kind: expression
+    display: "m = \\frac{\\Delta y}{\\Delta x}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_slope_between_points, op_slope_intercept]
+
+  - id: op_plot
+    tier: t3
+    unlocked_by: [alg.fn.graph_as_picture, precalc.fn.increasing_decreasing, calc1.apply.max_where_slope_zero, precalc.conic.slice_of_cone, trig.fn.wave_unrolls_circle, precalc.param.time_as_hidden_input, mvcalc.field.arrow_at_every_point, adv.cplx.function_deforms_plane]
+    kind: structural
+    input_kind: function
+    display: "Plot(f)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_plot_function, op_find_turning_points, op_find_critical_points, op_circle_equation, op_conic_identify, op_plot_trig, op_parametric_plot, op_plot_vector_field, op_complex_map_grid]
+
+  - id: op_transform_graph
+    tier: t3
+    unlocked_by: [precalc.fntr.shift_as_displace, precalc.fntr.stretch_as_scale, precalc.fntr.reflect_and_symmetry, trig.fn.transform_wave]
+    kind: function
+    input_kind: function
+    display: "a\\,f(b(x - h)) + k"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_shift_graph, op_stretch_graph, op_test_even_odd, op_fit_sinusoid]
+
+  - id: op_nth_term
+    tier: t3
+    unlocked_by: [precalc.seq.arithmetic_sequence, precalc.seq.geometric_sequence]
+    kind: algebraic
+    input_kind: expression
+    display: "a_n"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_arithmetic_nth_term, op_geometric_nth_term]
+
+  - id: op_sigma_sum
+    tier: t3
+    unlocked_by: [precalc.seq.arithmetic_sequence, precalc.seq.geometric_sequence, precalc.seq.sum_as_pattern, disc.sum.sigma_notation, calc2.ser.geometric_sum, calc2.ser.partial_sums]
+    kind: symbolic
+    input_kind: expression
+    display: "\\sum_{k=1}^{n} a_k"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_arithmetic_sum, op_geometric_sum, op_infinite_geometric_sum, op_sigma_eval, op_sum_closed_form, op_sum_geometric, op_partial_sum]
+
+  # ---------------------------------------------------------------- t4: trigonometría
+
+  - id: op_trig
+    tier: t4
+    unlocked_by: [trig.ratio.similar_shadows, trig.fn.sine_as_height, trig.fn.tangent_as_slope]
+    kind: function
+    input_kind: number
+    display: "\\sin x, \\; \\cos x, \\; \\tan x"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_sin, op_cos, op_tan, op_sin_cos_tan_of_angle]
+
+  - id: op_arc_trig
+    tier: t4
+    unlocked_by: [trig.inv.arcsin_two_branches, trig.fn.tangent_as_slope]
+    kind: function
+    input_kind: number
+    display: "\\arcsin x, \\; \\arccos x, \\; \\arctan x"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_arcsin, op_arccos, op_arctan, op_angle_from_slope]
+
+  - id: op_unit_circle
+    tier: t4
+    unlocked_by: [trig.circle.unit_circle_radians, trig.fn.periodic_wraps, trig.ang.quadrant_signs]
+    kind: numeric
+    input_kind: number
+    display: "\\theta \\leftrightarrow (\\cos\\theta, \\sin\\theta)"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_degrees_to_radians, op_radians_to_degrees, op_point_on_unit_circle, op_reduce_angle_mod_2pi, op_reference_angle]
+
+  - id: op_arc_and_sector
+    tier: t4
+    unlocked_by: [trig.circle.radian_as_arc_length]
+    kind: numeric
+    input_kind: number
+    display: "s = r\\theta, \\; A = \\tfrac{1}{2} r^2 \\theta"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_arc_length_radians, op_sector_area]
+
+  - id: op_trig_identity
+    tier: t4
+    unlocked_by: [trig.id.pythagorean_identity, trig.id.double_angle, trig.id.angle_sum]
+    kind: symbolic
+    input_kind: expression
+    display: "\\sin^2 x + \\cos^2 x = 1"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_cos_from_sin, op_double_angle, op_sin_cos_sum_formula]
+
+  - id: op_solve_triangle
+    tier: t4
+    unlocked_by: [trig.ratio.similar_shadows, trig.law.sines_from_altitude, trig.law.cosines_extends_pythagoras]
+    kind: numeric
+    input_kind: number
+    display: "\\triangle ABC"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_solve_right_triangle, op_law_of_sines, op_law_of_cosines]
+
+  - id: op_polar_convert
+    tier: t4
+    unlocked_by: [trig.polar.point_by_angle_and_radius]
+    kind: numeric
+    input_kind: vector
+    display: "(x, y) \\leftrightarrow (r, \\theta)"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_cartesian_to_polar, op_polar_to_cartesian]
+
+  # ---------------------------------------------------------------- t5: límites, derivadas e integrales
+
+  - id: op_limit
+    tier: t5
+    unlocked_by: [precalc.lim.approach, precalc.lim.infinity_and_asymptote, calc1.lim.one_sided_and_jump, calc1.lim.zero_over_zero_cancel, calc1.lim.continuous_or_not, adv.real.epsilon_delta_challenge, adv.real.uniform_continuity_one_delta]
+    kind: symbolic
+    input_kind: function
+    display: "\\lim_{x \\to a} f(x)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_limit_numeric, op_limit_table, op_limit_at_infinity, op_limit_one_sided, op_limit_algebraic, op_check_continuity, op_epsilon_delta_check, op_uniform_delta_search]
+
+  - id: op_derivative
+    tier: t5
+    unlocked_by: [calc1.deriv.rate_as_slope_limit, calc1.deriv.rules_as_structure, calc1.deriv.product_as_growing_rectangle, calc1.deriv.quotient_from_product, calc1.deriv.chain_as_gears, calc1.deriv.implicit_as_constraint, calc1.apply.motion_position_velocity_accel, adv.num.finite_difference_step]
+    kind: symbolic
+    input_kind: function
+    display: "\\frac{d}{dx}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_derivative_numeric, op_difference_quotient, op_derivative_sum_constant, op_derivative_symbolic_polynomial, op_derivative_product, op_derivative_quotient, op_derivative_chain, op_derivative_implicit, op_velocity_from_position, op_finite_difference]
+
+  - id: op_tangent_line
+    tier: t5
+    unlocked_by: [calc1.deriv.tangent_line, calc1.apply.linearization_tangent_approx, calc1.apply.newton_tangent_root, adv.num.newton_tangent_iteration]
+    kind: numeric
+    input_kind: function
+    display: "y = f(a) + f'(a)(x - a)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_tangent_line_at_point, op_linear_approximation, op_newton_root, op_newton_iterate]
+
+  - id: op_integral
+    tier: t5
+    unlocked_by: [calc1.int.accumulation, calc1.int.riemann_refines_to_limit, calc1.int.signed_area_below_axis, calc1.int.split_and_scale_properties, calc2.impr.limit_of_bounded_area, adv.real.riemann_upper_lower_squeeze]
+    kind: numeric
+    input_kind: function
+    display: "\\int_a^b f(x)\\,dx"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_integral_numeric, op_riemann_sum, op_riemann_left_right_midpoint, op_integral_signed, op_integral_properties, op_integrate_improper, op_upper_lower_sums]
+
+  - id: op_antiderivative
+    tier: t5
+    unlocked_by: [calc1.ftc.integral_undoes_derivative, calc1.ftc.antiderivative_family, calc2.tech.substitution_undoes_chain, calc2.tech.by_parts_undoes_product, calc2.tech.partial_fractions_split, calc2.tech.trig_substitution_as_triangle]
+    kind: symbolic
+    input_kind: function
+    display: "\\int f(x)\\,dx = F(x) + C"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_antiderivative_symbolic, op_antiderivative_table, op_definite_integral_symbolic, op_initial_value_find_c, op_integrate_substitution, op_integrate_by_parts, op_integrate_partial_fractions, op_integrate_trig_sub]
+
+  - id: op_integral_geometry
+    tier: t5
+    unlocked_by: [calc2.int.area_between, calc2.int.volume_by_slices, calc2.parpol.solid_of_revolution, calc2.parpol.polar_area_as_sectors]
+    kind: numeric
+    input_kind: function
+    display: "\\int (f - g)\\,dx, \\; \\int A(x)\\,dx"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_area_between, op_volume_slices, op_volume_revolution, op_polar_area]
+
+  - id: op_gradient
+    tier: t5
+    unlocked_by: [mvcalc.part.slice_of_surface, mvcalc.grad.terrain_walker, adv.opt.gradient_descent_downhill]
+    kind: symbolic
+    input_kind: function
+    display: "\\nabla f, \\; \\partial_x f"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_partial_derivative, op_gradient_step]
+
+  - id: op_jacobian
+    tier: t5
+    unlocked_by: [mvcalc.jac.local_stretch]
+    kind: symbolic
+    input_kind: function
+    display: "J_f"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_optimize_multivar
+    tier: t5
+    unlocked_by: [mvcalc.opt.hessian_curvature, mvcalc.lagr.tangent_level_curves, adv.opt.convex_bowl_one_minimum]
+    kind: symbolic
+    input_kind: function
+    display: "H_f, \\; \\nabla f = \\lambda \\nabla g"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_hessian, op_lagrange, op_convexity_check]
+
+  - id: op_multiple_integral
+    tier: t5
+    unlocked_by: [mvcalc.int.double_integral_tank, mvcalc.int.iterated_slices, mvcalc.int.change_of_variables_jacobian]
+    kind: numeric
+    input_kind: function
+    display: "\\iint, \\; \\iiint"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_double_integral, op_triple_integral, op_integrate_polar]
+
+  - id: op_field_integral
+    tier: t5
+    unlocked_by: [mvcalc.line.work_along_path, mvcalc.surf.flux_through_surface]
+    kind: numeric
+    input_kind: function
+    display: "\\int_C \\vec F \\cdot d\\vec r, \\; \\iint_S \\vec F \\cdot d\\vec S"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_line_integral, op_flux]
+
+  - id: op_div_curl
+    tier: t5
+    unlocked_by: [mvcalc.divrot.divergence_as_source, mvcalc.divrot.curl_as_spin]
+    kind: symbolic
+    input_kind: function
+    display: "\\nabla \\cdot \\vec F, \\; \\nabla \\times \\vec F"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_divergence, op_curl]
+
+  # ---------------------------------------------------------------- t6: vectores y matrices
+
+  - id: op_vector_arith
+    tier: t6
+    unlocked_by: [precalc.vec.arrow_2d_intro, linalg.vec.add_tip_to_tail, linalg.vec.scale_and_reverse, linalg.vec.span_and_combination]
+    kind: arithmetic
+    input_kind: vector
+    display: "\\vec u + \\vec v, \\; k\\vec v"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_vector_add, op_vector_scale, op_linear_combination]
+
+  - id: op_vector_length
+    tier: t6
+    unlocked_by: [precalc.vec.arrow_2d_intro, linalg.vec.vector_as_displacement]
+    kind: numeric
+    input_kind: vector
+    display: "\\|\\vec v\\|"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_dot_product
+    tier: t6
+    unlocked_by: [linalg.orth.dot_product_as_alignment, linalg.orth.projection_as_shadow, linalg.orth.orthonormal_makes_coordinates_easy]
+    kind: numeric
+    input_kind: vector
+    display: "\\vec u \\cdot \\vec v, \\; \\mathrm{proj}_{\\vec u} \\vec v"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_project_vector, op_gram_schmidt]
+
+  - id: op_matrix_vector
+    tier: t6
+    unlocked_by: [linalg.map.linear_transformation_2d, linalg.map.linear_transformation_3d, trig.rot.rotation_matrix, csmath.gfx.transform_matrix]
+    kind: function
+    input_kind: matrix
+    display: "A\\vec v"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_matrix_vector_3d, op_matrix_from_basis_images, op_rotate_point_by_angle, op_transform_pixels]
+
+  - id: op_matrix_multiply
+    tier: t6
+    unlocked_by: [linalg.map.compose_as_multiply, linalg.map.matrix_counts_routes, graph.matrix.two_step_routes_as_product]
+    kind: arithmetic
+    input_kind: matrix
+    display: "AB, \\; A^{n}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_matrix_power, op_matrix_power_routes]
+
+  - id: op_determinant
+    tier: t6
+    unlocked_by: [linalg.map.determinant_as_area, linalg.det.cofactor_by_slices]
+    kind: numeric
+    input_kind: matrix
+    display: "\\det A"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_determinant_2x2, op_determinant_3x3]
+
+  - id: op_matrix_inverse
+    tier: t6
+    unlocked_by: [linalg.map.inverse_and_systems]
+    kind: function
+    input_kind: matrix
+    display: "A^{-1}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_matrix_inverse_2x2]
+
+  - id: op_row_reduce
+    tier: t6
+    unlocked_by: [linalg.sys.row_operations, linalg.sys.elimination_to_echelon, linalg.sys.solution_set_shape]
+    kind: algebraic
+    input_kind: matrix
+    display: "RowReduce(A)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_rref, op_rank]
+
+  - id: op_change_of_basis
+    tier: t6
+    unlocked_by: [linalg.basis.unique_recipe, linalg.basis.in_span_or_not, linalg.basis.change_of_basis_as_translation]
+    kind: algebraic
+    input_kind: vector
+    display: "[\\vec v]_{B}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_coordinates_in_basis, op_check_in_span]
+
+  - id: op_eigen
+    tier: t6
+    unlocked_by: [linalg.eig.eigenvector_stays_on_line, linalg.eig.characteristic_polynomial, linalg.eig.diagonalize_as_change_of_view]
+    kind: symbolic
+    input_kind: matrix
+    display: "A\\vec v = \\lambda \\vec v"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_eigen_2x2, op_characteristic_polynomial, op_diagonalize]
+
+  - id: op_svd
+    tier: t6
+    unlocked_by: [linalg.svd.rotate_stretch_rotate]
+    kind: symbolic
+    input_kind: matrix
+    display: "A = U \\Sigma V^{T}"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_linear_program
+    tier: t6
+    unlocked_by: [adv.opt.linear_program_corners_dual]
+    kind: numeric
+    input_kind: expression
+    display: "\\max c^{T} x"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_lp_corners, op_lp_dual]
+
+  # ---------------------------------------------------------------- t7: complejos, series, EDOs y análisis
+
+  - id: op_complex
+    tier: t7
+    unlocked_by: [precalc.cplx.plane_intro, adv.cplx.i_as_new_axis, adv.cplx.plane_and_modulus, adv.cplx.multiplication_rotates_scales]
+    kind: arithmetic
+    input_kind: number
+    display: "a + bi"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_complex_from_parts, op_complex_add, op_complex_multiply]
+
+  - id: op_complex_polar
+    tier: t7
+    unlocked_by: [precalc.cplx.plane_intro, adv.cplx.plane_and_modulus, adv.cplx.multiplication_rotates_scales, trig.euler.cis_as_rotation, adv.cplx.euler_formula_circle, adv.cplx.roots_of_unity_polygon]
+    kind: function
+    input_kind: number
+    display: "r e^{i\\theta}, \\; |z|"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_complex_modulus, op_complex_polar_form, op_complex_exp, op_nth_roots_complex]
+
+  - id: op_slope_field
+    tier: t7
+    unlocked_by: [calc2.ode.rate_equation_as_rule, adv.ode.slope_field, adv.ode.euler_method, adv.ode.system_equilibrium_phase]
+    kind: numeric
+    input_kind: function
+    display: "y' = f(x, y)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_slope_field_plot, op_euler_step, op_phase_portrait]
+
+  - id: op_solve_ode
+    tier: t7
+    unlocked_by: [calc2.ode.separate_and_integrate, adv.ode.separable_variables, adv.ode.linear_first_order_factor]
+    kind: symbolic
+    input_kind: function
+    display: "y(x) = \\ldots"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_solve_separable, op_solve_linear_ode]
+
+  - id: op_fourier_transform
+    tier: t7
+    unlocked_by: [adv.four.projection_onto_sines, adv.four.transform_as_machine]
+    kind: symbolic
+    input_kind: function
+    display: "\\hat f(\\omega)"
+    locale_dependent: true
+    sandbox: true
+    aliases: [op_fourier_coefficient]
+
+  - id: op_inverse_fourier
+    tier: t7
+    unlocked_by: [adv.four.inverse_transform]
+    kind: symbolic
+    input_kind: function
+    display: "\\hat f \\mapsto f"
+    locale_dependent: true
+    sandbox: true
+    aliases: []
+
+  - id: op_taylor
+    tier: t7
+    unlocked_by: [calc2.taylor.polynomial_copies_derivatives, calc2.taylor.remainder_bounds_error]
+    kind: symbolic
+    input_kind: function
+    display: "T_n(x), \\; |R_n|"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_taylor_polynomial, op_taylor_error_bound]
+
+  - id: op_convergence_test
+    tier: t7
+    unlocked_by: [calc2.ser.power_series_radius, adv.real.function_series_uniform_limit, adv.real.cauchy_terms_huddle]
+    kind: logical
+    input_kind: expression
+    display: "R, \\; |a_n - a_m| < \\varepsilon"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_radius_convergence, op_m_test_bound, op_cauchy_gap_check]
+
+  # ---------------------------------------------------------------- t_disc: lógica, conjuntos, modular, combinatoria, grafos, algoritmos, estructuras
+
+  - id: op_truth_table
+    tier: t_disc
+    unlocked_by: [disc.logic.and_or_not, disc.logic.if_then_direction, csmath.bool.logic_gates]
+    kind: logical
+    input_kind: expression
+    display: "p \\land q, \\; p \\to q"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_implication_table, op_boolean_eval]
+
+  - id: op_proof_check
+    tier: t_disc
+    unlocked_by: [disc.logic.quantifiers_as_search, disc.proof.counterexample_breaks_forall, disc.ind.domino_induction]
+    kind: logical
+    input_kind: expression
+    display: "\\forall, \\; \\exists"
+    locale_dependent: false
+    sandbox: false
+    aliases: [op_forall_exists_check, op_counterexample_search, op_induction_check]
+
+  - id: op_set_ops
+    tier: t_disc
+    unlocked_by: [disc.set.membership_rule, disc.set.union_intersection, adv.real.supremum_least_ceiling]
+    kind: structural
+    input_kind: set
+    display: "A \\cup B, \\; A \\cap B, \\; \\sup A"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_set_membership, op_set_union, op_set_intersection, op_sup_inf_of_set]
+
+  - id: op_relation_check
+    tier: t_disc
+    unlocked_by: [disc.rel.relation_as_arrows, disc.rel.equivalence_classes]
+    kind: logical
+    input_kind: set
+    display: "a \\sim b"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_relation_is_function, op_partition_by_relation]
+
+  - id: op_mod_arith
+    tier: t_disc
+    unlocked_by: [disc.mod.modular_inverse, csmath.crypto.rsa_trapdoor]
+    kind: arithmetic
+    input_kind: number
+    display: "a^{-1} \\bmod n, \\; a^{k} \\bmod n"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_mod_inverse, op_gcd_extended, op_mod_pow, op_rsa_keypair]
+
+  - id: op_caesar
+    tier: t_disc
+    unlocked_by: [csmath.crypto.caesar_shift]
+    kind: function
+    input_kind: number
+    display: "x \\mapsto x \\pm k \\pmod{26}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_caesar_encode, op_caesar_decode]
+
+  - id: op_choose
+    tier: t_disc
+    unlocked_by: [disc.count.choose_as_pascal_paths, precalc.binom.pascal_triangle_expansion, disc.count.product_rule]
+    kind: arithmetic
+    input_kind: number
+    display: "\\binom{n}{k}, \\; n!"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_binomial_coefficient, op_pascal_row, op_factorial]
+
+  - id: op_count_outcomes
+    tier: t_disc
+    unlocked_by: [disc.count.product_rule, disc.count.sum_rule, prob.basic.count_outcomes_by_structure, prob.basic.sample_space_grid]
+    kind: arithmetic
+    input_kind: set
+    display: "|\\Omega|"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_count_product, op_count_by_cases, op_count_arrangements, op_count_sample_space]
+
+  - id: op_recurrence
+    tier: t_disc
+    unlocked_by: [disc.rec.recurrence_step, disc.rec.tree_recursion, csmath.rec.base_case_and_smaller_call]
+    kind: symbolic
+    input_kind: expression
+    display: "a_{n} = f(a_{n-1})"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_recurrence_unroll, op_recursion_tree_count, op_recursion_trace, op_binary_search_trace]
+
+  - id: op_graph_properties
+    tier: t_disc
+    unlocked_by: [graph.basic.graph_and_paths, graph.deg.handshake_lemma, graph.conn.components, graph.tree.tree_no_cycles, graph.walk.repeat_rules, graph.euler.bridges_konigsberg, graph.euler.hamilton_visits_every_node, graph.matrix.two_step_routes_as_product]
+    kind: structural
+    input_kind: graph
+    display: "G = (V, E)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_graph_edge_count, op_path_exists, op_degree_sum, op_component_count, op_is_tree, op_walk_classify, op_euler_path_check, op_hamilton_search, op_adjacency_matrix]
+
+  - id: op_graph_search
+    tier: t_disc
+    unlocked_by: [graph.search.bfs_dfs_frontier, csmath.alg.breadth_first_search, graph.path.shortest_path]
+    kind: numeric
+    input_kind: graph
+    display: "BFS(G, s), \\; d(s, t)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_bfs_order, op_dfs_order, op_bfs_trace, op_shortest_path]
+
+  - id: op_euler_characteristic
+    tier: t_disc
+    unlocked_by: [graph.planar.no_crossing_euler_formula, adv.topo.euler_characteristic_invariant]
+    kind: numeric
+    input_kind: graph
+    display: "V - E + F"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_planarity_check]
+
+  - id: op_graph_coloring
+    tier: t_disc
+    unlocked_by: [graph.color.map_coloring]
+    kind: numeric
+    input_kind: graph
+    display: "\\chi(G)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_chromatic_greedy]
+
+  - id: op_max_flow
+    tier: t_disc
+    unlocked_by: [graph.flow.max_flow_min_cut, graph.match.bipartite_matching]
+    kind: numeric
+    input_kind: graph
+    display: "\\max |f| = \\min |C|"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_bipartite_check, op_max_matching]
+
+  - id: op_machine_numbers
+    tier: t_disc
+    unlocked_by: [csmath.bin.place_value_binary, csmath.float.rounding_gaps]
+    kind: numeric
+    input_kind: number
+    display: "1011_2, \\; \\varepsilon_{mach}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_to_binary, op_from_binary, op_float_round, op_machine_epsilon]
+
+  - id: op_algorithm_trace
+    tier: t_disc
+    unlocked_by: [csmath.alg.sorting_algorithm, csmath.alg.state_machine, csmath.inv.loop_invariant, csmath.cplx.big_o_as_slope]
+    kind: structural
+    input_kind: expression
+    display: "O(n)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_sort_trace, op_automaton_run, op_loop_trace, op_prefix_sum, op_big_o_compare, op_count_steps]
+
+  - id: op_group_table
+    tier: t_disc
+    unlocked_by: [adv.alg.group_as_reversible_actions, adv.alg.cayley_graph, adv.alg.cosets_partition, adv.alg.homomorphism_preserves_structure]
+    kind: structural
+    input_kind: set
+    display: "g \\cdot h, \\; gH"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_group_compose_table, op_cayley_graph_build, op_coset_split, op_homomorphism_check]
+
+  - id: op_field_arith
+    tier: t_disc
+    unlocked_by: [adv.alg.field_every_nonzero_invertible, adv.alg.polynomial_arithmetic]
+    kind: arithmetic
+    input_kind: expression
+    display: "a^{-1} \\in \\mathbb{F}, \\; p(x) \\bmod q(x)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_field_inverse_table, op_poly_mod_arith]
+
+  - id: op_topology_check
+    tier: t_disc
+    unlocked_by: [adv.topo.open_or_closed, adv.topo.connected_one_piece, adv.topo.compact_finite_cover]
+    kind: logical
+    input_kind: set
+    display: "U \\subseteq X"
+    locale_dependent: false
+    sandbox: false
+    aliases: [op_open_closed_check, op_connected_check, op_finite_subcover_search]
+
+  # ---------------------------------------------------------------- t_prob: probabilidad y estadística
+
+  - id: op_probability
+    tier: t_prob
+    unlocked_by: [prob.basic.probability_as_proportion, prob.basic.complement_fills_the_rest, prob.basic.union_intersection]
+    kind: statistical
+    input_kind: set
+    display: "P(A), \\; P(A^{c}), \\; P(A \\cup B)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_probability_of_event, op_probability_complement, op_probability_union]
+
+  - id: op_conditional_probability
+    tier: t_prob
+    unlocked_by: [prob.cond.conditional_and_independence, prob.cond.markov_chain_walk]
+    kind: statistical
+    input_kind: set
+    display: "P(A \\mid B)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_markov_step]
+
+  - id: op_bayes
+    tier: t_prob
+    unlocked_by: [prob.cond.bayes_reverses_condition]
+    kind: statistical
+    input_kind: set
+    display: "P(B \\mid A) = \\frac{P(A \\mid B)\\,P(B)}{P(A)}"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_distribution
+    tier: t_prob
+    unlocked_by: [prob.rv.random_variable_as_machine, prob.rv.cumulative_distribution, prob.dist.binomial_counts, prob.dist.density_area_is_probability, prob.dist.normal_bell_from_sums]
+    kind: statistical
+    input_kind: distribution
+    display: "P(X = k), \\; F(x)"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_pmf_table, op_cdf, op_binomial_probability, op_density_probability, op_normal_probability]
+
+  - id: op_expected_value
+    tier: t_prob
+    unlocked_by: [prob.rv.expectation_as_weighted_average]
+    kind: statistical
+    input_kind: distribution
+    display: "E[X]"
+    locale_dependent: false
+    sandbox: true
+    aliases: []
+
+  - id: op_variance
+    tier: t_prob
+    unlocked_by: [prob.rv.variance_as_spread, prob.rv.linear_change_of_variable]
+    kind: statistical
+    input_kind: distribution
+    display: "\\mathrm{Var}(X), \\; z = \\frac{x - \\mu}{\\sigma}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_standardize]
+
+  - id: op_descriptive_stats
+    tier: t_prob
+    unlocked_by: [prob.stat.mean_as_leveling, prob.stat.frequency_table]
+    kind: statistical
+    input_kind: set
+    display: "\\bar x, \\; \\tilde x"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_mean, op_median, op_frequency_table]
+
+  - id: op_regression_line
+    tier: t_prob
+    unlocked_by: [prob.stat.correlation_vs_cause, prob.stat.regression_line, linalg.svd.least_squares_as_projection]
+    kind: statistical
+    input_kind: set
+    display: "\\hat y = a + bx, \\; r"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_correlation, op_least_squares]
+
+  - id: op_inference
+    tier: t_prob
+    unlocked_by: [prob.samp.sample_vs_population, prob.samp.central_limit_bell, prob.inf.confidence_interval_net, prob.inf.hypothesis_test_surprise]
+    kind: statistical
+    input_kind: set
+    display: "\\bar x \\pm z \\frac{s}{\\sqrt{n}}, \\; p"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_sample_mean, op_standard_error, op_confidence_interval, op_p_value]
+
+  - id: op_monte_carlo
+    tier: t_prob
+    unlocked_by: [adv.num.monte_carlo_pi]
+    kind: numeric
+    input_kind: expression
+    display: "\\hat p \\approx \\frac{k}{N}"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_monte_carlo_estimate, op_random_walk_sim]
+
+  - id: op_entropy
+    tier: t_prob
+    unlocked_by: [csmath.info.entropy_as_surprise]
+    kind: statistical
+    input_kind: distribution
+    display: "H = -\\sum p_i \\log_2 p_i"
+    locale_dependent: false
+    sandbox: true
+    aliases: [op_entropy_bits, op_sample_draws]
