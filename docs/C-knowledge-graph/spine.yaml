@@ -1,0 +1,42 @@
+# Espina dorsal del curriculum: 37 conceptos en orden. Cada uno depende solo de anteriores.
+# El número es el prefijo del archivo en D-curriculum/D1-espina/. Los ids son permanentes.
+# Si se quiere reducir a 35: degradar 27 y 35 a no-espina (ningún nodo de espina posterior depende de ellos).
+
+spine:
+  - {n: 1,  id: found.count.cardinality,                 prereqs: []}
+  - {n: 2,  id: found.count.number_line,                 prereqs: [found.count.cardinality]}
+  - {n: 3,  id: arith.add.displacement,                  prereqs: [found.count.number_line]}
+  - {n: 4,  id: arith.sub.undo_add,                      prereqs: [arith.add.displacement]}
+  - {n: 5,  id: arith.mul.scaling,                       prereqs: [arith.add.displacement]}
+  - {n: 6,  id: arith.div.undo_mul,                      prereqs: [arith.mul.scaling, arith.sub.undo_add]}
+  - {n: 7,  id: arith.int.negatives,                     prereqs: [arith.sub.undo_add]}
+  - {n: 8,  id: arith.frac.parts_and_ratio,              prereqs: [arith.div.undo_mul]}
+  - {n: 9,  id: arith.expr.precedence_tree,              prereqs: [arith.mul.scaling]}
+  - {n: 10, id: prealg.var.unknown_as_box,               prereqs: [arith.expr.precedence_tree]}
+  - {n: 11, id: prealg.eq.balance,                       prereqs: [prealg.var.unknown_as_box]}
+  - {n: 12, id: prealg.inv.operation_as_key,             prereqs: [arith.sub.undo_add, arith.div.undo_mul, arith.int.negatives]}
+  - {n: 13, id: alg.eq.one_step,                         prereqs: [prealg.eq.balance, prealg.inv.operation_as_key]}
+  - {n: 14, id: alg.eq.multi_step,                       prereqs: [alg.eq.one_step, arith.expr.precedence_tree]}
+  - {n: 15, id: alg.expr.distributive_tiles,             prereqs: [arith.mul.scaling, prealg.var.unknown_as_box]}
+  - {n: 16, id: alg.sys.two_by_two,                      prereqs: [alg.eq.multi_step, alg.expr.distributive_tiles]}
+  - {n: 17, id: alg.fn.function_as_machine,              prereqs: [prealg.var.unknown_as_box, arith.expr.precedence_tree]}
+  - {n: 18, id: alg.fn.graph_as_picture,                 prereqs: [alg.fn.function_as_machine, arith.int.negatives]}
+  - {n: 19, id: alg.fn.linear_slope,                     prereqs: [alg.fn.graph_as_picture, arith.mul.scaling]}
+  - {n: 20, id: alg.fn.composition,                      prereqs: [alg.fn.function_as_machine]}
+  - {n: 21, id: alg.fn.inverse_function,                 prereqs: [alg.fn.composition, prealg.inv.operation_as_key, alg.fn.graph_as_picture]}
+  - {n: 22, id: alg.fn.quadratic_and_sqrt,               prereqs: [alg.expr.distributive_tiles, alg.fn.inverse_function]}
+  - {n: 23, id: alg.fn.exponential_growth,               prereqs: [alg.fn.linear_slope, arith.frac.parts_and_ratio]}
+  - {n: 24, id: alg.fn.logarithm,                        prereqs: [alg.fn.exponential_growth, alg.fn.inverse_function]}
+  - {n: 25, id: precalc.lim.approach,                    prereqs: [alg.fn.graph_as_picture, arith.frac.parts_and_ratio]}
+  - {n: 26, id: calc1.deriv.rate_as_slope_limit,         prereqs: [precalc.lim.approach, alg.fn.linear_slope]}
+  - {n: 27, id: calc1.deriv.rules_as_structure,          prereqs: [calc1.deriv.rate_as_slope_limit, alg.fn.composition, alg.expr.distributive_tiles]}
+  - {n: 28, id: calc1.int.accumulation,                  prereqs: [precalc.lim.approach, arith.mul.scaling]}
+  - {n: 29, id: calc1.ftc.integral_undoes_derivative,    prereqs: [calc1.deriv.rate_as_slope_limit, calc1.int.accumulation, prealg.inv.operation_as_key]}
+  - {n: 30, id: linalg.vec.vector_as_displacement,       prereqs: [alg.fn.graph_as_picture, arith.add.displacement]}
+  - {n: 31, id: linalg.vec.span_and_combination,         prereqs: [linalg.vec.vector_as_displacement, arith.mul.scaling]}
+  - {n: 32, id: linalg.map.linear_transformation_2d,     prereqs: [linalg.vec.span_and_combination, alg.fn.function_as_machine]}
+  - {n: 33, id: linalg.map.inverse_and_systems,          prereqs: [linalg.map.linear_transformation_2d, alg.sys.two_by_two, alg.fn.inverse_function]}
+  - {n: 34, id: prob.basic.probability_as_proportion,    prereqs: [arith.frac.parts_and_ratio]}
+  - {n: 35, id: prob.cond.conditional_and_independence,  prereqs: [prob.basic.probability_as_proportion]}
+  - {n: 36, id: prob.rv.expectation_as_weighted_average, prereqs: [prob.basic.probability_as_proportion, linalg.vec.span_and_combination]}
+  - {n: 37, id: graph.basic.graph_and_paths,             prereqs: [found.count.cardinality]}

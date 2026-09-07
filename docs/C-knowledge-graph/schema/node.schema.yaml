@@ -1,0 +1,131 @@
+# Schema del nodo del knowledge graph de Mathy.
+# Este archivo es la ÚNICA definición de los enums; ningún otro archivo los redefine.
+# Se documenta como YAML y se hace cumplir con el validador descrito en C0-esquema.md.
+
+version: 1
+
+enums:
+  # Áreas del curriculum (16). Prefijo obligatorio del id de nodo.
+  area:
+    - found     # Nivel 0: intuición matemática (incluye pre-lectura found.lit.*)
+    - arith     # Nivel 1: aritmética
+    - prealg    # Nivel 2: preálgebra
+    - alg       # Álgebra
+    - geom      # Geometría
+    - trig      # Trigonometría
+    - precalc   # Precálculo
+    - calc1     # Cálculo I
+    - calc2     # Cálculo II
+    - mvcalc    # Cálculo multivariable
+    - linalg    # Álgebra lineal
+    - prob      # Probabilidad y estadística
+    - disc      # Matemática discreta
+    - graph     # Teoría de grafos
+    - csmath    # Matemática para computación
+    - adv       # Matemática avanzada (complejos, análisis, álgebra abstracta, topología, EDO, numérico, optimización, Fourier)
+
+  # Niveles de progresión (0–8). Orientativos; los prerequisitos mandan.
+  level:
+    0: intuición
+    1: aritmética
+    2: preálgebra
+    3: álgebra / geometría
+    4: trigonometría / precálculo
+    5: cálculo I
+    6: cálculo II / álgebra lineal / probabilidad
+    7: multivariable / discreta / grafos / csmath
+    8: avanzado
+
+  # Capas de abstracción (8), en orden. Ver H-progresion-abstraccion.md.
+  layer:
+    - real        # situación del mundo real
+    - intuition   # anticipación sin herramientas
+    - concrete    # manipulación física de objetos
+    - visual      # barras, bloques, diagramas, gráficos
+    - symbolic    # notación matemática
+    - formal      # definiciones, propiedades, condiciones de validez
+    - abstract    # sin analogía, solo propiedades
+    - transfer    # el mismo concepto en otro contexto
+
+  # Primitivas de la gramática visual (12). Ver H y B.
+  grammar:
+    - displace    # sumar = desplazar
+    - scale       # multiplicar = escalar
+    - nonlinear   # potenciar / exponencial = transformación no lineal
+    - compose     # componer = encadenar transformaciones
+    - invert      # inversa = transformación reversible (la llave)
+    - rate        # derivar = tasa de cambio
+    - accumulate  # integrar = acumular
+    - deform      # transformación lineal = deformar el espacio
+    - partition   # conjuntos, conteo, medida = partir
+    - relate      # relaciones, grafos = conectar
+    - invariant   # demostración, equivalencia, simetría = lo que no cambia
+    - random      # probabilidad = proporción bajo azar
+
+  # Verbos de evidencia (6). Mapean 1:1 a las dimensiones de mastery (K-evaluacion.md).
+  evidence:
+    - recognize   # → Familiarity
+    - explain     # → Understanding
+    - manipulate  # → Application
+    - apply       # → Application (+ Speed)
+    - generalize  # → Transfer
+    - transfer    # → Transfer
+
+  # Nivel de lectura requerido para jugar el nodo (Q-edad-universal.md).
+  literacy:
+    - none        # jugable sin leer: demostración + iconos + voz opcional
+    - icons       # iconos con etiquetas de una palabra, voz opcional
+    - short_text  # frases cortas (≤ 12 palabras) siempre con voz
+    - full_text   # definiciones y enunciados; solo desde nivel 3
+
+  # Mecánicas reutilizables: ids definidos en E-mecanicas/mechanics.yaml (12).
+  # Misconceptions: ids definidos en L-modelo-errores/misconceptions.yaml.
+  # Analogías: ids definidos en G-analogias/analogies.yaml.
+  # Escenas: ids definidos en I-manim/scenes.yaml.
+  # Operaciones de calculadora: ids definidos en M-calculadora/calculator_ops.yaml.
+
+node:
+  id:            {type: string, required: true,  pattern: '^[a-z]+\.[a-z0-9]{2,6}\.[a-z0-9_]+$', doc: "area.cluster.slug; el slug nombra la idea, no el tema escolar"}
+  area:          {type: enum:area, required: true, doc: "debe coincidir con el prefijo del id"}
+  level:         {type: int, required: true, min: 0, max: 8}
+  prereqs:       {type: list<id>, required: true, doc: "solo prerequisitos DIRECTOS; puede ser lista vacía únicamente en found.*"}
+  grammar:       {type: enum:grammar, required: true, doc: "la primitiva dominante"}
+  mechanics:     {type: list<mechanic_id>, required: true, min: 1, doc: "la primera es la mecánica principal"}
+  literacy:      {type: enum:literacy, required: true, doc: "nivel 0 → none; full_text prohibido antes del nivel 3"}
+  spine:         {type: bool, default: false}
+  layers:        {type: list<enum:layer>, default: all, doc: "declarar solo para acotar: found.* suele terminar en visual; adv.* puede empezar en symbolic"}
+  analogy:       {type: analogy_id, required: false, doc: "obligatoria si layers incluye real o concrete"}
+  misconceptions:{type: list<misconception_id>, default: []}
+  transfer_to:   {type: list<id>, default: [], doc: "nodos de OTRA área donde este concepto se evalúa en una mecánica ajena"}
+  calc_unlocks:  {type: list<calc_op_id>, default: [], doc: "operaciones que se habilitan cuando el nodo llega a ready"}
+  t_star:        {type: int, default: 30, doc: "segundos objetivo para la dimensión Speed"}
+  manim:         {type: list<scene_id>, default: []}
+  next:          {type: id, required: false, doc: "sucesor narrativo (campo 'concepto siguiente' del template)"}
+  doc:           {type: path, required: false, doc: "solo espina: ruta al archivo D1"}
+  probes:        {type: map<enum:evidence, locale_key>, required: false, doc: "solo espina; las 6 claves obligatorias; el texto vive en locales/<lang>/nodes.yaml"}
+  aliases:       {type: list<string>, default: [], doc: "ids anteriores tras un renombre"}
+  # DERIVADOS por el validador, nunca escritos a mano:
+  #   unlocks:   nodos que tienen a este como prerequisito directo
+  #   name:      clave de locale implícita nodes.<id>.name
+
+locale_keys:
+  # Convención de claves en docs/locales/<lang>/*.yaml. Toda cadena visible al usuario vive ahí.
+  nodes:          "nodes.<id>.name | nodes.<id>.probes.<evidence> | nodes.<id>.intro"
+  mechanics:      "mechanics.<id>.name | mechanics.<id>.player_action | mechanics.<id>.invariant"
+  misconceptions: "misconceptions.<id>.name | misconceptions.<id>.prompt"
+  analogies:      "analogies.<id>.name | analogies.<id>.text"
+  calculator:     "calculator.<op>.label | calculator.<op>.hint"
+  ui:             "ui.<screen>.<element>"
+
+validator_rules:
+  - ids únicos; formato area.cluster.slug; el prefijo coincide con area
+  - toda referencia (prereqs, transfer_to, next, mechanics, analogy, misconceptions, manim, calc_unlocks) resuelve a un id existente
+  - el grafo de prereqs es acíclico
+  - todo nodo tiene ≥ 1 mecánica; toda mecánica aparece en ≥ 3 áreas
+  - nivel 0 ⇒ literacy none; literacy full_text ⇒ level ≥ 3
+  - analogy obligatoria si layers incluye real o concrete
+  - spine ⇒ probes con las 6 claves, doc existente, y aparece en spine.yaml en orden compatible con sus prereqs
+  - aviso (no error) por prereqs transitivamente redundantes
+  - presupuesto por área dentro de ±20 % del declarado en D0-mapa.md
+  - toda clave de locale referenciada existe en locales/es; se listan las faltantes en otros locales
+  - unlocks se calcula, no se lee
