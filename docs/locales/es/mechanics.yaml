@@ -1,0 +1,70 @@
+# Locale fuente (es) de las mecánicas. Claves: mechanics.<id>.{name, player_action, invariant}.
+# `invariant` se narra por voz en la primera capa: debe poder oírlo un niño de 6 años.
+# Los ids vienen de ../../E-mecanicas/mechanics.yaml; este archivo no agrega ni quita mecánicas.
+
+mechanics:
+
+  balance:
+    name: "La balanza"
+    player_action: "Arrastrás cosas a los dos platos de una balanza hasta que quede derecha, y lo que le hacés a un plato se lo hacés al otro."
+    invariant: "Si a los dos platos les hacés exactamente lo mismo, la balanza sigue derecha."
+
+  chest_key:
+    name: "Cofres y llaves"
+    player_action: "Elegís la llave que abre cada cofre y la arrastrás al candado; los cofres pueden estar uno dentro de otro."
+    invariant: "Cada candado tiene una llave que lo deshace y te devuelve justo lo que había adentro."
+
+  machine_pipe:
+    name: "Máquinas y tubos"
+    player_action: "Metés algo por la boca de una máquina, mirás qué sale por el tubo, y encadenás máquinas para que la salida de una entre en la siguiente."
+    invariant: "Si metés lo mismo, sale lo mismo; la máquina nunca cambia de idea."
+
+  ledger:
+    name: "El libro de frutas"
+    player_action: "Juntás las cosas iguales en la misma fila y contás cuántas hay de cada una."
+    invariant: "Ordenar las cosas en filas no cambia cuántas hay."
+
+  tiles:
+    name: "Baldosas"
+    player_action: "Acomodás baldosas cuadradas para armar rectángulos y los cortás o los pegás sin perder ninguna."
+    invariant: "Si movés las baldosas de lugar, siguen siendo las mismas baldosas: el piso cubierto es igual de grande."
+
+  slope_walker:
+    name: "El caminante de la cuesta"
+    player_action: "Movés a un caminante por una cuesta y mirás cuánto sube por cada paso que da hacia adelante."
+    invariant: "Lo empinado de la cuesta no depende de si das pasos grandes o chiquitos."
+
+  fill_accumulate:
+    name: "Llenar el balde"
+    player_action: "Abrís una canilla y mirás cómo se llena un recipiente; podés parar, seguir y comparar cuánto entró."
+    invariant: "Lo que hay en el balde es todo lo que fue entrando, sin importar si entró de a poquito o de golpe."
+
+  grid_stretch:
+    name: "La cuadrícula elástica"
+    player_action: "Estirás, encogés o girás una sábana cuadriculada con los dedos y mirás adónde va a parar cada dibujo."
+    invariant: "Las líneas siguen siendo líneas derechas y parejas, y el punto del medio no se mueve."
+
+  network_routes:
+    name: "Islas y puentes"
+    player_action: "Unís puntos con caminos y buscás por dónde ir de un lugar a otro."
+    invariant: "Da igual cómo dibujes el mapa: lo que importa es quién está conectado con quién."
+
+  urn_dice:
+    name: "La bolsa y el dado"
+    player_action: "Sacás bolitas de una bolsa o tirás un dado muchas veces y vas anotando qué salió."
+    invariant: "Una vez puede salir cualquier cosa, pero si jugás muchas veces las cuentas se acomodan siempre igual."
+
+  gears_sequence:
+    name: "La manivela"
+    player_action: "Girás una manivela y una ficha avanza por un camino; podés enganchar engranajes para que otra ficha avance a su ritmo."
+    invariant: "Cada vuelta de la manivela mueve la ficha lo mismo que la vuelta anterior."
+
+  sorter:
+    name: "El clasificador"
+    player_action: "Arrastrás cada cosa al cajón que le corresponde según una regla, o adivinás la regla mirando adónde cae cada cosa."
+    invariant: "Cada cosa va a un solo cajón, y la regla decide cuál: nunca a dos y nunca a ninguno."
+
+  construct:
+    name: "Líneas auxiliares"
+    player_action: "Sobre una figura ya dibujada, unís puntos, trazás líneas, la doblás y marcás lo que es igual, hasta descubrir un dato que faltaba."
+    invariant: "Lo que dibujás encima no cambia la figura ni la agranda ni la achica: solo te deja ver lo que ya estaba ahí."

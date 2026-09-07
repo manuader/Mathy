@@ -1,0 +1,374 @@
+# Mecánicas reutilizables de Mathy (13). Ids congelados; los nodos del grafo los referencian en `mechanics`.
+# Este archivo no contiene texto visible al usuario: nombres, acción del jugador e invariante narrado
+# viven en ../locales/es/mechanics.yaml bajo mechanics.<id>.{name,player_action,invariant}.
+# `grammar` usa el enum de ../C-knowledge-graph/schema/node.schema.yaml.
+# `reused_by`: ids de nodos. Los de la espina son definitivos; los demás se reconcilian contra graph/*.yaml en la fase 3.
+# `areas` se deriva de `reused_by`; el validador exige ≥ 3 áreas por mecánica.
+# `fade_steps`: etapas ordenadas de desvanecimiento hacia la notación (ver ../H-progresion-abstraccion.md).
+# `manim_family`: familia de escenas; las clases concretas se declaran en ../I-manim/scenes.yaml.
+
+version: 1
+
+mechanics:
+
+  - id: balance
+    grammar: invariant
+    invariant_id: equality_under_identical_actions
+    input: [drag, tap]
+    literacy_min: none
+    fade_steps: [objects, bars, tokens, symbols]
+    reused_by:
+      - found.cmp.same_amount
+      - prealg.var.unknown_as_box
+      - prealg.eq.balance
+      - alg.eq.one_step
+      - alg.eq.multi_step
+      - alg.sys.two_by_two
+      - alg.ineq.inequality_tilts
+      - trig.id.identity_as_balance
+      - linalg.map.inverse_and_systems
+      - linalg.sys.row_operations
+      - prob.rv.expectation_as_weighted_average
+      - disc.mod.congruence_both_sides
+      - adv.ode.separable_variables
+    areas: [found, prealg, alg, trig, linalg, prob, disc, adv]
+    manim_family: balance_scene
+
+  - id: chest_key
+    grammar: invert
+    invariant_id: inverse_restores_original
+    input: [drag, tap]
+    literacy_min: none
+    fade_steps: [chests, arrows, boxes, inverse_notation]
+    reused_by:
+      - arith.sub.undo_add
+      - arith.div.undo_mul
+      - arith.expr.precedence_tree
+      - prealg.var.unknown_as_box
+      - prealg.inv.operation_as_key
+      - alg.eq.one_step
+      - alg.eq.multi_step
+      - alg.fn.inverse_function
+      - alg.fn.quadratic_and_sqrt
+      - alg.fn.logarithm
+      - geom.trans.undo_transformation
+      - trig.inv.arcsin_two_branches
+      - calc1.ftc.integral_undoes_derivative
+      - calc2.tech.substitution_undoes_chain
+      - linalg.map.inverse_and_systems
+      - prob.cond.bayes_reverses_condition
+      - disc.mod.modular_inverse
+      - csmath.crypto.caesar_shift
+      - adv.four.inverse_transform
+    areas: [arith, prealg, alg, geom, trig, calc1, calc2, linalg, prob, disc, csmath, adv]
+    manim_family: chest_scene
+
+  - id: machine_pipe
+    grammar: compose
+    invariant_id: same_input_same_output
+    input: [drag, tap]
+    literacy_min: none
+    fade_steps: [machines, pipes, arrow_diagram, function_notation]
+    reused_by:
+      - found.pat.rule_machine
+      - arith.expr.precedence_tree
+      - prealg.fn.input_output_table
+      - alg.eq.multi_step
+      - alg.fn.function_as_machine
+      - alg.fn.graph_as_picture
+      - alg.fn.composition
+      - alg.fn.inverse_function
+      - trig.fn.unit_circle_machine
+      - precalc.fn.piecewise_machine
+      - calc1.deriv.rules_as_structure
+      - mvcalc.fn.two_inputs_one_output
+      - linalg.map.linear_transformation_2d
+      - prob.rv.random_variable_as_machine
+      - disc.rel.function_vs_relation
+      - csmath.alg.pipeline_of_steps
+      - adv.four.transform_as_machine
+    areas: [found, arith, prealg, alg, trig, precalc, calc1, mvcalc, linalg, prob, disc, csmath, adv]
+    manim_family: pipe_scene
+
+  - id: ledger
+    grammar: partition
+    invariant_id: count_preserved_under_regrouping
+    input: [drag, tap]
+    literacy_min: none
+    fade_steps: [objects, tally, letters, coefficients]
+    reused_by:
+      - found.count.cardinality
+      - arith.add.displacement
+      - arith.add.combine_groups
+      - arith.mul.repeated_groups
+      - arith.frac.parts_and_ratio
+      - prealg.var.unknown_as_box
+      - prealg.expr.like_terms
+      - alg.expr.distributive_tiles
+      - alg.poly.coefficients_as_counts
+      - linalg.vec.span_and_combination
+      - prob.rv.expectation_as_weighted_average
+      - prob.stat.frequency_table
+      - disc.count.sum_rule
+      - adv.ring.polynomial_arithmetic
+    areas: [found, arith, prealg, alg, linalg, prob, disc, adv]
+    manim_family: ledger_scene
+
+  - id: tiles
+    grammar: scale
+    invariant_id: area_preserved_under_rearrangement
+    input: [drag, tap, pinch]
+    literacy_min: none
+    fade_steps: [loose_tiles, grid_rectangle, labeled_sides, product_notation]
+    reused_by:
+      - arith.mul.scaling
+      - arith.mul.rows_and_columns
+      - arith.div.undo_mul
+      - arith.frac.parts_and_ratio
+      - alg.expr.distributive_tiles
+      - alg.expr.binomial_product
+      - alg.fn.quadratic_and_sqrt
+      - geom.area.rectangle
+      - geom.area.triangle
+      - geom.thm.pythagoras_rearrangement
+      - trig.id.pythagorean_identity
+      - calc1.deriv.rules_as_structure
+      - calc1.int.accumulation
+      - mvcalc.int.double_integral_tiles
+      - linalg.map.determinant_as_area
+      - prob.basic.probability_as_proportion
+      - prob.cond.conditional_and_independence
+      - disc.count.product_rule
+    areas: [arith, alg, geom, trig, calc1, mvcalc, linalg, prob, disc]
+    manim_family: tile_scene
+
+  - id: slope_walker
+    grammar: rate
+    invariant_id: steepness_independent_of_step_size
+    input: [drag, scrub]
+    literacy_min: none
+    fade_steps: [hill_walk, staircase, rise_run_triangle, slope_ratio, derivative_notation]
+    reused_by:
+      - arith.rate.per_unit
+      - prealg.ratio.proportion_as_line
+      - alg.fn.graph_as_picture
+      - alg.fn.linear_slope
+      - alg.fn.exponential_growth
+      - geom.line.parallel_same_slope
+      - trig.fn.tangent_as_slope
+      - precalc.lim.approach
+      - calc1.deriv.rate_as_slope_limit
+      - calc1.deriv.tangent_line
+      - calc1.ftc.integral_undoes_derivative
+      - calc2.par.parametric_speed
+      - mvcalc.deriv.partial_as_axis_slope
+      - mvcalc.deriv.gradient_steepest_ascent
+      - prob.stat.regression_line
+      - csmath.cplx.big_o_as_slope
+      - adv.ode.slope_field
+    areas: [arith, prealg, alg, geom, trig, precalc, calc1, calc2, mvcalc, prob, csmath, adv]
+    manim_family: slope_scene
+
+  - id: fill_accumulate
+    grammar: accumulate
+    invariant_id: total_independent_of_chunking
+    input: [scrub, hold, drag]
+    literacy_min: none
+    fade_steps: [container, stacked_blocks, rectangles_under_curve, sigma_notation, integral_notation]
+    reused_by:
+      - found.meas.fill_compare
+      - arith.add.running_total
+      - prealg.pct.percent_fill
+      - geom.meas.volume_as_layers
+      - precalc.seq.sum_of_terms
+      - calc1.int.accumulation
+      - calc1.ftc.integral_undoes_derivative
+      - calc2.int.volume_by_slices
+      - calc2.ser.partial_sums
+      - mvcalc.int.volume_under_surface
+      - prob.rv.cumulative_distribution
+      - disc.sum.sigma_notation
+      - csmath.alg.prefix_sum
+      - adv.ode.euler_method
+    areas: [found, arith, prealg, geom, precalc, calc1, calc2, mvcalc, prob, disc, csmath, adv]
+    manim_family: fill_scene
+
+  - id: grid_stretch
+    grammar: deform
+    invariant_id: lines_stay_lines_origin_fixed
+    input: [pinch, drag]
+    literacy_min: none
+    fade_steps: [rubber_sheet, grid_lines, basis_arrows, matrix_notation]
+    reused_by:
+      - arith.mul.scaling
+      - arith.div.undo_mul
+      - arith.int.negatives
+      - alg.fn.linear_slope
+      - alg.sys.two_by_two
+      - alg.fn.quadratic_and_sqrt
+      - geom.trans.dilation
+      - geom.trans.rotation_reflection
+      - trig.fn.rotation_by_angle
+      - calc1.deriv.rate_as_slope_limit
+      - calc2.tech.substitution_undoes_chain
+      - linalg.vec.vector_as_displacement
+      - linalg.vec.span_and_combination
+      - linalg.map.linear_transformation_2d
+      - linalg.map.inverse_and_systems
+      - linalg.map.determinant_as_area
+      - linalg.eig.eigenvector_stays_on_line
+      - mvcalc.deriv.jacobian_local_stretch
+      - prob.rv.linear_change_of_variable
+      - csmath.gfx.transform_matrix
+      - adv.cx.multiplication_rotates_scales
+    areas: [arith, alg, geom, trig, calc1, calc2, linalg, mvcalc, prob, csmath, adv]
+    manim_family: grid_scene
+
+  - id: network_routes
+    grammar: relate
+    invariant_id: connections_independent_of_drawing
+    input: [drag, tap]
+    literacy_min: none
+    fade_steps: [islands_bridges, dots_lines, arrow_list, adjacency_matrix]
+    reused_by:
+      - found.count.cardinality
+      - found.rel.match_one_to_one
+      - arith.mul.factor_tree
+      - alg.fn.function_as_machine
+      - geom.top.euler_characteristic
+      - linalg.map.matrix_counts_routes
+      - prob.cond.conditional_and_independence
+      - prob.mc.markov_chain_walk
+      - disc.rel.relation_as_arrows
+      - disc.rel.function_vs_relation
+      - graph.basic.graph_and_paths
+      - graph.tree.tree_no_cycles
+      - graph.path.shortest_path
+      - graph.euler.bridges_konigsberg
+      - graph.color.map_coloring
+      - csmath.alg.state_machine
+      - csmath.alg.breadth_first_search
+      - adv.grp.cayley_graph
+    areas: [found, arith, alg, geom, linalg, prob, disc, graph, csmath, adv]
+    manim_family: network_scene
+
+  - id: urn_dice
+    grammar: random
+    invariant_id: proportion_stable_in_long_run
+    input: [tap, hold, drag]
+    literacy_min: none
+    fade_steps: [physical_draws, tally_bars, fraction_of_total, probability_notation]
+    reused_by:
+      - found.cmp.likely_unlikely
+      - arith.frac.parts_and_ratio
+      - arith.pct.percent_of_total
+      - geom.area.area_by_random_darts
+      - prob.basic.probability_as_proportion
+      - prob.cond.conditional_and_independence
+      - prob.rv.expectation_as_weighted_average
+      - prob.rv.variance_as_spread
+      - prob.lln.long_run_proportion
+      - prob.dist.binomial_counts
+      - prob.stat.sample_vs_population
+      - disc.count.count_outcomes
+      - csmath.rand.random_sampling
+      - adv.num.monte_carlo_pi
+      - adv.stoch.random_walk
+    areas: [found, arith, geom, prob, disc, csmath, adv]
+    manim_family: urn_scene
+
+  - id: gears_sequence
+    grammar: displace
+    invariant_id: same_step_every_turn
+    input: [scrub, drag, tap]
+    literacy_min: none
+    fade_steps: [crank_track, numbered_track, rule_card, recurrence_notation]
+    reused_by:
+      - found.count.number_line
+      - found.pat.what_comes_next
+      - arith.add.displacement
+      - arith.sub.undo_add
+      - arith.mul.scaling
+      - arith.mul.skip_counting
+      - arith.int.negatives
+      - prealg.pat.rule_from_table
+      - alg.fn.linear_slope
+      - alg.fn.composition
+      - alg.fn.exponential_growth
+      - alg.fn.logarithm
+      - trig.ang.angle_as_turn
+      - trig.fn.periodic_wraps
+      - precalc.lim.approach
+      - precalc.seq.arithmetic_sequence
+      - precalc.seq.geometric_sequence
+      - calc1.deriv.rules_as_structure
+      - linalg.vec.vector_as_displacement
+      - linalg.vec.span_and_combination
+      - disc.mod.clock_arithmetic
+      - disc.ind.domino_induction
+      - disc.rec.recurrence_step
+      - csmath.alg.loop_iteration
+      - adv.dyn.iterated_map_fixed_point
+    areas: [found, arith, prealg, alg, trig, precalc, calc1, linalg, disc, csmath, adv]
+    manim_family: gear_scene
+
+  - id: sorter
+    grammar: partition
+    invariant_id: every_object_exactly_one_bin
+    input: [drag, tap]
+    literacy_min: none
+    fade_steps: [picture_bins, labeled_bins, rule_card, set_notation]
+    reused_by:
+      - found.sort.by_attribute
+      - found.cmp.bigger_smaller
+      - arith.ord.compare_fractions
+      - arith.div.remainder_classes
+      - alg.ineq.inequality_as_region
+      - alg.fn.function_as_machine
+      - geom.class.polygon_by_sides
+      - geom.class.quadrilateral_hierarchy
+      - trig.ang.quadrant_signs
+      - precalc.fn.even_odd_symmetry
+      - calc1.lim.continuous_or_not
+      - linalg.space.in_span_or_not
+      - prob.basic.probability_as_proportion
+      - prob.cond.conditional_and_independence
+      - prob.stat.histogram_bins
+      - disc.set.subset_venn
+      - disc.set.union_intersection
+      - disc.logic.and_or_not
+      - disc.rel.equivalence_classes
+      - csmath.alg.sorting_algorithm
+      - csmath.alg.binary_search
+      - csmath.data.hash_buckets
+      - adv.grp.cosets_partition
+      - adv.top.open_or_closed
+    areas: [found, arith, alg, geom, trig, precalc, calc1, linalg, prob, disc, csmath, adv]
+    manim_family: sorter_scene
+
+  - id: construct
+    grammar: invariant
+    invariant_id: construction_reveals_not_changes
+    input: [drag, tap, hold]
+    literacy_min: none
+    fade_steps: [fold_paper, draw_line_on_figure, name_relation, symbolic_chain, proof_sketch]
+    reused_by:
+      - found.shape.fold_in_half
+      - geom.area.rect_and_triangle
+      - geom.angle.turn_as_measure
+      - geom.sim.similarity_as_scale
+      - geom.tri.pythagoras_as_tiles
+      - geom.cons.auxiliary_lines
+      - geom.circle.radius_bisects_chord
+      - trig.circle.unit_circle_radians
+      - trig.fn.sine_as_height
+      - trig.id.pythagorean_identity
+      - calc1.deriv.tangent_line
+      - calc1.opt.inscribed_rectangle
+      - linalg.vec.projection_as_shadow
+      - linalg.map.determinant_as_area
+      - disc.ind.domino_induction
+      - disc.proof.chain_of_constructions
+      - adv.cx.multiplication_rotates_scales
+    areas: [found, geom, trig, calc1, linalg, disc, adv]
+    manim_family: construction_scene
