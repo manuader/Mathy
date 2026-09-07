@@ -75,7 +75,7 @@ Ahora supongamos que el jugador marca el ángulo en C, entre DC y CB, como recto
 
 Con `assumed_right_angle` el patrón `replay_on_mechanic` corre sobre `construct`: el juego congela la figura, apoya la esquina de una baldosa cuadrada en C, y la baldosa no calza; sobra un ángulo visible entre la baldosa y el lado CB. El halo marca la brecha. La voz pregunta qué mide de verdad ese ángulo, y devuelve el control con la marca borrada. El jugador continúa desde su estado real, que sigue siendo válido: la figura, la diagonal si la trazó, y nada más. Las misconceptions de L siguen activas en el desafío por el vecindario conceptual de los nodos requeridos; `area_uses_slant_side`, por ejemplo, se dispara si el jugador usa 13 como altura.
 
-Nota para L: `explanation_patterns.yaml` declara qué mecánicas admite cada patrón, y hoy `replay_on_mechanic` no lista `construct`. Este documento la requiere. El cambio es una línea en L y el validador lo exige.
+`explanation_patterns.yaml` declara qué mecánicas admite cada patrón, y `replay_on_mechanic` incluye `construct`: las misconceptions de estrategia de este documento se explican volviendo a ejecutar la construcción del jugador sobre su propia figura.
 
 ## La mecánica `construct` y su combinación con las del área
 

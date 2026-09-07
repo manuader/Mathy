@@ -31,7 +31,7 @@ nodes:
     mechanics: [construct, gears_sequence, grid_stretch]
     literacy: icons
     analogy: clock_face_wrap
-    misconceptions: []
+    misconceptions: [sin_of_sum_distributes]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [adv.cplx.multiplication_rotates_scales, linalg.map.linear_transformation_2d, disc.mod.clock_equivalence, calc2.parpol.parametric_speed]
     calc_unlocks: [op_unit_circle]

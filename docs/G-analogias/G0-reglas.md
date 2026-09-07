@@ -142,7 +142,7 @@ La placa de regla separada del cuerpo de la máquina es deliberada: evita la ana
 
 ### ledger → `fruit_ledger`
 
-Nodos: `arith.add.displacement`, `arith.sub.undo_add`, `prealg.var.unknown_as_box`, `alg.eq.one_step`, `alg.expr.like_terms`.
+Nodos: `arith.add.displacement`, `arith.sub.undo_add`, `prealg.var.unknown_as_box`, `alg.eq.one_step`, `prealg.expr.like_terms`.
 
 Mapa: tipo de fruta → unidad o variable; montón de un tipo → término; juntar montones → suma; sacar fruta → resta; cuenco tapado → incógnita; solo se juntan frutas iguales → términos semejantes; tarjeta con número junto al montón → coeficiente.
 
@@ -182,7 +182,7 @@ El teorema fundamental aparece como sorpresa: el jugador que ya sabe que el medi
 
 ### grid_stretch → `rubber_grid_with_house`
 
-Nodos: `linalg.map.linear_transformation_2d`, `linalg.mat.matrix_columns`.
+Nodos: `linalg.map.linear_transformation_2d`, `linalg.map.linear_transformation_2d`.
 
 Mapa: lámina elástica → plano; casa dibujada → figura a transformar; estirar parejo → aplicación lineal; líneas que siguen rectas y equiespaciadas → linealidad; dónde caen los dos clavos unitarios → columnas de la matriz; clavo en el centro → origen fijo; estirar y volver a estirar → producto de matrices.
 
@@ -192,7 +192,7 @@ Su continuación `rubber_grid_undo_stretch` aporta el punto de ruptura más did�
 
 ### network_routes → `city_routes`
 
-Nodos: `graph.basic.graph_and_paths`, `graph.path.shortest`, `graph.conn.components`.
+Nodos: `graph.basic.graph_and_paths`, `graph.path.shortest_path`, `graph.conn.components`.
 
 Mapa: lugar → vértice; camino → arista; viaje → camino en el grafo; largo del camino → peso; isla sin puente → componente desconexa; viaje que vuelve → ciclo; viaje más barato → camino mínimo.
 
@@ -212,7 +212,7 @@ La proporción, no la frecuencia, es lo que se mapea a probabilidad. Ver la anal
 
 ### gears_sequence → `paper_folding_doubles`
 
-Nodos: `alg.fn.exponential_growth`, `alg.fn.logarithm`, `calc2.seq.geometric`.
+Nodos: `alg.fn.exponential_growth`, `alg.fn.logarithm`, `calc2.ser.geometric_sum`.
 
 Mapa: hoja → valor inicial; un doblez → multiplicar por dos; cantidad de dobleces → exponente; capas → `2ⁿ`; contar dobleces para llegar a un grosor → logaritmo en base 2; desdoblar una vez → dividir por dos.
 
@@ -231,23 +231,23 @@ Ruptura: `infinite_collections`. Se explicó en la sección 4. Se desvanece en `
 | id | mecánica | nodos | ruptura | se desvanece en | alcance |
 |---|---|---|---|---|---|
 | sorting_bins | sorter | found.count.cardinality, disc.set.membership_rule | infinite_collections | visual | universal |
-| fruit_bowl_count | ledger | found.count.cardinality, found.count.compare_more_less | fractional_units | visual | universal |
+| fruit_bowl_count | ledger | found.count.cardinality, found.cmp.bigger_smaller | fractional_units | visual | universal |
 | number_line_walk | slope_walker | found.count.number_line, arith.add.displacement | position_between_stones | visual | universal |
-| walker_forward_and_back | slope_walker | arith.add.displacement, arith.sub.undo_add, arith.seq.skip_count | walking_past_start | symbolic | universal |
-| fruit_ledger | ledger | arith.add.displacement, arith.sub.undo_add, prealg.var.unknown_as_box, alg.eq.one_step, alg.expr.like_terms | fruit_times_fruit | symbolic | universal |
-| tile_floor | tiles | arith.mul.scaling, arith.div.undo_mul, geom.area.rectangle, arith.mul.partial_products | non_integer_sides | symbolic | universal |
+| walker_forward_and_back | slope_walker | arith.add.displacement, arith.sub.undo_add, arith.mul.repeated_groups | walking_past_start | symbolic | universal |
+| fruit_ledger | ledger | arith.add.displacement, arith.sub.undo_add, prealg.var.unknown_as_box, alg.eq.one_step, prealg.expr.like_terms | fruit_times_fruit | symbolic | universal |
+| tile_floor | tiles | arith.mul.scaling, arith.div.undo_mul, geom.area.rect_and_triangle, arith.mul.partial_products | non_integer_sides | symbolic | universal |
 | rubber_band_stretch | grid_stretch | arith.mul.scaling, arith.div.undo_mul, arith.frac.parts_and_ratio | negative_scaling_flips | symbolic | universal |
 | sharing_into_plates | sorter | arith.div.undo_mul, arith.div.remainder | divisor_not_whole | symbolic | universal |
 | elevator_floors | slope_walker | arith.int.negatives, arith.int.add_signed | multiplying_floors | symbolic | adaptable |
 | debt_ledger | ledger | arith.int.negatives, arith.int.add_signed, arith.int.mul_signed | multiplying_two_debts | symbolic | adaptable |
 | pizza_slices | tiles | arith.frac.parts_and_ratio, arith.frac.equivalent, arith.frac.add_same_denominator | dividing_by_a_fraction | symbolic | adaptable |
 | chocolate_bar_grid | tiles | arith.frac.parts_and_ratio, arith.frac.multiply, prealg.pct.hundredths | percent_of_percent_and_over_hundred | symbolic | universal |
-| juice_mix_ratio | fill_accumulate | arith.frac.parts_and_ratio, prealg.ratio.rate_per_unit, prealg.prop.scaling_recipe | negative_ingredients | symbolic | adaptable |
+| juice_mix_ratio | fill_accumulate | arith.frac.parts_and_ratio, prealg.ratio.rate_per_unit, prealg.ratio.scaling_recipe | negative_ingredients | symbolic | adaptable |
 | chest_nested | chest_key | arith.expr.precedence_tree, alg.eq.multi_step, alg.fn.composition | unknown_in_two_chests | symbolic | universal |
 | chest_single_lock | chest_key | prealg.inv.operation_as_key, arith.sub.undo_add, arith.div.undo_mul, alg.eq.one_step | two_branches_of_sqrt | symbolic | universal |
 | mystery_box | chest_key | prealg.var.unknown_as_box | box_with_changing_contents | symbolic | universal |
 | balance_pans | balance | prealg.eq.balance, alg.eq.one_step, alg.eq.multi_step | negative_weights | symbolic | universal |
-| balance_tilted | balance | alg.ineq.tilted_balance, found.count.compare_more_less | multiplying_by_negative | symbolic | universal |
+| balance_tilted | balance | alg.ineq.inequality_tilts, found.cmp.bigger_smaller | multiplying_by_negative | symbolic | universal |
 | two_balances_shared_boxes | balance | alg.sys.two_by_two | contradictory_or_redundant_balances | symbolic | universal |
 | market_two_receipts | ledger | alg.sys.two_by_two, alg.eq.word_to_equation | negative_quantities | symbolic | adaptable |
 | tile_floor_two_rooms | tiles | alg.expr.distributive_tiles, alg.expr.factor_common, arith.mul.partial_products | negative_lengths | symbolic | universal |
@@ -258,37 +258,37 @@ Ruptura: `infinite_collections`. Se explicó en la sección 4. Se desvanece en `
 | walker_height_trace | slope_walker | alg.fn.graph_as_picture, precalc.fn.increasing_decreasing, alg.fn.linear_slope | two_heights_at_one_place | symbolic | universal |
 | walker_on_ramp | slope_walker | alg.fn.linear_slope, prealg.ratio.rate_per_unit | vertical_ramp | symbolic | universal |
 | taxi_fare_meter | ledger | alg.fn.linear_slope, alg.fn.word_to_linear | negative_distance | symbolic | adaptable |
-| paper_folding_doubles | gears_sequence | alg.fn.exponential_growth, alg.fn.logarithm, calc2.seq.geometric | half_a_fold | symbolic | universal |
-| zeno_half_steps | slope_walker | precalc.lim.approach, calc2.series.geometric_sum | limits_reached_or_oscillating | formal | universal |
+| paper_folding_doubles | gears_sequence | alg.fn.exponential_growth, alg.fn.logarithm, calc2.ser.geometric_sum | half_a_fold | symbolic | universal |
+| zeno_half_steps | slope_walker | precalc.lim.approach, calc2.ser.geometric_sum | limits_reached_or_oscillating | formal | universal |
 | walker_zoom_on_hill | slope_walker | calc1.deriv.rate_as_slope_limit, calc1.deriv.tangent_line | input_that_is_not_a_place | formal | universal |
 | tank_filling | fill_accumulate | calc1.int.accumulation, calc1.ftc.integral_undoes_derivative, calc2.int.area_between | variable_that_is_not_time | formal | universal |
 | odometer_from_speed | fill_accumulate | calc1.int.accumulation, calc1.ftc.integral_undoes_derivative | odometer_ignores_reversing | formal | adaptable |
 | growing_rectangle | tiles | calc1.deriv.rules_as_structure | shrinking_sides | formal | universal |
 | gear_train_ratios | gears_sequence | calc1.deriv.rules_as_structure, alg.fn.composition, prealg.ratio.rate_per_unit | ratio_that_changes_with_position | formal | universal |
 | treasure_map_arrows | grid_stretch | linalg.vec.vector_as_displacement, linalg.vec.add_tip_to_tail | length_of_diagonal_arrow | symbolic | universal |
-| two_kinds_of_steps | grid_stretch | linalg.vec.span_and_combination, linalg.vec.basis | fractional_and_backward_steps | symbolic | universal |
-| rubber_grid_with_house | grid_stretch | linalg.map.linear_transformation_2d, linalg.mat.matrix_columns | sliding_the_sheet | formal | universal |
-| rubber_grid_undo_stretch | grid_stretch | linalg.map.inverse_and_systems, linalg.det.area_scaling | more_than_two_dimensions | formal | universal |
-| shadow_and_stick | grid_stretch | trig.ratio.similar_shadows, geom.sim.scale_copies | angle_without_a_sun | symbolic | universal |
-| quarter_turn_dial | grid_stretch | adv.cplx.rotation_as_multiplication | functions_of_the_pointer | symbolic | universal |
+| two_kinds_of_steps | grid_stretch | linalg.vec.span_and_combination, linalg.basis.unique_recipe | fractional_and_backward_steps | symbolic | universal |
+| rubber_grid_with_house | grid_stretch | linalg.map.linear_transformation_2d, linalg.map.linear_transformation_2d | sliding_the_sheet | formal | universal |
+| rubber_grid_undo_stretch | grid_stretch | linalg.map.inverse_and_systems, linalg.map.determinant_as_area | more_than_two_dimensions | formal | universal |
+| shadow_and_stick | grid_stretch | trig.ratio.similar_shadows, geom.sim.similarity_as_scale | angle_without_a_sun | symbolic | universal |
+| quarter_turn_dial | grid_stretch | adv.cplx.multiplication_rotates_scales | functions_of_the_pointer | symbolic | universal |
 | urn_of_balls | urn_dice | prob.basic.probability_as_proportion, prob.cond.conditional_and_independence | uncountable_outcomes | formal | universal |
-| spinner_wheel | urn_dice | prob.basic.probability_as_proportion, prob.dist.uniform_vs_biased | needle_exactly_on_a_line | formal | universal |
-| sorted_bins_then_pick | sorter | prob.cond.conditional_and_independence, prob.bayes.update | conditioning_on_an_empty_bin | formal | universal |
-| tasting_soup | urn_dice | prob.stat.sample_estimates | measuring_the_spread_between_spoonfuls | formal | adaptable |
+| spinner_wheel | urn_dice | prob.basic.probability_as_proportion, prob.basic.equally_likely_or_weighted | needle_exactly_on_a_line | formal | universal |
+| sorted_bins_then_pick | sorter | prob.cond.conditional_and_independence, prob.cond.bayes_reverses_condition | conditioning_on_an_empty_bin | formal | universal |
+| tasting_soup | urn_dice | prob.samp.sample_vs_population | measuring_the_spread_between_spoonfuls | formal | adaptable |
 | balance_point_of_weights | balance | prob.rv.expectation_as_weighted_average, prob.stat.mean_as_leveling | no_balance_point | formal | universal |
 | fair_ticket_price | ledger | prob.rv.expectation_as_weighted_average | people_do_not_pay_the_fair_price | formal | adaptable |
-| water_leveling_cups | fill_accumulate | prob.stat.mean_as_leveling, prob.stat.median_vs_mean | negative_values | symbolic | universal |
-| city_routes | network_routes | graph.basic.graph_and_paths, graph.path.shortest, graph.conn.components | drawing_position_matters | formal | universal |
+| water_leveling_cups | fill_accumulate | prob.stat.mean_as_leveling, prob.stat.mean_as_leveling | negative_values | symbolic | universal |
+| city_routes | network_routes | graph.basic.graph_and_paths, graph.path.shortest_path, graph.conn.components | drawing_position_matters | formal | universal |
 | friends_handshakes | network_routes | graph.basic.graph_and_paths, graph.deg.handshake_lemma | one_sided_relations | formal | universal |
-| river_tributaries | network_routes | graph.tree.no_cycles, disc.rec.tree_recursion | river_deltas | formal | universal |
-| outfit_combinations | tiles | disc.count.multiplication_principle, prob.basic.sample_space_grid | choices_that_depend_on_earlier_choices | symbolic | adaptable |
-| hula_hoops_overlap | sorter | disc.set.venn_overlap, disc.logic.and_or, prob.basic.union_intersection | infinite_sets | formal | universal |
+| river_tributaries | network_routes | graph.tree.tree_no_cycles, disc.rec.tree_recursion | river_deltas | formal | universal |
+| outfit_combinations | tiles | disc.count.product_rule, prob.basic.sample_space_grid | choices_that_depend_on_earlier_choices | symbolic | adaptable |
+| hula_hoops_overlap | sorter | disc.set.union_intersection, disc.logic.and_or_not, prob.basic.union_intersection | infinite_sets | formal | universal |
 | odometer_dials | gears_sequence | arith.place.base_ten_carry, csmath.bin.place_value_binary | fractions_and_negatives_on_dials | symbolic | universal |
-| clock_face_wrap | gears_sequence | csmath.mod.clock_arithmetic, trig.circle.periodic_wrap | modulus_other_than_twelve | formal | adaptable |
-| beads_necklace_pattern | gears_sequence | found.pat.repeat_unit, arith.seq.arithmetic | sequences_without_a_repeating_rule | visual | universal |
-| wheel_rider_height | slope_walker | trig.circle.height_on_wheel, trig.fn.sine_wave | angle_as_a_pure_number | formal | adaptable |
-| walker_on_hill_compass | slope_walker | mvcalc.grad.steepest_ascent, mvcalc.pd.partial_slope | more_than_two_inputs | formal | universal |
-| stacked_slices_loaf | fill_accumulate | mvcalc.int.volume_by_slices, calc2.int.solids_of_revolution | slices_that_are_not_parallel | formal | universal |
+| clock_face_wrap | gears_sequence | csmath.mod.wraparound, trig.fn.periodic_wraps | modulus_other_than_twelve | formal | adaptable |
+| beads_necklace_pattern | gears_sequence | found.pat.repeat_unit, arith.mul.repeated_groups | sequences_without_a_repeating_rule | visual | universal |
+| wheel_rider_height | slope_walker | trig.fn.sine_as_height, trig.fn.wave_unrolls_circle | angle_as_a_pure_number | formal | adaptable |
+| walker_on_hill_compass | slope_walker | mvcalc.grad.terrain_walker, mvcalc.part.slice_of_surface | more_than_two_inputs | formal | universal |
+| stacked_slices_loaf | fill_accumulate | mvcalc.int.iterated_slices, calc2.parpol.solid_of_revolution | slices_that_are_not_parallel | formal | universal |
 
 Resumen: 59 analogías. Por mecánica: slope_walker 9, tiles 7, grid_stretch 7, ledger 6, fill_accumulate 5, gears_sequence 5, sorter 4, balance 4, chest_key 3, machine_pipe 3, urn_dice 3, network_routes 3. Alcance: 47 universales, 12 adaptables, 0 locales. Los 37 nodos de la espina tienen al menos una analogía.
 

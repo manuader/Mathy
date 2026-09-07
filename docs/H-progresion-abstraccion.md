@@ -218,8 +218,8 @@ La tabla registra la historia de los símbolos principales. La columna de nodo u
 | Vector (flecha) | Describir un desplazamiento que tiene dirección, no solo tamaño | `visual` | Una flecha en la grilla | `linalg.vec.vector_as_displacement` |
 | Matriz A | Escribir una deformación del espacio anotando solo dónde van los vectores de la base | `symbolic` | La grilla deformada con las dos flechas de base resaltadas | `linalg.map.linear_transformation_2d` |
 | A⁻¹ | Nombrar la deformación que devuelve la grilla a su estado original | `symbolic` | La deformación reproducida al revés | `linalg.map.inverse_and_systems` |
-| det | Medir cuánto cambió el área de la grilla, y cuándo se aplastó a cero | `visual` | El paralelogramo en que se convierte el cuadrado unidad | `linalg.map.determinant_as_area_factor` |
-| ∇ | Indicar en qué dirección sube más rápido una superficie | `visual` | Una flecha sobre un terreno con curvas de nivel | `mvcalc.deriv.gradient_as_steepest_ascent` |
+| det | Medir cuánto cambió el área de la grilla, y cuándo se aplastó a cero | `visual` | El paralelogramo en que se convierte el cuadrado unidad | `linalg.map.determinant_as_area` |
+| ∇ | Indicar en qué dirección sube más rápido una superficie | `visual` | Una flecha sobre un terreno con curvas de nivel | `mvcalc.grad.terrain_walker` |
 | P(A) | Escribir qué fracción del blanco corresponde a un resultado | `symbolic` | La urna con bolas de colores; el blanco con regiones | `prob.basic.probability_as_proportion` |
 | P(A\|B) | Escribir la fracción cuando solo se mira una parte del blanco | `symbolic` | El blanco recortado a la región B | `prob.cond.conditional_and_independence` |
 | E[X] | Resumir un juego de azar con un número que diga cuánto se gana en promedio | `symbolic` | Un ledger de resultados con sus frecuencias | `prob.rv.expectation_as_weighted_average` |
@@ -227,6 +227,13 @@ La tabla registra la historia de los símbolos principales. La columna de nodo u
 | ∀, ∃ | Afirmar algo sobre todos los casos, o sobre al menos uno, sin enumerarlos | `formal` | Una fila de objetos que se recorre buscando uno que falle o uno que cumpla | `disc.logic.quantifiers_as_search` |
 | ≡ (mod n) | Decir que dos números caen en la misma posición de un reloj de n horas | `symbolic` | Un reloj circular; una fila que se enrolla | `disc.mod.clock_equivalence` |
 
+| marca de ángulo igual | señalar que dos ángulos miden lo mismo sin medirlos | visual | los arcos que se dibujan sobre la figura al construir | `geom.cons.auxiliary_lines` |
+| unidad de área | contar cuánto cubre una figura, no cuánto la rodea | concrete | la baldosa que se repite sin huecos ni solapes | `geom.area.rect_and_triangle` |
+| ° (grado) | comparar giros sin superponer las figuras | visual | la vuelta completa partida en partes iguales | `geom.angle.turn_as_measure` |
+| razón de semejanza | decir en cuánto se agranda una figura sin nombrar sus lados | symbolic | las dos copias de la misma forma, una más grande | `geom.sim.similarity_as_scale` |
+| a² + b² = c² | encontrar un lado que no se puede medir | symbolic | las baldosas de dos cuadrados que llenan un tercero | `geom.tri.pythagoras_as_tiles` |
+| rad | medir el giro con la misma vara que el radio, para que las cuentas cierren | symbolic | el arco recorrido sobre el círculo de radio uno | `trig.circle.unit_circle_radians` |
+| sen, cos | nombrar las dos coordenadas del punto que gira | symbolic | la altura y el corrimiento del pasajero en la rueda | `trig.circle.unit_circle_radians` |
 Dos observaciones. Varios símbolos se introducen en `visual`, no en `symbolic`: son los que nombran un objeto (un número, una flecha, un punto) más que una operación; un número junto a una barra es una etiqueta, no notación en sentido fuerte. Y `eˣ` y los cuantificadores se introducen en `formal` porque su motivación no es visual sino de definición: no hay una imagen que haga necesario a `e`, hay una propiedad que lo caracteriza.
 
 ---

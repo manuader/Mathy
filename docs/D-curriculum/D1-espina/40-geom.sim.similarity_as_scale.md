@@ -30,7 +30,7 @@ Ninguna de las cuatro tiene misconception catalogada en el YAML todavía (secci�
 
 Un patio al sol. Un palo clavado en el suelo proyecta su sombra. Al lado, un árbol mucho más alto, con su sombra mucho más larga. La pregunta, por gesto: ¿cuánto mide el árbol, si al árbol no se lo puede medir?
 
-En `real` el jugador clava palos de distinto largo y ve las sombras estirarse todas al mismo sol. En `intuition` la escena se detiene con el palo, su sombra, y la sombra del árbol medida en el piso. Tres desenlaces dibujados: el árbol mide lo mismo que su sombra; el árbol es al palo lo que la sombra del árbol es a la sombra del palo; el árbol mide la sombra del palo más la diferencia de sombras. El jugador elige y después ve: el palo se agranda hasta que su sombra tapa la del árbol, y su punta queda a la altura del árbol.
+En `real` el jugador clava palos de distinto largo y ve las sombras estirarse todas al mismo sol. En `intuition` la escena se detiene con el palo, su sombra y la sombra del árbol medida en el piso. Tres desenlaces dibujados: el árbol mide lo mismo que su sombra; el árbol es al palo lo que la sombra del árbol es a la del palo; el árbol mide la sombra del palo más la diferencia de sombras. El jugador elige y después ve: el palo se agranda hasta que su sombra tapa la del árbol y su punta queda a la altura del árbol.
 
 ## 5. Analogía del mundo real
 
@@ -40,9 +40,9 @@ Mapa: altura del palo → un lado; largo de la sombra → el otro lado; el mismo
 
 Invariante que conserva: mientras el sol no se mueva, la razón entre altura y sombra es la misma para todos los palos del patio. Un palo y su sombra forman un triángulo rectángulo, y todos esos triángulos son copias a escala del mismo.
 
-Ruptura: `angle_without_a_sun`. El ángulo del sol es el que fija la razón, pero en el patio no hay forma de tocar el ángulo directamente: solo se lo mueve moviendo el sol. Un triángulo semejante que no venga de una sombra no tiene sol al que apelar. La analogía se retira en `symbolic`, cuando la razón se escribe y deja de necesitar el patio.
+Ruptura: `angle_without_a_sun`. El ángulo del sol fija la razón, pero en el patio no hay forma de tocarlo directamente: solo se lo mueve moviendo el sol, y un triángulo semejante que no venga de una sombra no tiene sol al que apelar. La analogía se retira en `symbolic`, cuando la razón se escribe y deja de necesitar el patio.
 
-Por qué esta y no otra: la sombra es la única situación cotidiana donde la escala se ve como una relación entre dos cantidades medibles y no como una foto ampliada. Una foto ampliada muestra el resultado; la sombra muestra el mecanismo, porque el sol está a la vista y se puede mover.
+Por qué esta y no otra: la sombra es la única situación cotidiana donde la escala se ve como relación entre dos cantidades medibles y no como una foto ampliada. La foto muestra el resultado; la sombra muestra el mecanismo, porque el sol está a la vista y se puede mover.
 
 ## 6. Mecánica de juego
 
@@ -52,9 +52,9 @@ Primera capa jugable: `real`. `grid_stretch` es la principal, `construct` traza 
 2. Si estira con los dos dedos en diagonal, la figura crece en las dos direcciones a la vez y los ángulos no se mueven. Si estira con un dedo fijo y otro horizontal, la figura se ensancha, los ángulos se abren o se cierran y el contorno gris deja de coincidir por más que se ajuste el tamaño.
 3. Cuando la figura estirada calza exactamente sobre la gris, la malla hace un chasquido y una regla al costado muestra el factor: la cantidad de veces que la malla se estiró. Es el único número de la pantalla.
 4. Tocar dos lados que se corresponden los pone uno debajo del otro con su razón a la vista. Todos los pares dan el mismo número, y el jugador lo comprueba tocando pares distintos.
-5. Baldosas: tocar la figura chica la llena de baldosas; el mismo gesto sobre la grande la llena con baldosas del mismo tamaño. La cuenta de la grande no es el factor por la de la chica y el jugador lo ve antes de que nadie lo diga.
-6. Paralela: sobre un triángulo, el jugador arrastra desde un punto de un lado en la dirección de otro lado. Si el trazo queda paralelo, se fija y el triángulo chico que recorta se colorea; si queda torcido, se desvanece. El triángulo recortado se puede levantar con `hold` y superponer sobre el grande.
-7. Sombra: mover el sol cambia todas las sombras a la vez, y la razón que muestra la regla cambia con él, igual para todos los palos.
+5. Baldosas: tocar una figura la llena de baldosas, y el mismo gesto sobre la otra usa baldosas del mismo tamaño. La cuenta de la grande no es el factor por la de la chica, y el jugador lo ve antes de que nadie lo diga.
+6. Paralela: sobre un triángulo, el jugador arrastra desde un punto de un lado en la dirección de otro. Si el trazo queda paralelo, se fija y el triángulo que recorta se colorea; si queda torcido, se desvanece. Ese triángulo se levanta con `hold` y se superpone sobre el grande.
+7. Sombra: mover el sol cambia todas las sombras a la vez, y la razón de la regla cambia con él, igual para todos los palos.
 
 Nada se llama error. Estirar en una sola dirección no está prohibido: se hace, y el contorno gris no calza nunca. Esa es la explicación.
 
@@ -130,7 +130,7 @@ El YAML declara `misconceptions: []`, pero el nodo hereda una de su prerequisito
 
 La analogía se retira en `symbolic`, cuando la razón se escribe como fracción entre dos lados y ya no hace falta el sol para justificarla. La malla de goma se queda como fantasma a demanda hasta `formal`, porque es la que explica por qué los ángulos no se mueven.
 
-Variantes sin ayuda visual, en orden: factores no enteros; factores menores que 1; figuras semejantes con distinta orientación, donde hay que emparejar los lados antes de dividir; triángulos dados solo por dos ángulos iguales, sin ningún lado en común a la vista; el factor de área dado y el de lados pedido, que obliga a volver hacia atrás; y figuras compuestas donde la parte semejante hay que aislarla.
+Variantes sin ayuda visual, en orden: factores no enteros; factores menores que 1; figuras con distinta orientación, donde hay que emparejar los lados antes de dividir; triángulos dados solo por dos ángulos iguales; el factor de área dado y el de lados pedido, que obliga a volver hacia atrás; y figuras compuestas donde la parte semejante hay que aislarla.
 
 El nodo está en `abstract` cuando el jugador declara dos triángulos semejantes a partir de sus ángulos, calcula un lado sin ver la malla, y predice el área de la copia sin contar baldosas, explicando el cuadrado con las filas y las columnas que se agregaron.
 
@@ -151,4 +151,4 @@ Concepto siguiente: `geom.trans.dilation`. Frase puente, narrada sobre la últim
 
 **Calculadora:** en `ready` se habilita `op_transform_point` ([M](../../M-calculadora/M0-progresion.md)), de nivel 1 y con caja de pruebas. Acá se presenta en sus dos formas útiles para el nodo: el factor de escala entre dos figuras, que se obtiene apoyando dos lados que se corresponden, y el lado que falta por razón, que toma tres medidas y devuelve la cuarta con la fracción escrita, no solo el resultado. El mismo `op_transform_point` lo comparten `geom.trans.rotation_reflection` y `geom.trans.dilation`, que le agregan el centro y el giro.
 
-**Edad universal:** el nodo es `icons` y no `none` porque desde el segundo nivel la regla del factor muestra un número y las razones se escriben como fracción; sin cifras, comprobar que todos los pares dan lo mismo no se puede jugar ([Q](../../Q-edad-universal.md)). Todo lo demás va sin leer: estirar con dos dedos, hacer calzar el contorno, tocar pares de lados, trazar la paralela, contar baldosas, y `explain` entre animaciones. La instrucción es una mano fantasma que estira en diagonal hasta el chasquido. Un adulto llega por diagnóstico salteando `real` e `intuition`, empieza en la capa de cuadrícula con el factor a la vista, y lo que le cambia es que el nivel del área con baldosas no se saltea nunca: es el que corrige la intuición equivocada, y se juega igual a cualquier edad.
+**Edad universal:** el nodo es `icons` y no `none` porque desde el segundo nivel la regla del factor muestra un número y las razones se escriben como fracción; sin cifras, comprobar que todos los pares dan lo mismo no se puede jugar ([Q](../../Q-edad-universal.md)). Lo demás va sin leer: estirar con dos dedos, hacer calzar el contorno, tocar pares de lados, trazar la paralela, contar baldosas, y `explain` entre animaciones. Un adulto llega por diagnóstico salteando `real` e `intuition` y empieza en la cuadrícula con el factor a la vista, pero el nivel del área con baldosas no se saltea nunca: es el que corrige la intuición equivocada y se juega igual a cualquier edad.

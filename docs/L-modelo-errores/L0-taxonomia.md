@@ -167,7 +167,7 @@ Las 19 iniciales del plan más 9 que cubren áreas sin cobertura. `detect` se mu
 | `fraction_add_across` | procedural | arith.frac.parts_and_ratio, arith.frac.common_unit | `a/b + c/d → (a+c)/(b+d)` | missing_piece_tiles / tiles |
 | `exponent_rules_mixed` | procedural | alg.pow.same_base_stack, alg.fn.exponential_growth | `aᵐ·aⁿ → aᵐⁿ` | counterexample_slider / gears_sequence |
 | `chain_rule_missing_inner` | procedural | calc1.deriv.rules_as_structure, alg.fn.composition | `(f∘g)' → f'(g(x))` | tree_unwrap / gears_sequence |
-| `area_uses_slant_side` | procedural | geom.area.shear_invariant, geom.area.triangle | `área → b·s` | missing_piece_tiles / tiles |
+| `area_uses_slant_side` | procedural | geom.area.shear_invariant, geom.area.rect_and_triangle | `área → b·s` | missing_piece_tiles / tiles |
 | `modular_negative_remainder` | procedural | csmath.mod.wraparound | `(-a) mod n → -(a mod n)` | replay_on_mechanic / gears_sequence |
 | `variable_as_label` | notation | prealg.var.unknown_as_box, alg.expr.distributive_tiles | `ax + by → (a+b)xy` | replay_on_mechanic / ledger |
 | `path_vs_walk_confusion` | notation | graph.walk.repeat_rules, graph.basic.graph_and_paths | `camino → recorrido con repetición` | replay_on_mechanic / network_routes |
@@ -175,7 +175,7 @@ Las 19 iniciales del plan más 9 que cubren áreas sin cobertura. `detect` se mu
 | `log_of_sum` | invalid_property | alg.fn.logarithm | `log(a+b) → log a + log b` | counterexample_slider / machine_pipe |
 | `derivative_of_product_as_product` | invalid_property | calc1.deriv.rules_as_structure | `(fg)' → f'g'` | missing_piece_tiles / tiles |
 | `matrix_multiplication_commutes` | invalid_property | linalg.map.linear_transformation_2d, linalg.map.compose_as_multiply | `AB → BA` | two_paths_diverge / grid_stretch |
-| `sin_of_sum_distributes` | invalid_property | trig.ident.angle_sum, trig.circ.unit_circle | `sin(a+b) → sin a + sin b` | counterexample_slider / machine_pipe |
+| `sin_of_sum_distributes` | invalid_property | trig.id.angle_sum, trig.circle.unit_circle_radians | `sin(a+b) → sin a + sin b` | counterexample_slider / machine_pipe |
 | `modulus_of_sum_adds` | invalid_property | adv.cplx.plane_and_modulus, linalg.vec.vector_as_displacement | `|z+w| → |z| + |w|` | counterexample_slider / slope_walker |
 
 Los nodos que no están en [`spine.yaml`](../C-knowledge-graph/spine.yaml) siguen la convención `area.cluster.slug` de [C0](../C-knowledge-graph/C0-esquema.md) y deben existir en `graph/` cuando se escriba cada área; el validador falla si una misconception referencia un nodo inexistente.

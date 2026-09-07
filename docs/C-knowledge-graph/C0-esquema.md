@@ -44,7 +44,7 @@ Los archivos de `graph/` no contienen texto visible al usuario. El nombre del no
 Un nodo no-espina cabe en una o dos líneas en estilo flow:
 
 ```yaml
-- {id: geom.area.triangle, area: geom, level: 3, prereqs: [geom.area.rectangle], grammar: scale, mechanics: [tiles], literacy: icons, analogy: tile_floor, misconceptions: [area_uses_slant_side], calc_unlocks: [area_triangle]}
+- {id: geom.area.rect_and_triangle, area: geom, level: 3, prereqs: [geom.area.rect_and_triangle], grammar: scale, mechanics: [tiles], literacy: icons, analogy: tile_floor, misconceptions: [area_uses_slant_side], calc_unlocks: [area_triangle]}
 ```
 
 Un nodo de espina ocupa unas veinte líneas porque declara `probes`, `transfer_to`, `manim` y `doc`.

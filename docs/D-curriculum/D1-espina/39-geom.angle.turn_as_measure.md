@@ -30,7 +30,7 @@ Ninguna de las cuatro tiene misconception catalogada en el YAML todavía (secci�
 
 Un portón sobre un patio. Está cerrado, pegado a la pared. Alguien lo empuja y queda a medio abrir. La pregunta, por gesto: ¿cuánto se abrió?
 
-En `real` el jugador empuja el portón con el dedo y lo ve barrer el suelo; queda una marca de tierra en el piso, el sector barrido. En `intuition` la escena se detiene con dos portones a medio abrir, uno corto y uno largo, abiertos lo mismo. Tres desenlaces dibujados: el largo se abrió más porque su punta recorrió más; los dos se abrieron igual porque barrieron la misma porción del giro; el corto se abrió más porque le costó menos. El jugador elige y después ve: los dos portones se superponen y coinciden.
+En `real` el jugador empuja el portón con el dedo y lo ve barrer el suelo, dejando una marca de tierra que es el sector barrido. En `intuition` la escena se detiene con dos portones abiertos lo mismo, uno corto y uno largo. Tres desenlaces dibujados: el largo se abrió más porque su punta recorrió más; los dos se abrieron igual porque barrieron la misma porción del giro; el corto se abrió más. El jugador elige y después ve: los dos portones se superponen y coinciden.
 
 ## 5. Analogía del mundo real
 
@@ -50,12 +50,12 @@ Por qué esta y no otra: la pista de piedras es la única analogía del catálog
 
 Primera capa jugable: `real`, sin leer nada. `gears_sequence` es la principal; `construct` entra para prolongar lados y `grid_stretch` para mostrar que agrandar la figura no toca el ángulo ([E0](../../E-mecanicas/E0-catalogo.md)). Gestos: `scrub`, `drag` y `tap`.
 
-1. Una manivela en el centro de la pantalla, con un brazo y una marca en la punta. Alrededor, una pista circular sin números, con muescas.
-2. El jugador arrastra el brazo. La marca recorre la pista y la pista se va pintando detrás: el rastro es el ángulo. Hay una meta dibujada; cuando la marca la alcanza, la manivela hace un chasquido y el rastro queda fijo.
-3. Un segundo brazo, más corto, con su propia marca, gira pegado al primero. Los dos rastros son distintos de largo y ocupan la misma porción de pista. Se pueden superponer con `tap`.
-4. La pista se parte con `pinch`: dos dedos la dividen en 2, en 4, en 8 partes iguales. Las muescas se reacomodan. Un cuarto de vuelta se lleva a la meta sin ningún número.
-5. Cuando la pista se parte en 360, las muescas se vuelven finitas y aparecen los números de a diez. Girar hasta la meta muestra el 90 en la pista.
-6. Prolongar un lado: sobre una figura, el jugador arrastra desde un vértice siguiendo un lado y suelta más allá. La prolongación queda punteada y el sector entre ella y el otro lado se pinta; los dos sectores juntos completan media vuelta.
+1. Una manivela en el centro, con un brazo y una marca en la punta. Alrededor, una pista circular con muescas y sin números.
+2. El jugador arrastra el brazo. La marca recorre la pista y la pista se pinta detrás: el rastro es el ángulo. Hay una meta dibujada; al alcanzarla, la manivela chasquea y el rastro queda fijo.
+3. Un segundo brazo más corto gira pegado al primero. Los dos rastros ocupan la misma porción de pista aunque las puntas recorran distinto. Se superponen con `tap`.
+4. La pista se parte con `pinch` en 2, en 4, en 8 partes iguales, y las muescas se reacomodan. Un cuarto de vuelta llega a la meta sin ningún número.
+5. Partida en 360, las muescas se vuelven finitas y aparecen los números de a diez. Girar hasta la meta muestra el 90.
+6. Prolongar un lado: sobre una figura, el jugador arrastra desde un vértice siguiendo un lado y suelta más allá. La prolongación queda punteada y el sector entre ella y el otro lado se pinta; los dos juntos completan media vuelta.
 7. Estirar la figura con `pinch`: los lados crecen, el sector pintado no cambia de tamaño.
 
 Girar de más pasa el cero y sigue contando: no hay tope. Girar hacia atrás descuenta. Nada se llama error; cada movimiento deja su rastro.
@@ -153,4 +153,4 @@ Concepto siguiente: `geom.angle.parallel_transversal`. Frase puente, narrada sob
 
 **Calculadora:** en `ready` se habilita `op_angle` ([M](../../M-calculadora/M0-progresion.md)), de nivel 1 y con caja de pruebas. Se presenta como una pista circular que se arrastra con el dedo: devuelve el giro en grados con el circulito puesto, y tiene dos atajos, la fracción de vuelta y el ángulo que falta para cerrar. No acepta un número escrito sin unidad; si el jugador tipea `90` a secas, la pista se pinta y espera que confirme. El mismo `op_angle` lo reusa `geom.angle.triangle_sum_half_turn`, que le agrega la suma de los tres.
 
-**Edad universal:** el nodo es `literacy: none` y se juega entero sin leer ([Q](../../Q-edad-universal.md)). Se gira con el dedo, se parte la pista con dos dedos, se prolonga un lado arrastrando, y `explain` es elegir entre animaciones. Los números aparecen recién cuando la pista se parte en 360, y son cifras, no palabras. La instrucción es una mano fantasma que gira el brazo hasta la meta y suelta. Un adulto llega por diagnóstico salteando `real` e `intuition`, entra en la pista ya numerada, y lo que le cambia es que la partición en 2, 4 y 8 se ofrece una sola vez como confirmación en vez de ser un nivel entero.
+**Edad universal:** el nodo es `literacy: none` y se juega entero sin leer ([Q](../../Q-edad-universal.md)). Se gira con el dedo, se parte la pista con dos dedos, se prolonga un lado arrastrando, y `explain` es elegir entre animaciones. Los números aparecen recién con la pista partida en 360, y son cifras, no palabras. La instrucción es una mano fantasma que gira el brazo hasta la meta. Un adulto llega por diagnóstico salteando `real` e `intuition` y entra en la pista ya numerada; la partición en 2, 4 y 8 se le ofrece una sola vez como confirmación en vez de ser un nivel entero.

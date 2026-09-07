@@ -28,7 +28,7 @@ Lo difícil no es aplicar la fórmula. Son cuatro capacidades:
 
 Una escalera apoyada contra una pared, en un patio embaldosado. El pie de la escalera está a tres baldosas de la pared; la escalera llega a cuatro baldosas de alto. La pregunta, por gesto: ¿cuántas baldosas mide la escalera?
 
-En `real` el jugador arrastra el pie de la escalera y la ve subir y bajar por la pared. En `intuition` la escena se detiene con la escalera quieta y tres desenlaces dibujados: la escalera mide 7, que es 3 más 4; mide entre 4 y 7, más cerca de 5; mide 12, que es 3 por 4. El jugador elige y después ve: la escalera se acuesta sobre el piso y se mide con baldosas. Da 5. Nadie explica por qué todavía.
+En `real` el jugador arrastra el pie de la escalera y la ve subir y bajar por la pared. En `intuition` la escena se detiene con tres desenlaces dibujados: la escalera mide 7, que es 3 más 4; mide entre 4 y 7, más cerca de 5; mide 12, que es 3 por 4. El jugador elige y después ve: la escalera se acuesta sobre el piso y se mide con baldosas. Da 5, y nadie explica por qué todavía.
 
 ## 5. Analogía del mundo real
 
@@ -47,12 +47,12 @@ Por qué esta y no otra: es la única analogía del catálogo en la que un núme
 Primera capa jugable: `real`. `tiles` es la mecánica principal y `construct` traza lo que falta ([E0](../../E-mecanicas/E0-catalogo.md)). Gestos: `drag`, `tap` y `pinch` para las baldosas; `drag`, `tap` y `hold` para el trazo.
 
 1. Un triángulo rectángulo en el centro, con la marca de ángulo recto. Sobre cada lado, un marco cuadrado apoyado hacia afuera. Los dos chicos vienen llenos de baldosas; el grande está vacío.
-2. El jugador arrastra baldosas de los cuadrados chicos al grande. Las baldosas se pegan entre sí y al borde. Si el jugador vacía los dos chicos y el grande queda completo, el triángulo hace un chasquido y los tres marcos brillan a la vez.
-3. Si el triángulo no es rectángulo, las baldosas de los chicos no alcanzan o sobran, y el hueco o el montón sobrante quedan a la vista. El jugador puede arrastrar el vértice hasta que la marca de ángulo recto aparece y las baldosas encajan.
-4. Modo de las cuatro copias: un marco cuadrado grande y cuatro copias del triángulo en la bandeja. El jugador las acomoda en las esquinas. En un acomodo queda un hueco cuadrado en el centro; en el otro quedan dos huecos cuadrados en una diagonal. Las cuatro copias no se mueven de tamaño y el hueco total tampoco. Los dos acomodos se pueden ver uno al lado del otro con `tap`.
-5. Recortar y pegar: mantener el dedo sobre un cuadrado chico lo parte en tiras que se pueden girar y deslizar. Es la vía para llenar el grande cuando los lados no son enteros y las baldosas sueltas no alcanzan.
-6. Trazar: sobre un triángulo cualquiera, el jugador baja una altura desde un vértice. Si llega perpendicular, se fija y el triángulo queda partido en dos rectángulos donde antes no había ninguno. Cada mitad ya tiene su ángulo recto y sus tres cuadrados.
-7. Verificación: tocar el cuadrado grande lleno hace que sus baldosas se levanten y vuelvan solas a los dos chicos, que quedan exactamente completos.
+2. El jugador arrastra baldosas de los chicos al grande; se pegan entre sí y al borde. Si vacía los dos y el grande queda completo, el triángulo chasquea y los tres marcos brillan a la vez.
+3. Si el triángulo no es rectángulo, las baldosas no alcanzan o sobran, y el hueco o el montón quedan a la vista. Arrastrar el vértice hasta que aparece la marca de ángulo recto las hace encajar.
+4. Modo de las cuatro copias: un marco cuadrado grande y cuatro copias del triángulo en la bandeja. En un acomodo queda un hueco cuadrado en el centro; en el otro, dos huecos en una diagonal. Ni las copias ni el hueco total cambian de tamaño, y los dos acomodos se ven uno al lado del otro con `tap`.
+5. Recortar y pegar: mantener el dedo sobre un cuadrado chico lo parte en tiras que se giran y deslizan. Es la vía cuando los lados no son enteros y las baldosas sueltas no alcanzan.
+6. Trazar: sobre un triángulo cualquiera, el jugador baja una altura desde un vértice. Si llega perpendicular, se fija y el triángulo queda partido en dos, cada mitad con su ángulo recto y sus tres cuadrados.
+7. Verificación: tocar el cuadrado grande lleno hace que sus baldosas vuelvan solas a los dos chicos, que quedan exactamente completos.
 
 Nada se llama error. Un acomodo que deja huecos deja huecos; una altura torcida se desvanece; baldosas de más vuelven a la bandeja con un rebote.
 
@@ -145,4 +145,4 @@ Concepto siguiente: `geom.coord.distance_as_pythagoras`. Frase puente, narrada s
 
 **Calculadora:** en `ready` se habilita `op_pythagoras` ([M](../../M-calculadora/M0-progresion.md)), de nivel 1 y con caja de pruebas. Se presenta como un triángulo rectángulo con tres casilleros: al llenar dos, el tercero se completa, y antes del resultado los tres cuadrados aparecen medio segundo con sus baldosas. Tiene dos modos, hipotenusa y cateto, y el modo se elige tocando el casillero vacío, no un menú. Devuelve la raíz exacta cuando el resultado no es entero, con el decimal disponible al tocarla. El mismo `op_pythagoras` lo reusa `geom.circle.radius_bisects_chord` para la cuerda.
 
-**Edad universal:** el nodo es `icons` y no `none` porque desde el tercer nivel los lados llevan un número escrito y la ecuación aparece con exponentes ([Q](../../Q-edad-universal.md)). La primera capa se juega sin leer: se arrastran baldosas de un marco a otro, se acomodan cuatro triángulos en un cuadrado, se baja una altura con el dedo, y `explain` es elegir entre animaciones. La instrucción es una mano fantasma que vacía un cuadrado chico dentro del grande y espera. Un adulto llega por diagnóstico salteando `real` e `intuition`, entra en el nivel de las cuatro copias, y lo que le cambia es que el nivel de los dos acomodos no se saltea: es la demostración, y quien viene con la fórmula memorizada del colegio suele ser el que nunca la vio.
+**Edad universal:** el nodo es `icons` y no `none` porque desde el cuarto nivel los lados llevan un número escrito y la ecuación aparece con exponentes ([Q](../../Q-edad-universal.md)). La primera capa se juega sin leer: se arrastran baldosas de un marco a otro, se acomodan cuatro triángulos en un cuadrado, se baja una altura con el dedo, y `explain` es elegir entre animaciones. Un adulto llega por diagnóstico salteando `real` e `intuition` y entra en el nivel de las cuatro copias, que no se saltea nunca: es la demostración, y quien viene con la fórmula memorizada del colegio suele ser el que nunca la vio.
