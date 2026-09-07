@@ -870,9 +870,8 @@ scenes:
     family: grid_scene
     nodes: [alg.fn.graph_as_picture]
     route: native
-    # Id congelado por el grafo: el nodo no declara la mecánica grid_stretch (usa slope_walker y
-    # machine_pipe). La escena es un plano de coordenadas sin deformación; se mantiene en grid_scene
-    # por su id y el validador la acepta por esta marca. Reconciliar en la fase 3 del plan.
+    # El nodo alg.fn.graph_as_picture declara grid_stretch entre sus mecánicas, pero la evalúa
+    # con slope_walker y machine_pipe: la grilla es soporte, no la mecánica del ítem.
     mechanic_exception: true
     primitives: [NumberPlane, Dot, Line, DashedLine, Tex, FadeIn, Indicate, ValueTracker, always_redraw, DecimalNumber, ChangeDecimalToValue, MoveAlongPath, FadeToColor]
     native_equivalents: [NumberPlane, Dot, Line, MathMobject, FadeIn, Indicate, SharedValue, AlwaysRedraw, DecimalNumber, Tween, MoveAlongPath]

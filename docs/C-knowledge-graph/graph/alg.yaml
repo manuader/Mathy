@@ -81,7 +81,7 @@ nodes:
     spine: true
     prereqs: [alg.eq.multi_step, alg.expr.distributive_tiles]
     grammar: invariant
-    mechanics: [balance, grid_stretch]
+    mechanics: [ledger, balance, grid_stretch]
     literacy: icons
     analogy: two_balances_shared_boxes
     misconceptions: []

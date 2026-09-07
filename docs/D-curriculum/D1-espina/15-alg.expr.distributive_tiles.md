@@ -19,7 +19,7 @@ Ninguna arista es la del orden escolar, donde la propiedad distributiva se enunc
 
 Lo difícil no es "aplicar la distributiva" sino tres capacidades:
 
-1. **Ver un producto como área y no como cuenta.** Mientras `5 × 7` sea "una cuenta que da 35", `5(x + 2)` no tiene sentido: no hay cuenta posible. Hay que aceptar que un producto es una superficie que existe aunque no se pueda medir.
+1. **Ver un producto como área y no como cuenta.** Mientras `5 × 7` sea "una cuenta que da 35", `5(x + 2)` no tiene sentido: no hay cuenta posible.
 2. **Reconocer el factor común como un lado compartido.** El `a` de `a(b + c)` es un ancho que cubre las dos habitaciones. Quien lo ve como "el número de afuera" reparte mal en cuanto cambia la forma del paréntesis. Falla en `distribute_over_wrong_op`.
 3. **Sumar cantidades del mismo tipo y solo del mismo tipo.** `2x + 3` no se junta, `2x + 3x` sí. La baldosa cuadrada y la tira de largo `x` son piezas distintas y no se apilan. Falla en `variable_as_label`.
 
@@ -29,13 +29,13 @@ La cuarta, que este nodo prepara sin cerrar, es la recomposición: mirar `ab + a
 
 Un departamento visto desde arriba, con dos habitaciones separadas por una pared. Las dos tienen el mismo ancho; una es más larga que la otra. Un albañil está por comprar baldosas y no sabe cuántas pedir.
 
-En `intuition` la escena se detiene con la pared todavía puesta. Dos desenlaces dibujados: el albañil mide cada habitación, cuenta las baldosas de cada una y suma; el albañil saca la pared, mide el piso entero de una vez y multiplica. El jugador elige cuál da más baldosas y después ve que dan lo mismo. La pared no ocupaba lugar.
+En `intuition` la escena se detiene con la pared todavía puesta. Dos desenlaces dibujados: el albañil mide cada habitación, cuenta las baldosas de cada una y suma; el albañil saca la pared, mide el piso entero de una vez y multiplica. El jugador elige cuál da más baldosas y después ve que dan lo mismo.
 
 ## 5. Analogía del mundo real
 
 `tile_floor_two_rooms`, con la mecánica `tiles` ([G0](../../G-analogias/G0-reglas.md)). Mapa: ancho compartido → factor común; los dos largos → sumandos del paréntesis; pared entre las habitaciones → paréntesis; piso entero → producto; sacar la pared → distribuir; volver a poner la pared → factorizar; habitación de largo desconocido → baldosa variable.
 
-Invariante: el área total no cambia cuando se saca o se pone la pared. La pared es una marca, no un volumen.
+Invariante: el área total no cambia cuando se saca o se pone la pared.
 
 Ruptura: `negative_lengths`. Una habitación no puede medir menos que nada, así que `5(x − 2)` fuerza la imagen. Se resuelve dentro del nodo con una convención visible: la baldosa de resta se dibuja como un hueco recortado sobre el piso, del mismo tamaño y de color invertido, y la resta se lee como quitar superficie. Es explícitamente una prótesis, y por eso las baldosas se retiran en `symbolic`, antes de que aparezcan expresiones donde todo es negativo.
 
@@ -52,7 +52,7 @@ Primera capa jugable: `concrete`. Mecánica principal `tiles`, con `ledger` como
 5. Cuando el marco queda cubierto sin huecos ni superposiciones, los lados se etiquetan solos y aparece la ficha del producto al lado de la ficha de la suma, unidas por un igual.
 6. Éxito: las dos escrituras coexisten y el jugador puede tocar cualquiera para verla dibujada. Verificación con `cs.alg.area_model_of_product`.
 
-Cuando el jugador deja un hueco, el hueco parpadea y el marco no cierra. Cuando superpone dos piezas, la de arriba se vuelve translúcida y la superficie contada excede al marco. Nada se llama incorrecto: el piso se ve mal cubierto y eso alcanza.
+Cuando el jugador deja un hueco, el hueco parpadea y el marco no cierra. Cuando superpone dos piezas, la de arriba se vuelve translúcida y la superficie contada excede al marco.
 
 ## 7. Representación visual
 
@@ -80,8 +80,6 @@ Queda `a(b + c) = ab + ac`, y con números y letras `5(x + 2) = 5x + 10`.
 
 El nodo no introduce símbolos nuevos con forma propia: el paréntesis nació en el nodo 14 y la letra en el 10. Lo que aporta es una **convención de escritura**, la yuxtaposición como producto: `5x` significa `5 · x`, y `5(x + 2)` significa `5 · (x + 2)`. El problema que la hace necesaria es el propio renglón. Con el signo de multiplicar escrito, `5 · x + 5 · 2` tiene tantos símbolos que la estructura se pierde; sin él, los dos sumandos se leen de un vistazo y el paréntesis queda como el único agrupador. Es la regla de oro de [H](../../H-progresion-abstraccion.md) aplicada a una convención: se adopta cuando escribirla completa estorba.
 
-La segunda convención es el orden dentro del término, número antes que letra, y se justifica igual: hace que dos términos del mismo tipo se reconozcan como iguales de un vistazo en el libro de cuentas.
-
 ## 10. Definición formal
 
 Capa `formal`: texto corto con voz y el rectángulo partido al lado. Dos frases, de a una: "Multiplicar por una suma es multiplicar por cada sumando y sumar los resultados." "La igualdad vale en los dos sentidos: repartir el producto y volver a juntarlo."
@@ -94,7 +92,7 @@ Ya jugado: las dos frases enteras, en la capa concreta, con la pared que sale y 
 
 - **Distributiva de la multiplicación sobre la suma.** `a(b + c) = ab + ac`. Ligada a sacar la pared sin que cambie el contador de superficie.
 - **Distributiva sobre la resta.** `a(b − c) = ab − ac`. Ligada al hueco recortado que se quita dos veces, una en el piso entero y otra en la franja.
-- **Factorización como el mismo movimiento al revés.** `ab + ac = a(b + c)` cuando las dos partes comparten un lado. Ligada a volver a poner la pared, y solo posible si los dos bloques tienen el mismo ancho.
+- **Factorización como el mismo movimiento al revés.** `ab + ac = a(b + c)` cuando las dos partes comparten un lado. Ligada a volver a poner la pared.
 - **Solo se suman piezas del mismo tipo.** `2x + 3x = 5x`, pero `2x + 3` no se junta. Ligada a las columnas del libro, que no se funden si las marcas difieren.
 - **El cuadrado de una suma tiene cuatro piezas.** `(a + b)²` es un cuadrado de lado `a + b` partido en un cuadrado `a·a`, otro `b·b` y dos rectángulos `a·b`. Ligada al marco donde faltan dos piezas, y es la propiedad que `alg.expr.binomial_product` retoma entera.
 
@@ -102,7 +100,7 @@ Ya jugado: las dos frases enteras, en la capa concreta, con la pared que sale y 
 
 Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
-- `recognize`: dos habitaciones con el mismo ancho y largos distintos. Tocar la expresión de fichas que mide el piso total. Los distractores salen de las reglas `detect` de las dos misconceptions del nodo.
+- `recognize`: dos habitaciones con el mismo ancho y largos distintos. Tocar la expresión de fichas que mide el piso total.
 - `explain`: tres animaciones. En una el ancho cubre las dos habitaciones y el piso queda entero; en otra se eleva al cuadrado cada habitación por separado y quedan dos rectángulos vacíos en el marco; en otra se multiplican las etiquetas como si fueran nombres y las dos columnas del libro se funden en una que no corresponde a ninguna pieza. Tocar las dos que pierden baldosas.
 - `manipulate`: arrastrar baldosas para cubrir un rectángulo con un lado partido en dos, y armar la ficha de producto que lo describe.
 - `apply`: un rectángulo con lados de letras y números. Arrastrar las fichas de cada baldosa parcial al libro de cuentas y sumar, contra el tiempo objetivo del nodo.
@@ -111,8 +109,8 @@ Las probes del locale, con los verbos de [K](../../K-evaluacion.md):
 
 Misconceptions esperadas y su patrón ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
-- **`distribute_over_wrong_op`** (`missing_piece_tiles` sobre `tiles`, mecánica que el nodo declara). El jugador responde `a² + b²` al área de un cuadrado de lado `a + b`, o convierte `a(bc)` en `(ab)(ac)`. El juego coloca las piezas que el jugador nombró: un cuadrado `a × a` y otro `b × b` en esquinas opuestas del marco. Quedan dos rectángulos vacíos, `a × b` cada uno, que parpadean. Voz: "Al cuadrado le falta un pedazo. ¿Qué rectángulos faltan?". Las baldosas `a × b` esperan en la bandeja, y al completar el hueco la expresión al costado pasa de `a² + b²` a `a² + 2ab + b²` con un morph. Es la de mayor severidad del nodo.
-- **`variable_as_label`** (`replay_on_mechanic` sobre `ledger`, también declarada). El jugador convierte `ax + by` en `(a + b)xy`, tratando las letras como nombres que se pueden juntar. El replay corre en el libro de cuentas: las dos columnas del jugador intentan fundirse y se rechazan, porque las piezas que cuentan tienen forma distinta. Sobre el piso, la tira de largo `x` y la de largo `y` se superponen y no encajan. Voz: "Estas dos piezas no tienen la misma forma. ¿Se pueden apilar en la misma columna?". El jugador separa las columnas y sigue desde ahí.
+- **`distribute_over_wrong_op`** (`missing_piece_tiles` sobre `tiles`, mecánica que el nodo declara). El jugador responde `a² + b²` al área de un cuadrado de lado `a + b`, o convierte `a(bc)` en `(ab)(ac)`. El juego coloca las piezas que el jugador nombró: un cuadrado `a × a` y otro `b × b` en esquinas opuestas del marco. Quedan dos rectángulos vacíos, `a × b` cada uno, que parpadean. Voz: "Al cuadrado le falta un pedazo. ¿Qué rectángulos faltan?". Las baldosas `a × b` esperan en la bandeja, y al completar el hueco la expresión al costado pasa de `a² + b²` a `a² + 2ab + b²` con un morph.
+- **`variable_as_label`** (`replay_on_mechanic` sobre `ledger`, también declarada). El jugador convierte `ax + by` en `(a + b)xy`, tratando las letras como nombres que se pueden juntar. El replay corre en el libro de cuentas: las dos columnas del jugador intentan fundirse y se rechazan, porque las piezas que cuentan tienen forma distinta. Voz: "Estas dos piezas no tienen la misma forma. ¿Se pueden apilar en la misma columna?".
 
 ## 13. Generalización
 
@@ -135,8 +133,8 @@ Concepto siguiente: `alg.sys.two_by_two` ([16](16-alg.sys.two_by_two.md)). Frase
 
 ---
 
-**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `tile_two_rooms_one_width` es nativa: recibe el ancho y los dos largos como árboles y dibuja el marco con la pared que sale y entra, con las llaves de los lados y el contador de superficie que no se mueve; gramática `scale`. Es la que produce las animaciones de `explain` y el patrón `missing_piece_tiles`, porque puede recibir una cobertura incompleta y hacer parpadear el hueco. `ledger_a_times_sum` es nativa y corre sincronizada al costado: las columnas del libro se llenan mientras las baldosas caen, y colapsan en coeficientes cuando el jugador cierra el marco; gramática `partition`. Ninguna lleva texto rasterizado: las etiquetas de los lados y las marcas de columna las dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)). Se reúsan `tile_rows_become_rectangle` (nodo 5) y `ledger_box_hides_tokens` (nodo 10) como apertura y como distractor de `variable_as_label`.
+**Visualización:** dos escenas del YAML, resueltas en [I](../../I-manim/I0-mapping.md). `tile_two_rooms_one_width` es nativa: recibe el ancho y los dos largos como árboles y dibuja el marco con la pared que sale y entra, con las llaves de los lados y el contador de superficie que no se mueve; gramática `scale`. Es la que produce las animaciones de `explain` y el patrón `missing_piece_tiles`, porque puede recibir una cobertura incompleta y hacer parpadear el hueco. `ledger_a_times_sum` es nativa y corre sincronizada al costado: las columnas del libro se llenan mientras las baldosas caen, y colapsan en coeficientes cuando el jugador cierra el marco; gramática `partition`. Ninguna lleva texto rasterizado: las etiquetas de los lados y las marcas de columna las dibuja el runtime según el locale ([P](../../P-internacionalizacion.md)).
 
-**Calculadora:** en `ready` se habilita `op_expand` ([M](../../M-calculadora/M0-progresion.md)), un ícono de pared que se abre, disponible sobre cualquier producto armado con fichas donde uno de los factores sea una suma. No devuelve solo el resultado: dibuja el rectángulo partido durante un instante y después escribe la suma, para que la respuesta siga anclada al área. La operación inversa aparece más tarde con `alg.expr.factor_common`, y hasta entonces el ícono de pared solo funciona en un sentido. Si el nodo decae, la pared del ícono queda a medio abrir.
+**Calculadora:** en `ready` se habilita `op_expand` ([M](../../M-calculadora/M0-progresion.md)), un ícono de pared que se abre, disponible sobre cualquier producto armado con fichas donde uno de los factores sea una suma. No devuelve solo el resultado: dibuja el rectángulo partido durante un instante y después escribe la suma, para que la respuesta siga anclada al área. Si el nodo decae, la pared del ícono queda a medio abrir.
 
-**Edad universal:** el nodo es `icons` porque los lados llevan etiquetas de un dígito y letras desde el segundo nivel ([Q](../../Q-edad-universal.md)). Lo demás se juega sin leer: baldosas por forma, pared por toque, mano fantasma, `explain` entre animaciones y prompts por voz. Un adulto llega por diagnóstico saltando `real` e `intuition`, entra en el nivel con letras y suele reconocer la regla de memoria; para él la aportación del nodo es el modelo de área, que se le presenta primero como verificación de algo que ya cree saber, con el caso `(a + b)²` como puerta de entrada.
+**Edad universal:** el nodo es `icons` porque los lados llevan etiquetas de un dígito y letras desde el segundo nivel ([Q](../../Q-edad-universal.md)). Lo demás se juega sin leer: baldosas por forma, pared por toque, mano fantasma, `explain` entre animaciones y prompts por voz. Un adulto llega por diagnóstico saltando `real` e `intuition`, entra en el nivel con letras y suele reconocer la regla de memoria, y para él la aportación del nodo es el modelo de área, con el caso `(a + b)²` como puerta de entrada.
