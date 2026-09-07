@@ -1290,3 +1290,137 @@ challenges:
     generator:
       name: gen_parallelogram_from_two_vectors
       params: {entry_range: [-5, 6], ask: [height, distance_point_to_line, area_two_ways]}
+
+  # =========================================================================
+  # GRAFOS
+  # =========================================================================
+
+  - id: ch.graph.count_edges_from_degrees
+    area: graph
+    tier: training
+    requires: [graph.basic.graph_and_paths, graph.deg.handshake_lemma]
+    mechanics: [network_routes, ledger]
+    literacy_min: none
+    figure: generated:gen_islands_hidden_bridges
+    hidden_data:
+      - {missing: total_bridges, discovered_by: sum_all_degrees_and_halve, uses: cs.graph.handshake_lemma}
+    expected_constructions:
+      - [list_degree_of_each_island_in_ledger, sum_all_degrees, halve_sum_for_bridge_count]
+      - [draw_one_bridge_end_per_degree_from_each_island, merge_each_bridge_counted_from_both_ends, count_distinct_bridges]
+    cheatsheet_refs: [cs.graph.handshake_lemma, cs.graph.graph_vocabulary]
+    strategy_misconceptions: [counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [list_degree_of_each_node, add_all_degrees, halve_the_total]
+    answer_kind: number
+    generator:
+      name: gen_islands_hidden_bridges
+      params: {islands_range: [4, 7], degree_range: [1, 4], force_even_degree_sum: true}
+
+  - id: ch.graph.hidden_component
+    area: graph
+    tier: training
+    requires: [graph.conn.components, graph.walk.repeat_rules]
+    mechanics: [network_routes, sorter]
+    literacy_min: icons
+    figure: generated:gen_network_hidden_component
+    hidden_data:
+      - {missing: number_of_components, discovered_by: mark_all_nodes_reachable_from_one_start_and_repeat_on_leftovers, uses: cs.graph.connected_components}
+    expected_constructions:
+      - [pick_any_node, mark_every_node_reached_by_some_walk, sort_marked_nodes_into_one_group, pick_an_unmarked_node, repeat_until_no_node_is_left, count_groups]
+      - [try_one_walk_that_visits_every_node, notice_it_cannot_reach_some_nodes, sort_the_unreached_nodes_into_their_own_group]
+    cheatsheet_refs: [cs.graph.connected_components, cs.graph.walk_path_cycle]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [pick_a_starting_node, mark_its_reachable_group, repeat_from_any_unmarked_node, count_the_groups]
+    answer_kind: number
+    generator:
+      name: gen_network_hidden_component
+      params: {main_component_nodes_range: [5, 9], isolated_component_size_range: [2, 3], extra_isolated_components: [0, 1]}
+
+  - id: ch.graph.euler_route_exists
+    area: graph
+    tier: regional
+    requires: [graph.euler.bridges_konigsberg, graph.deg.handshake_lemma, graph.walk.repeat_rules]
+    mechanics: [network_routes, ledger]
+    literacy_min: icons
+    figure: generated:gen_bridges_parity_puzzle
+    hidden_data:
+      - {missing: parity_of_each_node, discovered_by: list_degree_of_each_node_and_mark_odd_or_even, uses: cs.graph.handshake_lemma}
+      - {missing: whether_a_route_exists, discovered_by: count_nodes_with_odd_degree, uses: cs.graph.euler_path_degree_rule}
+      - {missing: minimal_bridge_to_add, discovered_by: join_two_odd_nodes_with_a_new_bridge_when_there_are_more_than_two, uses: cs.graph.euler_path_degree_rule}
+    expected_constructions:
+      - [list_degree_of_each_node_in_ledger, mark_each_as_odd_or_even, count_odd_nodes, conclude_by_the_count]
+      - [list_degree_of_each_node_in_ledger, count_odd_nodes, if_more_than_two_add_one_bridge_between_two_odd_nodes, recount_odd_nodes_after_adding]
+    cheatsheet_refs: [cs.graph.euler_path_degree_rule, cs.graph.handshake_lemma, cs.graph.walk_path_cycle]
+    strategy_misconceptions: [counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [list_degree_of_each_node, mark_odd_or_even, count_odd_nodes, decide_existence_or_minimal_fix]
+    answer_kind: expression
+    generator:
+      name: gen_bridges_parity_puzzle
+      params: {nodes_range: [5, 8], odd_degree_count: [0, 2, 4], allow_impossible_case: true}
+
+  - id: ch.graph.tree_edges_from_nodes
+    area: graph
+    tier: regional
+    requires: [graph.tree.tree_no_cycles, graph.conn.components]
+    mechanics: [network_routes, sorter]
+    literacy_min: icons
+    figure: generated:gen_network_no_cycles
+    hidden_data:
+      - {missing: number_of_edges, discovered_by: strip_one_leaf_at_a_time_and_count_removals, uses: cs.graph.tree_edges_n_minus_1}
+    expected_constructions:
+      - [sort_nodes_by_degree_to_find_a_leaf, remove_the_leaf_with_its_one_edge, repeat_on_the_smaller_network, count_removals_until_one_node_remains]
+      - [pick_a_root_and_add_nodes_one_at_a_time_by_their_single_connecting_edge, count_edges_added, compare_with_node_count]
+    cheatsheet_refs: [cs.graph.tree_edges_n_minus_1, cs.graph.connected_components, cs.graph.walk_path_cycle]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [find_a_leaf, remove_it_with_its_edge, repeat_until_one_node_remains, count_edges_removed]
+    answer_kind: number
+    generator:
+      name: gen_network_no_cycles
+      params: {nodes_range: [5, 10], layout: [star, chain, branching], hide_edge_count: true}
+
+  - id: ch.graph.shortest_path_hidden_weight
+    area: graph
+    tier: regional
+    requires: [graph.path.shortest_path, graph.walk.repeat_rules]
+    mechanics: [network_routes, ledger]
+    literacy_min: short_text
+    figure: generated:gen_network_covered_weight
+    hidden_data:
+      - {missing: covered_edge_weight, discovered_by: sum_known_weights_along_the_stated_shortest_path_and_match_the_given_total, uses: cs.graph.dijkstra_relax}
+      - {missing: whether_that_path_is_still_shortest, discovered_by: compare_the_reconstructed_total_against_every_other_route, uses: cs.graph.dijkstra_relax}
+    expected_constructions:
+      - [add_the_known_weights_along_the_stated_path_in_a_ledger, subtract_from_the_given_total, name_the_covered_weight, check_no_other_route_beats_that_total]
+      - [list_every_route_total_with_the_covered_edge_as_unknown, set_the_stated_route_equal_to_the_given_total, solve_for_the_weight, verify_it_keeps_that_route_shortest]
+    cheatsheet_refs: [cs.graph.dijkstra_relax, cs.graph.walk_path_cycle, cs.graph.graph_vocabulary]
+    strategy_misconceptions: [counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [add_known_weights_along_the_path, subtract_from_the_given_total, name_the_covered_weight, verify_against_alternative_routes]
+    answer_kind: number
+    generator:
+      name: gen_network_covered_weight
+      params: {nodes_range: [5, 7], route_length_range: [3, 4], alternative_route_margin_range: [1, 5]}
+
+  - id: ch.graph.two_step_routes
+    area: graph
+    tier: international
+    requires: [graph.matrix.two_step_routes_as_product, linalg.map.matrix_counts_routes]
+    mechanics: [network_routes, grid_stretch, ledger]
+    literacy_min: short_text
+    figure: generated:gen_two_cities_matrix_routes
+    hidden_data:
+      - {missing: count_of_two_step_routes, discovered_by: sum_over_every_middle_city_the_product_of_both_connections, uses: cs.linalg.adjacency_matrix_powers}
+      - {missing: which_matrix_entry_it_is, discovered_by: multiply_the_adjacency_matrix_by_itself_and_read_the_entry, uses: cs.linalg.matrix_product}
+    expected_constructions:
+      - [list_every_possible_middle_city, multiply_the_two_connections_through_each_middle_city, add_the_products]
+      - [write_the_adjacency_matrix, multiply_it_by_itself, read_the_entry_at_the_row_and_column_of_the_two_cities]
+    cheatsheet_refs: [cs.linalg.adjacency_matrix_powers, cs.linalg.matrix_product, cs.graph.graph_vocabulary]
+    strategy_misconceptions: [tracked_wrong_basis_arrow, counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [list_middle_cities, multiply_the_two_connections_for_each, add_the_products, match_with_the_matrix_entry]
+    answer_kind: number
+    generator:
+      name: gen_two_cities_matrix_routes
+      params: {cities_range: [5, 7], asked_pair: any_two_cities, allow_direct_edge_too: true}

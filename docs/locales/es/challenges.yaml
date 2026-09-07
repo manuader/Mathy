@@ -705,3 +705,82 @@ challenges:
       - "Calcular la sombra de v sobre u con el producto punto."
       - "Pitágoras entre v y su sombra da la altura."
       - "Área: base por altura, y también el determinante; deben coincidir."
+
+  # ---- graph ---------------------------------------------------------------
+
+  ch.graph.count_edges_from_degrees:
+    title: "Los puentes que no se ven"
+    statement: "Un mapa de islas une algunas con puentes, pero no se ven todos: descubrí cuántos puentes hay en total sabiendo cuántos salen de cada isla."
+    hints:
+      - "Si sumás los puentes que salen de cada isla, ¿qué estás contando: cada puente una vez o dos veces?"
+      - "Cada puente tiene dos puntas, y cada punta se cuenta en la isla donde termina. ¿Qué operación deshace ese doble conteo?"
+      - "Anotá cuántos puentes salen de cada isla y sumalos todos en una lista. Esa suma cuenta cada puente dos veces, una por cada punta: dividila por dos."
+    solution_steps:
+      - "Anotar cuántos puentes salen de cada isla."
+      - "Sumar todos esos números."
+      - "Dividir la suma por dos: cada puente se contó desde sus dos puntas."
+
+  ch.graph.hidden_component:
+    title: "El grupo aislado"
+    statement: "Esta red de rutas entre pueblos parece conectar a todos, pero hay un grupo de pueblos al que nunca se llega desde los demás. ¿Cuántos grupos separados forma la red?"
+    hints:
+      - "Elegí un pueblo cualquiera. ¿A cuántos otros podés llegar siguiendo rutas, una tras otra?"
+      - "Si todavía queda algún pueblo al que no llegaste desde ahí, ¿pertenece al mismo grupo o a uno distinto?"
+      - "Elegí un pueblo y marcá todos los que se alcanzan siguiendo rutas: ese es un grupo. Si sobra algún pueblo sin marcar, elegilo y repetí el marcado desde ahí. Contá cuántos grupos armaste."
+    solution_steps:
+      - "Elegir un pueblo y marcar todos los que alcanza."
+      - "Ese conjunto marcado es un grupo separado."
+      - "Repetir desde un pueblo sin marcar hasta que no quede ninguno afuera."
+      - "Contar los grupos armados."
+
+  ch.graph.euler_route_exists:
+    title: "El recorrido que no repite puente"
+    statement: "En esta red de islas y puentes, ¿se puede cruzar cada puente exactamente una vez sin repetir ninguno? Si no se puede, ¿cuál es el mínimo de puentes nuevos que hacen falta para lograrlo?"
+    hints:
+      - "Contá cuántos puentes salen de cada isla. ¿Ese número es par o impar en cada una?"
+      - "Un cruce que llega a una isla también tiene que salir de ella, salvo en el principio y el final del recorrido. ¿Cuántas islas pueden tener un número impar de puentes para que eso funcione?"
+      - "Contá las islas con número impar de puentes. Si son cero o dos, el recorrido existe. Si son más de dos, cada puente nuevo puede arreglar dos islas impares a la vez: unilas de a pares con el mínimo de puentes."
+    solution_steps:
+      - "Contar los puentes de cada isla y marcar cuáles son impares."
+      - "Contar cuántas islas quedaron con número impar de puentes."
+      - "Si son cero o dos, el recorrido existe sin agregar nada."
+      - "Si son más, agregar un puente por cada par de islas impares hasta que queden cero o dos."
+
+  ch.graph.tree_edges_from_nodes:
+    title: "Los canales sin ciclos"
+    statement: "Esta red de canales conecta todos los pueblos partiendo de una sola fuente, sin que ningún camino vuelva a cruzarse formando un ciclo. Sabiendo cuántos pueblos conecta, ¿cuántos tramos de canal tiene en total?"
+    hints:
+      - "Si le sacaras a la red un pueblo de la punta, con su único tramo, ¿cuántos pueblos y cuántos tramos te quedan?"
+      - "Cada vez que sacás una punta, pueblos y tramos bajan juntos, de a uno. ¿Con qué te quedás al final?"
+      - "Buscá un pueblo con un solo tramo y sacalo junto con ese tramo. Repetí sobre la red que queda. Vas a terminar con un solo pueblo y ningún tramo, habiendo sacado tantos tramos como pueblos de más tenía la red al principio."
+    solution_steps:
+      - "Buscar un pueblo con un solo tramo."
+      - "Sacarlo junto con su tramo: bajan un pueblo y un tramo."
+      - "Repetir hasta quedar con un solo pueblo."
+      - "La cantidad de tramos sacados es el número de pueblos menos uno."
+
+  ch.graph.shortest_path_hidden_weight:
+    title: "El tramo tapado"
+    statement: "En esta red de rutas, un cartel tapa el costo de un tramo. Sabés cuál es el camino más corto entre dos ciudades y cuánto cuesta en total. ¿Cuánto cuesta el tramo tapado?"
+    hints:
+      - "Sumá los costos que sí conocés a lo largo del camino más corto que te dieron. ¿Qué le falta a esa suma para llegar al total?"
+      - "Ese faltante es el costo tapado. Pero, ¿qué pasaría con los demás caminos si ese costo fuera todavía más bajo?"
+      - "Sumá los tramos conocidos del camino dado y restá del costo total: eso da el tramo tapado. Después, sumá el costo de cada camino alternativo usando ese valor y confirmá que ninguno da menos que el total dado."
+    solution_steps:
+      - "Sumar los costos conocidos del camino más corto dado."
+      - "Restar esa suma del costo total: es el tramo tapado."
+      - "Sumar cada camino alternativo usando ese valor."
+      - "Confirmar que ningún camino alternativo cuesta menos que el dado."
+
+  ch.graph.two_step_routes:
+    title: "Las rutas de dos escalas"
+    statement: "Entre {n} ciudades hay vuelos directos marcados en un mapa. ¿De cuántas maneras se puede ir de una ciudad a otra haciendo exactamente una escala en el medio?"
+    hints:
+      - "Para cada ciudad que podría servir de escala, ¿qué dos datos necesitás para saber si sirve?"
+      - "Si armás una tabla con un uno donde hay vuelo directo y un cero donde no, ¿qué operación entre filas y columnas cuenta las escalas por vos?"
+      - "Para cada ciudad intermedia, multiplicá si hay vuelo hacia ella por si hay vuelo desde ella hacia el destino, y sumá esos productos para todas las ciudades intermedias. Esa cuenta es exactamente la entrada de la matriz de adyacencia multiplicada por sí misma."
+    solution_steps:
+      - "Listar todas las ciudades que podrían servir de escala."
+      - "Para cada una, multiplicar si hay vuelo hacia ella por si hay vuelo desde ella hacia el destino."
+      - "Sumar esos productos para todas las escalas posibles."
+      - "Esa suma es la entrada de la matriz de adyacencia elevada al cuadrado."

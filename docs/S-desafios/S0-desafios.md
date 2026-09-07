@@ -168,9 +168,11 @@ El patrón "dato oculto que se revela con una construcción" no es exclusivo de 
 
 **Álgebra lineal: transformación compuesta.** En `ch.linalg.matrix_of_a_composed_move` lo oculto es adónde van las flechas base después de dos movimientos, y que el orden importa. En `ch.linalg.shadow_gives_the_height` la altura de un paralelogramo se descubre proyectando: la misma perpendicular del trapecio, ahora sobre vectores, y el determinante como comprobación.
 
+**Grafos: lo que el dibujo no muestra.** En `ch.graph.count_edges_from_degrees` el lema del apretón de manos revela el total de puentes a partir de lo que sale de cada isla; `counted_twice` es la trampa, porque sumar los grados cuenta cada puente por sus dos puntas. En `ch.graph.hidden_component` lo oculto no es un número sobre la figura sino la figura misma: un grupo que la red no deja ver conectado; `ignored_case` se dispara si el conteo de grupos se detiene apenas parece que todo quedó cubierto. `ch.graph.euler_route_exists` esconde la paridad de los grados y, cuando el recorrido no existe, cuántos puentes hacen falta agregar. `ch.graph.tree_edges_from_nodes` esconde por qué un árbol tiene siempre un nodo menos aristas que vértices: sacar hojas de a una lo muestra. `ch.graph.shortest_path_hidden_weight` esconde el peso de un tramo detrás del costo total del camino más corto, con la trampa de que un peso demasiado bajo cambiaría cuál camino es el más corto. `ch.graph.two_step_routes` cruza con álgebra lineal: contar rutas de dos pasos por cada ciudad intermedia es, sin que el enunciado lo diga, calcular una entrada del cuadrado de la matriz de adyacencia.
+
 ## Edad universal
 
-Los desafíos existen también en los niveles 0 a 2, y no requieren leer ([Q](../Q-edad-universal.md), sección 4.2). Son **rompecabezas de baldosas con datos ocultos**: una figura cubierta parcialmente, donde hay que descubrir cuántas baldosas hay usando las que se ven. El catálogo inicial tiene seis, con `literacy_min: none`:
+Los desafíos existen también en los niveles 0 a 2, y no requieren leer ([Q](../Q-edad-universal.md), sección 4.2). Son **rompecabezas de baldosas con datos ocultos**: una figura cubierta parcialmente, donde hay que descubrir cuántas baldosas hay usando las que se ven. El catálogo inicial tiene siete, con `literacy_min: none`:
 
 - `ch.geom.tiles_hidden_corner`: una hoja tapa una esquina del piso; prolongar las líneas de filas y columnas por debajo revela el rectángulo entero.
 - `ch.geom.tiles_l_shape_split`: un piso en L con un brazo tapado; una línea recta lo parte en dos rectángulos.
@@ -178,6 +180,7 @@ Los desafíos existen también en los niveles 0 a 2, y no requieren leer ([Q](..
 - `ch.geom.tiles_slanted_same_as_straight`: un piso inclinado; cortar el triángulo que sobra y deslizarlo al otro lado lo vuelve rectángulo.
 - `ch.geom.tiles_hidden_layers_volume`: una caja de cubos con capas escondidas; prolongar las aristas cuenta las capas y el volumen es capas por cubos de una capa.
 - `ch.arith.plates_hidden_remainder`: bolitas en platos iguales con algunos platos tapados; completar las filas revela cuántas sobran.
+- `ch.graph.count_edges_from_degrees`: un mapa de islas con puentes que no se ven todos; sumar cuántos puentes sale de cada isla y dividir por dos revela el total.
 
 Estos desafíos cumplen las reglas de Q sin excepción: el enunciado es una sola frase para voz (o nada, si el sonido está apagado; la figura con la hoja que tapa es el enunciado), los gestos son `drag` y `hold` con targets grandes, la cheatsheet es una imagen con voz, las tres pistas son animaciones y la solución paso a paso es una animación narrada. Cuentan en K igual que cualquier otro desafío: un niño que descubre las baldosas tapadas produce un ítem `transfer` de `geom.area.rect_and_triangle`. El tiempo no se muestra, y `T_STAR_LITERACY_NONE_FACTOR` se aplica como en todo nodo sin lectura.
 
@@ -207,7 +210,7 @@ Lo que el validador de [C0](../C-knowledge-graph/C0-esquema.md) comprueba sobre 
 
 ## Tabla completa de desafíos
 
-Derivada de [`challenges.yaml`](challenges.yaml). La construcción clave es la primera de `hidden_data`; los caminos completos están en el archivo. Cincuenta y cuatro desafíos: geometría 13 (5 sin leer), álgebra 6, aritmética y teoría de números 6 (1 sin leer), combinatoria 6, probabilidad 6, trigonometría 7, cálculo 7, álgebra lineal 3.
+Derivada de [`challenges.yaml`](challenges.yaml). La construcción clave es la primera de `hidden_data`; los caminos completos están en el archivo. Sesenta desafíos: geometría 13 (5 sin leer), álgebra 6, aritmética y teoría de números 6 (1 sin leer), combinatoria 6, probabilidad 6, trigonometría 7, cálculo 7, álgebra lineal 3, grafos 6 (1 sin leer).
 
 | id | área | tier | nodos requeridos | dato oculto | construcción clave |
 |---|---|---|---|---|---|
@@ -265,6 +268,12 @@ Derivada de [`challenges.yaml`](challenges.yaml). La construcción clave es la p
 | `ch.linalg.matrix_of_a_composed_move` | linalg | entrenamiento | `linalg.map.compose_as_multiply`<br>`linalg.map.linear_transformation_2d` | `where_each_basis_arrow_lands`<br>`order_of_the_two_moves` | `track_basis_arrows_through_both_moves` |
 | `ch.linalg.undo_the_unknown_stretch` | linalg | regional | `linalg.map.inverse_and_systems`<br>`linalg.map.determinant_as_area` | `the_matrix`<br>`whether_it_can_be_undone`<br>`original_point` | `read_columns_from_images_of_basis` |
 | `ch.linalg.shadow_gives_the_height` | linalg | internacional | `linalg.orth.projection_as_shadow`<br>`linalg.map.determinant_as_area`<br>`geom.tri.pythagoras_as_tiles` | `height_of_parallelogram`<br>`distance_point_to_line` | `project_one_vector_onto_the_other_and_take_the_rest` |
+| `ch.graph.count_edges_from_degrees` | graph (sin leer) | entrenamiento | `graph.basic.graph_and_paths`<br>`graph.deg.handshake_lemma` | `total_bridges` | `sum_all_degrees_and_halve` |
+| `ch.graph.hidden_component` | graph | entrenamiento | `graph.conn.components`<br>`graph.walk.repeat_rules` | `number_of_components` | `mark_all_nodes_reachable_from_one_start_and_repeat_on_leftovers` |
+| `ch.graph.euler_route_exists` | graph | regional | `graph.euler.bridges_konigsberg`<br>`graph.deg.handshake_lemma`<br>`graph.walk.repeat_rules` | `parity_of_each_node`<br>`whether_a_route_exists`<br>`minimal_bridge_to_add` | `list_degree_of_each_node_and_mark_odd_or_even` |
+| `ch.graph.tree_edges_from_nodes` | graph | regional | `graph.tree.tree_no_cycles`<br>`graph.conn.components` | `number_of_edges` | `strip_one_leaf_at_a_time_and_count_removals` |
+| `ch.graph.shortest_path_hidden_weight` | graph | regional | `graph.path.shortest_path`<br>`graph.walk.repeat_rules` | `covered_edge_weight`<br>`whether_that_path_is_still_shortest` | `sum_known_weights_along_the_stated_shortest_path_and_match_the_given_total` |
+| `ch.graph.two_step_routes` | graph | internacional | `graph.matrix.two_step_routes_as_product`<br>`linalg.map.matrix_counts_routes` | `count_of_two_step_routes`<br>`which_matrix_entry_it_is` | `sum_over_every_middle_city_the_product_of_both_connections` |
 
 ## Qué no vive acá
 
