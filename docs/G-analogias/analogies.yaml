@@ -22,7 +22,7 @@ analogies:
 
   - id: sorting_bins
     mechanic: sorter
-    target_nodes: [found.count.cardinality, disc.set.membership_rule]
+    target_nodes: [found.count.cardinality, disc.set.membership_rule, adv.alg.cosets_partition, csmath.alg.sorting_algorithm, disc.rel.equivalence_classes, found.sort.by_attribute, geom.class.polygon_by_sides, geom.class.quadrilateral_hierarchy, graph.color.map_coloring, graph.match.bipartite_matching]
     structure_map:
       - bin: set
       - object: element
@@ -37,7 +37,7 @@ analogies:
 
   - id: fruit_bowl_count
     mechanic: ledger
-    target_nodes: [found.count.cardinality, found.count.compare_more_less]
+    target_nodes: [found.count.cardinality, found.cmp.bigger_smaller, found.count.zero_as_empty]
     structure_map:
       - bowl: collection
       - fruit: unit
@@ -52,7 +52,7 @@ analogies:
 
   - id: number_line_walk
     mechanic: slope_walker
-    target_nodes: [found.count.number_line, arith.add.displacement]
+    target_nodes: [found.count.number_line, arith.add.displacement, found.pat.what_comes_next, geom.angle.turn_as_measure]
     structure_map:
       - stone_on_path: integer
       - walker_position: value
@@ -67,7 +67,7 @@ analogies:
 
   - id: walker_forward_and_back
     mechanic: slope_walker
-    target_nodes: [arith.add.displacement, arith.sub.undo_add, arith.seq.skip_count]
+    target_nodes: [arith.add.displacement, arith.sub.undo_add, arith.mul.repeated_groups]
     structure_map:
       - steps_forward: addend
       - landing_stone: sum
@@ -83,7 +83,7 @@ analogies:
 
   - id: fruit_ledger
     mechanic: ledger
-    target_nodes: [arith.add.displacement, arith.sub.undo_add, prealg.var.unknown_as_box, alg.eq.one_step, alg.expr.like_terms]
+    target_nodes: [arith.add.displacement, arith.sub.undo_add, prealg.var.unknown_as_box, alg.eq.one_step, prealg.expr.like_terms, adv.alg.polynomial_arithmetic, alg.poly.coefficients_as_counts, arith.add.combine_groups, arith.mul.repeated_groups, disc.count.sum_rule, prealg.prop.order_does_not_matter]
     structure_map:
       - fruit_kind: unit_or_variable
       - pile_of_one_kind: term
@@ -100,7 +100,7 @@ analogies:
 
   - id: tile_floor
     mechanic: tiles
-    target_nodes: [arith.mul.scaling, arith.div.undo_mul, geom.area.rectangle, arith.mul.partial_products]
+    target_nodes: [arith.mul.scaling, arith.div.undo_mul, geom.area.rect_and_triangle, arith.mul.partial_products, arith.mul.rows_and_columns, arith.num.factor_tree, geom.area.perimeter_vs_area, geom.area.shear_invariant, geom.area.trapezoid_as_two_triangles, geom.cons.auxiliary_lines]
     structure_map:
       - row_of_tiles: first_factor
       - column_of_tiles: second_factor
@@ -117,7 +117,7 @@ analogies:
 
   - id: rubber_band_stretch
     mechanic: grid_stretch
-    target_nodes: [arith.mul.scaling, arith.div.undo_mul, arith.frac.parts_and_ratio]
+    target_nodes: [arith.mul.scaling, arith.div.undo_mul, arith.frac.parts_and_ratio, arith.meas.unit_conversion, geom.trans.dilation, precalc.fntr.stretch_as_scale]
     structure_map:
       - marked_band: number_line
       - mark_on_band: number
@@ -133,7 +133,7 @@ analogies:
 
   - id: sharing_into_plates
     mechanic: sorter
-    target_nodes: [arith.div.undo_mul, arith.div.remainder]
+    target_nodes: [arith.div.undo_mul, arith.div.remainder, arith.num.divisible_or_not]
     structure_map:
       - pile_to_share: dividend
       - plates: divisor
@@ -149,7 +149,7 @@ analogies:
 
   - id: elevator_floors
     mechanic: slope_walker
-    target_nodes: [arith.int.negatives, arith.int.add_signed]
+    target_nodes: [arith.int.negatives, arith.int.add_signed, alg.abs.distance_two_branches]
     structure_map:
       - floor: integer
       - ground_floor: zero
@@ -167,7 +167,7 @@ analogies:
 
   - id: debt_ledger
     mechanic: ledger
-    target_nodes: [arith.int.negatives, arith.int.add_signed, arith.int.mul_signed]
+    target_nodes: [arith.int.negatives, arith.int.add_signed, arith.int.mul_signed, prealg.int.sign_rules]
     structure_map:
       - coin: positive_unit
       - iou_token: negative_unit
@@ -184,7 +184,7 @@ analogies:
 
   - id: pizza_slices
     mechanic: tiles
-    target_nodes: [arith.frac.parts_and_ratio, arith.frac.equivalent, arith.frac.add_same_denominator]
+    target_nodes: [arith.frac.parts_and_ratio, arith.frac.equivalent, arith.frac.add_same_denominator, geom.area.circle_by_slices]
     structure_map:
       - whole_disc: unit
       - cutting_into_n_equal_slices: denominator
@@ -201,7 +201,7 @@ analogies:
 
   - id: chocolate_bar_grid
     mechanic: tiles
-    target_nodes: [arith.frac.parts_and_ratio, arith.frac.multiply, prealg.pct.hundredths]
+    target_nodes: [arith.frac.parts_and_ratio, arith.frac.multiply, prealg.pct.hundredths, arith.frac.common_unit]
     structure_map:
       - bar: whole
       - small_squares: equal_parts
@@ -217,7 +217,7 @@ analogies:
 
   - id: juice_mix_ratio
     mechanic: fill_accumulate
-    target_nodes: [arith.frac.parts_and_ratio, prealg.ratio.rate_per_unit, prealg.prop.scaling_recipe]
+    target_nodes: [arith.frac.parts_and_ratio, prealg.ratio.rate_per_unit, prealg.ratio.scaling_recipe]
     structure_map:
       - cup_of_concentrate: part_a
       - cup_of_water: part_b
@@ -236,7 +236,7 @@ analogies:
 
   - id: chest_nested
     mechanic: chest_key
-    target_nodes: [arith.expr.precedence_tree, alg.eq.multi_step, alg.fn.composition]
+    target_nodes: [arith.expr.precedence_tree, alg.eq.multi_step, alg.fn.composition, csmath.crypto.rsa_trapdoor, prealg.expr.implicit_grouping]
     structure_map:
       - chest: expression
       - chest_inside_chest: subexpression
@@ -253,7 +253,7 @@ analogies:
 
   - id: chest_single_lock
     mechanic: chest_key
-    target_nodes: [prealg.inv.operation_as_key, arith.sub.undo_add, arith.div.undo_mul, alg.eq.one_step]
+    target_nodes: [prealg.inv.operation_as_key, arith.sub.undo_add, arith.div.undo_mul, alg.eq.one_step, csmath.crypto.caesar_shift, disc.mod.modular_inverse, geom.trans.undo_transformation]
     structure_map:
       - chest: expression
       - lock_shape: operation
@@ -270,7 +270,7 @@ analogies:
 
   - id: mystery_box
     mechanic: chest_key
-    target_nodes: [prealg.var.unknown_as_box]
+    target_nodes: [prealg.var.unknown_as_box, prealg.expr.substitute_value]
     structure_map:
       - closed_box: variable
       - what_is_inside: value
@@ -286,7 +286,7 @@ analogies:
 
   - id: balance_pans
     mechanic: balance
-    target_nodes: [prealg.eq.balance, alg.eq.one_step, alg.eq.multi_step]
+    target_nodes: [prealg.eq.balance, alg.eq.one_step, alg.eq.multi_step, adv.ode.separable_variables, alg.eq.variable_both_sides, found.cmp.same_amount]
     structure_map:
       - pan: side_of_equation
       - weights_on_a_pan: terms
@@ -303,7 +303,7 @@ analogies:
 
   - id: balance_tilted
     mechanic: balance
-    target_nodes: [alg.ineq.tilted_balance, found.count.compare_more_less]
+    target_nodes: [alg.ineq.inequality_tilts, found.cmp.bigger_smaller, prealg.ineq.compare_expressions]
     structure_map:
       - lower_pan: greater_side
       - tilt_direction: inequality_sign
@@ -318,7 +318,7 @@ analogies:
 
   - id: two_balances_shared_boxes
     mechanic: balance
-    target_nodes: [alg.sys.two_by_two]
+    target_nodes: [alg.sys.two_by_two, alg.sys.parallel_or_same_line]
     structure_map:
       - two_balances: two_equations
       - same_marked_boxes_on_both: shared_unknowns
@@ -350,7 +350,7 @@ analogies:
 
   - id: tile_floor_two_rooms
     mechanic: tiles
-    target_nodes: [alg.expr.distributive_tiles, alg.expr.factor_common, arith.mul.partial_products]
+    target_nodes: [alg.expr.distributive_tiles, alg.expr.factor_common, arith.mul.partial_products, alg.expr.binomial_product, alg.expr.factor_trinomial, precalc.binom.pascal_triangle_expansion]
     structure_map:
       - shared_width: common_factor
       - two_room_lengths: addends_in_parenthesis
@@ -367,7 +367,7 @@ analogies:
 
   - id: square_garden_side
     mechanic: tiles
-    target_nodes: [alg.fn.quadratic_and_sqrt, alg.expr.complete_square]
+    target_nodes: [alg.fn.quadratic_and_sqrt, alg.expr.complete_square, alg.eq.quadratic_roots, alg.rad.root_as_fractional_power, geom.tri.pythagoras_as_tiles]
     structure_map:
       - square_plot: x_squared
       - side_length: x
@@ -383,7 +383,7 @@ analogies:
 
   - id: function_machine
     mechanic: machine_pipe
-    target_nodes: [alg.fn.function_as_machine, alg.fn.domain_range]
+    target_nodes: [alg.fn.function_as_machine, alg.fn.domain_range, adv.four.transform_as_machine, alg.rat.division_by_zero_hole, csmath.alg.state_machine, disc.rel.relation_as_arrows, found.pat.rule_machine, prealg.fn.input_output_table, prealg.pat.rule_from_table, precalc.fn.piecewise_machine, precalc.param.time_as_hidden_input]
     structure_map:
       - machine: function
       - input_slot: argument
@@ -400,7 +400,7 @@ analogies:
 
   - id: machine_chain
     mechanic: machine_pipe
-    target_nodes: [alg.fn.composition, calc1.deriv.rules_as_structure]
+    target_nodes: [alg.fn.composition, calc1.deriv.rules_as_structure, csmath.bool.logic_gates]
     structure_map:
       - pipe_from_output_to_input: composition
       - order_of_machines: order_of_composition
@@ -415,7 +415,7 @@ analogies:
 
   - id: machine_reverse_run
     mechanic: machine_pipe
-    target_nodes: [alg.fn.inverse_function, alg.fn.logarithm]
+    target_nodes: [alg.fn.inverse_function, alg.fn.logarithm, adv.alg.group_as_reversible_actions, adv.four.inverse_transform, calc1.ftc.antiderivative_family, trig.inv.arcsin_two_branches]
     structure_map:
       - running_the_machine_backwards: inverse_function
       - output_fed_into_output_slot: swapping_x_and_y
@@ -430,7 +430,7 @@ analogies:
 
   - id: walker_height_trace
     mechanic: slope_walker
-    target_nodes: [alg.fn.graph_as_picture, precalc.fn.increasing_decreasing, alg.fn.linear_slope]
+    target_nodes: [alg.fn.graph_as_picture, precalc.fn.increasing_decreasing, alg.fn.linear_slope, adv.ode.slope_field, alg.ineq.inequality_as_region, alg.sys.lines_intersect, calc1.lim.one_sided_and_jump, precalc.lim.continuity_unbroken_pen, precalc.lim.infinity_and_asymptote]
     structure_map:
       - distance_walked: input_x
       - height_of_walker: output_f_x
@@ -447,7 +447,7 @@ analogies:
 
   - id: walker_on_ramp
     mechanic: slope_walker
-    target_nodes: [alg.fn.linear_slope, prealg.ratio.rate_per_unit]
+    target_nodes: [alg.fn.linear_slope, prealg.ratio.rate_per_unit, arith.rate.per_unit, csmath.cplx.big_o_as_slope, prealg.ratio.proportion_as_line, trig.fn.tangent_as_slope]
     structure_map:
       - straight_ramp: linear_function
       - rise_per_step: slope
@@ -479,7 +479,7 @@ analogies:
 
   - id: paper_folding_doubles
     mechanic: gears_sequence
-    target_nodes: [alg.fn.exponential_growth, alg.fn.logarithm, calc2.seq.geometric]
+    target_nodes: [alg.fn.exponential_growth, alg.fn.logarithm, calc2.ser.geometric_sum, alg.pow.log_rules_from_stack, alg.pow.same_base_stack, arith.pow.repeated_scaling, disc.rec.recurrence_step, precalc.seq.geometric_sequence]
     structure_map:
       - single_sheet: initial_value
       - one_fold: multiply_by_two
@@ -495,7 +495,7 @@ analogies:
 
   - id: zeno_half_steps
     mechanic: slope_walker
-    target_nodes: [precalc.lim.approach, calc2.series.geometric_sum]
+    target_nodes: [precalc.lim.approach, calc2.ser.geometric_sum, csmath.rec.base_case_and_smaller_call, precalc.seq.sum_as_pattern]
     structure_map:
       - wall: limit
       - each_step_half_the_remaining: sequence_term
@@ -511,7 +511,7 @@ analogies:
 
   - id: walker_zoom_on_hill
     mechanic: slope_walker
-    target_nodes: [calc1.deriv.rate_as_slope_limit, calc1.deriv.tangent_line]
+    target_nodes: [calc1.deriv.rate_as_slope_limit, calc1.deriv.tangent_line, adv.num.newton_tangent_iteration, calc1.apply.linearization_tangent_approx, calc1.apply.max_where_slope_zero]
     structure_map:
       - curved_hill: function
       - zooming_in_on_the_walker: shrinking_interval
@@ -530,7 +530,7 @@ analogies:
 
   - id: tank_filling
     mechanic: fill_accumulate
-    target_nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative, calc2.int.area_between]
+    target_nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative, calc2.int.area_between, adv.real.riemann_upper_lower_squeeze, arith.add.running_total, calc1.int.signed_area_below_axis, calc1.int.split_and_scale_properties, csmath.inv.loop_invariant, disc.sum.sigma_notation, found.meas.fill_compare, geom.solid.cone_sphere_by_pouring, mvcalc.int.double_integral_tank, prealg.pct.percent_fill, precalc.exp.natural_base]
     structure_map:
       - tap_flow_rate: integrand
       - time_running: variable_of_integration
@@ -549,7 +549,7 @@ analogies:
 
   - id: odometer_from_speed
     mechanic: fill_accumulate
-    target_nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative]
+    target_nodes: [calc1.int.accumulation, calc1.ftc.integral_undoes_derivative, adv.ode.euler_method, calc1.apply.motion_position_velocity_accel]
     structure_map:
       - speedometer_reading: derivative
       - odometer_reading: accumulated_value
@@ -565,7 +565,7 @@ analogies:
 
   - id: growing_rectangle
     mechanic: tiles
-    target_nodes: [calc1.deriv.rules_as_structure]
+    target_nodes: [calc1.deriv.rules_as_structure, calc1.deriv.product_as_growing_rectangle]
     structure_map:
       - two_sides: factors_u_and_v
       - strip_added_along_first_side: v_times_du
@@ -580,7 +580,7 @@ analogies:
 
   - id: gear_train_ratios
     mechanic: gears_sequence
-    target_nodes: [calc1.deriv.rules_as_structure, alg.fn.composition, prealg.ratio.rate_per_unit]
+    target_nodes: [calc1.deriv.rules_as_structure, alg.fn.composition, prealg.ratio.rate_per_unit, calc1.apply.related_rates_chain, calc1.deriv.chain_as_gears]
     structure_map:
       - gear: function
       - teeth_ratio_between_gears: rate_of_change
@@ -598,7 +598,7 @@ analogies:
 
   - id: treasure_map_arrows
     mechanic: grid_stretch
-    target_nodes: [linalg.vec.vector_as_displacement, linalg.vec.add_tip_to_tail]
+    target_nodes: [linalg.vec.vector_as_displacement, linalg.vec.add_tip_to_tail, adv.cplx.plane_and_modulus, linalg.vec.scale_and_reverse, prealg.coord.grid_position, precalc.vec.arrow_2d_intro, trig.polar.point_by_angle_and_radius]
     structure_map:
       - arrow_on_map: vector
       - steps_east_and_steps_north: components
@@ -614,7 +614,7 @@ analogies:
 
   - id: two_kinds_of_steps
     mechanic: grid_stretch
-    target_nodes: [linalg.vec.span_and_combination, linalg.vec.basis]
+    target_nodes: [linalg.vec.span_and_combination, linalg.basis.unique_recipe, linalg.basis.in_span_or_not]
     structure_map:
       - step_of_kind_a: basis_vector
       - step_of_kind_b: basis_vector
@@ -630,7 +630,7 @@ analogies:
 
   - id: rubber_grid_with_house
     mechanic: grid_stretch
-    target_nodes: [linalg.map.linear_transformation_2d, linalg.mat.matrix_columns]
+    target_nodes: [linalg.map.linear_transformation_2d, linalg.map.linear_transformation_2d, adv.cplx.function_deforms_plane, csmath.gfx.transform_matrix, linalg.map.compose_as_multiply, trig.rot.rotation_matrix]
     structure_map:
       - rubber_sheet: plane
       - drawn_house: shape_to_transform
@@ -647,7 +647,7 @@ analogies:
 
   - id: rubber_grid_undo_stretch
     mechanic: grid_stretch
-    target_nodes: [linalg.map.inverse_and_systems, linalg.det.area_scaling]
+    target_nodes: [linalg.map.inverse_and_systems, linalg.map.determinant_as_area]
     structure_map:
       - pulling_the_sheet_back: inverse_matrix
       - finding_where_a_point_came_from: solving_a_system
@@ -663,7 +663,7 @@ analogies:
 
   - id: shadow_and_stick
     mechanic: grid_stretch
-    target_nodes: [trig.ratio.similar_shadows, geom.sim.scale_copies]
+    target_nodes: [trig.ratio.similar_shadows, geom.sim.similarity_as_scale]
     structure_map:
       - stick_height: one_side
       - shadow_length: other_side
@@ -679,7 +679,7 @@ analogies:
 
   - id: quarter_turn_dial
     mechanic: grid_stretch
-    target_nodes: [adv.cplx.rotation_as_multiplication]
+    target_nodes: [adv.cplx.multiplication_rotates_scales, adv.cplx.i_as_new_axis, geom.trans.rotation_reflection, precalc.cplx.plane_intro]
     structure_map:
       - pointer_on_dial: complex_number
       - quarter_turn: multiply_by_i
@@ -697,7 +697,7 @@ analogies:
 
   - id: urn_of_balls
     mechanic: urn_dice
-    target_nodes: [prob.basic.probability_as_proportion, prob.cond.conditional_and_independence]
+    target_nodes: [prob.basic.probability_as_proportion, prob.cond.conditional_and_independence, adv.num.monte_carlo_pi, arith.pct.percent_of_total, csmath.info.entropy_as_surprise]
     structure_map:
       - urn: sample_space
       - ball: outcome
@@ -714,7 +714,7 @@ analogies:
 
   - id: spinner_wheel
     mechanic: urn_dice
-    target_nodes: [prob.basic.probability_as_proportion, prob.dist.uniform_vs_biased]
+    target_nodes: [prob.basic.probability_as_proportion, prob.basic.equally_likely_or_weighted, found.cmp.likely_unlikely]
     structure_map:
       - wheel: sample_space
       - sector: event
@@ -730,7 +730,7 @@ analogies:
 
   - id: sorted_bins_then_pick
     mechanic: sorter
-    target_nodes: [prob.cond.conditional_and_independence, prob.bayes.update]
+    target_nodes: [prob.cond.conditional_and_independence, prob.cond.bayes_reverses_condition]
     structure_map:
       - sorting_by_the_first_trait: conditioning
       - picking_only_from_one_bin: conditional_probability
@@ -745,7 +745,7 @@ analogies:
 
   - id: tasting_soup
     mechanic: urn_dice
-    target_nodes: [prob.stat.sample_estimates]
+    target_nodes: [prob.samp.sample_vs_population]
     structure_map:
       - pot: population
       - spoonful: sample
@@ -792,7 +792,7 @@ analogies:
 
   - id: water_leveling_cups
     mechanic: fill_accumulate
-    target_nodes: [prob.stat.mean_as_leveling, prob.stat.median_vs_mean]
+    target_nodes: [prob.stat.mean_as_leveling, prob.stat.mean_as_leveling]
     structure_map:
       - cup: data_point
       - water_height: value
@@ -810,7 +810,7 @@ analogies:
 
   - id: city_routes
     mechanic: network_routes
-    target_nodes: [graph.basic.graph_and_paths, graph.path.shortest, graph.conn.components]
+    target_nodes: [graph.basic.graph_and_paths, graph.path.shortest_path, graph.conn.components, adv.alg.cayley_graph, csmath.alg.breadth_first_search, disc.count.choose_as_pascal_paths, geom.top.euler_characteristic, geom.tri.inequality_shortest_path, graph.euler.bridges_konigsberg, graph.euler.hamilton_visits_every_node, graph.planar.no_crossing_euler_formula, graph.search.bfs_dfs_frontier, graph.walk.repeat_rules]
     structure_map:
       - place: vertex
       - road: edge
@@ -842,7 +842,7 @@ analogies:
 
   - id: river_tributaries
     mechanic: network_routes
-    target_nodes: [graph.tree.no_cycles, disc.rec.tree_recursion]
+    target_nodes: [graph.tree.tree_no_cycles, disc.rec.tree_recursion, graph.flow.max_flow_min_cut]
     structure_map:
       - spring_where_a_stream_starts: leaf
       - two_streams_joining: parent_node
@@ -858,7 +858,7 @@ analogies:
 
   - id: outfit_combinations
     mechanic: tiles
-    target_nodes: [disc.count.multiplication_principle, prob.basic.sample_space_grid]
+    target_nodes: [disc.count.product_rule, prob.basic.sample_space_grid, prob.basic.count_outcomes_by_structure]
     structure_map:
       - row_of_tops: first_choice
       - column_of_bottoms: second_choice
@@ -874,7 +874,7 @@ analogies:
 
   - id: hula_hoops_overlap
     mechanic: sorter
-    target_nodes: [disc.set.venn_overlap, disc.logic.and_or, prob.basic.union_intersection]
+    target_nodes: [disc.set.union_intersection, disc.logic.and_or_not, prob.basic.union_intersection, prob.basic.complement_fills_the_rest]
     structure_map:
       - hoop: set
       - standing_inside_a_hoop: membership
@@ -890,7 +890,7 @@ analogies:
 
   - id: odometer_dials
     mechanic: gears_sequence
-    target_nodes: [arith.place.base_ten_carry, csmath.bin.place_value_binary]
+    target_nodes: [arith.place.base_ten_carry, csmath.bin.place_value_binary, arith.dec.tenths_as_place, prealg.exp.powers_of_ten]
     structure_map:
       - dial: digit_position
       - ten_clicks_turn_the_next_dial: carry
@@ -905,7 +905,7 @@ analogies:
 
   - id: clock_face_wrap
     mechanic: gears_sequence
-    target_nodes: [csmath.mod.clock_arithmetic, trig.circle.periodic_wrap]
+    target_nodes: [csmath.mod.wraparound, trig.fn.periodic_wraps, disc.mod.clock_equivalence, geom.circle.radius_and_arc, trig.circle.radian_as_arc_length, trig.circle.unit_circle_radians]
     structure_map:
       - clock_face: modulus
       - hours_moved_forward: addition_mod_n
@@ -922,7 +922,7 @@ analogies:
 
   - id: beads_necklace_pattern
     mechanic: gears_sequence
-    target_nodes: [found.pat.repeat_unit, arith.seq.arithmetic]
+    target_nodes: [found.pat.repeat_unit, arith.mul.repeated_groups, precalc.seq.arithmetic_sequence]
     structure_map:
       - bead: term
       - repeating_group_of_beads: period
@@ -937,7 +937,7 @@ analogies:
 
   - id: wheel_rider_height
     mechanic: slope_walker
-    target_nodes: [trig.circle.height_on_wheel, trig.fn.sine_wave]
+    target_nodes: [trig.fn.sine_as_height, trig.fn.wave_unrolls_circle]
     structure_map:
       - rider_on_the_rim: point_on_unit_circle
       - angle_the_wheel_has_turned: theta
@@ -954,7 +954,7 @@ analogies:
 
   - id: walker_on_hill_compass
     mechanic: slope_walker
-    target_nodes: [mvcalc.grad.steepest_ascent, mvcalc.pd.partial_slope]
+    target_nodes: [mvcalc.grad.terrain_walker, mvcalc.part.slice_of_surface, adv.opt.gradient_descent_downhill]
     structure_map:
       - hill_surface: function_of_two_variables
       - slope_when_facing_east: partial_derivative_x
@@ -970,7 +970,7 @@ analogies:
 
   - id: stacked_slices_loaf
     mechanic: fill_accumulate
-    target_nodes: [mvcalc.int.volume_by_slices, calc2.int.solids_of_revolution]
+    target_nodes: [mvcalc.int.iterated_slices, calc2.parpol.solid_of_revolution, calc2.int.volume_by_slices, geom.solid.volume_as_layers]
     structure_map:
       - loaf: solid
       - one_slice: cross_section

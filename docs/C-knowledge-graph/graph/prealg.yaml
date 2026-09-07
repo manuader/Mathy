@@ -52,7 +52,7 @@ nodes:
     analogy: balance_pans
     misconceptions: [equals_as_operator, inverse_applied_one_side]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [alg.eq.one_step, trig.id.identity_as_balance, disc.mod.congruence_both_sides, linalg.sys.row_operations]
+    transfer_to: [alg.eq.one_step, trig.id.double_angle, disc.mod.clock_equivalence, linalg.sys.row_operations]
     calc_unlocks: [op_equals]
     cheatsheet: [cs.prealg.equals_means_level_pans, cs.prealg.same_action_both_sides]
     manim: [balance_equal_pans_stay_level, balance_remove_one_side_tilts]

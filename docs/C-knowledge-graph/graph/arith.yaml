@@ -143,7 +143,7 @@ nodes:
     analogy: chest_nested
     misconceptions: [unwrap_order_inverted]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [prealg.var.unknown_as_box, alg.eq.multi_step, csmath.alg.pipeline_of_steps, calc1.deriv.rules_as_structure]
+    transfer_to: [prealg.var.unknown_as_box, alg.eq.multi_step, csmath.inv.loop_invariant, calc1.deriv.rules_as_structure]
     calc_unlocks: [op_paren]
     cheatsheet: [cs.arith.expression_is_a_tree, cs.arith.inner_chest_first]
     manim: [chest_nested_open_inside_first, pipe_two_machines_order_matters]

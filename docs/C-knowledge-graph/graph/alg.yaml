@@ -3,7 +3,7 @@
 # expressions, absolute value).
 # DATA only: no user-visible text. Names live in ../../locales/es/nodes/alg.yaml.
 # Enums: ../schema/node.schema.yaml. Spine order and prereqs: ../spine.yaml.
-# alg.expr.like_terms (referenced by G) lives in prealg as prealg.expr.like_terms (alias).
+# prealg.expr.like_terms (referenced by G) lives in prealg as prealg.expr.like_terms (alias).
 
 area: alg
 
@@ -32,7 +32,7 @@ nodes:
     analogy: balance_pans
     misconceptions: [sign_flip_on_move, wrong_inverse_choice, inverse_applied_one_side]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [linalg.map.inverse_and_systems, disc.mod.congruence_both_sides, trig.id.identity_as_balance]
+    transfer_to: [linalg.map.inverse_and_systems, disc.mod.clock_equivalence, trig.id.double_angle]
     calc_unlocks: [op_solve_linear_1var]
     cheatsheet: [cs.alg.one_key_both_sides, cs.alg.check_by_substituting]
     manim: [balance_key_both_sides, chest_pick_key_for_lock]
@@ -68,7 +68,7 @@ nodes:
     analogy: tile_floor_two_rooms
     misconceptions: [distribute_over_wrong_op, variable_as_label]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [calc1.deriv.rules_as_structure, geom.area.rectangle, linalg.map.linear_transformation_2d, adv.ring.polynomial_arithmetic]
+    transfer_to: [calc1.deriv.rules_as_structure, geom.area.rect_and_triangle, linalg.map.linear_transformation_2d, adv.alg.polynomial_arithmetic]
     calc_unlocks: [op_expand]
     cheatsheet: [cs.alg.distributive_law, cs.alg.area_model_of_product]
     manim: [tile_two_rooms_one_width, ledger_a_times_sum]
@@ -86,7 +86,7 @@ nodes:
     analogy: two_balances_shared_boxes
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [linalg.map.inverse_and_systems, linalg.sys.row_operations, linalg.space.in_span_or_not]
+    transfer_to: [linalg.map.inverse_and_systems, linalg.sys.row_operations, linalg.basis.in_span_or_not]
     calc_unlocks: [op_solve_system_2x2]
     cheatsheet: [cs.alg.substitution_method, cs.alg.elimination_method]
     manim: [balance_two_scales_shared_boxes, grid_two_lines_cross]
@@ -104,7 +104,7 @@ nodes:
     analogy: function_machine
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [linalg.map.linear_transformation_2d, prob.rv.random_variable_as_machine, disc.rel.function_vs_relation, trig.fn.sine_as_height]
+    transfer_to: [linalg.map.linear_transformation_2d, prob.rv.random_variable_as_machine, disc.rel.relation_as_arrows, trig.fn.sine_as_height]
     calc_unlocks: [op_define_function]
     cheatsheet: [cs.alg.function_notation_f_of_x, cs.alg.one_input_one_output]
     manim: [pipe_machine_named_f, network_each_input_one_arrow]
@@ -158,7 +158,7 @@ nodes:
     analogy: machine_chain
     misconceptions: [chain_rule_missing_inner]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [calc1.deriv.rules_as_structure, linalg.map.compose_as_multiply, csmath.alg.pipeline_of_steps, disc.rel.relation_as_arrows]
+    transfer_to: [calc1.deriv.rules_as_structure, linalg.map.compose_as_multiply, csmath.inv.loop_invariant, disc.rel.relation_as_arrows]
     calc_unlocks: [op_compose]
     cheatsheet: [cs.alg.compose_inner_first, cs.alg.composition_order_matters]
     manim: [pipe_chain_two_machines, gear_train_composed_ratio]
@@ -212,7 +212,7 @@ nodes:
     analogy: paper_folding_doubles
     misconceptions: [exponent_rules_mixed]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [precalc.seq.geometric_sequence, calc2.seq.geometric, prob.dist.binomial_counts, precalc.exp.natural_base]
+    transfer_to: [precalc.seq.geometric_sequence, calc2.ser.geometric_sum, prob.dist.binomial_counts, precalc.exp.natural_base]
     calc_unlocks: [op_exp]
     cheatsheet: [cs.alg.exponential_multiplies_each_step, cs.alg.linear_adds_exponential_multiplies, cs.alg.fractional_base_decays]
     manim: [gear_doubling_track, slope_linear_vs_exponential_race]
@@ -230,7 +230,7 @@ nodes:
     analogy: machine_reverse_run
     misconceptions: [log_of_sum]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [precalc.exp.natural_base, csmath.cplx.big_o_as_slope, csmath.alg.binary_search, calc1.deriv.rules_as_structure]
+    transfer_to: [precalc.exp.natural_base, csmath.cplx.big_o_as_slope, csmath.rec.base_case_and_smaller_call, calc1.deriv.rules_as_structure]
     calc_unlocks: [op_log]
     cheatsheet: [cs.alg.log_counts_scalings, cs.alg.log_undoes_exponential, cs.alg.log_of_product_is_sum]
     manim: [chest_log_key_counts_turns, gear_track_read_backwards]

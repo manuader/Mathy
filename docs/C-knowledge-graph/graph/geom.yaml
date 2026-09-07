@@ -38,7 +38,7 @@ nodes:
     analogy: number_line_walk
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [trig.circle.unit_circle_radians, disc.mod.clock_arithmetic, adv.cx.multiplication_rotates_scales]
+    transfer_to: [trig.circle.unit_circle_radians, disc.mod.clock_equivalence, adv.cplx.multiplication_rotates_scales]
     calc_unlocks: [op_angle_degrees, op_fraction_of_turn]
     cheatsheet: [cs.geom.full_turn_360, cs.geom.angle_names_right_straight, cs.geom.exterior_angle_completes_turn]
     manim: [gear_scene_turn_as_angle, construction_scene_extend_side_exterior_angle]
@@ -70,7 +70,7 @@ nodes:
     next: geom.area.shear_invariant
     doc: docs/D-curriculum/D1-espina/38-geom.area.rect_and_triangle.md
     aliases: [geom.area.rectangle, geom.area.triangle]
-  - {id: geom.area.perimeter_vs_area, area: geom, level: 1, prereqs: [geom.area.rect_and_triangle, arith.add.displacement], grammar: displace, mechanics: [gears_sequence, tiles], literacy: none, analogy: tile_floor, misconceptions: [], cheatsheet: [cs.geom.perimeter_sum_of_sides], calc_unlocks: [op_perimeter]}
+  - {id: geom.area.perimeter_vs_area, area: geom, level: 1, prereqs: [geom.area.rect_and_triangle], grammar: displace, mechanics: [gears_sequence, tiles], literacy: none, analogy: tile_floor, misconceptions: [], cheatsheet: [cs.geom.perimeter_sum_of_sides], calc_unlocks: [op_perimeter]}
   - {id: geom.area.shear_invariant, area: geom, level: 2, prereqs: [geom.area.rect_and_triangle], grammar: invariant, mechanics: [tiles, grid_stretch, construct], literacy: none, analogy: tile_floor, misconceptions: [area_uses_slant_side], cheatsheet: [cs.geom.area_parallelogram_base_height], calc_unlocks: [op_area_parallelogram]}
   - {id: geom.area.trapezoid_as_two_triangles, area: geom, level: 2, prereqs: [geom.area.shear_invariant], grammar: partition, mechanics: [construct, tiles], literacy: icons, analogy: tile_floor, misconceptions: [area_uses_slant_side], cheatsheet: [cs.geom.area_trapezoid, cs.geom.strategy_draw_diagonal], calc_unlocks: [op_area_trapezoid]}
   - {id: geom.area.circle_by_slices, area: geom, level: 2, prereqs: [geom.area.shear_invariant, geom.circle.radius_and_arc], grammar: partition, mechanics: [tiles, construct, fill_accumulate], literacy: icons, analogy: pizza_slices, misconceptions: [], cheatsheet: [cs.geom.area_circle_pi_r_squared, cs.geom.pi_as_ratio], calc_unlocks: [op_area_circle, op_pi]}
@@ -81,7 +81,7 @@ nodes:
   - {id: geom.solid.cone_sphere_by_pouring, area: geom, level: 3, prereqs: [geom.solid.volume_as_layers, geom.area.circle_by_slices], grammar: scale, mechanics: [fill_accumulate], literacy: icons, analogy: tank_filling, misconceptions: [], cheatsheet: [cs.geom.volume_cone_third_cylinder, cs.geom.volume_sphere_two_thirds_cylinder], calc_unlocks: [op_volume_cone, op_volume_sphere]}
 
   # ---- tri ------------------------------------------------------------------
-  - {id: geom.tri.congruence_rigid_fit, area: geom, level: 2, prereqs: [geom.class.polygon_by_sides, geom.angle.triangle_sum_half_turn], grammar: invariant, mechanics: [construct, sorter], literacy: icons, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.geom.congruence_sss_sas_asa], calc_unlocks: []}
+  - {id: geom.tri.congruence_rigid_fit, area: geom, level: 2, prereqs: [geom.angle.triangle_sum_half_turn], grammar: invariant, mechanics: [construct, sorter], literacy: icons, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.geom.congruence_sss_sas_asa], calc_unlocks: []}
   - {id: geom.tri.inequality_shortest_path, area: geom, level: 2, prereqs: [geom.class.polygon_by_sides, arith.add.displacement], grammar: displace, mechanics: [construct, slope_walker], literacy: none, analogy: city_routes, misconceptions: [], cheatsheet: [cs.geom.triangle_inequality], calc_unlocks: []}
   - id: geom.tri.pythagoras_as_tiles
     area: geom
@@ -114,7 +114,7 @@ nodes:
     analogy: shadow_and_stick
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [trig.ratio.similar_shadows, linalg.map.linear_transformation_2d, prealg.prop.scaling_recipe, arith.frac.equivalent]
+    transfer_to: [trig.ratio.similar_shadows, linalg.map.linear_transformation_2d, prealg.ratio.scaling_recipe, arith.frac.equivalent]
     calc_unlocks: [op_scale_factor, op_missing_side_by_ratio]
     cheatsheet: [cs.geom.similar_ratios_equal, cs.geom.area_scales_by_k_squared, cs.geom.strategy_parallel_cuts_similar_triangle]
     manim: [grid_scene_dilate_triangle, construction_scene_parallel_cut_similar]
@@ -124,7 +124,7 @@ nodes:
 
   # ---- circle ---------------------------------------------------------------
   - {id: geom.circle.radius_and_arc, area: geom, level: 2, prereqs: [geom.angle.turn_as_measure, geom.class.polygon_by_sides], grammar: scale, mechanics: [gears_sequence, construct], literacy: icons, analogy: clock_face_wrap, misconceptions: [], cheatsheet: [cs.geom.circumference_2_pi_r, cs.geom.arc_length_fraction_of_turn], calc_unlocks: [op_circumference, op_arc_length]}
-  - {id: geom.circle.inscribed_half_central, area: geom, level: 3, prereqs: [geom.circle.radius_and_arc, geom.angle.triangle_sum_half_turn, geom.tri.congruence_rigid_fit], grammar: invariant, mechanics: [construct, gears_sequence], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.geom.inscribed_angle_half_central, cs.geom.strategy_draw_radii_isosceles], calc_unlocks: []}
+  - {id: geom.circle.inscribed_half_central, area: geom, level: 3, prereqs: [geom.circle.radius_and_arc, geom.tri.congruence_rigid_fit], grammar: invariant, mechanics: [construct, gears_sequence], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.geom.inscribed_angle_half_central, cs.geom.strategy_draw_radii_isosceles], calc_unlocks: []}
   - {id: geom.circle.radius_bisects_chord, area: geom, level: 3, prereqs: [geom.circle.radius_and_arc, geom.tri.pythagoras_as_tiles, geom.tri.congruence_rigid_fit], grammar: invariant, mechanics: [construct], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.geom.perpendicular_from_center_bisects_chord, cs.geom.strategy_drop_perpendicular_from_center], calc_unlocks: [op_chord_length]}
 
   # ---- trans ----------------------------------------------------------------
@@ -133,7 +133,7 @@ nodes:
   - {id: geom.trans.undo_transformation, area: geom, level: 2, prereqs: [geom.trans.dilation, prealg.inv.operation_as_key], grammar: invert, mechanics: [chest_key, grid_stretch], literacy: icons, analogy: chest_single_lock, misconceptions: [wrong_inverse_choice], cheatsheet: [cs.geom.inverse_transformations_table], calc_unlocks: []}
 
   # ---- coord ----------------------------------------------------------------
-  - {id: geom.coord.distance_as_pythagoras, area: geom, level: 3, prereqs: [geom.tri.pythagoras_as_tiles, alg.fn.graph_as_picture], grammar: invariant, mechanics: [construct, grid_stretch, slope_walker], literacy: short_text, layers: [visual, symbolic, formal, transfer], misconceptions: [distribute_over_wrong_op], cheatsheet: [cs.geom.distance_formula, cs.geom.midpoint_formula], calc_unlocks: [op_distance_between_points, op_midpoint]}
+  - {id: geom.coord.distance_as_pythagoras, area: geom, level: 3, prereqs: [geom.tri.pythagoras_as_tiles], grammar: invariant, mechanics: [construct, grid_stretch, slope_walker], literacy: short_text, layers: [visual, symbolic, formal, transfer], misconceptions: [distribute_over_wrong_op], cheatsheet: [cs.geom.distance_formula, cs.geom.midpoint_formula], calc_unlocks: [op_distance_between_points, op_midpoint]}
 
   # ---- cons -----------------------------------------------------------------
   - id: geom.cons.auxiliary_lines
@@ -147,14 +147,14 @@ nodes:
     analogy: tile_floor
     misconceptions: [area_uses_slant_side]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [trig.law.sines_from_altitude, calc1.deriv.tangent_line, disc.proof.chain_of_constructions, linalg.vec.projection_as_shadow]
+    transfer_to: [trig.law.sines_from_altitude, calc1.deriv.tangent_line, disc.proof.chain_of_constructions, linalg.orth.projection_as_shadow]
     calc_unlocks: [op_composite_area]
     cheatsheet: [cs.geom.strategy_draw_altitude, cs.geom.strategy_draw_diagonal, cs.geom.strategy_extend_side, cs.geom.strategy_mark_equal_parts]
     t_star: 60
     manim: [construction_scene_composite_figure_altitude, construction_scene_choose_the_line]
     next: geom.cons.hidden_data_hunt
     doc: docs/D-curriculum/D1-espina/42-geom.cons.auxiliary_lines.md
-  - {id: geom.cons.hidden_data_hunt, area: geom, level: 3, prereqs: [geom.cons.auxiliary_lines, geom.circle.radius_bisects_chord, geom.angle.parallel_transversal], grammar: invariant, mechanics: [construct, tiles], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [area_uses_slant_side], cheatsheet: [cs.geom.strategy_list_what_you_know, cs.geom.strategy_work_backwards_from_goal], calc_unlocks: [], t_star: 90}
+  - {id: geom.cons.hidden_data_hunt, area: geom, level: 3, prereqs: [geom.cons.auxiliary_lines, geom.circle.radius_bisects_chord], grammar: invariant, mechanics: [construct, tiles], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [area_uses_slant_side], cheatsheet: [cs.geom.strategy_list_what_you_know, cs.geom.strategy_work_backwards_from_goal], calc_unlocks: [], t_star: 90}
 
   # ---- top ------------------------------------------------------------------
   - {id: geom.top.euler_characteristic, area: geom, level: 3, prereqs: [geom.class.polygon_by_sides, graph.basic.graph_and_paths], grammar: relate, mechanics: [network_routes, construct], literacy: icons, analogy: city_routes, misconceptions: [], cheatsheet: [cs.geom.euler_v_minus_e_plus_f], calc_unlocks: []}

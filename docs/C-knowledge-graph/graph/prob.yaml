@@ -2,7 +2,7 @@
 # Schema y enums: ../schema/node.schema.yaml. Presupuesto D0: 22 (±20 %). Tres nodos de espina (34–36).
 # Ids de E/G/L con otros clusters (lln, mc, bayes, stat.*) se reconcilian con aliases; `stat` se conserva como
 # cluster de estadística descriptiva y regresión porque E y L lo usan.
-# prob.lln.long_run_proportion es alias del nodo de espina 34: el invariante de urn_dice (proportion_stable_in_long_run) ES ese nodo.
+# prob.basic.probability_as_proportion es alias del nodo de espina 34: el invariante de urn_dice (proportion_stable_in_long_run) ES ese nodo.
 
 area: prob
 
@@ -30,7 +30,7 @@ nodes:
     analogy: urn_of_balls
     misconceptions: [equiprobable_assumed]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [geom.area.area_by_random_darts, disc.count.count_outcomes, csmath.rand.random_sampling, arith.pct.percent_of_total]
+    transfer_to: [geom.area.area_by_random_darts, disc.count.sum_rule, csmath.info.entropy_as_surprise, arith.pct.percent_of_total]
     calc_unlocks: [op_probability_of_event]
     cheatsheet: [cs.prob.probability_as_fraction, cs.prob.probability_between_0_and_1, cs.prob.long_run_proportion]
     t_star: 20
@@ -58,7 +58,7 @@ nodes:
     analogy: sorted_bins_then_pick
     misconceptions: [conditional_reversed, independent_means_disjoint]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [disc.logic.if_then_direction, disc.set.subset_venn, csmath.rand.random_sampling]
+    transfer_to: [disc.logic.if_then_direction, disc.set.membership_rule, csmath.info.entropy_as_surprise]
     calc_unlocks: [op_conditional_probability]
     cheatsheet: [cs.prob.conditional_definition, cs.prob.independence_product_rule, cs.prob.multiplication_rule]
     manim: [sorter_scene_bins_then_pick, urn_scene_restricted_urn, network_scene_tree_of_draws]
@@ -83,7 +83,7 @@ nodes:
     analogy: balance_point_of_weights
     misconceptions: [equiprobable_assumed]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [adv.stoch.random_walk, csmath.rand.random_sampling, geom.area.area_by_random_darts]
+    transfer_to: [adv.num.monte_carlo_pi, csmath.info.entropy_as_surprise, geom.area.area_by_random_darts]
     calc_unlocks: [op_expected_value]
     cheatsheet: [cs.prob.expected_value_formula, cs.prob.linearity_of_expectation]
     t_star: 40

@@ -37,6 +37,6 @@ nodes:
   disc.mod.clock_equivalence:
     name: "Misma hora en el reloj"
   disc.mod.modular_inverse:
-    name: "La llave que deshace en el reloj"
+    name: "La llave del reloj"
   disc.sum.sigma_notation:
     name: "Sigma: sumar con una regla"

@@ -48,7 +48,7 @@ nodes:
     name: "Binomio y triángulo de Pascal"
 
   precalc.exp.natural_base:
-    name: "La base que crece como ella misma"
+    name: "La base que crece sola"
 
   precalc.fn.increasing_decreasing:
     name: "Sube, baja, da la vuelta"

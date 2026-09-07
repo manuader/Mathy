@@ -1,6 +1,6 @@
 # Trigonometría. DATA, sin texto visible: nombres y probes en ../../locales/es/nodes/trig.yaml.
 # Nivel 4 (razones en triángulo rectángulo en 3). El ángulo como giro vive en geom.angle.turn_as_measure
-# (alias trig.ang.angle_as_turn). Espina: 43 circle.unit_circle_radians · 44 fn.sine_as_height.
+# (alias geom.angle.turn_as_measure). Espina: 43 circle.unit_circle_radians · 44 fn.sine_as_height.
 
 area: trig
 
@@ -33,7 +33,7 @@ nodes:
     analogy: clock_face_wrap
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [adv.cx.multiplication_rotates_scales, linalg.map.linear_transformation_2d, disc.mod.clock_arithmetic, calc2.par.parametric_speed]
+    transfer_to: [adv.cplx.multiplication_rotates_scales, linalg.map.linear_transformation_2d, disc.mod.clock_equivalence, calc2.parpol.parametric_speed]
     calc_unlocks: [op_degrees_to_radians, op_radians_to_degrees, op_point_on_unit_circle]
     cheatsheet: [cs.trig.radian_as_arc_over_radius, cs.trig.unit_circle_key_points, cs.trig.degrees_radians_conversion]
     manim: [construction_scene_radius_and_dropped_height, gear_scene_unroll_radius_on_arc]
@@ -43,7 +43,7 @@ nodes:
   - {id: trig.circle.radian_as_arc_length, area: trig, level: 4, prereqs: [trig.circle.unit_circle_radians, geom.circle.radius_and_arc], grammar: scale, mechanics: [gears_sequence, construct], literacy: icons, analogy: clock_face_wrap, misconceptions: [], cheatsheet: [cs.trig.arc_length_r_theta, cs.trig.sector_area_half_r_squared_theta], calc_unlocks: [op_arc_length_radians, op_sector_area]}
 
   # ---- ang ------------------------------------------------------------------
-  - {id: trig.ang.quadrant_signs, area: trig, level: 4, prereqs: [trig.fn.sine_as_height, arith.int.negatives], grammar: partition, mechanics: [sorter, construct], literacy: icons, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.trig.quadrant_signs_table, cs.trig.reference_angle], calc_unlocks: [op_reference_angle]}
+  - {id: trig.ang.quadrant_signs, area: trig, level: 4, prereqs: [trig.fn.sine_as_height], grammar: partition, mechanics: [sorter, construct], literacy: icons, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.trig.quadrant_signs_table, cs.trig.reference_angle], calc_unlocks: [op_reference_angle]}
 
   # ---- fn -------------------------------------------------------------------
   - id: trig.fn.sine_as_height
@@ -57,17 +57,17 @@ nodes:
     analogy: wheel_rider_height
     misconceptions: []
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [precalc.param.time_as_hidden_input, calc2.par.parametric_speed, adv.four.transform_as_machine]
+    transfer_to: [precalc.param.time_as_hidden_input, calc2.parpol.parametric_speed, adv.four.transform_as_machine]
     calc_unlocks: [op_sin, op_cos]
     cheatsheet: [cs.trig.sin_cos_as_coordinates, cs.trig.sin_cos_values_key_angles, cs.trig.cos_is_sin_shifted]
     manim: [construction_scene_height_from_radius_tip, slope_scene_wheel_rider_trace, pipe_scene_angle_to_height]
     next: trig.fn.wave_unrolls_circle
     doc: docs/D-curriculum/D1-espina/44-trig.fn.sine_as_height.md
     aliases: [trig.circle.height_on_wheel, trig.fn.unit_circle_machine]
-  - {id: trig.fn.wave_unrolls_circle, area: trig, level: 4, prereqs: [trig.fn.sine_as_height, alg.fn.graph_as_picture], grammar: displace, mechanics: [slope_walker, gears_sequence, construct], literacy: icons, analogy: wheel_rider_height, misconceptions: [], cheatsheet: [cs.trig.sine_graph_shape, cs.trig.cosine_graph_shape], calc_unlocks: [op_plot_trig], aliases: [trig.fn.sine_wave]}
+  - {id: trig.fn.wave_unrolls_circle, area: trig, level: 4, prereqs: [trig.fn.sine_as_height], grammar: displace, mechanics: [slope_walker, gears_sequence, construct], literacy: icons, analogy: wheel_rider_height, misconceptions: [], cheatsheet: [cs.trig.sine_graph_shape, cs.trig.cosine_graph_shape], calc_unlocks: [op_plot_trig], aliases: [trig.fn.sine_wave]}
   - {id: trig.fn.periodic_wraps, area: trig, level: 4, prereqs: [trig.fn.wave_unrolls_circle], grammar: invariant, mechanics: [gears_sequence, sorter], literacy: icons, analogy: clock_face_wrap, misconceptions: [], cheatsheet: [cs.trig.period_2pi_reduce_angle], calc_unlocks: [op_reduce_angle_mod_2pi], aliases: [trig.circle.periodic_wrap]}
   - {id: trig.fn.tangent_as_slope, area: trig, level: 4, prereqs: [trig.fn.sine_as_height, alg.fn.linear_slope, trig.ratio.similar_shadows], grammar: rate, mechanics: [slope_walker, construct], literacy: icons, analogy: walker_on_ramp, misconceptions: [], cheatsheet: [cs.trig.tan_as_sin_over_cos, cs.trig.tan_vertical_asymptotes], calc_unlocks: [op_tan, op_angle_from_slope]}
-  - {id: trig.fn.transform_wave, area: trig, level: 4, prereqs: [trig.fn.periodic_wraps, precalc.fntr.stretch_as_scale, precalc.fntr.shift_as_displace], grammar: scale, mechanics: [grid_stretch, slope_walker], literacy: short_text, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.trig.amplitude_period_phase], calc_unlocks: [op_fit_sinusoid]}
+  - {id: trig.fn.transform_wave, area: trig, level: 4, prereqs: [trig.fn.periodic_wraps, precalc.fntr.stretch_as_scale], grammar: scale, mechanics: [grid_stretch, slope_walker], literacy: short_text, layers: [visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.trig.amplitude_period_phase], calc_unlocks: [op_fit_sinusoid]}
 
   # ---- id -------------------------------------------------------------------
   - {id: trig.id.pythagorean_identity, area: trig, level: 4, prereqs: [trig.fn.sine_as_height, geom.tri.pythagoras_as_tiles], grammar: invariant, mechanics: [construct, tiles, balance], literacy: icons, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [distribute_over_wrong_op], cheatsheet: [cs.trig.sin2_plus_cos2, cs.trig.strategy_pythagoras_on_unit_triangle], calc_unlocks: [op_cos_from_sin]}
@@ -82,10 +82,10 @@ nodes:
   - {id: trig.law.cosines_extends_pythagoras, area: trig, level: 4, prereqs: [trig.law.sines_from_altitude, trig.id.pythagorean_identity, geom.coord.distance_as_pythagoras], grammar: invariant, mechanics: [construct, tiles], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [distribute_over_wrong_op], cheatsheet: [cs.trig.law_of_cosines, cs.trig.strategy_which_law], calc_unlocks: [op_law_of_cosines]}
 
   # ---- polar ----------------------------------------------------------------
-  - {id: trig.polar.point_by_angle_and_radius, area: trig, level: 4, prereqs: [trig.fn.sine_as_height, trig.ang.quadrant_signs, geom.coord.distance_as_pythagoras], grammar: displace, mechanics: [construct, grid_stretch, gears_sequence], literacy: short_text, analogy: treasure_map_arrows, misconceptions: [], cheatsheet: [cs.trig.polar_to_cartesian, cs.trig.cartesian_to_polar], calc_unlocks: [op_polar_to_cartesian, op_cartesian_to_polar]}
+  - {id: trig.polar.point_by_angle_and_radius, area: trig, level: 4, prereqs: [trig.ang.quadrant_signs, geom.coord.distance_as_pythagoras], grammar: displace, mechanics: [construct, grid_stretch, gears_sequence], literacy: short_text, analogy: treasure_map_arrows, misconceptions: [], cheatsheet: [cs.trig.polar_to_cartesian, cs.trig.cartesian_to_polar], calc_unlocks: [op_polar_to_cartesian, op_cartesian_to_polar]}
 
   # ---- rot ------------------------------------------------------------------
-  - {id: trig.rot.rotation_matrix, area: trig, level: 4, prereqs: [trig.fn.sine_as_height, geom.trans.rotation_reflection, trig.ang.quadrant_signs], grammar: deform, mechanics: [grid_stretch, construct], literacy: short_text, analogy: rubber_grid_with_house, misconceptions: [], cheatsheet: [cs.trig.rotation_matrix_columns], calc_unlocks: [op_rotate_point_by_angle], aliases: [trig.fn.rotation_by_angle]}
+  - {id: trig.rot.rotation_matrix, area: trig, level: 4, prereqs: [trig.ang.quadrant_signs, geom.trans.rotation_reflection], grammar: deform, mechanics: [grid_stretch, construct], literacy: short_text, analogy: rubber_grid_with_house, misconceptions: [], cheatsheet: [cs.trig.rotation_matrix_columns], calc_unlocks: [op_rotate_point_by_angle], aliases: [trig.fn.rotation_by_angle]}
 
   # ---- euler ----------------------------------------------------------------
-  - {id: trig.euler.cis_as_rotation, area: trig, level: 4, prereqs: [trig.rot.rotation_matrix, trig.id.angle_sum, precalc.cplx.plane_intro, trig.polar.point_by_angle_and_radius], grammar: deform, mechanics: [grid_stretch, gears_sequence, balance], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [modulus_of_sum_adds], cheatsheet: [cs.trig.euler_formula, cs.trig.multiply_complex_add_angles], calc_unlocks: [op_complex_polar_form]}
+  - {id: trig.euler.cis_as_rotation, area: trig, level: 4, prereqs: [trig.id.angle_sum, precalc.cplx.plane_intro, trig.polar.point_by_angle_and_radius], grammar: deform, mechanics: [grid_stretch, gears_sequence, balance], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [modulus_of_sum_adds], cheatsheet: [cs.trig.euler_formula, cs.trig.multiply_complex_add_angles], calc_unlocks: [op_complex_polar_form]}

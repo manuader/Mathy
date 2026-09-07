@@ -30,7 +30,7 @@ nodes:
     analogy: treasure_map_arrows
     misconceptions: [modulus_of_sum_adds]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [trig.fn.rotation_by_angle, adv.cplx.plane_and_modulus, mvcalc.field.arrow_at_every_point, geom.trans.dilation]
+    transfer_to: [trig.rot.rotation_matrix, adv.cplx.plane_and_modulus, mvcalc.field.arrow_at_every_point, geom.trans.dilation]
     calc_unlocks: [op_vector_length]
     cheatsheet: [cs.linalg.vector_components, cs.linalg.vector_length]
     manim: [grid_scene_arrow_on_map, gear_scene_steps_east_then_north]
@@ -52,7 +52,7 @@ nodes:
     analogy: two_kinds_of_steps
     misconceptions: [variable_as_label]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [prob.rv.expectation_as_weighted_average, mvcalc.field.arrow_at_every_point, adv.ring.polynomial_arithmetic]
+    transfer_to: [prob.rv.expectation_as_weighted_average, mvcalc.field.arrow_at_every_point, adv.alg.polynomial_arithmetic]
     calc_unlocks: [op_linear_combination]
     cheatsheet: [cs.linalg.linear_combination, cs.linalg.span]
     manim: [grid_scene_two_kinds_of_steps, ledger_scene_recipe_of_steps]
@@ -72,7 +72,7 @@ nodes:
     analogy: rubber_grid_with_house
     misconceptions: [matrix_multiplication_commutes]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [geom.trans.dilation, trig.fn.rotation_by_angle, csmath.gfx.transform_matrix, adv.cx.multiplication_rotates_scales]
+    transfer_to: [geom.trans.dilation, trig.rot.rotation_matrix, csmath.gfx.transform_matrix, adv.cplx.multiplication_rotates_scales]
     calc_unlocks: [op_matrix_vector, op_matrix_from_basis_images]
     cheatsheet: [cs.linalg.matrix_columns_are_basis_images, cs.linalg.matrix_vector_product, cs.linalg.rotation_shear_reflection_matrices]
     t_star: 45

@@ -9,7 +9,7 @@ nodes:
   adv.cplx.multiplication_rotates_scales:
     name: "Multiplicar gira y estira"
   adv.cplx.euler_formula_circle:
-    name: "e elevado a i: girar sin parar"
+    name: "Euler: exponencial que gira"
   adv.cplx.roots_of_unity_polygon:
     name: "Raíces de la unidad: un polígono"
   adv.cplx.function_deforms_plane:

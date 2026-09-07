@@ -32,7 +32,7 @@ nodes:
     analogy: city_routes
     misconceptions: [path_vs_walk_confusion]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
-    transfer_to: [arith.mul.factor_tree, linalg.map.matrix_counts_routes, prob.mc.markov_chain_walk]
+    transfer_to: [arith.num.factor_tree, linalg.map.matrix_counts_routes, prob.cond.markov_chain_walk]
     calc_unlocks: [op_graph_edge_count, op_path_exists]
     cheatsheet: [cs.graph.graph_vocabulary]
     manim: [network_scene_islands_to_dots, network_scene_same_graph_redrawn]
@@ -51,4 +51,4 @@ nodes:
   - {id: graph.planar.no_crossing_euler_formula, area: graph, level: 4, prereqs: [graph.basic.graph_and_paths, geom.top.euler_characteristic], grammar: invariant, mechanics: [network_routes, construct], literacy: short_text, analogy: city_routes, misconceptions: [], cheatsheet: [cs.graph.euler_formula_planar], calc_unlocks: [op_planarity_check]}
   - {id: graph.matrix.two_step_routes_as_product, area: graph, level: 6, prereqs: [graph.walk.repeat_rules, linalg.map.compose_as_multiply], grammar: relate, mechanics: [network_routes, grid_stretch], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [matrix_multiplication_commutes], cheatsheet: [cs.graph.adjacency_matrix_powers], calc_unlocks: [op_adjacency_matrix, op_matrix_power_routes]}
   - {id: graph.flow.max_flow_min_cut, area: graph, level: 7, prereqs: [graph.path.shortest_path, arith.add.running_total], grammar: accumulate, mechanics: [network_routes, fill_accumulate], literacy: short_text, analogy: river_tributaries, misconceptions: [], cheatsheet: [cs.graph.max_flow_min_cut], calc_unlocks: [op_max_flow]}
-  - {id: graph.match.bipartite_matching, area: graph, level: 7, prereqs: [graph.color.map_coloring, found.rel.match_one_to_one], grammar: relate, mechanics: [network_routes, sorter], literacy: short_text, analogy: sorting_bins, misconceptions: [], cheatsheet: [cs.graph.bipartite_two_colors, cs.graph.matching_hall], calc_unlocks: [op_bipartite_check, op_max_matching]}
+  - {id: graph.match.bipartite_matching, area: graph, level: 7, prereqs: [graph.color.map_coloring, found.cmp.same_amount], grammar: relate, mechanics: [network_routes, sorter], literacy: short_text, analogy: sorting_bins, misconceptions: [], cheatsheet: [cs.graph.bipartite_two_colors, cs.graph.matching_hall], calc_unlocks: [op_bipartite_check, op_max_matching]}

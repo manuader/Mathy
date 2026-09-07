@@ -17,11 +17,9 @@ nodes:
   csmath.cplx.big_o_as_slope:
     name: "Big-O: qué tan empinado crece"
   csmath.rec.base_case_and_smaller_call:
-    name: "Llamarse a sí mismo más chico"
+    name: "Partir a la mitad hasta terminar"
   csmath.alg.state_machine:
     name: "Máquina que cambia de estado"
-  csmath.alg.binary_search:
-    name: "Buscar partiendo a la mitad"
   csmath.alg.sorting_algorithm:
     name: "Ordenar sin perder lo ordenado"
   csmath.alg.breadth_first_search:

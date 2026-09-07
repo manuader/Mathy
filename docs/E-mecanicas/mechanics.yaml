@@ -25,11 +25,11 @@ mechanics:
       - alg.eq.multi_step
       - alg.sys.two_by_two
       - alg.ineq.inequality_tilts
-      - trig.id.identity_as_balance
+      - trig.id.double_angle
       - linalg.map.inverse_and_systems
       - linalg.sys.row_operations
       - prob.rv.expectation_as_weighted_average
-      - disc.mod.congruence_both_sides
+      - disc.mod.clock_equivalence
       - adv.ode.separable_variables
     areas: [found, prealg, alg, trig, linalg, prob, disc, adv]
     manim_family: balance_scene
@@ -78,14 +78,14 @@ mechanics:
       - alg.fn.graph_as_picture
       - alg.fn.composition
       - alg.fn.inverse_function
-      - trig.fn.unit_circle_machine
+      - trig.fn.sine_as_height
       - precalc.fn.piecewise_machine
       - calc1.deriv.rules_as_structure
       - mvcalc.fn.two_inputs_one_output
       - linalg.map.linear_transformation_2d
       - prob.rv.random_variable_as_machine
-      - disc.rel.function_vs_relation
-      - csmath.alg.pipeline_of_steps
+      - disc.rel.relation_as_arrows
+      - csmath.inv.loop_invariant
       - adv.four.transform_as_machine
     areas: [found, arith, prealg, alg, trig, precalc, calc1, mvcalc, linalg, prob, disc, csmath, adv]
     manim_family: pipe_scene
@@ -110,7 +110,7 @@ mechanics:
       - prob.rv.expectation_as_weighted_average
       - prob.stat.frequency_table
       - disc.count.sum_rule
-      - adv.ring.polynomial_arithmetic
+      - adv.alg.polynomial_arithmetic
     areas: [found, arith, prealg, alg, linalg, prob, disc, adv]
     manim_family: ledger_scene
 
@@ -128,13 +128,13 @@ mechanics:
       - alg.expr.distributive_tiles
       - alg.expr.binomial_product
       - alg.fn.quadratic_and_sqrt
-      - geom.area.rectangle
-      - geom.area.triangle
-      - geom.thm.pythagoras_rearrangement
+      - geom.area.rect_and_triangle
+      - geom.area.rect_and_triangle
+      - geom.tri.pythagoras_as_tiles
       - trig.id.pythagorean_identity
       - calc1.deriv.rules_as_structure
       - calc1.int.accumulation
-      - mvcalc.int.double_integral_tiles
+      - mvcalc.int.double_integral_tank
       - linalg.map.determinant_as_area
       - prob.basic.probability_as_proportion
       - prob.cond.conditional_and_independence
@@ -160,9 +160,9 @@ mechanics:
       - calc1.deriv.rate_as_slope_limit
       - calc1.deriv.tangent_line
       - calc1.ftc.integral_undoes_derivative
-      - calc2.par.parametric_speed
-      - mvcalc.deriv.partial_as_axis_slope
-      - mvcalc.deriv.gradient_steepest_ascent
+      - calc2.parpol.parametric_speed
+      - mvcalc.part.slice_of_surface
+      - mvcalc.grad.terrain_walker
       - prob.stat.regression_line
       - csmath.cplx.big_o_as_slope
       - adv.ode.slope_field
@@ -179,16 +179,16 @@ mechanics:
       - found.meas.fill_compare
       - arith.add.running_total
       - prealg.pct.percent_fill
-      - geom.meas.volume_as_layers
-      - precalc.seq.sum_of_terms
+      - geom.solid.volume_as_layers
+      - precalc.seq.sum_as_pattern
       - calc1.int.accumulation
       - calc1.ftc.integral_undoes_derivative
       - calc2.int.volume_by_slices
       - calc2.ser.partial_sums
-      - mvcalc.int.volume_under_surface
+      - mvcalc.int.double_integral_tank
       - prob.rv.cumulative_distribution
       - disc.sum.sigma_notation
-      - csmath.alg.prefix_sum
+      - csmath.inv.loop_invariant
       - adv.ode.euler_method
     areas: [found, arith, prealg, geom, precalc, calc1, calc2, mvcalc, prob, disc, csmath, adv]
     manim_family: fill_scene
@@ -208,7 +208,7 @@ mechanics:
       - alg.fn.quadratic_and_sqrt
       - geom.trans.dilation
       - geom.trans.rotation_reflection
-      - trig.fn.rotation_by_angle
+      - trig.rot.rotation_matrix
       - calc1.deriv.rate_as_slope_limit
       - calc2.tech.substitution_undoes_chain
       - linalg.vec.vector_as_displacement
@@ -217,10 +217,10 @@ mechanics:
       - linalg.map.inverse_and_systems
       - linalg.map.determinant_as_area
       - linalg.eig.eigenvector_stays_on_line
-      - mvcalc.deriv.jacobian_local_stretch
+      - mvcalc.jac.local_stretch
       - prob.rv.linear_change_of_variable
       - csmath.gfx.transform_matrix
-      - adv.cx.multiplication_rotates_scales
+      - adv.cplx.multiplication_rotates_scales
     areas: [arith, alg, geom, trig, calc1, calc2, linalg, mvcalc, prob, csmath, adv]
     manim_family: grid_scene
 
@@ -232,15 +232,15 @@ mechanics:
     fade_steps: [islands_bridges, dots_lines, arrow_list, adjacency_matrix]
     reused_by:
       - found.count.cardinality
-      - found.rel.match_one_to_one
-      - arith.mul.factor_tree
+      - found.cmp.same_amount
+      - arith.num.factor_tree
       - alg.fn.function_as_machine
       - geom.top.euler_characteristic
       - linalg.map.matrix_counts_routes
       - prob.cond.conditional_and_independence
-      - prob.mc.markov_chain_walk
+      - prob.cond.markov_chain_walk
       - disc.rel.relation_as_arrows
-      - disc.rel.function_vs_relation
+      - disc.rel.relation_as_arrows
       - graph.basic.graph_and_paths
       - graph.tree.tree_no_cycles
       - graph.path.shortest_path
@@ -248,7 +248,7 @@ mechanics:
       - graph.color.map_coloring
       - csmath.alg.state_machine
       - csmath.alg.breadth_first_search
-      - adv.grp.cayley_graph
+      - adv.alg.cayley_graph
     areas: [found, arith, alg, geom, linalg, prob, disc, graph, csmath, adv]
     manim_family: network_scene
 
@@ -267,13 +267,13 @@ mechanics:
       - prob.cond.conditional_and_independence
       - prob.rv.expectation_as_weighted_average
       - prob.rv.variance_as_spread
-      - prob.lln.long_run_proportion
+      - prob.basic.probability_as_proportion
       - prob.dist.binomial_counts
-      - prob.stat.sample_vs_population
-      - disc.count.count_outcomes
-      - csmath.rand.random_sampling
+      - prob.samp.sample_vs_population
+      - disc.count.sum_rule
+      - csmath.info.entropy_as_surprise
       - adv.num.monte_carlo_pi
-      - adv.stoch.random_walk
+      - adv.num.monte_carlo_pi
     areas: [found, arith, geom, prob, disc, csmath, adv]
     manim_family: urn_scene
 
@@ -289,14 +289,14 @@ mechanics:
       - arith.add.displacement
       - arith.sub.undo_add
       - arith.mul.scaling
-      - arith.mul.skip_counting
+      - arith.mul.repeated_groups
       - arith.int.negatives
       - prealg.pat.rule_from_table
       - alg.fn.linear_slope
       - alg.fn.composition
       - alg.fn.exponential_growth
       - alg.fn.logarithm
-      - trig.ang.angle_as_turn
+      - geom.angle.turn_as_measure
       - trig.fn.periodic_wraps
       - precalc.lim.approach
       - precalc.seq.arithmetic_sequence
@@ -304,11 +304,11 @@ mechanics:
       - calc1.deriv.rules_as_structure
       - linalg.vec.vector_as_displacement
       - linalg.vec.span_and_combination
-      - disc.mod.clock_arithmetic
+      - disc.mod.clock_equivalence
       - disc.ind.domino_induction
       - disc.rec.recurrence_step
-      - csmath.alg.loop_iteration
-      - adv.dyn.iterated_map_fixed_point
+      - csmath.inv.loop_invariant
+      - adv.num.newton_tangent_iteration
     areas: [found, arith, prealg, alg, trig, precalc, calc1, linalg, disc, csmath, adv]
     manim_family: gear_scene
 
@@ -321,28 +321,28 @@ mechanics:
     reused_by:
       - found.sort.by_attribute
       - found.cmp.bigger_smaller
-      - arith.ord.compare_fractions
-      - arith.div.remainder_classes
+      - arith.frac.common_unit
+      - arith.div.remainder
       - alg.ineq.inequality_as_region
       - alg.fn.function_as_machine
       - geom.class.polygon_by_sides
       - geom.class.quadrilateral_hierarchy
       - trig.ang.quadrant_signs
-      - precalc.fn.even_odd_symmetry
+      - precalc.fntr.reflect_and_symmetry
       - calc1.lim.continuous_or_not
-      - linalg.space.in_span_or_not
+      - linalg.basis.in_span_or_not
       - prob.basic.probability_as_proportion
       - prob.cond.conditional_and_independence
-      - prob.stat.histogram_bins
-      - disc.set.subset_venn
+      - prob.stat.frequency_table
+      - disc.set.membership_rule
       - disc.set.union_intersection
       - disc.logic.and_or_not
       - disc.rel.equivalence_classes
       - csmath.alg.sorting_algorithm
-      - csmath.alg.binary_search
-      - csmath.data.hash_buckets
-      - adv.grp.cosets_partition
-      - adv.top.open_or_closed
+      - csmath.rec.base_case_and_smaller_call
+      - csmath.mod.wraparound
+      - adv.alg.cosets_partition
+      - adv.topo.open_or_closed
     areas: [found, arith, alg, geom, trig, precalc, calc1, linalg, prob, disc, csmath, adv]
     manim_family: sorter_scene
 
@@ -364,11 +364,11 @@ mechanics:
       - trig.fn.sine_as_height
       - trig.id.pythagorean_identity
       - calc1.deriv.tangent_line
-      - calc1.opt.inscribed_rectangle
-      - linalg.vec.projection_as_shadow
+      - calc1.apply.max_where_slope_zero
+      - linalg.orth.projection_as_shadow
       - linalg.map.determinant_as_area
       - disc.ind.domino_induction
       - disc.proof.chain_of_constructions
-      - adv.cx.multiplication_rotates_scales
+      - adv.cplx.multiplication_rotates_scales
     areas: [found, geom, trig, calc1, linalg, disc, adv]
     manim_family: construction_scene

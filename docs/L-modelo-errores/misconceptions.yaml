@@ -182,7 +182,7 @@ misconceptions:
 
   - id: area_uses_slant_side
     category: procedural
-    nodes: [geom.area.shear_invariant, geom.area.triangle]
+    nodes: [geom.area.shear_invariant, geom.area.rect_and_triangle]
     detect: {from: "area(parallelogram(b, h, s))", guard: "s > h", to: "b * s", correct: "b * h"}
     pattern: missing_piece_tiles
     mechanic: tiles
@@ -254,7 +254,7 @@ misconceptions:
 
   - id: sin_of_sum_distributes
     category: invalid_property
-    nodes: [trig.ident.angle_sum, trig.circ.unit_circle]
+    nodes: [trig.id.angle_sum, trig.circle.unit_circle_radians]
     detect: {from: "sin(a + b)", to: "sin(a) + sin(b)", correct: "sin(a) * cos(b) + cos(a) * sin(b)"}
     pattern: counterexample_slider
     mechanic: machine_pipe

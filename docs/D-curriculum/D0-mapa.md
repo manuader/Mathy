@@ -32,8 +32,8 @@ Objetivo: 310 nodos, tolerancia ±20 % por área. El presupuesto no es una meta 
 | `trig` | 16 | `ratio` (2), `circle` (3: giro, círculo unitario con radianes, identidad pitagórica), `fn` (3), `id` (3), `inv`, `law` (2), `polar`, `rot` |
 | `precalc` | 16 | `lim` (3), `seq`, `conic`, `cplx`, `vec`, `param`, `fntr` (3), `binom` |
 | `calc1` | 22 | `lim` (4), `deriv` (7), `apply` (5), `int` (4), `ftc` (2) |
-| `calc2` | 18 | `tech` (5), `improper`, `ser` (6), `taylor` (2), `parpol`, `ode` (2) |
-| `mvcalc` | 16 | `partial`, `grad`, `jac`, `int`, `line`, `surf`, `divcurl`, `lagrange`, `thm` |
+| `calc2` | 18 | `tech` (4), `impr`, `int` (2), `ser` (7), `taylor` (2), `parpol` (3), `ode` (2) |
+| `mvcalc` | 16 | `fn`, `part`, `grad`, `jac`, `opt`, `lagr`, `int`, `field`, `line`, `surf`, `divrot`, `thm` |
 | `linalg` | 24 | `vec` (4), `map` (6), `sys` (3), `det` (2), `eig` (3), `basis` (2), `orth` (2), `svd` (2) |
 | `prob` | 22 | `basic` (6), `cond` (3), `rv` (4), `dist` (3), `moment` (2), `samp` (2), `inf` (2) |
 | `disc` | 16 | `logic`, `set`, `proof` (3), `ind`, `rec` (2), `count` (3), `mod` (2), `rel` |
@@ -62,7 +62,7 @@ Cada área tiene un nivel de desafío con problemas estilo olimpíada de varios 
 
 ## Lista de espera para 3D
 
-La capa visual interactiva de la app es 2D (ver [O](../O-arquitectura-tecnica.md)). Los nodos que **requieren** 3D interactivo y no solo un clip pre-renderizado son pocos y se listan aquí para que nadie los introduzca sin decidirlo: `mvcalc.partial.slice_of_surface`, `mvcalc.grad.terrain_walker`, `mvcalc.int.double_integral_tank`, `linalg.map.linear_transformation_3d`, `geom.solid.volume_by_slices`, `calc2.parpol.solid_of_revolution`. Todo lo demás en 3D se resuelve con proyección 2.5D o con clip.
+La capa visual interactiva de la app es 2D (ver [O](../O-arquitectura-tecnica.md)). Los nodos que **requieren** 3D interactivo y no solo un clip pre-renderizado son pocos y se listan aquí para que nadie los introduzca sin decidirlo: `mvcalc.part.slice_of_surface`, `mvcalc.grad.terrain_walker`, `mvcalc.int.double_integral_tank`, `linalg.map.linear_transformation_3d`, `calc2.parpol.solid_of_revolution`. El volumen por capas de geometría (`geom.solid.volume_as_layers`) se resuelve en 2.5D apilando rebanadas. Todo lo demás en 3D se resuelve con proyección 2.5D o con clip.
 
 ## Lo que este mapa no decide
 
