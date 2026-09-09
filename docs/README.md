@@ -30,7 +30,7 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 | R | [Cheatsheet](R-cheatsheet/R0-cheatsheet.md) | Referencia personal incremental por tema; [entradas](R-cheatsheet/cheatsheet_entries.yaml) |
 | S | [Desafíos](S-desafios/S0-desafios.md) | Problemas estilo olimpíada con datos faltantes; [catálogo](S-desafios/challenges.yaml) |
 | T | [Plan de implementación](T-plan-implementacion.md) | Stack verificado, arquitectura de paquetes, hitos, pacing y riesgos |
-| U | [Desarrollo](U-desarrollo/U0-estado.md) | Estado del código: qué está construido, qué sigue, cómo correrlo |
+| U | [Desarrollo](U-desarrollo/U0-estado.md) | Estado del código: qué está construido, qué sigue, cómo correrlo. [U1](U-desarrollo/U1-decisiones.md): las decisiones técnicas con su evidencia |
 | | [Locales](locales/es/) | Todas las cadenas visibles al usuario, en español como locale fuente |
 
 ## Convenciones

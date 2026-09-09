@@ -2,7 +2,7 @@
 
 Este documento es el punto de entrada para quien retoma el trabajo. Dice qué está construido y verificado, qué está a medias, qué sigue, y las decisiones que ya se tomaron para que nadie las vuelva a discutir sin motivo. Se actualiza al cerrar cada hito.
 
-**Última actualización:** al cerrar el núcleo del motor (commit `8d9ec79`).
+**Última actualización:** al cerrar el atlas de glifos y la cadena completa (commit `1e76b0d`).
 
 ## Dónde estamos
 
@@ -12,7 +12,7 @@ M0 pregunta una sola cosa: **¿se puede animar una ecuación con identidad de t�
 
 ## Qué está construido y verificado
 
-Tres paquetes de TypeScript puro, sin dependencias de React Native, con 25 tests que pasan y tipado estricto sin errores.
+Cuatro paquetes, con **39 tests que pasan** y tipado estricto sin errores. Los tres primeros son TypeScript puro sin dependencias de React Native, así que se testean en Node.
 
 ### `packages/math-core`
 
@@ -50,14 +50,21 @@ El punto más temido era interpolar trazos entre formas distintas, que Skia solo
 
 El morphing real queda para las transiciones entre capas, donde un cofre se convierte en una caja. Esos objetos son assets propios, así que se dibujan desde el principio con la misma estructura de comandos que su destino.
 
+### `packages/glyphs`
+
+El atlas de contornos, horneado en build time con MathJax v4. Existe porque las dos APIs de Skia que darían el contorno de un glifo en runtime (`Path.MakeFromText`, `Paragraph.getPath`) **no existen en la versión web**, y CanvasKit no tiene con qué implementarlas.
+
+Veintitrés glifos: los dígitos, las variables `x y a b n` en itálica matemática, los operadores, el igual, los paréntesis y el punto. En unidades de em con el eje Y hacia abajo, que es lo que Skia espera. El horneado es reproducible byte a byte.
+
+Dos datos del atlas que valen como verificación y como fundamento del diseño: la `y` tiene descendente de 0.205 y la `x` de 0.011, lo que confirma que la conversión de ejes está bien; y los diez dígitos comparten avance, porque en tipografía matemática son de ancho tabular, que es justo lo que la composición supone para que el ancho de un número no dependa de sus cifras.
+
 ## Qué está a medias
 
-**`packages/glyphs`** está en construcción. Su trabajo es hornear en build time los contornos de los glifos, porque las dos APIs de Skia que los darían en runtime (`Path.MakeFromText`, `Paragraph.getPath`) **no existen en la versión web**. Se hornean con MathJax v4 usando `liteAdaptor` y `fontCache: 'none'`, que emite un `<path>` explícito por glifo. Si el paquete quedó a medio hacer, revisar `packages/glyphs/tools/bake.ts` y los archivos `probe*.mjs`, que son sondas de exploración y **no deberían quedar en el repo**.
+Nada. La mitad del hito M0 que se puede resolver sin dibujar está cerrada y verificada de punta a punta: árbol con identidad, traza del paso, composición con métricas reales, plan de morph y muestreo en cualquier instante.
 
 ## Qué sigue, en orden
 
-1. **Cerrar `packages/glyphs`**: el atlas horneado para los dígitos, `x`, `y`, `a`, `b`, `n`, los operadores, el igual, los paréntesis y el punto. En unidades de em con el eje Y hacia abajo, que es lo que Skia espera.
-2. **`packages/viz-skia`**: el adaptador que convierte un fotograma de `sampleMorph` en un árbol retained de Skia. Delgado a propósito.
+1. **`packages/viz-skia`**: el adaptador que convierte un fotograma de `sampleMorph` en un árbol retained de Skia. Delgado a propósito.
 3. **`apps/mathy`**: la app Expo única para las tres plataformas. Es donde se contesta la pregunta de M0.
 4. **El gesto**: arrastrar la ficha `−5` sobre el igual, con el progreso del morph atado al dedo y no a un temporizador.
 5. **Medir**: sesenta cuadros por segundo en un Android de gama baja **en build de release**, y arranque en frío del navegador por debajo de tres segundos.
@@ -66,7 +73,7 @@ Después de eso empieza M1, que es la mecánica `chest_key` y los ocho niveles d
 
 ## Decisiones tomadas que no conviene reabrir sin motivo
 
-Están argumentadas en [T](../T-plan-implementacion.md) con la evidencia que las respalda. En resumen:
+Están argumentadas con su evidencia en [U1](U1-decisiones.md), que es el documento a leer antes de proponer cambiar el stack, y en [T](../T-plan-implementacion.md). En resumen:
 
 - **Un solo código para iOS, Android y navegador**, sobre React Native Skia. En web corre sobre CanvasKit. Se descartaron con evidencia Motion Canvas (abandonado, y su `seek` re-simula desde el frame cero), GeoGebra (licencia no comercial), un WebView con una librería web adentro (puente asíncrono, incompatible con sesenta cuadros por segundo) y `expo-three` (dos años sin actualizarse).
 - **No hay clips pre-renderizados.** Todo se calcula en el dispositivo. Con eso se fueron 700 MB de assets, el CDN, el empalme entre video y escena nativa y la restricción de renderizar sin texto para servir a todos los idiomas.
