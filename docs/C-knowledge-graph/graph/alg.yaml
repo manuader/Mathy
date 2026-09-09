@@ -84,7 +84,7 @@ nodes:
     mechanics: [ledger, balance, grid_stretch]
     literacy: icons
     analogy: two_balances_shared_boxes
-    misconceptions: []
+    misconceptions: [substitution_ignores_other_row]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.map.inverse_and_systems, linalg.sys.row_operations, linalg.basis.in_span_or_not]
     calc_unlocks: [op_solve_system]
@@ -102,7 +102,7 @@ nodes:
     mechanics: [machine_pipe, network_routes, sorter]
     literacy: icons
     analogy: function_machine
-    misconceptions: []
+    misconceptions: [machine_gives_two_outputs]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.map.linear_transformation_2d, prob.rv.random_variable_as_machine, disc.rel.relation_as_arrows, trig.fn.sine_as_height]
     calc_unlocks: [op_define_function]
@@ -120,7 +120,7 @@ nodes:
     mechanics: [slope_walker, machine_pipe, grid_stretch]
     literacy: icons
     analogy: walker_height_trace
-    misconceptions: []
+    misconceptions: [machine_gives_two_outputs, graph_read_axes_swapped]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [precalc.lim.approach, linalg.vec.vector_as_displacement, trig.circle.unit_circle_radians, prob.rv.cumulative_distribution]
     calc_unlocks: [op_plot]
@@ -138,7 +138,7 @@ nodes:
     mechanics: [slope_walker, gears_sequence, grid_stretch]
     literacy: icons
     analogy: walker_on_ramp
-    misconceptions: []
+    misconceptions: [slope_confuses_step_with_rate, slope_as_rise_only]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [calc1.deriv.rate_as_slope_limit, geom.line.parallel_same_slope, prob.stat.regression_line, trig.fn.tangent_as_slope]
     calc_unlocks: [op_slope]

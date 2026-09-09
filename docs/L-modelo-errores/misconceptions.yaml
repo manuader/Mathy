@@ -48,11 +48,31 @@ misconceptions:
     mechanic: fill_accumulate
     severity: 2
 
+  - id: subtrahend_order_swapped
+    category: sign
+    nodes: [arith.sub.undo_add]
+    detect:
+      - {from: "b - a", guard: "b > a", to: "a - b", correct: "b - a"}
+      - {from: "x + a = b", guard: "a != b", to: "x = a - b", correct: "x = b - a"}
+    pattern: replay_on_mechanic
+    mechanic: gears_sequence
+    severity: 2
+
+  - id: division_order_swapped
+    category: sign
+    nodes: [arith.div.undo_mul]
+    detect:
+      - {from: "a * x = b", guard: "a != b", to: "x = a / b", correct: "x = b / a"}
+      - {from: "b / a", guard: "a != b", to: "a / b", correct: "b / a"}
+    pattern: key_mismatch
+    mechanic: chest_key
+    severity: 2
+
   # ---- wrong_inverse -------------------------------------------------------
 
   - id: wrong_inverse_choice
     category: wrong_inverse
-    nodes: [alg.eq.one_step, prealg.inv.operation_as_key, adv.alg.field_every_nonzero_invertible, calc1.ftc.antiderivative_family, calc1.ftc.integral_undoes_derivative, disc.mod.modular_inverse, geom.trans.undo_transformation, linalg.map.inverse_and_systems]
+    nodes: [alg.eq.one_step, prealg.inv.operation_as_key, adv.alg.field_every_nonzero_invertible, arith.div.undo_mul, calc1.ftc.antiderivative_family, calc1.ftc.integral_undoes_derivative, disc.mod.modular_inverse, geom.trans.undo_transformation, linalg.map.inverse_and_systems]
     detect:
       - {from: "a * x = b", to: "x = b - a", correct: "x = b / a"}
       - {from: "x / a = b", to: "x = b / a", correct: "x = b * a"}
@@ -144,6 +164,58 @@ misconceptions:
     mechanic: urn_dice
     severity: 2
 
+  - id: substitution_ignores_other_row
+    category: conceptual
+    nodes: [alg.sys.two_by_two]
+    detect:
+      - {from: "a * x + b * y = c | d * x + e * y = f", guard: "b != 0", to: "x = c / a", correct: "x = (c * e - b * f) / (a * e - b * d)"}
+      - {from: "y = c - a * x | d * x + e * y = f", guard: "e != 0", to: "y = c - a * x | y = c - a * x", correct: "d * x + e * (c - a * x) = f"}
+    pattern: replay_on_mechanic
+    mechanic: balance
+    severity: 3
+
+  - id: machine_gives_two_outputs
+    category: conceptual
+    nodes: [alg.fn.function_as_machine, alg.fn.graph_as_picture]
+    detect: {from: "f(a)", guard: "pairs (a, b) and (a, c) with b != c", to: "is_function", correct: "not_a_function"}
+    pattern: two_paths_diverge
+    mechanic: machine_pipe
+    severity: 3
+
+  - id: slope_confuses_step_with_rate
+    category: conceptual
+    nodes: [alg.fn.linear_slope]
+    detect: {from: "b / a", guard: "b != a * a", to: "a", correct: "b / a"}
+    pattern: counterexample_slider
+    mechanic: slope_walker
+    severity: 3
+
+  - id: angle_measured_by_side_length
+    category: conceptual
+    nodes: [geom.angle.turn_as_measure]
+    detect: {from: "angle(turn a, arm r)", guard: "r != 1", to: "a * r", correct: "a"}
+    pattern: replay_on_mechanic
+    mechanic: gears_sequence
+    severity: 3
+
+  - id: turn_read_as_final_position
+    category: conceptual
+    nodes: [geom.angle.turn_as_measure]
+    detect: {from: "turn(a)", guard: "a > 360", to: "a mod 360", correct: "a"}
+    pattern: replay_on_mechanic
+    mechanic: gears_sequence
+    severity: 2
+
+  - id: sine_confused_with_cosine
+    category: conceptual
+    nodes: [trig.fn.sine_as_height]
+    detect:
+      - {from: "sin(a)", guard: "sin(a) != cos(a)", to: "cos(a)", correct: "sin(a)"}
+      - {from: "cos(a)", guard: "sin(a) != cos(a)", to: "sin(a)", correct: "cos(a)"}
+    pattern: two_paths_diverge
+    mechanic: machine_pipe
+    severity: 3
+
   # ---- procedural ----------------------------------------------------------
 
   - id: inverse_applied_one_side
@@ -180,9 +252,17 @@ misconceptions:
     mechanic: gears_sequence
     severity: 3
 
+  - id: slope_as_rise_only
+    category: procedural
+    nodes: [alg.fn.linear_slope]
+    detect: {from: "b / a", guard: "a != 1", to: "b", correct: "b / a"}
+    pattern: counterexample_slider
+    mechanic: slope_walker
+    severity: 2
+
   - id: area_uses_slant_side
     category: procedural
-    nodes: [geom.area.shear_invariant, geom.area.rect_and_triangle, geom.area.trapezoid_as_two_triangles, geom.cons.auxiliary_lines, geom.cons.hidden_data_hunt]
+    nodes: [geom.area.shear_invariant, geom.area.rect_and_triangle, geom.area.trapezoid_as_two_triangles, geom.cons.auxiliary_lines, geom.cons.hidden_data_hunt, geom.sim.similarity_as_scale]
     detect: {from: "area(parallelogram(b, h, s))", guard: "s > h", to: "b * s", correct: "b * h"}
     pattern: missing_piece_tiles
     mechanic: tiles
@@ -213,6 +293,22 @@ misconceptions:
     pattern: replay_on_mechanic
     mechanic: network_routes
     severity: 1
+
+  - id: endpoint_read_as_distance
+    category: notation
+    nodes: [arith.sub.undo_add]
+    detect: {from: "b - a", guard: "a > 0", to: "b", correct: "b - a"}
+    pattern: key_mismatch
+    mechanic: chest_key
+    severity: 2
+
+  - id: graph_read_axes_swapped
+    category: notation
+    nodes: [alg.fn.graph_as_picture]
+    detect: {from: "point(a, b)", guard: "a != b", to: "point(b, a)", correct: "point(a, b)"}
+    pattern: replay_on_mechanic
+    mechanic: slope_walker
+    severity: 2
 
   # ---- invalid_property ----------------------------------------------------
 
@@ -254,10 +350,18 @@ misconceptions:
 
   - id: sin_of_sum_distributes
     category: invalid_property
-    nodes: [trig.id.angle_sum, trig.circle.unit_circle_radians, adv.four.projection_onto_sines, trig.id.double_angle]
+    nodes: [trig.id.angle_sum, trig.circle.unit_circle_radians, adv.four.projection_onto_sines, trig.fn.sine_as_height, trig.id.double_angle]
     detect: {from: "sin(a + b)", to: "sin(a) + sin(b)", correct: "sin(a) * cos(b) + cos(a) * sin(b)"}
     pattern: counterexample_slider
     mechanic: machine_pipe
+    severity: 2
+
+  - id: area_scales_like_length
+    category: invalid_property
+    nodes: [geom.sim.similarity_as_scale]
+    detect: {from: "area(scale(F, k))", guard: "k != 1", to: "k * area(F)", correct: "k^2 * area(F)"}
+    pattern: missing_piece_tiles
+    mechanic: tiles
     severity: 2
 
   - id: modulus_of_sum_adds

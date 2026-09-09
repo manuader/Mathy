@@ -1,0 +1,463 @@
+# Nombres visibles al usuario para los minijuegos (P-internacionalizacion.md).
+# Se deriva de los 44 archivos docs/F-minijuegos/<node-id>.md: el nombre del
+# minijuego es el titulo de su archivo (encabezado H1) y el nombre de cada
+# nivel es el titulo en negrita de la seccion Desafio, en el mismo orden que
+# docs/F-minijuegos/minigames.yaml. Las instrucciones narradas de la
+# demostracion no viven acá: ver Q-edad-universal.md.
+
+minigames:
+  found.count.cardinality:
+    name: Los cuencos de fruta
+    levels:
+    - name: Un par por fruta
+    - name: El tic y la tarjeta
+    - name: Mover no cambia
+    - name: La tarjeta viaja
+    - name: Más frutas, más mezcla
+    - name: Piedras, conchas, marcas
+  found.count.number_line:
+    name: El camino de piedras
+    levels:
+    - name: Un diente, una piedra
+    - name: Las piedras tienen nombre
+    - name: La piedra donde no diste ningún paso
+    - name: Huecos
+    - name: Pistas que cambian de tamaño
+    - name: Solo marcas
+  arith.add.displacement:
+    name: El viaje de dos tramos
+    levels:
+    - name: Un tirón
+    - name: Adivinar antes de girar
+    - name: Dos tramos y el libro
+    - name: La flecha
+    - name: El renglón
+    - name: Números grandes y el cero
+    - name: El tramo que falta
+  arith.sub.undo_add:
+    name: La llave de vuelta
+    levels:
+    - name: Volver de un tirón
+    - name: Elegir sin probar
+    - name: La vuelta que se pasa
+    - name: Dos caminantes
+    - name: El renglón
+    - name: Números grandes, cero y vuelta completa
+    - name: Cerraduras que no son pasos
+  arith.mul.scaling:
+    name: La banda y el piso
+    levels:
+    - name: Tres casillas por vuelta
+    - name: Filas que se funden
+    - name: Dar vuelta el piso
+    - name: La banda
+    - name: Llaves y cruz
+    - name: Piso fantasma
+    - name: Uno, cero y fracciones
+    - name: Bandas sin números
+  arith.div.undo_mul:
+    name: La llave que encoge
+    levels:
+    - name: La banda vuelve
+    - name: El llavero completo
+    - name: Flechas
+    - name: El piso con la pared
+    - name: Fichas al lado
+    - name: Banda fantasma
+    - name: Lo que sobra
+    - name: Vueltas que nunca viste
+  arith.int.negatives:
+    name: El ascensor y el caminante
+    levels:
+    - name: Cruzar el cero
+    - name: El ascensor
+    - name: Monedas y vales
+    - name: Flechas y escalera
+    - name: Fichas al lado
+    - name: Sin edificio
+    - name: La calle se muda
+    - name: Direcciones que nunca viste
+  arith.frac.parts_and_ratio:
+    name: La pizza y la barra
+    levels:
+    - name: Cortar parejo
+    - name: Encender varias
+    - name: El frasco
+    - name: Barras y contornos
+    - name: Fichas al lado
+    - name: El reparto
+    - name: La recta sola
+    - name: Todos que nunca viste
+  arith.expr.precedence_tree:
+    name: Cofres dentro de cofres
+    levels:
+    - name: Un cofre adentro de otro
+    - name: Armar el anidamiento
+    - name: Cofres y árbol
+    - name: La tubería
+    - name: Fichas y paredes
+    - name: Cofres invisibles
+    - name: Deshacer
+    - name: Encastres que nunca viste
+  prealg.var.unknown_as_box:
+    name: Cajas en el libro de cuentas
+    levels:
+    - name: Cada cosa en su fila
+    - name: La caja también es una fila
+    - name: Cuánto pesa sin abrirla
+    - name: Dos marcas
+    - name: Barras y conteos
+    - name: Letras al lado
+    - name: Marcas que nunca viste
+  prealg.eq.balance:
+    name: Los dos platos
+    levels:
+    - name: Que quede derecha
+    - name: Que siga derecha
+    - name: La caja en un plato
+    - name: Barras y estados
+    - name: La barra se vuelve igual
+    - name: Los dos lados compuestos
+    - name: Acciones que nunca viste
+  prealg.inv.operation_as_key:
+    name: El llavero
+    levels:
+    - name: La llave que entra
+    - name: Cuatro cerraduras
+    - name: La llave completa
+    - name: Flechas
+    - name: Fichas sobre las flechas
+    - name: Cadenas y negativos
+    - name: Cerraduras que nunca viste
+  alg.eq.one_step:
+    name: Cofres y llaves
+    levels:
+    - name: Una llave, dos platos
+    - name: Cuatro cerraduras
+    - name: Barras y flechas
+    - name: Fichas al lado
+    - name: Balanza fantasma
+    - name: Números difíciles
+    - name: La caja a la derecha
+    - name: Cerraduras que nunca viste
+  alg.eq.multi_step:
+    name: Cofres anidados
+    levels:
+    - name: Dos cofres, dos llaves
+    - name: Cuatro cerraduras anidadas
+    - name: Cajas y escalera
+    - name: Mezcla con símbolos
+    - name: Cofres fantasma
+    - name: Armar la llave
+    - name: Ecuaciones nuevas
+  alg.expr.distributive_tiles:
+    name: Dos habitaciones
+    levels:
+    - name: Cubrir el piso
+    - name: La habitación sin medida
+    - name: Barras y llaves
+    - name: Fichas al lado
+    - name: Sin piso
+    - name: El cuadrado que crece
+  alg.sys.two_by_two:
+    name: El libro de frutas
+    levels:
+    - name: Una fruta sola
+    - name: Dos frutas, una fila
+    - name: Dos filas
+    - name: Barras y segmentos
+    - name: Letras y llave
+    - name: Elegir el método
+    - name: Cuando no hay cruce
+  alg.fn.function_as_machine:
+    name: La fábrica
+    levels:
+    - name: Adivinar la máquina
+    - name: Armar la máquina
+    - name: Puntos y flechas
+    - name: La máquina tiene nombre
+    - name: Entradas que no son números
+    - name: Dos escrituras, una función
+  alg.fn.graph_as_picture:
+    name: El rastro del caminante
+    levels:
+    - name: El lápiz que dibuja solo
+    - name: ¿Por dónde sigue?
+    - name: Arrastrar al caminante
+    - name: Bajo el nivel del mar
+    - name: Hilos y reglas
+    - name: Pares y ejes
+    - name: Rastros que nunca viste
+    - name: La recta vertical
+  alg.fn.linear_slope:
+    name: La rampa del caminante
+    levels:
+    - name: Dos rampas
+    - name: ¿Cuál cuesta más?
+    - name: Apoyar el escalón
+    - name: Escalones de cualquier ancho
+    - name: Manivela y grilla
+    - name: Fichas al lado
+    - name: Rampa fantasma
+    - name: La rampa que no tiene pendiente
+  alg.fn.composition:
+    name: La cadena de máquinas
+    levels:
+    - name: Pintar y tapar
+    - name: ¿Y si las damos vuelta?
+    - name: Enganchar el tubo
+    - name: El orden importa
+    - name: El tren de engranajes
+    - name: Nombres y paréntesis
+    - name: Cadenas de tres
+  alg.fn.inverse_function:
+    name: La máquina en reversa
+    levels:
+    - name: Envolver y desenvolver
+    - name: ¿Qué sale por el otro lado?
+    - name: Tirar de la palanca
+    - name: El llavero de máquinas
+    - name: Doblar la grilla
+    - name: Nombres y marca
+    - name: Dos pasos y máquina fantasma
+    - name: Máquinas que no vuelven
+  alg.fn.quadratic_and_sqrt:
+    name: El jardín cuadrado
+    levels:
+    - name: Cerrar el cuadrado
+    - name: Cuando no cierra
+    - name: Dos tiras y una esquina
+    - name: La llave que abre dos
+    - name: Fichas al lado
+    - name: Números difíciles
+    - name: Elegir la rama
+    - name: Sin baldosas
+  alg.fn.exponential_growth:
+    name: La manivela que duplica
+    levels:
+    - name: Doblar y contar
+    - name: Cambiar el diente
+    - name: Barras y llaves
+    - name: Tandas encadenadas
+    - name: Fichas al lado
+    - name: La carrera
+    - name: El diente chico
+    - name: Sin papel
+  alg.fn.logarithm:
+    name: La llave que cuenta vueltas
+    levels:
+    - name: Desdoblar y contar
+    - name: Una llave por factor
+    - name: Diagrama y pista
+    - name: Las dos tuberías
+    - name: Fichas al lado
+    - name: Entre dos marcas
+    - name: Del otro lado del uno
+    - name: Sin pista
+  precalc.lim.approach:
+    name: La mitad del camino
+    levels:
+    - name: Pasos que se achican
+    - name: La brecha elegida
+    - name: Del pasillo al rastro
+    - name: El hueco
+    - name: Tabla al lado
+    - name: El renglón solo
+    - name: Puntos mudados y saltos
+    - name: Sin pasillo
+  calc1.deriv.rate_as_slope_limit:
+    name: La lupa y la colina
+    levels:
+    - name: El tramo se acorta
+    - name: La lupa
+    - name: Muchos lugares
+    - name: Triángulos que se apilan
+    - name: Delta y razón
+    - name: El límite escrito
+    - name: Signo, pico y sin gráfica
+    - name: La derivada como camino
+  calc1.deriv.rules_as_structure:
+    name: Las tiras y los engranajes
+    levels:
+    - name: El piso que se agranda
+    - name: La esquina que se apaga
+    - name: Encadenar máquinas
+    - name: El tren
+    - name: Tiras con etiqueta
+    - name: Las reglas escritas
+    - name: Formas anidadas
+    - name: Reglas que nunca viste
+  calc1.int.accumulation:
+    name: El tanque y las franjas
+    levels:
+    - name: Apretar el grifo
+    - name: El caudal cambia
+    - name: Partir el tiempo
+    - name: Rectángulos bajo la curva
+    - name: Bloques etiquetados y sumas
+    - name: El signo de integral
+    - name: Abajo del eje
+    - name: Ejes que no son tiempo
+  calc1.ftc.integral_undoes_derivative:
+    name: La tercera llave
+    levels:
+    - name: Las dos agujas
+    - name: La curva que se dibuja sola
+    - name: El caminante sobre el nivel
+    - name: El cofre
+    - name: La regla vertical
+    - name: La barra de evaluación
+    - name: Signo, familia y sin gráfica
+    - name: Cofres que no son curvas
+  linalg.vec.vector_as_displacement:
+    name: El mapa del tesoro
+    levels:
+    - name: Dos manivelas
+    - name: La misma flecha en otro rincón
+    - name: Encadenar
+    - name: Triángulo de pasos
+    - name: Columnas
+    - name: Sin grilla
+  linalg.vec.span_and_combination:
+    name: Dos clases de pasos
+    levels:
+    - name: De a un paso
+    - name: El libro
+    - name: Pasos para atrás
+    - name: La nube
+    - name: La receta escrita
+    - name: Sin mapa
+  linalg.map.linear_transformation_2d:
+    name: La lámina y la casa
+    levels:
+    - name: Tirar de una clavija
+    - name: Las dos clavijas
+    - name: El tubo
+    - name: Números en las llegadas
+    - name: Dos láminas
+    - name: Sin lámina
+    - name: Deformaciones que nunca viste
+  linalg.map.inverse_and_systems:
+    name: Devolver la lámina a su forma
+    levels:
+    - name: Una llave, una lámina
+    - name: Cuatro llaves
+    - name: La lámina aplastada
+    - name: Los dos lados
+    - name: La fórmula
+    - name: Dos láminas apiladas
+    - name: Sin lámina
+  prob.basic.probability_as_proportion:
+    name: La urna y la barra
+    levels:
+    - name: Sacar y ver
+    - name: El dedo apretado
+    - name: Barras y contadores
+    - name: La marca antes de sacar
+    - name: Fichas y paréntesis
+    - name: Sin urna
+    - name: Pesos desparejos
+  prob.cond.conditional_and_independence:
+    name: Primero las cajas, después la mano
+    levels:
+    - name: Repartir y sacar
+    - name: Los dos rasgos
+    - name: La grilla
+    - name: La caja que brilla
+    - name: La barra vertical
+    - name: El árbol y el producto
+    - name: Tres rasgos
+  prob.rv.expectation_as_weighted_average:
+    name: La tabla y el libro de premios
+    levels:
+    - name: Equilibrar la tabla
+    - name: Poner las pesas
+    - name: Cambiar una chance
+    - name: Barras y aportes
+    - name: Mil boletos
+    - name: El renglón
+    - name: Números difíciles
+    - name: Dos juegos a la vez
+  graph.basic.graph_and_paths:
+    name: Islas y puentes
+    levels:
+    - name: Llegar caminando
+    - name: Tender puentes
+    - name: Mover las islas
+    - name: La misma red dos veces
+    - name: La lista de pares
+    - name: Sin dibujo
+    - name: Armar la red
+  geom.area.rect_and_triangle:
+    name: El piso de baldosas
+    levels:
+    - name: Llenar el cuarto
+    - name: La fila que se copia
+    - name: Medio rectángulo
+    - name: La línea que falta
+    - name: Cuadrícula y rótulos
+    - name: Sin cuadrícula
+    - name: Otra baldosa
+  geom.angle.turn_as_measure:
+    name: La manivela y la vuelta
+    levels:
+    - name: Abrir el portón
+    - name: Dos brazos
+    - name: Partir la vuelta
+    - name: La pista de 360
+    - name: Prolongar el lado
+    - name: Sin la marca
+    - name: Partes que no cierran redondo
+  geom.sim.similarity_as_scale:
+    name: El palo y su sombra
+    levels:
+    - name: Palos y sombras
+    - name: Hacer calzar
+    - name: Estirar torcido
+    - name: Todos los lados
+    - name: Baldosas en las dos
+    - name: La paralela
+    - name: Solo los ángulos
+  geom.tri.pythagoras_as_tiles:
+    name: Los tres cuadrados
+    levels:
+    - name: Vaciar la carretilla
+    - name: Mover el vértice
+    - name: Cuatro copias
+    - name: Potencias
+    - name: Despejar el cateto
+    - name: Sin cuadrados
+    - name: La vuelta del teorema
+  geom.cons.auxiliary_lines:
+    name: La línea que falta
+    levels:
+    - name: Doblar la hoja
+    - name: La primera línea
+    - name: Borrar la línea
+    - name: Marcas con nombre
+    - name: La cadena
+    - name: Dos líneas
+    - name: Afuera de la figura
+    - name: Justificar
+  trig.circle.unit_circle_radians:
+    name: La rueda de radio uno
+    levels:
+    - name: Cintas en el borde
+    - name: La sexta y el pedacito
+    - name: Bajar la altura
+    - name: Los cuatro cuadrantes
+    - name: Otro radio
+    - name: Fichas de pi
+    - name: Vueltas y giros al revés
+    - name: Sin reloj
+  trig.fn.sine_as_height:
+    name: La rueda gigante
+    levels:
+    - name: La cabina que sube
+    - name: Por debajo del eje
+    - name: La máquina
+    - name: El rastro
+    - name: La sombra
+    - name: Fichas y gráfico
+    - name: Radio y vueltas
+    - name: Sin rueda

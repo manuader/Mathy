@@ -1,0 +1,3498 @@
+# Indice de minijuegos de Mathy. DATA, sin ninguna cadena visible al usuario:
+# los nombres del minijuego y de cada nivel viven en ../locales/es/minigames.yaml
+# bajo minigames.<id>.name y minigames.<id>.levels[n].name (P-internacionalizacion.md).
+#
+# Se deriva de los 44 archivos docs/F-minijuegos/<node-id>.md (uno por concepto
+# de la espina, ver C-knowledge-graph/spine.yaml), leyendo sus secciones
+# Desafio, Mastery e Implementacion. `node`, `mechanics`, `analogies` y
+# `misconceptions` salen de docs/C-knowledge-graph/graph/*.yaml (fuente de
+# verdad); `scenes` sale del campo `manim` del nodo, cruzado con
+# docs/I-manim/scenes.yaml; `challenges` se deriva de docs/S-desafios/challenges.yaml
+# (todo ch.* cuyo `requires` contenga este nodo). El validador (tools/validate.py)
+# comprueba que estos datos son coherentes entre los cinco archivos.
+#
+# Campos por minijuego:
+#   id              igual al id del nodo (p.ej. alg.eq.one_step)
+#   node            id del nodo del grafo que instancia este minijuego
+#   mechanics       mecanicas del nodo, principal primero
+#   analogies       analogia del nodo mas las secundarias que declare el minijuego
+#   literacy        {min, max}: rango de la enum literacy que el minijuego soporta
+#   levels          progresion de niveles: n, layer (capa de H), evidence (verbos
+#                   de K que ese nivel ejercita) y hardens (id corto de que
+#                   parametro o transicion introduce/endurece ese nivel)
+#   generators      generadores gen_* del nodo, por nombre, con sus parametros
+#   scenes          ids de escena de I-manim/scenes.yaml
+#   misconceptions  ids de misconceptions esperadas (L-modelo-errores)
+#   challenges      ids de ch.* de S-desafios cuyo requires declara este nodo
+#   demonstration   id corto de que muestra la mano fantasma la primera vez
+
+minigames:
+- id: found.count.cardinality
+  node: found.count.cardinality
+  mechanics:
+  - ledger
+  - network_routes
+  - sorter
+  analogies:
+  - fruit_bowl_count
+  literacy:
+    min: none
+    max: none
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: pairing_by_matching
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: card_matches_tally
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: conservation_under_rearrangement
+  - n: 4
+    layer: concrete
+    evidence:
+    - apply
+    hardens: card_transfers_without_objects
+  - n: 5
+    layer: concrete
+    evidence:
+    - apply
+    hardens: larger_counts_mixed_kinds_scattered
+  - n: 6
+    layer: visual
+    evidence:
+    - generalize
+    hardens: skin_change_size_invariance
+  generators:
+  - name: gen_fruit_bowls
+    params:
+    - count_a
+    - count_b
+    - difference
+    - kinds
+    - arrangement
+    - seed
+  - name: gen_dot_card
+    params:
+    - target
+    - distractor_offsets
+    - numeral
+  - name: gen_object_set
+    params:
+    - skin
+    - size_variance
+    - bar_thickness
+    - count
+  scenes:
+  - ledger_pair_fruit_to_fruit
+  - sorter_number_card_on_bin
+  misconceptions: []
+  challenges: []
+  demonstration: pairing_fruit_to_fruit_bridge
+- id: found.count.number_line
+  node: found.count.number_line
+  mechanics:
+  - gears_sequence
+  - slope_walker
+  analogies:
+  - number_line_walk
+  literacy:
+    min: none
+    max: none
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: walk_and_arrive
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: numeral_anticipation
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: zero_as_start_stone
+  - n: 4
+    layer: concrete
+    evidence:
+    - apply
+    hardens: gaps_between_numbered_stones
+  - n: 5
+    layer: concrete
+    evidence:
+    - apply
+    hardens: stretch_shrink_and_offset_zero
+  - n: 6
+    layer: visual
+    evidence:
+    - generalize
+    hardens: marks_only_no_drawings
+  generators:
+  - name: gen_stone_path
+    params:
+    - length
+    - start_stone
+    - flag_stone
+    - gaps
+    - orientation
+    - stretch
+    - seed
+  - name: gen_crank
+    params:
+    - teeth
+    - direction
+    - backstop
+  - name: gen_number_tile
+    params:
+    - target
+    - distractor_offsets
+    - skin
+  scenes:
+  - gear_track_numbers_in_order
+  - gear_one_step_one_number
+  misconceptions: []
+  challenges: []
+  demonstration: crank_one_tooth_one_stone
+- id: arith.add.displacement
+  node: arith.add.displacement
+  mechanics:
+  - gears_sequence
+  - ledger
+  analogies:
+  - number_line_walk
+  - walker_forward_and_back
+  literacy:
+    min: none
+    max: none
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_leg_trip
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: anticipate_before_crank
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    - explain
+    hardens: two_legs_and_ledger
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: track_becomes_line_arrow
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: plus_sign_and_row
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: number_range_zero_three_legs
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: unknown_addend_no_numerals
+  generators:
+  - name: gen_walk_sum
+    params:
+    - start
+    - steps
+    - step_range
+    - allow_zero_step
+    - unknown
+    - seed
+  - name: gen_crank
+    params:
+    - teeth
+    - direction
+    - backstop
+  - name: gen_track_skin
+    params:
+    - skin
+    - numerals
+  scenes:
+  - gear_step_forward_adds
+  - ledger_join_two_piles
+  misconceptions:
+  - equals_as_operator
+  challenges: []
+  demonstration: token_dropped_on_crank_walks_forward
+- id: arith.sub.undo_add
+  node: arith.sub.undo_add
+  mechanics:
+  - chest_key
+  - gears_sequence
+  analogies:
+  - walker_forward_and_back
+  literacy:
+    min: none
+    max: none
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: exact_key_return
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: choose_key_before_turning
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: overshoot_return
+  - n: 4
+    layer: visual
+    evidence:
+    - apply
+    hardens: folding_ruler_distance
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: minus_sign_and_row
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: number_range_zero_full_return_unknown_minuend
+  - n: 7
+    layer: visual
+    evidence:
+    - generalize
+    hardens: non_arithmetic_locks
+  generators:
+  - name: gen_walk_undo
+    params:
+    - start
+    - step
+    - mode
+    - allow_zero
+    - allow_full_return
+    - unknown
+    - seed
+  - name: gen_key_ring
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_arbitrary_lock
+    params: []
+  scenes:
+  - chest_step_back_undoes_step
+  - gear_walk_back_same_count
+  - chest_scene_key_intro
+  misconceptions: []
+  challenges: []
+  demonstration: key_turns_manivela_backward_three_stones
+- id: arith.mul.scaling
+  node: arith.mul.scaling
+  mechanics:
+  - tiles
+  - grid_stretch
+  - gears_sequence
+  analogies:
+  - rubber_band_stretch
+  - tile_floor
+  literacy:
+    min: none
+    max: none
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: gear_ratio_bridge_from_node3
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: rows_merge_into_rectangle
+  - n: 3
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: commutativity_flip
+  - n: 4
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: pinch_to_stretch_band
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: times_sign_and_keys
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: factor_beyond_grid
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: factor_one_zero_fractions
+  - n: 8
+    layer: visual
+    evidence:
+    - generalize
+    hardens: arbitrary_stretch_no_numbers
+  generators:
+  - name: gen_tile_floor
+    params:
+    - rows
+    - cols
+    - orientation
+    - cut
+    - show_keys
+    - seed
+  - name: gen_stretch_band
+    params:
+    - factor
+    - length
+    - target_mark
+    - anticipate
+    - flip
+    - skin
+  - name: gen_gear_pair
+    params:
+    - teeth_ratio
+    - turns
+  scenes:
+  - tile_rows_become_rectangle
+  - grid_stretch_by_factor
+  misconceptions:
+  - negative_times_negative
+  challenges: []
+  demonstration: pinch_band_to_target_mark
+- id: arith.div.undo_mul
+  node: arith.div.undo_mul
+  mechanics:
+  - chest_key
+  - tiles
+  - grid_stretch
+  analogies:
+  - rubber_band_stretch
+  - tile_floor
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_key_near_dial
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: full_key_ring_zero_start
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: vertical_diagram_two_arrows
+  - n: 4
+    layer: visual
+    evidence:
+    - apply
+    hardens: floor_with_hidden_side
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: labeled_key_beside_band
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: larger_range_band_on_demand
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: division_with_remainder
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: non_arithmetic_undo_with_parameter
+  generators:
+  - name: gen_stretched_band
+    params:
+    - factor
+    - marks
+    - witness_visible
+    - dial_start
+    - seed
+  - name: gen_shrink_key_ring
+    params:
+    - size
+    - classes
+    - distractors
+    - labeled
+  - name: gen_tiled_floor
+    params:
+    - total
+    - known_side
+    - exact
+    - wall_side
+    - seed
+  - name: gen_arbitrary_undo
+    params: []
+  scenes:
+  - chest_shrink_key_undoes_stretch
+  - tile_split_rectangle_into_rows
+  misconceptions: []
+  challenges: []
+  demonstration: shrink_key_turn_to_witness_mark
+- id: arith.int.negatives
+  node: arith.int.negatives
+  mechanics:
+  - gears_sequence
+  - ledger
+  - grid_stretch
+  analogies:
+  - elevator_floors
+  - debt_ledger
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: cross_zero_three_each_side
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: elevator_shared_axis
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: coin_voucher_cancellation
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: double_turn_negative_times_negative
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: signed_numerals_beside_building
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: larger_range_no_building
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: moving_zero_and_comparisons
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: drawings_without_numerals
+  generators:
+  - name: gen_signed_track
+    params:
+    - start
+    - step
+    - crossings
+    - range
+    - zero_offset
+    - seed
+  - name: gen_ledger_board
+    params:
+    - credits
+    - debts
+    - pair_size
+    - prefilled_pairs
+    - seed
+  - name: gen_floor_pair
+    params:
+    - low
+    - high
+    - both_below
+    - distractors
+    - seed
+  - name: gen_arbitrary_direction
+    params: []
+  scenes:
+  - gear_walk_past_zero
+  - ledger_debt_tokens
+  misconceptions:
+  - negative_times_negative
+  challenges: []
+  demonstration: crank_backward_crosses_zero_turns_around
+- id: arith.frac.parts_and_ratio
+  node: arith.frac.parts_and_ratio
+  mechanics:
+  - tiles
+  - ledger
+  - urn_dice
+  analogies:
+  - pizza_slices
+  - urn_of_balls
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: equal_cuts_one_bar
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: multiple_shaded_parts_pizza
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    - apply
+    hardens: uncut_whole_urn
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: cross_addition_distractor
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    hardens: fraction_tile_beside_bar
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: division_morph_plates
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    - generalize
+    hardens: fraction_on_number_line_larger_denominator
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: rotated_shapes_paths_glasses
+  generators:
+  - name: gen_cut_bar
+    params:
+    - parts
+    - shaded
+    - equal_cuts
+    - bar_length
+    - seed
+  - name: gen_urn
+    params:
+    - composition
+    - highlighted
+    - refill_same_ratio
+    - seed
+  - name: gen_share_plates
+    params:
+    - bars
+    - plates
+    - exact
+    - seed
+  - name: gen_arbitrary_whole
+    params: []
+  scenes:
+  - tile_bar_cut_into_equal_parts
+  - urn_fraction_of_balls
+  misconceptions:
+  - fraction_add_across
+  challenges: []
+  demonstration: finger_drags_to_cut_bar_and_shade
+- id: arith.expr.precedence_tree
+  node: arith.expr.precedence_tree
+  mechanics:
+  - chest_key
+  - machine_pipe
+  analogies:
+  - chest_nested
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: nested_two_chests_shape_locks
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: build_three_chest_nesting
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - recognize
+    hardens: rounded_boxes_and_tree
+  - n: 4
+    layer: visual
+    evidence:
+    - apply
+    hardens: pipe_order_changes_output
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    hardens: walls_become_parentheses
+  - n: 6
+    layer: symbolic
+    evidence:
+    - generalize
+    hardens: invisible_chests_convention
+  - n: 7
+    layer: symbolic
+    evidence:
+    - generalize
+    hardens: undo_from_treasure_outward
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: non_arithmetic_nesting_two_orders
+  generators:
+  - name: gen_nested_chest
+    params:
+    - depth
+    - ops
+    - operand_range
+    - visible_chests
+    - direction
+    - seed
+  - name: gen_expression_tree
+    params:
+    - nodes
+    - same_level_pairs
+    - paren_positions
+    - distractors
+    - seed
+  - name: gen_machine_pipe
+    params:
+    - ops
+    - input
+    - swapped
+    - seed
+  - name: gen_arbitrary_nesting
+    params: []
+  scenes:
+  - chest_nested_open_inside_first
+  - pipe_two_machines_order_matters
+  misconceptions:
+  - unwrap_order_inverted
+  challenges: []
+  demonstration: outer_key_spins_free_until_inner_opens
+- id: prealg.var.unknown_as_box
+  node: prealg.var.unknown_as_box
+  mechanics:
+  - ledger
+  - balance
+  - chest_key
+  analogies:
+  - mystery_box
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: sort_by_kind_no_boxes
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: closed_box_joins_row
+  - n: 3
+    layer: concrete
+    evidence:
+    - apply
+    hardens: balance_measures_unopened_box
+  - n: 4
+    layer: concrete
+    evidence:
+    - explain
+    - manipulate
+    hardens: two_box_marks
+  - n: 5
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: ledger_as_bars_dotted_box
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: mark_becomes_letter
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: arbitrary_objects_three_letters
+  generators:
+  - name: gen_ledger_rows
+    params:
+    - kinds
+    - counts
+    - boxed_kinds
+    - coefficient_range
+    - seed
+  - name: gen_box_marks
+    params:
+    - marks
+    - hidden_value_range
+    - same_value_across_marks
+    - zero_allowed
+    - seed
+  - name: gen_tree_slot
+    params:
+    - expression
+    - unknown_position
+    - distractors
+    - seed
+  scenes:
+  - ledger_box_hides_tokens
+  - chest_box_as_tree_leaf
+  - ledger_morph_fruit_to_symbol
+  misconceptions:
+  - variable_as_label
+  challenges: []
+  demonstration: apples_and_boxes_sorted_into_rows
+- id: prealg.eq.balance
+  node: prealg.eq.balance
+  mechanics:
+  - balance
+  analogies:
+  - balance_pans
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: level_from_tilted_equal_weights
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: keep_level_at_risk
+  - n: 3
+    layer: concrete
+    evidence:
+    - apply
+    hardens: isolate_box_removing_equal_weights
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: bars_before_after
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    hardens: equals_sign_beside_balance
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: compound_sides_box_on_right
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: false_equalities_and_nonarithmetic_actions
+  generators:
+  - name: gen_balance_state
+    params:
+    - left
+    - right
+    - starts_level
+    - token_range
+    - box_side
+    - seed
+  - name: gen_token_set
+    params:
+    - sizes
+    - exact_match_available
+    - seed
+  - name: gen_false_equality
+    params:
+    - difference
+    - side_to_repair
+    - distractors
+  - name: gen_arbitrary_action
+    params: []
+  scenes:
+  - balance_equal_pans_stay_level
+  - balance_remove_one_side_tilts
+  misconceptions:
+  - equals_as_operator
+  - inverse_applied_one_side
+  challenges: []
+  demonstration: touch_weight_left_then_matching_weight_right
+- id: prealg.inv.operation_as_key
+  node: prealg.inv.operation_as_key
+  mechanics:
+  - chest_key
+  analogies:
+  - chest_single_lock
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_key_enters_lock
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: four_operations_key_ring
+  - n: 3
+    layer: concrete
+    evidence:
+    - apply
+    hardens: assemble_key_two_slots
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: vertical_diagram_key_as_arrow
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    hardens: labeled_lock_and_key
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: chained_actions_negative_results
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: non_arithmetic_actions_one_without_key
+  generators:
+  - name: gen_chest_lock
+    params:
+    - op
+    - operand_range
+    - start_value_range
+    - allow_negative_result
+    - chain_depth
+    - seed
+  - name: gen_key_ring
+    params:
+    - size
+    - distractors
+    - labeled
+    - assembled
+  - name: gen_arbitrary_lock
+    params: []
+  scenes:
+  - chest_key_matches_lock
+  - chest_wrong_key_stays_shut
+  - chest_scene_key_intro
+  misconceptions:
+  - wrong_inverse_choice
+  challenges: []
+  demonstration: wrong_shaped_key_turns_and_opens
+- id: alg.eq.one_step
+  node: alg.eq.one_step
+  mechanics:
+  - balance
+  - chest_key
+  analogies:
+  - balance_pans
+  - chest_single_lock
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: number_range_small_add_sub_only
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: mul_div_added_wrong_inverse_choice
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: bars_and_vertical_diagram
+  - n: 4
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: tokens_beside_balance
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: ghost_balance_sign_flip
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: number_range_and_negatives
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: unknown_on_right_and_fractions
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: non_arithmetic_locks_formal
+  generators:
+  - name: gen_one_step_equation
+    params:
+    - op
+    - operand_range
+    - solution_range
+    - allow_negative_constant
+    - unknown_side
+    - seed
+  - name: gen_key_ring
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_arbitrary_lock
+    params: []
+  scenes:
+  - balance_key_both_sides
+  - chest_pick_key_for_lock
+  misconceptions:
+  - sign_flip_on_move
+  - wrong_inverse_choice
+  - inverse_applied_one_side
+  challenges: []
+  demonstration: key_passes_through_both_pans
+- id: alg.eq.multi_step
+  node: alg.eq.multi_step
+  mechanics:
+  - chest_key
+  - balance
+  - machine_pipe
+  analogies:
+  - chest_nested
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_nested_chests_small_range
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: unwrap_order_inverted_appears
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: boxes_and_staircase_diagram
+  - n: 4
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: parenthesized_expression_beside_chest
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: ghost_chests_sign_flip
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: three_layers_fractional_coeffs_build_key
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: commuting_layers_new_equations
+  generators:
+  - name: gen_nested_chest
+    params:
+    - depth
+    - ops
+    - operand_range
+    - solution_range
+    - commuting_layers
+    - degenerate
+    - seed
+  - name: gen_key_ring
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_pipe_chain
+    params:
+    - stages
+    - ops
+    - output_range
+  scenes:
+  - chest_unwrap_outer_to_inner
+  - balance_two_keys_in_order
+  misconceptions:
+  - unwrap_order_inverted
+  - sign_flip_on_move
+  challenges:
+  - ch.alg.absolute_value_two_cases
+  demonstration: outer_key_opens_revealing_inner_lock
+- id: alg.expr.distributive_tiles
+  node: alg.expr.distributive_tiles
+  mechanics:
+  - tiles
+  - ledger
+  analogies:
+  - tile_floor_two_rooms
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_rooms_square_tiles
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: unknown_length_variable_as_label
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: continuous_rectangle_with_bar_keys
+  - n: 4
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: parenthesized_expression_beside_floor
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: negative_common_factor_three_terms
+  - n: 6
+    layer: formal
+    evidence:
+    - generalize
+    hardens: product_of_two_parens_square_of_sum
+  generators:
+  - name: gen_room_pair
+    params:
+    - width
+    - lengths
+    - unknown_count
+    - allow_subtraction
+    - coefficient_range
+    - allow_negative_factor
+    - seed
+  - name: gen_tile_tray
+    params:
+    - shapes
+    - spare_count
+    - missing_count
+  - name: gen_square_of_sum
+    params:
+    - side_terms
+    - player_answer_shape
+  scenes:
+  - tile_two_rooms_one_width
+  - ledger_a_times_sum
+  - ledger_morph_fruit_to_symbol
+  misconceptions:
+  - distribute_over_wrong_op
+  - variable_as_label
+  challenges: []
+  demonstration: tiles_fill_left_room_column_counts_alone
+- id: alg.sys.two_by_two
+  node: alg.sys.two_by_two
+  mechanics:
+  - ledger
+  - balance
+  - grid_stretch
+  analogies:
+  - two_balances_shared_boxes
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_fruit_row_repartition
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: single_row_two_fruits_many_pairs
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_rows_substitution_by_touch
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: bars_and_strips_row_flip
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: coefficients_not_one_scale_before_flip
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: choose_method_scale_both_negative_fractional_shuffled
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: no_solution_infinite_solutions_grid
+  generators:
+  - name: gen_fruit_ledger
+    params:
+    - rows
+    - fruits
+    - repeat_range
+    - total_range
+    - allow_subtraction
+    - seed
+  - name: gen_two_balances
+    params:
+    - coefficients
+    - totals
+    - solution_range
+    - scaling_needed
+    - shuffled_terms
+    - degenerate
+    - seed
+  - name: gen_line_pair
+    params:
+    - window
+    - intersection_visible
+  scenes:
+  - balance_two_scales_shared_boxes
+  - grid_two_lines_cross
+  misconceptions: []
+  challenges:
+  - ch.alg.two_receipts_system
+  - ch.alg.symmetric_sum_of_squares
+  demonstration: drag_number_under_apple_both_rows_respond
+- id: alg.fn.function_as_machine
+  node: alg.fn.function_as_machine
+  mechanics:
+  - machine_pipe
+  - network_routes
+  - sorter
+  analogies:
+  - function_machine
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: empty_casing_single_op
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: build_machine_broken_machine
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    hardens: network_flattened_two_arrows_or_none
+  - n: 4
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: naming_fx_two_machines
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: letters_expressions_chained_rejecting_machines
+  - n: 6
+    layer: formal
+    evidence:
+    - generalize
+    hardens: compare_rules_ambiguous_table_relation
+  generators:
+  - name: gen_machine
+    params:
+    - stages
+    - ops
+    - operand_range
+    - input_kind
+    - rejects_input
+    - ambiguous
+    - seed
+  - name: gen_arrow_network
+    params:
+    - input_count
+    - output_count
+    - extra_arrows
+    - orphan_inputs
+  - name: gen_sorter_bins
+    params:
+    - bin_count
+    - rule_kind
+    - boundary_objects
+  scenes:
+  - pipe_machine_named_f
+  - network_each_input_one_arrow
+  misconceptions: []
+  challenges: []
+  demonstration: token_drops_in_slot_machine_vibrates_row_fills
+- id: alg.fn.graph_as_picture
+  node: alg.fn.graph_as_picture
+  mechanics:
+  - slope_walker
+  - machine_pipe
+  - grid_stretch
+  analogies:
+  - walker_height_trace
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - recognize
+    hardens: walker_draws_alone_single_hill
+  - n: 2
+    layer: intuition
+    evidence:
+    - explain
+    hardens: predict_continuation_three_options
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_hills_positive_heights_corner
+  - n: 4
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: negative_heights_backward_positions
+  - n: 5
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: rulers_dotted_threads_machine
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: pairs_written_small_range
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    - generalize
+    hardens: larger_range_jumps_gaps_two_traces
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: closed_curves_vertical_line_test
+  generators:
+  - name: gen_terrain_profile
+    params:
+    - bumps
+    - height_range
+    - position_range
+    - flat_segments
+    - jump_at
+    - gap_at
+    - seed
+  - name: gen_coordinate_pair
+    params:
+    - x_range
+    - y_range
+    - quadrants
+    - distractors
+  - name: gen_curve_to_judge
+    params: []
+  scenes:
+  - slope_walker_leaves_trace
+  - grid_four_quadrants_with_signs
+  misconceptions: []
+  challenges: []
+  demonstration: hand_drags_walker_drops_leave_trace
+- id: alg.fn.linear_slope
+  node: alg.fn.linear_slope
+  mechanics:
+  - slope_walker
+  - gears_sequence
+  - grid_stretch
+  analogies:
+  - walker_on_ramp
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - recognize
+    hardens: two_ramps_small_positive_slopes
+  - n: 2
+    layer: intuition
+    evidence:
+    - explain
+    hardens: which_costs_more_three_answers
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: unit_step_zero_start
+  - n: 4
+    layer: concrete
+    evidence:
+    - explain
+    - manipulate
+    hardens: variable_step_width_overlap
+  - n: 5
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: crank_and_grid_stretch_color
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: delta_x_delta_y_m_b_tokens
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: negative_fractional_slope_nonzero_intercept_two_points
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: zero_slope_vertical_line_compare
+  generators:
+  - name: gen_ramp
+    params:
+    - slope
+    - intercept
+    - x_range
+    - step_width
+    - seed
+  - name: gen_two_points
+    params:
+    - slope
+    - intercept
+  - name: gen_line_form
+    params: []
+  scenes:
+  - slope_same_steepness_any_step
+  - slope_intercept_is_start_height
+  - slope_scene_hill_intro
+  misconceptions: []
+  challenges: []
+  demonstration: step_slides_along_ramp_color_unchanged
+- id: alg.fn.composition
+  node: alg.fn.composition
+  mechanics:
+  - machine_pipe
+  - gears_sequence
+  analogies:
+  - machine_chain
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - recognize
+    hardens: tape_runs_alone_watch
+  - n: 2
+    layer: intuition
+    evidence:
+    - explain
+    hardens: choose_ending_three_options
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_machines_add_sub_single_digit
+  - n: 4
+    layer: concrete
+    evidence:
+    - explain
+    - manipulate
+    hardens: add_and_multiply_noncommuting_two_lanes
+  - n: 5
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: gear_train_anticipate_before_turning
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: names_intermediate_value_parentheses
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    - generalize
+    hardens: three_machines_noncommuting_incompatible
+  generators:
+  - name: gen_machine_chain
+    params:
+    - length
+    - ops
+    - operand_range
+    - input_range
+    - commuting_pair
+    - include_identity
+    - seed
+  - name: gen_gear_train
+    params:
+    - ratio_a
+    - ratio_b
+    - turns
+    - show_counter
+  - name: gen_incompatible_chain
+    params: []
+  scenes:
+  - pipe_chain_two_machines
+  - gear_train_composed_ratio
+  misconceptions:
+  - chain_rule_missing_inner
+  challenges: []
+  demonstration: pipe_connects_two_machines_ball_drops
+- id: alg.fn.inverse_function
+  node: alg.fn.inverse_function
+  mechanics:
+  - chest_key
+  - machine_pipe
+  - slope_walker
+  analogies:
+  - machine_reverse_run
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - recognize
+    hardens: machine_runs_both_directions_alone
+  - n: 2
+    layer: intuition
+    evidence:
+    - explain
+    hardens: choose_ending_wrapped_box
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_step_add_sub
+  - n: 4
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: mul_div_added_wrong_inverse_choice
+  - n: 5
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: fold_grid_diagonal_reflection
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: f_inverse_notation_identity
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: two_step_machines_order_reversal_ghost
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: non_injective_machines_domain_restriction
+  generators:
+  - name: gen_invertible_machine
+    params:
+    - steps
+    - ops
+    - operand_range
+    - input_range
+    - output_positive_only
+    - seed
+  - name: gen_machine_key_ring
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_non_injective_machine
+    params: []
+  scenes:
+  - pipe_run_machine_backwards
+  - slope_reflect_graph_over_diagonal
+  misconceptions:
+  - sqrt_loses_negative_branch
+  challenges: []
+  demonstration: ball_exits_pulls_lever_reenters_exit
+- id: alg.fn.quadratic_and_sqrt
+  node: alg.fn.quadratic_and_sqrt
+  mechanics:
+  - tiles
+  - chest_key
+  - grid_stretch
+  analogies:
+  - square_garden_side
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: perfect_square_areas_no_chest
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: non_perfect_square_side_between_integers
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: enlarge_with_strips_corner_gap
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: chest_forked_diagram_folded_line
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: sqrt_and_plus_minus_tokens
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: larger_nonperfect_areas_two_digit_coeffs
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: shifted_square_branch_selection
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: negative_areas_foreign_expansions_missing_piece
+  generators:
+  - name: gen_square_from_area
+    params:
+    - area_range
+    - perfect
+    - seed
+  - name: gen_two_branch_chest
+    params:
+    - square_value
+    - shift
+    - context
+    - allow_negative_area
+  - name: gen_border_strips
+    params:
+    - side_label
+    - strip_width
+    - missing_piece
+  scenes:
+  - tile_square_from_area
+  - chest_one_key_two_chests
+  misconceptions:
+  - sqrt_loses_negative_branch
+  - distribute_over_wrong_op
+  challenges:
+  - ch.calc.fence_along_the_river
+  demonstration: tiles_fill_frame_row_by_row_key_unfolds
+- id: alg.fn.exponential_growth
+  node: alg.fn.exponential_growth
+  mechanics:
+  - gears_sequence
+  - slope_walker
+  analogies:
+  - paper_folding_doubles
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: fixed_factor_two_few_turns
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: factors_two_three_ten_linear_comparison
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: stack_becomes_bar_repeated_ratio_key
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    hardens: batches_instead_of_single_turns_exponent_rules_mixed
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: exponent_dragged_beside_track
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: linear_vs_exponential_race_crossing
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: fractional_base_two_digit_start
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: classify_tables_and_word_situations
+  generators:
+  - name: gen_growth_track
+    params:
+    - base
+    - turns
+    - start_value
+    - seed
+  - name: gen_race_pair
+    params:
+    - slope
+    - head_start
+    - base
+    - crossing_hint
+  - name: gen_exponent_chain
+    params:
+    - chunks
+    - distractor_rule
+  scenes:
+  - gear_doubling_track
+  - slope_linear_vs_exponential_race
+  misconceptions:
+  - exponent_rules_mixed
+  challenges:
+  - ch.alg.doublings_until_overflow
+  demonstration: crank_turns_three_times_stack_doubles
+- id: alg.fn.logarithm
+  node: alg.fn.logarithm
+  mechanics:
+  - chest_key
+  - gears_sequence
+  - machine_pipe
+  analogies:
+  - machine_reverse_run
+  - paper_folding_doubles
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: base_two_exact_marks
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: three_bases_key_mismatch
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: vertical_diagram_two_token_forms
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    hardens: pipes_join_split_log_of_sum
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: name_and_subscript_beside_diagram
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: non_integer_counts_symbol
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: values_below_one_negative_zero_chests
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: conversion_both_ways_product_rule_ln
+  generators:
+  - name: gen_scaling_count
+    params:
+    - base
+    - exact
+    - value_range
+    - allow_fractional_value
+    - allow_invalid_input
+    - seed
+  - name: gen_key_ring_by_base
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_log_pipe_pair
+    params:
+    - combiner
+    - a
+    - b
+    - gap_target
+  scenes:
+  - chest_log_key_counts_turns
+  - gear_track_read_backwards
+  misconceptions:
+  - log_of_sum
+  challenges:
+  - ch.alg.doublings_until_overflow
+  demonstration: reversed_crank_key_drags_chest_count_appears
+- id: precalc.lim.approach
+  node: precalc.lim.approach
+  mechanics:
+  - slope_walker
+  - gears_sequence
+  analogies:
+  - zeno_half_steps
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: fixed_half_ratio_eight_turns
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: chosen_gap_distractor_walkers
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: hallway_folds_into_trace_two_sided
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    hardens: hole_at_the_mark_limit_as_reaching
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: table_beside_trace_arrow_and_name
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: ghost_curve_row_from_table
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: moved_point_and_jump_discontinuity
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: sequences_oscillating_repeating_decimal
+  generators:
+  - name: gen_halving_walk
+    params:
+    - target
+    - ratio
+    - n_steps
+    - chosen_gap
+    - seed
+  - name: gen_hole_graph
+    params:
+    - shape
+    - a
+    - hole
+    - limit_value
+    - point_value
+  - name: gen_approach_table
+    params:
+    - sides
+    - rows
+    - decimals
+    - stop_short
+  scenes:
+  - slope_scene_walker_approaches_wall
+  - gear_scene_zeno_halving
+  misconceptions:
+  - limit_as_reaching
+  challenges:
+  - ch.calc.telescoping_sum_hidden_split
+  demonstration: crank_halves_remaining_distance_gap_shrinks
+- id: calc1.deriv.rate_as_slope_limit
+  node: calc1.deriv.rate_as_slope_limit
+  mechanics:
+  - slope_walker
+  - grid_stretch
+  - construct
+  analogies:
+  - walker_zoom_on_hill
+  literacy:
+    min: short_text
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: segment_shortens_bar_settles
+  - n: 2
+    layer: concrete
+    evidence:
+    - explain
+    hardens: zoom_two_fingers_flat_ground
+  - n: 3
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: steepest_point_among_several
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: stacked_triangles_secant_approaches_tangent
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: delta_x_delta_y_ratio_tokens
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: lim_notation_fprime_dydx
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: descending_curves_kink_machine_no_graph
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: derivative_as_path_units_no_place
+  generators:
+  - name: gen_hill_profile
+    params:
+    - family
+    - curvature
+    - marked_places
+    - has_kink
+    - has_flat
+    - seed
+  - name: gen_step_sequence
+    params:
+    - dx_start
+    - dx_ratio
+    - steps
+    - stop_before_zero
+  - name: gen_rate_context
+    params:
+    - input_kind
+    - units
+  - name: gen_tile_keyboard
+    params:
+    - symbols
+    - distractors
+  scenes:
+  - slope_scene_secants_collapse_to_tangent
+  - grid_scene_zoom_curve_looks_straight
+  - slope_scene_hill_intro
+  misconceptions:
+  - limit_as_reaching
+  challenges: []
+  demonstration: hand_drags_walker_one_step_then_shrinks_it
+- id: calc1.deriv.rules_as_structure
+  node: calc1.deriv.rules_as_structure
+  mechanics:
+  - machine_pipe
+  - tiles
+  - gears_sequence
+  analogies:
+  - growing_rectangle
+  - gear_train_ratios
+  literacy:
+    min: short_text
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_square_floor_crank_pull
+  - n: 2
+    layer: concrete
+    evidence:
+    - explain
+    hardens: two_strips_not_one_derivative_of_product_as_product
+  - n: 3
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: pipeline_sum_and_constant_multiple
+  - n: 4
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: gear_train_product_of_ratios_chain_rule_missing_inner
+  - n: 5
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: delta_u_delta_v_labeled_strips
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: prime_notation_bracket_operator_ratio_product
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: negative_fractional_exponents_three_factors_three_layers_opaque
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: four_rules_boxed_exponent_rewrite_first
+  generators:
+  - name: gen_expression_tree
+    params:
+    - forms
+    - depth
+    - term_count
+    - opaque_machines
+    - seed
+  - name: gen_growing_rectangle
+    params:
+    - sides
+    - exponent
+    - delta_start
+    - delta_ratio
+    - show_corner
+  - name: gen_gear_train
+    params:
+    - stages
+    - ratio_range
+    - reversed_stage
+  - name: gen_tile_keyboard
+    params:
+    - symbols
+    - distractors
+  scenes:
+  - tile_scene_growing_square_power_rule
+  - pipe_scene_rules_as_pipeline
+  misconceptions:
+  - chain_rule_missing_inner
+  - derivative_of_product_as_product
+  challenges:
+  - ch.calc.box_from_a_sheet
+  demonstration: handle_pulled_square_grows_two_strips_corner_gray
+- id: calc1.int.accumulation
+  node: calc1.int.accumulation
+  mechanics:
+  - fill_accumulate
+  - tiles
+  analogies:
+  - tank_filling
+  literacy:
+    min: short_text
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: constant_rate_product_total
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: variable_rate_more_water_distractor_peak
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    - explain
+    hardens: refine_partition_counter_settles
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: curve_on_axes_stacked_partitions
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: sigma_notation_index_and_top
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: integral_sign_dx_arrow
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: curve_crosses_axis_draining_integral_ignores_sign
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: non_time_axes_no_graph_units
+  generators:
+  - name: gen_rate_curve
+    params:
+    - family
+    - crosses_axis
+    - peak_position
+    - interval
+    - seed
+  - name: gen_partition
+    params:
+    - n_start
+    - n_ratio
+    - steps
+    - rule
+    - stop_before_zero_width
+    - interior_marks
+  - name: gen_accumulation_context
+    params:
+    - axis_kind
+    - units
+  - name: gen_tile_keyboard
+    params:
+    - symbols
+    - distractors
+  scenes:
+  - fill_scene_rectangles_under_curve
+  - tile_scene_riemann_refine
+  - fill_scene_tank_intro
+  misconceptions:
+  - integral_ignores_sign
+  challenges: []
+  demonstration: faucet_held_open_level_rises_then_partition_refines
+- id: calc1.ftc.integral_undoes_derivative
+  node: calc1.ftc.integral_undoes_derivative
+  mechanics:
+  - chest_key
+  - fill_accumulate
+  - slope_walker
+  analogies:
+  - odometer_from_speed
+  - tank_filling
+  literacy:
+    min: short_text
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: car_and_film_fastest_odometer_turn
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: tank_faucet_level_curve_draws
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    - explain
+    hardens: walker_on_level_matches_gauge
+  - n: 4
+    layer: concrete
+    evidence:
+    - recognize
+    hardens: chest_walker_shaped_lock_wrong_inverse_choice
+  - n: 5
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: two_marks_filled_area_height_difference
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: evaluation_bar_prime_and_subtraction
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: axis_crossing_reversed_bounds_no_graph_family_plus_c
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: variable_upper_bound_lossy_operation_pairs
+  generators:
+  - name: gen_rate_and_level_pair
+    params:
+    - rate_family
+    - crosses_axis
+    - interval
+    - sample_instants
+    - seed
+  - name: gen_key_ring
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_evaluation_item
+    params:
+    - antiderivative_family
+    - bounds_range
+    - reversed_bounds
+    - variable_upper_bound
+    - given_point_for_c
+  - name: gen_lossy_pair
+    params: []
+  - name: gen_tile_keyboard
+    params:
+    - symbols
+    - distractors
+  scenes:
+  - chest_scene_integral_key_opens_derivative
+  - fill_scene_accumulation_rate_equals_height
+  - fill_scene_tank_intro
+  misconceptions:
+  - integral_ignores_sign
+  - wrong_inverse_choice
+  challenges:
+  - ch.calc.area_between_hidden_crossings
+  demonstration: faucet_fills_tank_curve_draws_walker_matches_gauge
+- id: linalg.vec.vector_as_displacement
+  node: linalg.vec.vector_as_displacement
+  mechanics:
+  - grid_stretch
+  - gears_sequence
+  analogies:
+  - treasure_map_arrows
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_positive_cranks_full_map
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: free_vector_translucent_copies
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    - apply
+    hardens: chain_two_arrows_saved_key_ring
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    hardens: right_triangle_legs_modulus_of_sum_adds
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: column_notation_negative_larger_range
+  - n: 6
+    layer: formal
+    evidence:
+    - generalize
+    hardens: fractional_components_free_vectors_nonstep_displacements
+  generators:
+  - name: gen_map_arrow
+    params:
+    - east_range
+    - north_range
+    - allow_negative
+    - fractional
+    - origin_at
+    - seed
+  - name: gen_arrow_pair
+    params:
+    - angle_spread
+    - chain_length
+  - name: gen_map_scene
+    params:
+    - landmarks
+    - grid_size
+  - name: gen_arrow_distractors
+    params: []
+  scenes:
+  - grid_scene_arrow_on_map
+  - gear_scene_steps_east_then_north
+  misconceptions:
+  - modulus_of_sum_adds
+  challenges: []
+  demonstration: two_cranks_turn_walker_steps_east_then_north
+- id: linalg.vec.span_and_combination
+  node: linalg.vec.span_and_combination
+  mechanics:
+  - grid_stretch
+  - ledger
+  - gears_sequence
+  analogies:
+  - two_kinds_of_steps
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_classes_small_coefficients
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: ledger_two_rows_alternate_order
+  - n: 3
+    layer: concrete
+    evidence:
+    - apply
+    hardens: negative_coefficients_variable_as_label
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    hardens: span_lights_up_aligned_case
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: scrub_coefficient_larger_range
+  - n: 6
+    layer: formal
+    evidence:
+    - generalize
+    - transfer
+    hardens: fractional_coefficients_column_vectors_third_class_nonstep_combinations
+  generators:
+  - name: gen_step_pair
+    params:
+    - component_range
+    - angle_separation
+    - collinear
+    - seed
+  - name: gen_target_on_map
+    params:
+    - coefficient_range
+    - allow_negative_coefficients
+    - fractional_coefficients
+    - reachable
+  - name: gen_recipe_ledger
+    params:
+    - rows
+    - third_card
+  - name: gen_span_distractors
+    params: []
+  scenes:
+  - grid_scene_two_kinds_of_steps
+  - ledger_scene_recipe_of_steps
+  misconceptions:
+  - variable_as_label
+  challenges: []
+  demonstration: touch_arrow_a_twice_b_once_walker_takes_three_legs
+- id: linalg.map.linear_transformation_2d
+  node: linalg.map.linear_transformation_2d
+  mechanics:
+  - grid_stretch
+  - machine_pipe
+  analogies:
+  - rubber_grid_with_house
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_pin_soft_deformations
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: both_pins_move_pinned_nail
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: pipe_arrow_recipe_rebuilds
+  - n: 4
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: matrix_numerals_negative_entries
+  - n: 5
+    layer: symbolic
+    evidence:
+    - explain
+    - apply
+    hardens: stack_two_sheets_matrix_multiplication_commutes
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: matrix_given_sheet_on_demand_range_fractions
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    - transfer
+    hardens: collapses_identity_unannounced_non_map_objects
+  generators:
+  - name: gen_stretch_matrix
+    params:
+    - entry_range
+    - allow_negative
+    - fractional_entries
+    - family
+    - singular
+    - seed
+  - name: gen_house_shape
+    params:
+    - marked_corner
+    - vertex_count
+  - name: gen_pipe_vector
+    params:
+    - component_range
+  - name: gen_move_pair
+    params:
+    - order_matters_required
+  scenes:
+  - grid_scene_rubber_sheet_house
+  - grid_scene_basis_arrows_land
+  - pipe_scene_vector_in_vector_out
+  - grid_scene_sheet_intro
+  misconceptions:
+  - matrix_multiplication_commutes
+  challenges:
+  - ch.linalg.matrix_of_a_composed_move
+  demonstration: pin_dragged_sheet_follows_house_tilts
+- id: linalg.map.inverse_and_systems
+  node: linalg.map.inverse_and_systems
+  mechanics:
+  - grid_stretch
+  - chest_key
+  - balance
+  analogies:
+  - rubber_grid_undo_stretch
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: simple_one_direction_small_keyring
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: full_keyring_wrong_inverse_choice
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    hardens: collapsed_sheet_slot_hollow
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: key_dropped_on_equals_tilts_if_one_side
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: x_equals_a_inverse_b_formula_negative_entries
+  - n: 6
+    layer: symbolic
+    evidence:
+    - explain
+    - apply
+    hardens: undo_in_reverse_order_matrix_multiplication_commutes
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    - transfer
+    hardens: fractional_singular_row_given_nonmap_undo
+  generators:
+  - name: gen_invertible_stretch
+    params:
+    - entry_range
+    - determinant_nonzero
+    - integer_inverse_preferred
+    - family
+    - seed
+  - name: gen_key_rack
+    params:
+    - size
+    - distractors
+    - labeled
+  - name: gen_system_rows
+    params:
+    - coefficient_range
+    - solution_range
+    - unknown_order
+  - name: gen_singular_case
+    params:
+    - b_on_line
+  scenes:
+  - grid_scene_undo_stretch
+  - chest_scene_matrix_as_key
+  - balance_scene_two_equations_one_grid
+  - grid_scene_sheet_intro
+  misconceptions:
+  - wrong_inverse_choice
+  - matrix_multiplication_commutes
+  challenges:
+  - ch.linalg.undo_the_unknown_stretch
+  demonstration: matching_laminita_dragged_over_sheet_house_restores
+- id: prob.basic.probability_as_proportion
+  node: prob.basic.probability_as_proportion
+  mechanics:
+  - urn_dice
+  - tiles
+  - sorter
+  analogies:
+  - urn_of_balls
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_colors_small_urn_no_counters
+  - n: 2
+    layer: concrete
+    evidence:
+    - explain
+    - manipulate
+    hardens: long_run_dashed_line
+  - n: 3
+    layer: visual
+    evidence:
+    - recognize
+    - manipulate
+    hardens: bars_with_digits_compare_two_urn_sizes
+  - n: 4
+    layer: visual
+    evidence:
+    - apply
+    hardens: predict_before_run_three_colors
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: fraction_token_and_pa_notation
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: four_colors_grouped_events_uncommon_denominators
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: unequal_weights_equiprobable_assumed
+  generators:
+  - name: gen_urn
+    params:
+    - colors
+    - total_range
+    - target_share
+    - equal_weights
+    - seed
+  - name: gen_draw_run
+    params:
+    - n_draws
+    - with_replacement
+    - seed
+  - name: gen_event_bin
+    params:
+    - size
+    - rule_kind
+  - name: gen_weighted_space
+    params: []
+  scenes:
+  - urn_scene_draw_and_tally
+  - urn_scene_fraction_of_total
+  - urn_scene_frequency_bar_stabilizes
+  misconceptions:
+  - equiprobable_assumed
+  challenges:
+  - ch.prob.two_dice_hidden_grid
+  demonstration: ball_drawn_moved_to_bin_column_rises_then_held_run
+- id: prob.cond.conditional_and_independence
+  node: prob.cond.conditional_and_independence
+  mechanics:
+  - urn_dice
+  - sorter
+  - tiles
+  - network_routes
+  analogies:
+  - sorted_bins_then_pick
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_colors_two_sizes_single_trait
+  - n: 2
+    layer: concrete
+    evidence:
+    - explain
+    - manipulate
+    hardens: second_trait_back_and_forth
+  - n: 3
+    layer: visual
+    evidence:
+    - recognize
+    hardens: two_by_two_grid_compare_bars
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: matching_lines_independence_unnamed
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: p_a_given_b_notation_conditional_reversed
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: two_stage_tree_with_without_replacement_independent_means_disjoint
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: three_traits_compound_conditions_pairwise_independence
+  generators:
+  - name: gen_two_trait_urn
+    params:
+    - trait_a
+    - trait_b
+    - total_range
+    - dependence
+    - seed
+  - name: gen_condition_query
+    params:
+    - direction
+    - compound
+    - asks
+  - name: gen_draw_tree
+    params:
+    - stages
+    - with_replacement
+    - stage_probs
+    - highlighted_path
+    - seed
+  - name: gen_independence_puzzle
+    params: []
+  scenes:
+  - sorter_scene_bins_then_pick
+  - urn_scene_restricted_urn
+  - network_scene_tree_of_draws
+  misconceptions:
+  - conditional_reversed
+  - independent_means_disjoint
+  challenges:
+  - ch.prob.at_least_one_by_complement
+  - ch.prob.shared_month_small_group
+  - ch.prob.three_doors_switch
+  - ch.prob.expected_rolls_until_six
+  demonstration: size_icon_touched_balls_fly_to_bins_bar_shortens
+- id: prob.rv.expectation_as_weighted_average
+  node: prob.rv.expectation_as_weighted_average
+  mechanics:
+  - ledger
+  - balance
+  - urn_dice
+  analogies:
+  - balance_point_of_weights
+  - fair_ticket_price
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_prizes_preplaced_weights
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: three_prizes_weights_from_ledger
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: change_one_probability_pivot_chases_weight
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: bars_and_contribution_column
+  - n: 5
+    layer: visual
+    evidence:
+    - apply
+    hardens: long_run_predict_before_running
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: sum_notation_ex_beside_table
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: negative_prizes_percent_chances_non_integer_ten_values
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: linearity_two_tied_tickets_unseen_games
+  generators:
+  - name: gen_prize_book
+    params:
+    - n_prizes
+    - value_range
+    - prob_shape
+    - prob_format
+    - integer_values
+    - seed
+  - name: gen_plank_layout
+    params:
+    - mark_spacing
+    - pivot_on_mark
+    - pivot_guess
+  - name: gen_long_run
+    params:
+    - n_tickets
+    - seed
+  - name: gen_linear_pair
+    params: []
+  scenes:
+  - ledger_scene_prize_ledger
+  - balance_scene_plank_with_weights
+  - urn_scene_frequency_bar_stabilizes
+  misconceptions:
+  - equiprobable_assumed
+  challenges:
+  - ch.prob.expected_rolls_until_six
+  demonstration: weight_dropped_on_mark_pivot_dragged_to_level
+- id: graph.basic.graph_and_paths
+  node: graph.basic.graph_and_paths
+  mechanics:
+  - network_routes
+  analogies:
+  - city_routes
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: prebuilt_bridges_single_destination
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - apply
+    hardens: split_network_minimum_bridges
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    hardens: islands_shrink_to_points_draggable
+  - n: 4
+    layer: visual
+    evidence:
+    - recognize
+    hardens: two_drawings_same_graph
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    hardens: pair_list_beside_drawing
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: pair_list_only_up_to_twelve_points_crossings
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: build_from_animation_adjacency_matrix_fold
+  generators:
+  - name: gen_island_map
+    params:
+    - n_nodes
+    - edge_density
+    - components
+    - guarantee_path
+    - seed
+  - name: gen_layout_pair
+    params:
+    - spread
+    - crossings_allowed
+  - name: gen_bridge_budget
+    params:
+    - wood
+    - min_edges_needed
+  - name: gen_situation_to_graph
+    params: []
+  scenes:
+  - network_scene_islands_to_dots
+  - network_scene_same_graph_redrawn
+  misconceptions:
+  - path_vs_walk_confusion
+  challenges:
+  - ch.graph.count_edges_from_degrees
+  demonstration: touch_islands_in_order_bridges_light_up
+- id: geom.area.rect_and_triangle
+  node: geom.area.rect_and_triangle
+  mechanics:
+  - tiles
+  - construct
+  analogies:
+  - tile_floor
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - manipulate
+    hardens: small_rectangles_no_row_shortcut
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: row_copy_shortcut_larger_rectangles
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    - manipulate
+    hardens: right_triangle_ghost_copy
+  - n: 4
+    layer: concrete
+    evidence:
+    - manipulate
+    - generalize
+    hardens: oblique_triangle_needs_altitude_area_uses_slant_side
+  - n: 5
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: keyed_sides_area_ficha_with_unit
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: larger_range_composite_figures_no_grid
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: decimal_fractional_sides_obtuse_triangle_unit_change
+  generators:
+  - name: gen_floor
+    params:
+    - width
+    - height
+    - tile_supply
+    - show_grid
+    - seed
+  - name: gen_triangle
+    params:
+    - base
+    - height
+    - apex_offset
+    - orientation
+    - seed
+  - name: gen_composite_floor
+    params: []
+  - name: gen_unit_swap
+    params: []
+  scenes:
+  - tile_scene_rectangle_rows
+  - construction_scene_triangle_half_rectangle
+  misconceptions:
+  - area_uses_slant_side
+  challenges:
+  - ch.geom.l_shape_missing_side
+  - ch.geom.inscribed_right_angle_area
+  - ch.geom.tiles_hidden_corner
+  - ch.geom.tiles_l_shape_split
+  - ch.geom.tiles_triangle_half_rectangle
+  - ch.geom.tiles_slanted_same_as_straight
+  - ch.geom.tiles_hidden_layers_volume
+  - ch.alg.rectangle_perimeter_area_quadratic
+  - ch.trig.triangle_area_from_included_angle
+  - ch.trig.regular_polygon_area_by_radii
+  - ch.calc.fence_along_the_river
+  demonstration: three_tiles_complete_row_then_copies_down
+- id: geom.angle.turn_as_measure
+  node: geom.angle.turn_as_measure
+  mechanics:
+  - gears_sequence
+  - construct
+  - grid_stretch
+  analogies:
+  - number_line_walk
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - manipulate
+    hardens: single_arm_no_notches
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: short_arm_added_quarter_half_three_quarter_no_numbers
+  - n: 3
+    layer: concrete
+    evidence:
+    - manipulate
+    - generalize
+    hardens: two_finger_partition_2_4_8
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: numbered_notches_degree_multiples_of_15
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: extend_side_exterior_interior_angle
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: non_45_multiples_more_than_full_turn_backward
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: partition_into_5_7_12_non_integer_degree
+  generators:
+  - name: gen_dial
+    params:
+    - target_turn
+    - arm_lengths
+    - show_marks
+    - allow_overshoot
+    - seed
+  - name: gen_turn_partition
+    params: []
+  - name: gen_figure_exterior
+    params: []
+  - name: gen_stretched_figure
+    params: []
+  scenes:
+  - gear_scene_turn_as_angle
+  - construction_scene_extend_side_exterior_angle
+  misconceptions: []
+  challenges: []
+  demonstration: arm_dragged_to_goal_dial_clicks_sector_paints
+- id: geom.sim.similarity_as_scale
+  node: geom.sim.similarity_as_scale
+  mechanics:
+  - grid_stretch
+  - construct
+  - tiles
+  analogies:
+  - shadow_and_stick
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - recognize
+    hardens: sticks_same_ratio_under_sun_no_numbers
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: diagonal_stretch_snap_integer_factor
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    - recognize
+    hardens: single_direction_stretch_widened_distractor
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: grid_rays_from_center_ratio_repeats_unknown_side
+  - n: 5
+    layer: visual
+    evidence:
+    - explain
+    - generalize
+    hardens: area_level_factor_squared
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: parallel_cut_similar_triangle_fractional_factor_orientation
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: angle_only_triangles_area_factor_given
+  generators:
+  - name: gen_scale_pair
+    params:
+    - shape
+    - factor
+    - direction
+    - orientation_shift
+    - hidden_side
+    - seed
+  - name: gen_shadow_scene
+    params: []
+  - name: gen_parallel_cut
+    params: []
+  - name: gen_area_scale_item
+    params: []
+  - name: gen_stretch_distractor
+    params: []
+  scenes:
+  - grid_scene_dilate_triangle
+  - construction_scene_parallel_cut_similar
+  misconceptions: []
+  challenges:
+  - ch.geom.parallel_cut_missing_length
+  - ch.geom.altitude_hypotenuse_three_similar
+  - ch.geom.frustum_volume_by_extension
+  - ch.calc.cylinder_inside_a_cone
+  demonstration: two_finger_diagonal_stretch_until_snap
+- id: geom.tri.pythagoras_as_tiles
+  node: geom.tri.pythagoras_as_tiles
+  mechanics:
+  - tiles
+  - construct
+  analogies:
+  - square_garden_side
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - manipulate
+    hardens: small_integer_legs_exact_tiles
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: vertex_drag_right_angle_mark
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: four_copies_two_arrangements_mandatory
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: counters_become_powers_integer_triples
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: given_hypotenuse_and_leg_distribute_over_wrong_op
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    - generalize
+    hardens: irrational_results_hidden_right_triangle
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: converse_decide_right_triangle_construct_one
+  generators:
+  - name: gen_right_triangle
+    params:
+    - legs
+    - unknown_side
+    - orientation
+    - show_squares
+    - seed
+  - name: gen_four_copies
+    params: []
+  - name: gen_hidden_right_triangle
+    params: []
+  - name: gen_triple_check
+    params: []
+  scenes:
+  - tile_scene_pythagoras_rearrangement
+  - construction_scene_altitude_to_hypotenuse
+  misconceptions:
+  - distribute_over_wrong_op
+  challenges:
+  - ch.geom.trapezoid_hidden_height
+  - ch.geom.chord_distance_from_center
+  - ch.geom.inscribed_right_angle_area
+  - ch.geom.altitude_hypotenuse_three_similar
+  - ch.calc.sliding_ladder_rates
+  - ch.linalg.shadow_gives_the_height
+  demonstration: tiles_move_from_small_squares_to_large_until_empty
+- id: geom.cons.auxiliary_lines
+  node: geom.cons.auxiliary_lines
+  mechanics:
+  - construct
+  - tiles
+  analogies:
+  - tile_floor
+  literacy:
+    min: short_text
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: paper_folding_symmetric_no_measures
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: single_construction_small_integer_range
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: draw_collect_erase_verify_invariant
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: ticks_arcs_named_data_collected_with_tiles
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: letters_at_vertices_area_uses_slant_side
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: two_chained_constructions_three_piece_figures
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: altitude_falls_outside_extend_or_reflect
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: unseen_figures_proof_sketch_no_interior_line_works
+  generators:
+  - name: gen_composite_figure
+    params:
+    - shape
+    - piece_count
+    - side_range
+    - triples
+    - hidden_side
+    - altitude_falls
+    - seed
+  - name: gen_candidate_lines
+    params:
+    - count
+    - useful
+  - name: gen_marked_figure
+    params: []
+  scenes:
+  - construction_scene_composite_figure_altitude
+  - construction_scene_choose_the_line
+  misconceptions:
+  - area_uses_slant_side
+  challenges:
+  - ch.geom.trapezoid_hidden_height
+  - ch.geom.l_shape_missing_side
+  - ch.geom.chord_distance_from_center
+  - ch.geom.parallel_cut_missing_length
+  - ch.geom.frustum_volume_by_extension
+  - ch.trig.tower_from_two_angles
+  demonstration: fold_paper_then_drag_vertex_to_opposite_side
+- id: trig.circle.unit_circle_radians
+  node: trig.circle.unit_circle_radians
+  mechanics:
+  - construct
+  - gears_sequence
+  - grid_stretch
+  analogies:
+  - clock_face_wrap
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: turn_and_count_whole_ribbons
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: radian_by_radian_crank_not_round_number
+  - n: 3
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: right_triangle_construction_first_quadrant_coordinates
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    - apply
+    hardens: turns_past_quarter_signs_appear
+  - n: 5
+    layer: visual
+    evidence:
+    - generalize
+    hardens: radius_three_counter_unchanged_locked_ribbon
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: rad_notable_angles_keyboard
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: negative_angles_beyond_2pi_sin_of_sum_distributes
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: arcs_given_angle_asked_degree_conversion_convention
+  generators:
+  - name: gen_circle_angle
+    params:
+    - angle_set
+    - sign
+    - winding
+    - radius
+    - seed
+  - name: gen_arc_ribbon
+    params:
+    - steps
+    - show_counter
+    - ribbon_scales
+  - name: gen_quadrant_point
+    params: []
+  scenes:
+  - construction_scene_radius_and_dropped_height
+  - gear_scene_unroll_radius_on_arc
+  misconceptions:
+  - sin_of_sum_distributes
+  challenges: []
+  demonstration: ribbon_laid_along_rim_repeatedly_until_full_turn
+- id: trig.fn.sine_as_height
+  node: trig.fn.sine_as_height
+  mechanics:
+  - construct
+  - machine_pipe
+  - slope_walker
+  analogies:
+  - wheel_rider_height
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: upper_half_only_measure_against_post
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: full_turn_negative_heights_unannounced
+  - n: 3
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: machine_mouth_pipe_table_repeated_ghost
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    hardens: paper_crank_trace_half_and_full_turn
+  - n: 5
+    layer: visual
+    evidence:
+    - explain
+    - apply
+    hardens: flipped_machine_cosine_overlay_traces
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: angle_token_pi_marks_notable_values
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: radius_other_than_one_negative_multi_turn_non_notable
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: definition_height_given_angle_asked_graph_only
+  generators:
+  - name: gen_wheel_angle
+    params:
+    - angle_set
+    - sign
+    - winding
+    - radius
+    - ask
+    - seed
+  - name: gen_angle_table
+    params: []
+  - name: gen_wave_trace
+    params:
+    - turns
+    - direction
+    - speed
+    - overlay
+  scenes:
+  - construction_scene_height_from_radius_tip
+  - slope_scene_wheel_rider_trace
+  - pipe_scene_angle_to_height
+  misconceptions: []
+  challenges:
+  - ch.trig.regular_polygon_area_by_radii
+  demonstration: passenger_dragged_quarter_turn_height_measured_against_post

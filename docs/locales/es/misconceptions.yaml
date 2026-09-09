@@ -17,6 +17,14 @@ misconceptions:
     name: "Área sin signo"
     prompt: "Bajo la línea el tanque se vacía. ¿Cuánto queda al final?"
 
+  subtrahend_order_swapped:
+    name: "Restar en el orden invertido"
+    prompt: "La pista se terminó. ¿Desde cuál de los dos hay que volver?"
+
+  division_order_swapped:
+    name: "Dividir al revés"
+    prompt: "Esa llave encoge mucho más de lo que se estiró. ¿Cuánto se estiró?"
+
   wrong_inverse_choice:
     name: "Elegir la llave equivocada"
     prompt: "Esa llave no abre este cofre. ¿Qué operación deshace multiplicar por {a}?"
@@ -61,6 +69,30 @@ misconceptions:
     name: "Independiente como incompatible"
     prompt: "Salieron {a} veces las dos juntas. ¿Independientes o incompatibles?"
 
+  substitution_ignores_other_row:
+    name: "Resolver una fila sin la otra"
+    prompt: "Esa balanza quedó derecha y la otra se inclinó. ¿Qué falta reemplazar?"
+
+  machine_gives_two_outputs:
+    name: "Una entrada con dos salidas"
+    prompt: "La misma ficha salió por dos tubos distintos. ¿Cuál es la salida?"
+
+  slope_confuses_step_with_rate:
+    name: "El paso confundido con la pendiente"
+    prompt: "El escalón se hizo más ancho y el color no cambió. ¿Qué mide el color?"
+
+  angle_measured_by_side_length:
+    name: "El ángulo medido por el brazo"
+    prompt: "Los dos giraron hasta acá. ¿Cuál giró más?"
+
+  turn_read_as_final_position:
+    name: "El giro leído como posición final"
+    prompt: "Uno dio la vuelta entera y siguió. ¿Cuál giró más?"
+
+  sine_confused_with_cosine:
+    name: "La sombra tomada por la altura"
+    prompt: "Bajaste la sombra en vez de la altura. ¿Cuál sube con el ángulo?"
+
   inverse_applied_one_side:
     name: "Aplicar la inversa a un solo lado"
     prompt: "Restaste {a} solo de un lado. ¿Qué le falta al otro?"
@@ -77,6 +109,10 @@ misconceptions:
     name: "Olvidar la derivada de adentro"
     prompt: "El engranaje de adentro también gira. ¿Cuánto por cada vuelta?"
 
+  slope_as_rise_only:
+    name: "La pendiente como subida sola"
+    prompt: "Las dos suben lo mismo. ¿Por qué una cuesta más?"
+
   area_uses_slant_side:
     name: "Usar el lado inclinado como altura"
     prompt: "Las baldosas sobran por el costado. ¿Qué medida va con la base?"
@@ -92,6 +128,14 @@ misconceptions:
   path_vs_walk_confusion:
     name: "Camino con nodos repetidos"
     prompt: "El nodo {u} se encendió dos veces. ¿Sigue siendo un camino?"
+
+  endpoint_read_as_distance:
+    name: "La piedra de llegada como tramo"
+    prompt: "Esa llave se pasa de la piedra de salida. ¿Cuánto avanzó el caminante?"
+
+  graph_read_axes_swapped:
+    name: "El par leído al revés"
+    prompt: "Moviste al caminante hasta acá. ¿A qué altura quedó?"
 
   distribute_over_wrong_op:
     name: "Repartir sobre la operación equivocada"
@@ -112,6 +156,10 @@ misconceptions:
   sin_of_sum_distributes:
     name: "Seno de una suma"
     prompt: "Con {a} y {b} las salidas difieren. ¿Para qué ángulos coinciden?"
+
+  area_scales_like_length:
+    name: "El área escalada como un lado"
+    prompt: "Quedó piso sin cubrir. ¿Cuántas filas nuevas entraron y cuánto creció cada una?"
 
   modulus_of_sum_adds:
     name: "Sumar longitudes de dos pasos"

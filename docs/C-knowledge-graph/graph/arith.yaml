@@ -51,7 +51,7 @@ nodes:
     mechanics: [chest_key, gears_sequence]
     literacy: none
     analogy: walker_forward_and_back
-    misconceptions: []
+    misconceptions: [subtrahend_order_swapped, endpoint_read_as_distance]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [geom.trans.undo_transformation, linalg.vec.vector_as_displacement, calc1.ftc.integral_undoes_derivative]
     calc_unlocks: [op_sub]
@@ -87,7 +87,7 @@ nodes:
     mechanics: [chest_key, tiles, grid_stretch]
     literacy: none
     analogy: rubber_band_stretch
-    misconceptions: []
+    misconceptions: [division_order_swapped, wrong_inverse_choice]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.map.inverse_and_systems, geom.sim.similarity_as_scale, prob.basic.probability_as_proportion]
     calc_unlocks: [op_div]

@@ -36,7 +36,7 @@ nodes:
     mechanics: [gears_sequence, construct, grid_stretch]
     literacy: none
     analogy: number_line_walk
-    misconceptions: []
+    misconceptions: [angle_measured_by_side_length, turn_read_as_final_position]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [trig.circle.unit_circle_radians, disc.mod.clock_equivalence, adv.cplx.multiplication_rotates_scales]
     calc_unlocks: [op_angle]
@@ -112,7 +112,7 @@ nodes:
     mechanics: [grid_stretch, construct, tiles]
     literacy: icons
     analogy: shadow_and_stick
-    misconceptions: []
+    misconceptions: [area_scales_like_length, area_uses_slant_side]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [trig.ratio.similar_shadows, linalg.map.linear_transformation_2d, prealg.ratio.scaling_recipe, arith.frac.equivalent]
     calc_unlocks: [op_transform_point]
