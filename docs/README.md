@@ -59,4 +59,14 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 
 ## Verificación
 
-El grafo y sus referencias cruzadas se validan con un script que comprueba ids, prerequisitos, aciclicidad, orden de la espina, mecánicas por área, reglas de `literacy`, claves de locale y referencias a escenas, operaciones, entradas de cheatsheet y desafíos. Las reglas están enumeradas al final de [`node.schema.yaml`](C-knowledge-graph/schema/node.schema.yaml).
+El documento se valida con [`tools/validate.py`](../tools/validate.py), que se corre desde la raíz del repositorio y no necesita más que Python con PyYAML:
+
+```bash
+python3 tools/validate.py
+```
+
+Comprueba lo que enumera el final de [`node.schema.yaml`](C-knowledge-graph/schema/node.schema.yaml) (ids, prerequisitos, aciclicidad, orden de la espina, reglas de `literacy`, claves de locale y referencias a mecánicas, analogías, escenas, operaciones, entradas de cheatsheet y desafíos) y además tres cosas que el documento exige de sí mismo: que los enlaces relativos resuelvan, que la prosa cite el id vigente y no un alias, y que los nombres de clases de ManimGL no aparezcan fuera de I y O.
+
+Distingue errores de avisos. Un error es una contradicción: una referencia que no resuelve, un ciclo, un enlace roto. Un aviso es una observación que puede ser deliberada: un prerequisito transitivamente redundante, una misconception que se explica sobre una mecánica que su nodo no declara (ver la regla de [L0](L-modelo-errores/L0-taxonomia.md)), un concepto de la espina sin desafío. El documento debe cerrar siempre con cero errores; los avisos se leen y se deciden.
+
+Una región de prosa cuyo tema son los aliases mismos, como la sección de [M0](M-calculadora/M0-progresion.md) que documenta qué operaciones se absorbieron en cuál, se marca con `<!-- alias-ok -->` y `<!-- /alias-ok -->` para que citarlos ahí no cuente como error.

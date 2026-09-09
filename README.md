@@ -19,7 +19,8 @@ Fase de diseño. Todo el diseño vive en [`docs/`](docs/README.md); todavía no 
 ```
 docs/        documento de diseño (visión, pedagogía, knowledge graph, curriculum, mecánicas,
              minijuegos, analogías, Manim, adaptativo, evaluación, errores, calculadora, UX,
-             arquitectura, i18n, edad universal)
+             arquitectura, i18n, edad universal, cheatsheet, desafíos)
+tools/       validate.py, el validador del documento
 apps/mobile  app React Native (Expo) para iOS y Android          [futuro]
 packages/    math-engine, viz-core (mini-Manim), curriculum-engine,
              knowledge-graph, user-model, persistence           [futuro]
@@ -29,4 +30,10 @@ manim/       escenas ManimGL parametrizadas y pipeline de pre-render [futuro]
 
 ## Cómo leer el diseño
 
-Empezar por [`docs/README.md`](docs/README.md), que indexa las secciones A–Q y explica las convenciones (qué es prosa, qué es YAML, cómo se referencian los ids).
+Empezar por [`docs/README.md`](docs/README.md), que indexa las secciones A–S y explica las convenciones (qué es prosa, qué es YAML, cómo se referencian los ids).
+
+Antes de dar por bueno un cambio, correr el validador desde la raíz. Tiene que cerrar con cero errores:
+
+```bash
+python3 tools/validate.py
+```
