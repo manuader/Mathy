@@ -4,7 +4,7 @@ Este directorio contiene el diseño completo de Mathy, un juego mobile para apre
 
 ## Cómo leer
 
-Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-progresion-abstraccion.md) y el concepto de calibración [13-alg.eq.one_step](D-curriculum/D1-espina/13-alg.eq.one_step.md) con su [minijuego](F-minijuegos/alg.eq.one_step.md). Si vas a escribir contenido: [C0](C-knowledge-graph/C0-esquema.md), [E0](E-mecanicas/E0-catalogo.md), [G0](G-analogias/G0-reglas.md), [L0](L-modelo-errores/L0-taxonomia.md), la [plantilla D1](D-curriculum/D1-espina/_plantilla.md) y [F0](F-minijuegos/F0-principios.md). Si vas a implementar: [O](O-arquitectura-tecnica.md), [I0](I-manim/I0-mapping.md), [K](K-evaluacion.md), [J](J-adaptativo.md), [P](P-internacionalizacion.md).
+Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-progresion-abstraccion.md) y el concepto de calibración [13-alg.eq.one_step](D-curriculum/D1-espina/13-alg.eq.one_step.md) con su [minijuego](F-minijuegos/alg.eq.one_step.md). Si vas a escribir contenido: [C0](C-knowledge-graph/C0-esquema.md), [E0](E-mecanicas/E0-catalogo.md), [G0](G-analogias/G0-reglas.md), [L0](L-modelo-errores/L0-taxonomia.md), la [plantilla D1](D-curriculum/D1-espina/_plantilla.md) y [F0](F-minijuegos/F0-principios.md). Si vas a implementar: [T](T-plan-implementacion.md), [U](U-desarrollo/U0-estado.md), [O](O-arquitectura-tecnica.md), [I0](I-manim/I0-mapping.md), [K](K-evaluacion.md), [J](J-adaptativo.md), [P](P-internacionalizacion.md).
 
 ## Secciones
 
@@ -29,6 +29,8 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 | Q | [Edad universal](Q-edad-universal.md) | Jugable desde 5–6 años: pre-lectura, input, privacidad infantil |
 | R | [Cheatsheet](R-cheatsheet/R0-cheatsheet.md) | Referencia personal incremental por tema; [entradas](R-cheatsheet/cheatsheet_entries.yaml) |
 | S | [Desafíos](S-desafios/S0-desafios.md) | Problemas estilo olimpíada con datos faltantes; [catálogo](S-desafios/challenges.yaml) |
+| T | [Plan de implementación](T-plan-implementacion.md) | Stack verificado, arquitectura de paquetes, hitos, pacing y riesgos |
+| U | [Desarrollo](U-desarrollo/U0-estado.md) | Estado del código: qué está construido, qué sigue, cómo correrlo |
 | | [Locales](locales/es/) | Todas las cadenas visibles al usuario, en español como locale fuente |
 
 ## Convenciones

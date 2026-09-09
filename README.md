@@ -12,7 +12,9 @@ Principios que atraviesan todo el diseño:
 
 ## Estado
 
-Fase de diseño. Todo el diseño vive en [`docs/`](docs/README.md); todavía no hay código de producto.
+Diseño cerrado, construcción en marcha. El diseño completo vive en [`docs/`](docs/README.md); el estado del código y qué sigue, en [`docs/U-desarrollo/U0-estado.md`](docs/U-desarrollo/U0-estado.md).
+
+El núcleo del motor de animación está construido y probado: representa una ecuación como un árbol donde cada término tiene identidad estable, y anima el paso de un estado al siguiente moviendo esos términos en vez de redibujar la fórmula. Falta la capa que dibuja.
 
 ## Estructura prevista del repositorio
 
@@ -21,11 +23,13 @@ docs/        documento de diseño (visión, pedagogía, knowledge graph, curricu
              minijuegos, analogías, Manim, adaptativo, evaluación, errores, calculadora, UX,
              arquitectura, i18n, edad universal, cheatsheet, desafíos)
 tools/       validate.py, el validador del documento
-apps/mobile  app React Native (Expo) para iOS y Android          [futuro]
-packages/    math-engine, viz-core (mini-Manim), curriculum-engine,
-             knowledge-graph, user-model, persistence           [futuro]
-content/     grafo, actividades y locales compilados a la app    [futuro]
-manim/       escenas ManimGL parametrizadas y pipeline de pre-render [futuro]
+packages/    math-core   árbol de expresión con identidad de término   [listo]
+             typeset     composición de fórmulas                       [listo]
+             viz-core    suavizados de Manim y planificador de morph   [listo]
+             glyphs      atlas de contornos horneado en build time     [en curso]
+             viz-skia    adaptador de dibujo                           [futuro]
+apps/mathy   app Expo única para iOS, Android y navegador              [futuro]
+content/     grafo, actividades y locales compilados a la app          [futuro]
 ```
 
 ## Cómo leer el diseño
@@ -35,7 +39,7 @@ Empezar por [`docs/README.md`](docs/README.md), que indexa las secciones A–S y
 Antes de dar por bueno un cambio, correr el validador desde la raíz. Tiene que cerrar con cero errores:
 
 ```bash
-python3 tools/validate.py
+npm install && npm test --workspaces --if-present && python3 tools/validate.py
 ```
 
 ## Licencia
