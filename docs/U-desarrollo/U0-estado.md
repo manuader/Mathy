@@ -2,13 +2,13 @@
 
 Este documento es el punto de entrada para quien retoma el trabajo. Dice qué está construido y verificado, qué está a medias, qué sigue, y las decisiones que ya se tomaron para que nadie las vuelva a discutir sin motivo. Se actualiza al cerrar cada hito.
 
-**Última actualización:** al cerrar el atlas de glifos y la cadena completa (commit `1e76b0d`).
+**Última actualización:** al cerrar el hito M0 en navegador (commit `369ab4e`).
 
 ## Dónde estamos
 
-La fase de diseño está cerrada: las secciones A a S de [`docs/`](../README.md) están completas y el validador pasa con cero errores. La fase de construcción arrancó y está dentro del hito **M0**, que es la prueba vertical descrita en [T](../T-plan-implementacion.md).
+La fase de diseño está cerrada: las secciones A a S de [`docs/`](../README.md) están completas y el validador pasa con cero errores. La de construcción tiene cerrado el hito **M0**, la prueba vertical descrita en [T](../T-plan-implementacion.md).
 
-M0 pregunta una sola cosa: **¿se puede animar una ecuación con identidad de término, a sesenta cuadros por segundo, con el dedo, en iOS, Android y navegador?** La mitad de la respuesta ya está: el motor que calcula la animación funciona y está probado. Falta la mitad que dibuja.
+M0 preguntaba una sola cosa: **¿se puede animar una ecuación con identidad de término, con el dedo, en iOS, Android y navegador?** La respuesta, verificada en el navegador y no solo compilada, es que sí. La app dibuja `x + 5 = 12` con los glifos reales del atlas, en la misma tipografía que usan LaTeX y Manim; el morph sigue al dedo mientras se arrastra la ficha, sin temporizador de por medio; y al soltar pasado el umbral el paso se confirma y queda `x = 7`.
 
 ## Qué está construido y verificado
 
@@ -58,18 +58,28 @@ Veintitrés glifos: los dígitos, las variables `x y a b n` en itálica matemát
 
 Dos datos del atlas que valen como verificación y como fundamento del diseño: la `y` tiene descendente de 0.205 y la `x` de 0.011, lo que confirma que la conversión de ejes está bien; y los diez dígitos comparten avance, porque en tipografía matemática son de ancho tabular, que es justo lo que la composición supone para que el ancho de un número no dependa de sus cifras.
 
+### `packages/viz-skia`
+
+El adaptador de dibujo, y lo único del proyecto que sabe que existe Skia. Cien líneas.
+
+Respeta el modo retained, que no es un detalle de estilo sino la diferencia entre pagar o no el cruce de frontera en cada cuadro: el árbol de componentes se arma con la unión de los glifos de los dos estados y no cambia durante la animación; un glifo que todavía no se ve está montado con opacidad cero. Cada glifo es un componente con su propio valor derivado, así que cuando el dedo se mueve nada vuelve al hilo de JavaScript.
+
+### `apps/mathy`
+
+La app Expo, una sola para iOS, Android y navegador. En web el punto de entrada es `index.web.tsx`, que difiere el registro de la app hasta que termina de cargar el WASM de Skia; sin eso el primer lienzo se dibujaría contra un Skia que todavía no existe.
+
+`src/OneStepScene.tsx` es la prueba vertical: el nodo de calibración del diseño, con el progreso del morph atado al arrastre.
+
 ## Qué está a medias
 
-Nada. La mitad del hito M0 que se puede resolver sin dibujar está cerrada y verificada de punta a punta: árbol con identidad, traza del paso, composición con métricas reales, plan de morph y muestreo en cualquier instante.
+Nada.
 
-## Qué sigue, en orden
+## Qué falta y en qué orden
 
-1. **`packages/viz-skia`**: el adaptador que convierte un fotograma de `sampleMorph` en un árbol retained de Skia. Delgado a propósito.
-3. **`apps/mathy`**: la app Expo única para las tres plataformas. Es donde se contesta la pregunta de M0.
-4. **El gesto**: arrastrar la ficha `−5` sobre el igual, con el progreso del morph atado al dedo y no a un temporizador.
-5. **Medir**: sesenta cuadros por segundo en un Android de gama baja **en build de release**, y arranque en frío del navegador por debajo de tres segundos.
-
-Después de eso empieza M1, que es la mecánica `chest_key` y los ocho niveles de `alg.eq.one_step`.
+1. **Medir en dispositivo.** Sesenta cuadros por segundo en un Android de gama baja **en build de release**, no de depuración, y el arranque en frío del navegador. Es lo que falta del criterio de salida de M0.
+2. **Correr en iOS y Android.** Hasta ahora solo se verificó el navegador. Necesita una build de desarrollo, porque Skia es un módulo nativo y no corre en Expo Go.
+3. **Adelgazar el WASM de web.** Los dos primeros peldaños de la escalera de [T](../T-plan-implementacion.md) son casi gratis: servir con Brotli, y aliasear el build completo de CanvasKit al recortado que el paquete ya trae, que ahorra unos 350 KB.
+4. **M1**: la mecánica `chest_key` completa y los ocho niveles de `alg.eq.one_step`, con el `StepEngine` validando y una explicación de error dinámica.
 
 ## Decisiones tomadas que no conviene reabrir sin motivo
 
@@ -87,10 +97,18 @@ Están argumentadas con su evidencia en [U1](U1-decisiones.md), que es el docume
 Node 26 y npm 11, instalados con Homebrew. Desde la raíz del repositorio:
 
 ```bash
-npm install
-npm test --workspaces --if-present
-python3 tools/validate.py
+npm install && npm test --workspaces --if-present && python3 tools/validate.py
 ```
+
+Para ver la app en el navegador:
+
+```bash
+cd apps/mathy && npx expo start --web
+```
+
+La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a `apps/mathy/public/`. No está versionado: se regenera en cada instalación.
+
+Dos trampas que cuestan una tarde. El `.wasm` tiene que servirse con el tipo MIME `application/wasm`; varios servidores estáticos simples no lo hacen, y el síntoma es una pantalla en blanco sin ningún error en la consola. Y la implementación web de gesture-handler escucha eventos de puntero, así que un arrastre sintético hecho con eventos de mouse no la despierta: hay que emitir `pointerdown`, varios `pointermove` y `pointerup` con el mismo `pointerId`.
 
 Los tests de cada paquete usan el corredor de Node con stripping de tipos, así que no hay paso de compilación. Por eso los imports llevan la extensión `.ts` explícita y `tsconfig.base.json` tiene `allowImportingTsExtensions`.
 
@@ -102,4 +120,4 @@ Las del documento de diseño siguen valiendo, y se agregan estas:
 - **TypeScript estricto**, con `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`. La configuración sale de `tsconfig.base.json`.
 - **Los paquetes de modelo no importan React Native.** Si un paquete necesita Skia, va en `viz-skia` o más arriba.
 - **Los tests describen comportamiento, no implementación.** Los nombres son frases en español que dicen qué tiene que pasar.
-- **Nada se da por bueno sin correr.** Un paquete que no tiene tests que pasen no está terminado.
+- **Nada se da por bueno sin correr.** Un paquete sin tests que pasen no está terminado, y una pantalla que no se miró en el navegador no está verificada. Los dos errores de M0 compilaban y pasaban los tests: un trazo sin color explícito, que Skia pinta de negro sobre fondo negro; y el progreso sin reiniciar al confirmar el paso, que dibujaba un paso que el jugador nunca dio.
