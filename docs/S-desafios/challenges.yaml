@@ -398,6 +398,28 @@ challenges:
       name: gen_cubes_box_partly_hidden
       params: {base_range: [2, 4], layers_range: [2, 5], hidden_fraction_range: [0.3, 0.6]}
 
+
+  - id: ch.geom.zigzag_between_parallels
+    area: geom
+    tier: regional
+    requires: [geom.angle.turn_as_measure, geom.angle.parallel_transversal, geom.cons.auxiliary_lines]
+    mechanics: [construct, gears_sequence]
+    literacy_min: short_text
+    figure: generated:gen_zigzag_between_parallels
+    hidden_data:
+      - {missing: the_line_that_relates_the_two_arms, discovered_by: draw_through_the_vertex_a_line_parallel_to_the_two_given_ones, uses: cs.geom.parallel_angles_equal_or_supplementary}
+      - {missing: the_two_parts_of_the_middle_angle, discovered_by: mark_the_alternate_angle_on_each_side_of_that_new_line, uses: cs.geom.full_turn_360}
+    expected_constructions:
+      - [draw_a_line_through_the_vertex_parallel_to_both, mark_the_alternate_angle_above, mark_the_alternate_angle_below, add_the_two_parts]
+      - [extend_one_arm_until_it_crosses_the_far_parallel, mark_the_corresponding_angle, close_the_triangle_and_use_its_angle_sum]
+    cheatsheet_refs: [cs.geom.parallel_angles_equal_or_supplementary, cs.geom.full_turn_360, cs.geom.angle_names_right_straight, cs.geom.triangle_angles_180, cs.geom.strategy_list_what_you_know]
+    strategy_misconceptions: [assumed_parallel, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_the_auxiliary_parallel, mark_the_alternate_angle_on_each_side, add_the_two_parts, state_the_middle_angle]
+    answer_kind: number
+    generator:
+      name: gen_zigzag_between_parallels
+      params: {angle_a_range: [20, 70], angle_b_range: [20, 70], vertices: [1, 2], ask: [middle_angle, one_of_the_outer_angles]}
   # =========================================================================
   # ÁLGEBRA
   # =========================================================================
@@ -530,6 +552,138 @@ challenges:
       name: gen_sum_and_product_given
       params: {sum_range: [3, 20], product_range: [2, 90], ask: [sum_of_squares, sum_of_cubes, difference]}
 
+
+  - id: ch.alg.chained_scales_hidden_weight
+    area: alg
+    tier: training
+    requires: [prealg.eq.balance, prealg.var.unknown_as_box, alg.eq.one_step]
+    mechanics: [balance, ledger]
+    literacy_min: icons
+    figure: generated:gen_two_chained_balances
+    hidden_data:
+      - {missing: weight_of_one_cube, discovered_by: take_the_second_balance_away_from_the_first_pan_by_pan, uses: cs.prealg.same_action_both_sides}
+      - {missing: weight_of_the_sphere, discovered_by: put_the_cube_just_found_back_into_either_balance, uses: cs.alg.check_by_substituting}
+    expected_constructions:
+      - [name_a_box_for_each_shape, remove_from_both_balances_the_shapes_they_share, read_what_is_left_on_each_pan, substitute_back_into_the_first_balance]
+      - [copy_the_second_balance_and_swap_it_into_the_first, solve_the_single_shape_that_remains, substitute_back]
+    cheatsheet_refs: [cs.prealg.equals_means_level_pans, cs.prealg.same_action_both_sides, cs.prealg.letter_names_the_box, cs.alg.one_key_both_sides, cs.alg.check_by_substituting]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_each_shape, subtract_one_balance_from_the_other, solve_the_shape_that_remains, substitute_to_get_the_other]
+    answer_kind: number
+    generator:
+      name: gen_two_chained_balances
+      params: {shapes: 2, weight_range: [1, 12], copies_range: [1, 3], integer_answer: true}
+
+  - id: ch.alg.meter_hidden_flat_fee
+    area: alg
+    tier: training
+    requires: [alg.fn.linear_slope, alg.fn.graph_as_picture, prealg.var.unknown_as_box]
+    mechanics: [slope_walker, ledger]
+    literacy_min: icons
+    figure: generated:gen_two_trips_one_meter
+    hidden_data:
+      - {missing: price_per_kilometre, discovered_by: build_the_rise_over_run_staircase_between_the_two_trips, uses: cs.alg.slope_rise_over_run}
+      - {missing: the_flat_fee, discovered_by: walk_the_line_back_to_the_vertical_axis, uses: cs.alg.y_equals_mx_plus_b}
+    expected_constructions:
+      - [plot_both_trips_as_points, draw_the_staircase_between_them, read_rise_over_run, step_back_to_zero_kilometres]
+      - [name_a_box_for_the_fee_and_another_for_the_rate, write_one_row_per_trip, subtract_the_rows]
+    cheatsheet_refs: [cs.alg.slope_rise_over_run, cs.alg.y_equals_mx_plus_b, cs.alg.delta_means_change, cs.alg.point_is_input_output_pair, cs.alg.start_value_plus_rate_times_steps]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [plot_the_two_trips, build_the_rise_run_triangle, read_the_rate, walk_back_to_the_axis_for_the_fee]
+    answer_kind: number
+    generator:
+      name: gen_two_trips_one_meter
+      params: {rate_range: [2, 9], fee_range: [3, 20], distance_pairs: [[3, 8], [4, 10], [5, 12], [6, 15]], ask: [flat_fee, rate, price_of_a_third_trip]}
+
+  - id: ch.alg.machine_inside_a_machine
+    area: alg
+    tier: regional
+    requires: [alg.fn.composition, alg.fn.function_as_machine, prealg.inv.operation_as_key]
+    mechanics: [machine_pipe, chest_key]
+    literacy_min: icons
+    figure: generated:gen_hidden_first_machine
+    hidden_data:
+      - {missing: the_middle_values, discovered_by: run_the_known_machine_backwards_on_each_output, uses: cs.prealg.every_operation_has_a_key}
+      - {missing: rule_of_the_hidden_machine, discovered_by: compare_each_input_with_the_middle_value_it_produces, uses: cs.prealg.constant_step_reveals_rule}
+    expected_constructions:
+      - [build_the_key_of_the_known_machine, feed_each_output_backwards_through_it, tabulate_input_against_middle_value, read_the_constant_step]
+      - [guess_the_hidden_rule_from_one_pair, compose_it_with_the_known_machine, check_it_against_the_other_pairs]
+    cheatsheet_refs: [cs.alg.compose_inner_first, cs.alg.composition_order_matters, cs.prealg.every_operation_has_a_key, cs.prealg.inverse_pairs_table, cs.alg.function_notation_f_of_x, cs.prealg.table_records_machine]
+    strategy_misconceptions: [ignored_case, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [invert_the_known_machine, recover_the_middle_column, find_the_rule_of_the_first_machine, verify_on_a_new_input]
+    answer_kind: expression
+    generator:
+      name: gen_hidden_first_machine
+      params: {outer_rules: [add_then_scale, scale_then_add, square], inner_coeff_range: [2, 6], inner_shift_range: [-5, 5], pairs_shown: 3}
+
+  - id: ch.alg.garden_wider_and_narrower
+    area: alg
+    tier: regional
+    requires: [alg.expr.distributive_tiles, geom.area.rect_and_triangle, alg.eq.one_step]
+    mechanics: [construct, tiles]
+    literacy_min: icons
+    figure: generated:gen_square_widened_and_narrowed
+    hidden_data:
+      - {missing: the_side_of_the_square, discovered_by: notice_that_the_change_in_area_does_not_depend_on_it, uses: cs.alg.difference_of_squares}
+      - {missing: the_corner_tile_that_does_not_fit, discovered_by: slide_the_added_strip_onto_the_removed_strip, uses: cs.alg.area_model_of_product}
+    expected_constructions:
+      - [lay_the_square_as_tiles, add_a_strip_on_one_side, remove_a_strip_of_the_same_width_from_the_other, slide_the_added_strip_into_the_gap, mark_the_corner_square_left_over]
+      - [name_the_side_with_a_box, write_the_product_of_the_two_new_sides, expand_it_as_four_tiles, cancel_the_two_equal_strips]
+    cheatsheet_refs: [cs.alg.difference_of_squares, cs.alg.area_model_of_product, cs.alg.distributive_law, cs.alg.binomial_product_four_tiles, cs.geom.area_rectangle]
+    strategy_misconceptions: [assumed_equal_segments, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [lay_the_square_as_tiles, move_the_strip_from_one_side_to_the_other, mark_the_corner_square, read_the_change_in_area]
+    answer_kind: number
+    generator:
+      name: gen_square_widened_and_narrowed
+      params: {side_range: [6, 30], shift_range: [2, 7], ask: [area_change, new_area, side], hide_side: true}
+
+  - id: ch.alg.second_equation_in_the_picture
+    area: alg
+    tier: regional
+    requires: [alg.sys.two_by_two, alg.expr.distributive_tiles, prealg.eq.balance]
+    mechanics: [balance, ledger]
+    literacy_min: icons
+    figure: generated:gen_frame_of_two_tiles
+    hidden_data:
+      - {missing: the_second_equation, discovered_by: read_the_row_of_tiles_that_fits_exactly_across_the_frame, uses: cs.prealg.equals_means_level_pans}
+      - {missing: size_of_one_tile, discovered_by: eliminate_the_tile_the_two_rows_share, uses: cs.alg.elimination_method}
+    expected_constructions:
+      - [name_a_box_for_each_tile, read_the_top_row_as_one_balance, read_the_side_column_as_a_second_balance, eliminate_the_shared_tile]
+      - [stack_copies_of_the_shorter_row_until_it_matches_the_longer_one, compare_the_two_rows, read_what_is_left]
+    cheatsheet_refs: [cs.alg.elimination_method, cs.alg.substitution_method, cs.prealg.equals_means_level_pans, cs.prealg.letter_names_the_box, cs.alg.distributive_law, cs.alg.collect_boxes_on_one_side]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [name_the_two_tiles, write_the_equation_the_frame_gives, read_the_second_equation_off_the_picture, eliminate_and_solve]
+    answer_kind: number
+    generator:
+      name: gen_frame_of_two_tiles
+      params: {tile_a_range: [2, 15], tile_b_range: [2, 15], row_counts: [[3, 2], [4, 1], [2, 5], [5, 3]], integer_answer: true}
+
+  - id: ch.alg.read_the_inverse_off_the_graph
+    area: alg
+    tier: regional
+    requires: [alg.fn.inverse_function, alg.fn.graph_as_picture, alg.fn.linear_slope]
+    mechanics: [slope_walker, grid_stretch]
+    literacy_min: icons
+    figure: generated:gen_line_graph_without_formula
+    hidden_data:
+      - {missing: the_slope_of_the_line, discovered_by: build_the_rise_over_run_triangle_between_two_lattice_points, uses: cs.alg.slope_rise_over_run}
+      - {missing: the_value_of_the_inverse, discovered_by: reflect_the_line_over_the_diagonal_and_read_the_new_height, uses: cs.alg.inverse_reflects_over_diagonal}
+    expected_constructions:
+      - [pick_two_lattice_points_on_the_line, build_the_rise_run_triangle, draw_the_diagonal_y_equals_x, reflect_the_line, read_the_height_at_the_asked_input]
+      - [enter_from_the_vertical_axis_at_the_asked_value, walk_across_to_the_line, drop_to_the_horizontal_axis, extend_with_the_slope_if_it_falls_outside_the_window]
+    cheatsheet_refs: [cs.alg.inverse_reflects_over_diagonal, cs.alg.inverse_undoes_f, cs.alg.inverse_needs_one_to_one, cs.alg.slope_rise_over_run, cs.alg.point_is_input_output_pair]
+    strategy_misconceptions: [ignored_case, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [read_two_points_off_the_line, get_the_slope, reflect_over_the_diagonal, read_the_value_of_the_inverse]
+    answer_kind: number
+    generator:
+      name: gen_line_graph_without_formula
+      params: {slope_range: [-4, 4], intercept_range: [-6, 6], exclude_zero_slope: true, ask_outside_window: true}
   # =========================================================================
   # ARITMÉTICA Y TEORÍA DE NÚMEROS
   # =========================================================================
@@ -662,6 +816,163 @@ challenges:
       name: gen_coins_flip_pairs
       params: {coins_range: [5, 9], flip_per_move: [2, 4], start_heads: odd, target_heads: even}
 
+  # ---- rompecabezas de conteo, recta y cuentas, jugables sin leer (niveles 0–2) ----
+
+  - id: ch.arith.covered_row_count
+    area: arith
+    tier: training
+    requires: [found.count.cardinality, found.count.number_line, arith.add.displacement]
+    mechanics: [ledger, gears_sequence]
+    literacy_min: none
+    figure: generated:gen_covered_row_of_boxes
+    hidden_data:
+      - {missing: boxes_under_the_strip, discovered_by: step_the_visible_spacing_under_the_strip, uses: cs.arith.skip_count_is_constant_step}
+      - {missing: total_boxes, discovered_by: join_the_visible_groups_with_the_hidden_one, uses: cs.arith.add_as_step_forward}
+    expected_constructions:
+      - [mark_the_gap_between_two_visible_boxes, repeat_that_gap_under_the_strip, count_the_marks, add_the_three_groups]
+      - [pair_each_visible_box_with_a_tick_on_the_line, read_the_tick_under_the_far_end, count_the_ticks_in_between]
+    cheatsheet_refs: [cs.arith.skip_count_is_constant_step, cs.arith.add_as_step_forward, cs.arith.sub_as_distance_between, cs.arith.add_as_join_groups]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [measure_one_step, extend_the_steps_under_the_cover, count_the_hidden_places, add_visible_and_hidden]
+    answer_kind: number
+    generator:
+      name: gen_covered_row_of_boxes
+      params: {visible_left_range: [2, 5], hidden_range: [3, 8], visible_right_range: [1, 4], equal_spacing: true}
+
+  - id: ch.arith.pair_them_to_compare
+    area: arith
+    tier: training
+    requires: [found.count.cardinality, arith.sub.undo_add]
+    mechanics: [network_routes, sorter]
+    literacy_min: none
+    figure: generated:gen_two_scattered_groups
+    hidden_data:
+      - {missing: which_group_has_more, discovered_by: draw_one_bridge_from_each_object_to_a_partner, uses: cs.arith.sub_undoes_add}
+      - {missing: leftover_after_pairing, discovered_by: count_the_objects_left_without_a_partner, uses: cs.arith.sub_as_distance_between}
+    expected_constructions:
+      - [draw_a_bridge_from_each_left_object_to_a_right_object, mark_the_objects_without_partner, read_the_side_with_leftovers]
+      - [sort_both_groups_into_two_rows_of_equal_spacing, line_up_the_starts, measure_the_overhang]
+    cheatsheet_refs: [cs.arith.sub_undoes_add, cs.arith.sub_as_distance_between, cs.arith.add_as_join_groups]
+    strategy_misconceptions: [counted_twice, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [pair_one_to_one, mark_the_unpaired, name_the_bigger_group, count_the_difference]
+    answer_kind: number
+    generator:
+      name: gen_two_scattered_groups
+      params: {group_size_range: [5, 14], difference_range: [1, 4], layout: scattered, shapes_differ: true}
+
+  - id: ch.arith.hidden_numerator_on_the_line
+    area: arith
+    tier: training
+    requires: [arith.frac.parts_and_ratio, found.count.number_line, arith.div.undo_mul]
+    mechanics: [tiles, slope_walker]
+    literacy_min: none
+    figure: generated:gen_point_on_unit_segment
+    hidden_data:
+      - {missing: the_numerator, discovered_by: cut_the_unit_into_as_many_equal_parts_as_the_denominator, uses: cs.arith.fraction_as_parts_of_whole}
+      - {missing: length_of_one_equal_part, discovered_by: divide_the_unit_by_the_denominator, uses: cs.arith.fraction_as_division}
+    expected_constructions:
+      - [cut_the_unit_into_equal_parts, count_the_parts_up_to_the_point, read_the_numerator]
+      - [regrid_the_unit_with_a_finer_denominator, match_the_point_to_a_tick, scale_the_fraction_back_down]
+    cheatsheet_refs: [cs.arith.fraction_as_parts_of_whole, cs.arith.fraction_as_division, cs.arith.equivalent_fraction_scale_both, cs.arith.div_undoes_mul]
+    strategy_misconceptions: [assumed_same_whole, assumed_equal_segments]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [cut_the_unit_into_equal_parts, locate_the_point, count_the_parts, name_the_fraction]
+    answer_kind: expression
+    generator:
+      name: gen_point_on_unit_segment
+      params: {denominators: [3, 4, 5, 6, 8], unit_span: [1, 2], hide: numerator, tick_marks_visible: false}
+
+  - id: ch.arith.ledger_with_hidden_debts
+    area: arith
+    tier: training
+    requires: [arith.int.negatives, arith.add.displacement, arith.sub.undo_add]
+    mechanics: [ledger, gears_sequence]
+    literacy_min: none
+    figure: generated:gen_ledger_hidden_signed_row
+    hidden_data:
+      - {missing: sign_of_the_covered_row, discovered_by: compare_the_running_total_before_and_after_it, uses: cs.arith.sub_past_zero}
+      - {missing: size_of_the_covered_row, discovered_by: measure_the_step_the_walk_needs_to_land_on_the_final_total, uses: cs.arith.negative_as_opposite_direction}
+    expected_constructions:
+      - [write_the_running_total_beside_every_visible_row, subtract_the_total_before_from_the_total_after, read_the_signed_step]
+      - [walk_the_line_forward_for_each_gain_and_backward_for_each_debt, mark_where_the_walk_must_land, measure_the_missing_step]
+    cheatsheet_refs: [cs.arith.negative_as_opposite_direction, cs.arith.sub_past_zero, cs.arith.add_signed_as_net_steps, cs.arith.running_total_is_sum_so_far]
+    strategy_misconceptions: [counted_twice, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [write_the_running_totals, locate_the_covered_row, subtract_the_neighbouring_totals, read_sign_and_size]
+    answer_kind: number
+    generator:
+      name: gen_ledger_hidden_signed_row
+      params: {rows_range: [5, 8], covered_rows: [1, 2], value_range: [-9, 9], allow_negative_total: true}
+
+  - id: ch.arith.where_the_parentheses_went
+    area: arith
+    tier: regional
+    requires: [arith.expr.precedence_tree, arith.mul.scaling, arith.add.displacement]
+    mechanics: [chest_key, machine_pipe]
+    literacy_min: none
+    figure: generated:gen_expression_missing_parentheses
+    hidden_data:
+      - {missing: value_of_the_inner_chest, discovered_by: undo_the_outer_operation_on_the_given_result, uses: cs.arith.inner_chest_first}
+      - {missing: the_grouping, discovered_by: rebuild_the_chain_as_a_tree_and_move_the_inner_chest, uses: cs.arith.expression_is_a_tree}
+    expected_constructions:
+      - [read_the_chain_as_a_tree_with_the_default_order, compare_with_the_given_result, move_the_inner_chest_one_operator_at_a_time]
+      - [undo_the_last_operation_on_the_result, look_for_a_grouping_that_produces_that_value, close_the_parentheses_there]
+    cheatsheet_refs: [cs.arith.expression_is_a_tree, cs.arith.inner_chest_first, cs.arith.mul_as_scaling, cs.arith.add_as_step_forward]
+    strategy_misconceptions: [ignored_case, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [evaluate_without_parentheses, compare_with_the_target, try_each_grouping, keep_the_one_that_matches]
+    answer_kind: expression
+    generator:
+      name: gen_expression_missing_parentheses
+      params: {length_range: [4, 5], operators: [add, sub, mul], value_range: [1, 12], unique_solution: true}
+
+  # ---- restos y divisibilidad ---------------------------------------------
+
+  - id: ch.arith.same_remainder_hidden_divisor
+    area: arith
+    tier: regional
+    requires: [arith.div.undo_mul, arith.sub.undo_add, disc.mod.clock_equivalence]
+    mechanics: [gears_sequence, sorter]
+    literacy_min: icons
+    figure: generated:gen_two_totals_same_remainder
+    hidden_data:
+      - {missing: the_divisor, discovered_by: subtract_the_two_totals_and_factor_the_difference, uses: cs.arith.div_undoes_mul}
+      - {missing: which_candidates_survive, discovered_by: keep_only_the_divisors_larger_than_the_shared_remainder, uses: cs.arith.quotient_times_divisor_plus_remainder}
+    expected_constructions:
+      - [align_both_counters_at_the_shared_mark, subtract_the_two_totals, list_the_divisors_of_the_difference, discard_those_not_larger_than_the_remainder]
+      - [step_one_counter_forward_until_its_mark_meets_the_other, read_the_gap, factor_the_gap]
+    cheatsheet_refs: [cs.arith.div_undoes_mul, cs.arith.quotient_times_divisor_plus_remainder, cs.disc.congruence_mod_n, cs.arith.sub_as_distance_between, cs.arith.divisibility_shortcuts]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [subtract_the_two_totals, factor_the_difference, discard_the_divisors_too_small, read_the_surviving_candidates]
+    answer_kind: set
+    generator:
+      name: gen_two_totals_same_remainder
+      params: {divisor_candidates: [6, 7, 8, 9, 11, 12], remainder_range: [1, 5], quotient_range: [3, 20], allow_two_answers: true}
+
+  - id: ch.arith.one_more_makes_it_divide
+    area: arith
+    tier: international
+    requires: [arith.div.undo_mul, arith.div.remainder, arith.num.divisible_or_not, disc.mod.clock_equivalence]
+    mechanics: [sorter, gears_sequence]
+    literacy_min: icons
+    figure: generated:gen_jar_remainders_one_short
+    hidden_data:
+      - {missing: the_reframe_add_one, discovered_by: notice_every_remainder_is_one_short_of_its_divisor, uses: cs.disc.congruence_mod_n}
+      - {missing: first_common_multiple_of_all_the_divisors, discovered_by: turn_all_the_gears_together_until_every_mark_returns_to_zero, uses: cs.arith.div_undoes_mul}
+    expected_constructions:
+      - [line_up_each_remainder_next_to_its_divisor, add_one_marble_to_the_jar, check_that_every_sharing_is_now_exact, take_the_first_common_multiple_and_subtract_one]
+      - [list_the_numbers_that_leave_the_first_remainder, filter_by_the_second_sharing, filter_by_the_third_sharing, take_the_smallest]
+    cheatsheet_refs: [cs.disc.congruence_mod_n, cs.arith.quotient_times_divisor_plus_remainder, cs.arith.div_undoes_mul, cs.arith.divisibility_shortcuts]
+    strategy_misconceptions: [ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [compare_each_remainder_with_its_divisor, add_one_to_the_total, find_the_first_common_multiple, subtract_one]
+    answer_kind: number
+    generator:
+      name: gen_jar_remainders_one_short
+      params: {divisor_sets: [[3, 4, 5], [4, 5, 6], [2, 3, 4, 5], [3, 5, 7]], answer_max: 500}
   # =========================================================================
   # MATEMÁTICA DISCRETA (COMBINATORIA)
   # =========================================================================
@@ -1067,6 +1378,28 @@ challenges:
       name: gen_trig_equation_wheel
       params: {forms: [k_sin2_minus_sin, cos2_minus_cos, two_sin_cos_minus_sin], interval: [0, two_pi]}
 
+
+  - id: ch.trig.wheel_mark_height_from_arc
+    area: trig
+    tier: regional
+    requires: [trig.circle.unit_circle_radians, geom.angle.turn_as_measure, trig.fn.sine_as_height]
+    mechanics: [construct, gears_sequence]
+    literacy_min: icons
+    figure: generated:gen_wheel_mark_from_arc
+    hidden_data:
+      - {missing: the_turned_angle, discovered_by: divide_the_arc_the_mark_travelled_by_the_radius, uses: cs.trig.radian_as_arc_over_radius}
+      - {missing: the_height_above_the_axle, discovered_by: drop_the_vertical_from_the_mark_to_the_horizontal_through_the_axle, uses: cs.trig.sin_cos_as_coordinates}
+    expected_constructions:
+      - [measure_the_arc_along_the_rim, divide_it_by_the_radius_to_get_the_angle, drop_the_vertical_from_the_mark, read_the_height_as_radius_times_sine]
+      - [turn_the_arc_into_a_fraction_of_the_whole_turn, place_the_mark_at_that_fraction_of_the_circle, read_its_height_off_the_key_points_table]
+    cheatsheet_refs: [cs.trig.radian_as_arc_over_radius, cs.trig.arc_length_r_theta, cs.trig.unit_circle_key_points, cs.trig.sin_cos_as_coordinates, cs.trig.sin_cos_values_key_angles, cs.geom.full_turn_360]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, assumed_right_angle]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [divide_the_arc_by_the_radius, name_the_angle_in_radians, drop_the_vertical_from_the_mark, multiply_the_radius_by_the_sine]
+    answer_kind: number
+    generator:
+      name: gen_wheel_mark_from_arc
+      params: {radius_range: [2, 12], key_fractions: [[1, 12], [1, 8], [1, 6], [1, 4], [1, 3]], ask: [height, arc, radius]}
   # =========================================================================
   # CÁLCULO (calc1 y calc2)
   # =========================================================================
@@ -1220,6 +1553,50 @@ challenges:
       name: gen_telescoping_terms
       params: {forms: [one_over_n_n_plus_one, one_over_n_n_plus_two, one_over_2n_minus_one_2n_plus_one], start_index: [1, 2]}
 
+
+  - id: ch.calc.instant_rate_between_two_chords
+    area: calc
+    tier: international
+    requires: [calc1.deriv.rate_as_slope_limit, precalc.lim.approach, alg.fn.linear_slope]
+    mechanics: [construct, slope_walker]
+    literacy_min: short_text
+    figure: generated:gen_curve_shrinking_chords
+    hidden_data:
+      - {missing: the_slope_of_each_chord, discovered_by: draw_the_chord_to_a_neighbour_on_each_side_and_build_its_rise_run_triangle, uses: cs.alg.slope_rise_over_run}
+      - {missing: the_instantaneous_rate, discovered_by: halve_the_interval_until_both_sides_close_in_on_the_same_number, uses: cs.calc1.derivative_definition_limit}
+    expected_constructions:
+      - [mark_the_point_on_the_curve, draw_a_chord_to_a_neighbour_on_each_side, build_the_rise_run_triangle_of_each, halve_the_interval_and_repeat, read_the_number_both_sides_close_in_on]
+      - [write_the_difference_quotient_for_a_general_step, simplify_until_the_step_cancels, send_the_step_to_zero]
+    cheatsheet_refs: [cs.calc1.derivative_definition_limit, cs.calc1.derivative_as_rate_units, cs.calc1.tangent_line_equation, cs.alg.slope_rise_over_run, cs.precalc.limit_by_table_of_values, cs.precalc.limit_ignores_value_at_point]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [draw_the_chords_on_both_sides, compute_each_average_rate, halve_the_interval_and_repeat, read_the_common_limit]
+    answer_kind: number
+    generator:
+      name: gen_curve_shrinking_chords
+      params: {curves: [quadratic, cubic, reciprocal], point_range: [1, 4], step_sequence: [1, 0.5, 0.25, 0.125], integer_answer: true}
+
+  - id: ch.calc.tank_from_the_rate_graph
+    area: calc
+    tier: international
+    requires: [calc1.int.accumulation, geom.area.rect_and_triangle, alg.fn.graph_as_picture]
+    mechanics: [construct, fill_accumulate]
+    literacy_min: short_text
+    figure: generated:gen_rate_graph_with_covered_stretch
+    hidden_data:
+      - {missing: the_rate_under_the_panel, discovered_by: extend_the_straight_segment_across_the_covered_stretch, uses: cs.calc1.integral_units_rate_times_time}
+      - {missing: the_area_of_the_covered_piece, discovered_by: cut_that_piece_into_a_rectangle_and_a_triangle, uses: cs.geom.area_triangle_half_base_height}
+    expected_constructions:
+      - [extend_the_straight_segment_under_the_panel, cut_the_region_into_rectangle_and_triangle, add_the_pieces, read_the_total_as_volume]
+      - [replace_each_straight_stretch_by_a_trapezoid, add_the_trapezoids, check_the_units_are_rate_times_time]
+    cheatsheet_refs: [cs.calc1.integral_notation_meaning, cs.calc1.integral_units_rate_times_time, cs.calc1.riemann_sum_notation, cs.calc1.left_right_midpoint_trapezoid, cs.geom.area_triangle_half_base_height, cs.geom.area_rectangle]
+    strategy_misconceptions: [strategy_missing_auxiliary_line, counted_twice]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [extend_the_rate_line_under_the_panel, split_the_area_into_simple_pieces, add_the_pieces, state_the_volume_with_its_units]
+    answer_kind: number
+    generator:
+      name: gen_rate_graph_with_covered_stretch
+      params: {segments_range: [3, 4], rate_range: [0, 12], time_span_range: [6, 14], covered_fraction_range: [0.2, 0.4]}
   # =========================================================================
   # ÁLGEBRA LINEAL
   # =========================================================================
@@ -1291,6 +1668,50 @@ challenges:
       name: gen_parallelogram_from_two_vectors
       params: {entry_range: [-5, 6], ask: [height, distance_point_to_line, area_two_ways]}
 
+
+  - id: ch.linalg.the_leg_that_closes_the_walk
+    area: linalg
+    tier: regional
+    requires: [linalg.vec.vector_as_displacement, linalg.vec.span_and_combination, alg.fn.graph_as_picture]
+    mechanics: [grid_stretch, ledger]
+    literacy_min: icons
+    figure: generated:gen_walk_with_one_hidden_leg
+    hidden_data:
+      - {missing: the_hidden_leg, discovered_by: close_the_chain_of_arrows_from_the_last_tip_back_to_the_finish, uses: cs.linalg.vector_addition_components}
+      - {missing: the_length_of_that_leg, discovered_by: build_the_right_triangle_on_its_two_components, uses: cs.linalg.vector_length}
+    expected_constructions:
+      - [lay_the_known_arrows_tip_to_tail, draw_the_arrow_from_the_last_tip_to_the_finish, read_its_components_off_the_grid, build_the_right_triangle_for_its_length]
+      - [add_the_components_of_the_known_arrows, subtract_that_sum_from_the_total_displacement, read_the_remaining_components]
+    cheatsheet_refs: [cs.linalg.vector_components, cs.linalg.vector_addition_components, cs.linalg.vector_length, cs.linalg.scalar_multiple]
+    strategy_misconceptions: [tracked_wrong_basis_arrow, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [chain_the_known_arrows, close_the_chain_to_the_finish, read_the_missing_components, compute_its_length]
+    answer_kind: expression
+    generator:
+      name: gen_walk_with_one_hidden_leg
+      params: {legs_range: [3, 4], component_range: [-8, 8], closing_leg_is_a_triple: true, hide: one_leg}
+
+  - id: ch.linalg.count_the_moves_to_the_treasure
+    area: linalg
+    tier: international
+    requires: [linalg.vec.span_and_combination, linalg.vec.vector_as_displacement, alg.sys.two_by_two]
+    mechanics: [grid_stretch, ledger]
+    literacy_min: icons
+    figure: generated:gen_target_from_two_moves
+    hidden_data:
+      - {missing: whether_the_target_can_be_reached_at_all, discovered_by: check_that_the_two_arrows_are_not_multiples_of_each_other, uses: cs.linalg.span}
+      - {missing: how_many_of_each_move, discovered_by: draw_the_slanted_grid_the_two_arrows_generate, uses: cs.linalg.coordinates_in_basis}
+    expected_constructions:
+      - [draw_the_slanted_grid_of_the_two_arrows, walk_that_grid_to_the_target, count_the_steps_along_each_arrow]
+      - [write_one_row_per_coordinate_as_a_balance, eliminate_one_arrow_between_the_rows, solve_and_substitute_back]
+    cheatsheet_refs: [cs.linalg.linear_combination, cs.linalg.span, cs.linalg.coordinates_in_basis, cs.linalg.solve_ax_equals_b, cs.alg.elimination_method]
+    strategy_misconceptions: [tracked_wrong_basis_arrow, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [check_the_two_arrows_are_independent, draw_the_slanted_grid, read_the_two_counts, verify_by_walking_the_moves]
+    answer_kind: expression
+    generator:
+      name: gen_target_from_two_moves
+      params: {arrow_component_range: [-4, 4], counts_range: [-6, 6], forbid_parallel_arrows: true, sometimes_unreachable: true}
   # =========================================================================
   # GRAFOS
   # =========================================================================

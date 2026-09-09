@@ -173,6 +173,19 @@ challenges:
       - "Contar las capas prolongando las aristas."
       - "Multiplicar cubos por capa por cantidad de capas."
 
+
+  ch.geom.zigzag_between_parallels:
+    title: "El zigzag entre paralelas"
+    statement: "Dos rectas paralelas y, entre ellas, un camino que va de una a la otra doblando en un solo punto. Sabés qué ángulo hace el camino con la recta de arriba, {a}°, y qué ángulo hace con la de abajo, {b}°. ¿Cuánto mide el ángulo del codo?"
+    hints:
+      - "El ángulo del codo no toca ninguna de las dos paralelas. ¿Con qué recta lo podrías comparar?"
+      - "Si por el codo pasara una tercera recta paralela a las otras dos, ¿en cuántas partes quedaría partido el ángulo?"
+      - "Trazá por el vértice del codo una recta paralela a las dos dadas. El ángulo queda partido en dos, y cada parte es alterno interno con uno de los ángulos que ya conocés."
+    solution_steps:
+      - "Trazar por el vértice una recta paralela a las dos dadas."
+      - "El ángulo de arriba se copia como alterno interno por encima de la recta nueva."
+      - "El de abajo se copia como alterno interno por debajo."
+      - "El ángulo del codo es la suma de las dos partes."
   # ---- alg ----------------------------------------------------------------
 
   ch.alg.hidden_equation_ages:
@@ -253,6 +266,84 @@ challenges:
       - "Los dos rectángulos valen dos veces el producto."
       - "Restar los rectángulos al cuadrado grande: suma de cuadrados."
 
+
+  ch.alg.chained_scales_hidden_weight:
+    title: "Las dos balanzas"
+    statement: "En la primera balanza, dos cubos y una esfera equilibran {p} pesas. En la segunda, un cubo y una esfera equilibran {q} pesas. Ninguna de las dos, sola, te dice cuánto pesa un cubo. Averigualo."
+    hints:
+      - "¿Qué figuras aparecen en las dos balanzas con la misma cantidad en cada una?"
+      - "Si a la primera balanza le sacás justo lo que la segunda equilibra, ¿qué queda de cada lado?"
+      - "Poné una balanza al lado de la otra. Quitá de la primera un cubo y una esfera, y del otro plato quitá {q} pesas: queda un cubo solo contra unas pocas pesas."
+    solution_steps:
+      - "Nombrar una caja para el cubo y otra para la esfera."
+      - "Restar la segunda balanza de la primera, quitando lo mismo de los dos platos."
+      - "Queda un cubo solo: ese es su peso."
+      - "Volver a poner el cubo en cualquiera de las dos balanzas para obtener la esfera."
+
+  ch.alg.meter_hidden_flat_fee:
+    title: "La bajada de bandera"
+    statement: "Un viaje de {d1} km costó {c1} y otro de {d2} km costó {c2}. El taxímetro cobra un monto fijo al subir y después tanto por kilómetro, pero ninguno de esos dos números está escrito. ¿Cuánto es el monto fijo?"
+    hints:
+      - "Hacen falta dos números para reconstruir la tarifa. ¿Cuál de los dos podés conseguir primero?"
+      - "Si marcás los dos viajes como puntos en la grilla, ¿qué te dice el escalón que va de uno al otro?"
+      - "Marcá los dos viajes como puntos: kilómetros a lo largo, precio a lo alto. El escalón entre ellos da el precio por kilómetro; con ese precio, caminá desde uno de los puntos hacia atrás hasta los cero kilómetros."
+    solution_steps:
+      - "Marcar los dos viajes como puntos en la grilla."
+      - "Construir el escalón entre ellos: diferencia de precio sobre diferencia de kilómetros."
+      - "Ese cociente es el precio por kilómetro."
+      - "Retroceder desde un punto hasta cero kilómetros; lo que queda es la bajada de bandera."
+
+  ch.alg.machine_inside_a_machine:
+    title: "La máquina de adentro"
+    statement: "Dos máquinas están conectadas en fila: lo que sale de la primera entra en la segunda. Te muestran la regla de la segunda y {n} pares de entrada y salida final, pero la tapa de la primera está cerrada. Descubrí su regla."
+    hints:
+      - "Entre las dos máquinas pasa un número que nadie te muestra. ¿Cuántos de esos números hay?"
+      - "La segunda máquina tiene llave. ¿Qué pasa si le hacés recorrer cada salida al revés?"
+      - "Pasá cada salida final hacia atrás por la llave de la segunda máquina. Anotá cada entrada al lado del número intermedio que recuperaste: la regla que falta está en cómo cambia esa columna."
+    solution_steps:
+      - "Armar la llave que deshace la segunda máquina."
+      - "Pasar cada salida hacia atrás por esa llave y recuperar el número del medio."
+      - "Poner entradas y números del medio en una tabla y leer el paso constante."
+      - "Comprobar la regla encontrada con una entrada nueva."
+
+  ch.alg.garden_wider_and_narrower:
+    title: "La huerta más ancha y más angosta"
+    statement: "Una huerta cuadrada se agranda {k} metros de un lado y se achica {k} metros del otro. Nadie te dice cuánto medía el lado. ¿Cuánto cambia el área?"
+    hints:
+      - "Para el área nueva parecería que hace falta el lado. ¿Hace falta de verdad?"
+      - "Dibujá la huerta con baldosas: ¿qué tira se agrega y qué tira se quita? ¿Miden lo mismo?"
+      - "Cortá la tira que se agrega y deslizala hasta el hueco que dejó la tira que se quitó. Encajan salvo un cuadradito en la esquina, y ese cuadradito es toda la diferencia."
+    solution_steps:
+      - "Dibujar el cuadrado con baldosas y nombrar el lado con una caja."
+      - "Agregar la tira de ancho {k} de un lado y quitar la tira de ancho {k} del otro."
+      - "Deslizar la tira agregada al hueco: encaja salvo un cuadrado de lado {k}."
+      - "El área baja exactamente {k} por {k}, sin importar cuánto medía el lado."
+
+  ch.alg.second_equation_in_the_picture:
+    title: "La ecuación que está en el dibujo"
+    statement: "Un marco rectangular está cubierto con dos tipos de baldosa. El enunciado te dice cuánto mide el marco de punta a punta, pero eso es una sola ecuación con dos incógnitas. Averiguá cuánto mide cada baldosa."
+    hints:
+      - "Con una ecuación y dos incógnitas hay infinitas respuestas. ¿De dónde puede salir la segunda ecuación?"
+      - "Mirá la hilera del costado: también entra justa. ¿Qué está diciendo esa hilera?"
+      - "Leé la hilera del costado como una segunda balanza: tantas baldosas de un tipo y tantas del otro cubren exactamente ese lado. Con dos ecuaciones ya podés eliminar la baldosa que se repite."
+    solution_steps:
+      - "Nombrar una caja para cada tipo de baldosa."
+      - "Escribir la ecuación que da el enunciado."
+      - "Leer la segunda ecuación en la hilera que entra justa en el dibujo."
+      - "Eliminar la baldosa que comparten las dos ecuaciones y resolver."
+
+  ch.alg.read_the_inverse_off_the_graph:
+    title: "La inversa sin fórmula"
+    statement: "Está dibujada la recta de una función, pero no su fórmula. Te piden el valor de la función inversa en {v}, y ese valor cae fuera del pedazo dibujado. Calculalo."
+    hints:
+      - "La inversa pregunta al revés: no qué sale, sino qué tuvo que entrar. ¿Dónde se lee eso en el dibujo?"
+      - "¿Qué recta convierte el gráfico de una función en el de su inversa?"
+      - "Elegí dos puntos de la recta que caigan justo en cruces de la grilla y armá el escalón entre ellos: eso da la pendiente. Después trazá la diagonal y reflejá la recta sobre ella; con la pendiente podés estirar el dibujo hasta {v}."
+    solution_steps:
+      - "Leer dos puntos de la recta que caigan en cruces de la grilla."
+      - "Armar el escalón entre ellos para obtener la pendiente."
+      - "Trazar la diagonal y reflejar la recta sobre ella."
+      - "Estirar la recta reflejada hasta la entrada pedida y leer su altura."
   # ---- arith --------------------------------------------------------------
 
   ch.arith.plates_hidden_remainder:
@@ -329,6 +420,97 @@ challenges:
       - "Calcularla al inicio y en el objetivo."
       - "Si difieren, ninguna secuencia de jugadas puede conectar los dos estados."
 
+
+  ch.arith.covered_row_count:
+    title: "La fila tapada"
+    statement: "Una cinta tapa el medio de una fila de cajas: descubrí cuántas cajas hay en total."
+    hints:
+      - "Mirá dos cajas seguidas de las que se ven: ¿cuánto hay de una a la otra?"
+      - "Ese mismo hueco se repite debajo de la cinta. ¿Qué pasa si lo vas marcando?"
+      - "Marcá el hueco que hay entre dos cajas visibles y repetilo por debajo de la cinta hasta llegar a la primera caja del otro lado. Contá las marcas y sumá los tres grupos."
+    solution_steps:
+      - "Medir el hueco entre dos cajas visibles."
+      - "Repetir ese hueco por debajo de la cinta."
+      - "Contar cuántas cajas entran tapadas."
+      - "Sumar las de la izquierda, las tapadas y las de la derecha."
+
+  ch.arith.pair_them_to_compare:
+    title: "¿Cuál tiene más?"
+    statement: "Hay dos montones desordenados: descubrí cuál tiene más sin contarlos."
+    hints:
+      - "Contar los dos montones es lento y es fácil perder la cuenta. ¿Habrá otra forma de compararlos?"
+      - "¿Qué pasa si unís cada objeto de un montón con uno del otro?"
+      - "Tirá un puente desde cada objeto de un montón hasta uno del otro. Los que quedan sin pareja están todos del mismo lado: ese montón es el que tiene más, y cuántos sobran es por cuánto."
+    solution_steps:
+      - "Unir cada objeto de un montón con uno del otro."
+      - "Marcar los que quedan sin pareja."
+      - "El montón con sobrantes es el que tiene más."
+      - "Contar los sobrantes para saber por cuánto."
+
+  ch.arith.hidden_numerator_on_the_line:
+    title: "El numerador tapado"
+    statement: "Un punto está marcado en la recta y una etiqueta tapa el número de arriba de su fracción: descubrí qué fracción es."
+    hints:
+      - "El número de abajo dice en cuántas partes iguales se corta el entero. ¿Están dibujadas esas partes?"
+      - "¿Qué pasa si cortás vos el tramo del cero al uno en esa cantidad de partes iguales?"
+      - "Cortá el tramo del cero al uno en tantas partes iguales como dice el número de abajo. Contá cuántas partes hay desde el cero hasta el punto: ese es el número tapado."
+    solution_steps:
+      - "Cortar el entero en tantas partes iguales como dice el número de abajo."
+      - "Ubicar el punto entre las marcas."
+      - "Contar las partes desde el cero hasta el punto."
+      - "Escribir la fracción con ese numerador."
+
+  ch.arith.ledger_with_hidden_debts:
+    title: "La fila tapada del libro"
+    statement: "En el libro de cuentas hay una fila tapada y el total del final no cierra: descubrí qué decía esa fila."
+    hints:
+      - "Fijate en el total que se ve antes de la fila tapada y en el que se ve después."
+      - "¿Qué paso hay que dar para ir de un total al otro? ¿Va hacia adelante o hacia atrás?"
+      - "Anotá el total corrido al lado de cada fila que se vea. El paso que va del total de antes al total de después es exactamente lo que decía la fila tapada, y si el total baja, era una deuda."
+    solution_steps:
+      - "Escribir el total corrido junto a cada fila visible."
+      - "Ubicar la fila tapada entre dos totales conocidos."
+      - "Restar el total de antes al total de después."
+      - "Leer el signo y el tamaño de ese paso."
+
+  ch.arith.where_the_parentheses_went:
+    title: "¿Dónde iban los paréntesis?"
+    statement: "Una cuenta escrita sin paréntesis no da el resultado que está anotado al lado: descubrí dónde iban."
+    hints:
+      - "Resolvé la cuenta con el orden de siempre. ¿Te da más o menos que el resultado pedido?"
+      - "Los paréntesis obligan a hacer una parte primero. ¿Cuánto tendría que valer esa parte para que el final cierre?"
+      - "Armá la cuenta como un árbol de cofres. Deshacé la última operación sobre el resultado pedido: ese número es lo que tiene que valer el cofre de adentro. Buscá qué pedazo de la cuenta da ese valor y cerralo entre paréntesis."
+    solution_steps:
+      - "Resolver la cuenta con el orden de siempre."
+      - "Comparar con el resultado pedido."
+      - "Deshacer la última operación para saber cuánto debe valer el grupo de adentro."
+      - "Probar cada agrupación y quedarse con la que cierra."
+
+  ch.arith.same_remainder_hidden_divisor:
+    title: "Dos vueltas, el mismo sobrante"
+    statement: "Un engranaje avanza siempre de a saltos del mismo tamaño, pero nadie te dice de cuánto. La primera vez avanzó {a} casilleros y la segunda {b}, y las dos veces quedó parado {r} casilleros después de la marca. ¿Qué tamaños de salto son posibles?"
+    hints:
+      - "Las dos veces sobró lo mismo. ¿Qué pasa si mirás la diferencia entre los dos totales?"
+      - "Si dos números dejan el mismo sobrante, su diferencia no deja ninguno. ¿De qué número es múltiplo esa diferencia?"
+      - "Restá los dos totales y descomponé la diferencia: el salto tiene que ser uno de sus divisores. Después descartá los que no sean más grandes que {r}, porque un sobrante nunca llega al tamaño del salto."
+    solution_steps:
+      - "Restar los dos totales."
+      - "Listar los divisores de esa diferencia."
+      - "Descartar los que no superen al sobrante."
+      - "Los que quedan son los saltos posibles."
+
+  ch.arith.one_more_makes_it_divide:
+    title: "Siempre falta uno"
+    statement: "En un frasco hay menos de {max} bolitas. Repartidas de a {d1} sobran {r1}, de a {d2} sobran {r2} y de a {d3} sobran {r3}. ¿Cuántas bolitas hay?"
+    hints:
+      - "Mirá cada sobrante al lado de su repartija. ¿Ves algo que se repite en los tres casos?"
+      - "En cada repartija falta exactamente una bolita para completar el último grupo. ¿Qué pasaría si agregaras una al frasco?"
+      - "Agregá una bolita: ahora las tres repartijas dan justo, así que el total más uno es múltiplo de {d1}, de {d2} y de {d3} a la vez. Buscá el primer múltiplo común y restale la bolita que agregaste."
+    solution_steps:
+      - "Comparar cada sobrante con su repartija: a todas les falta una para cerrar."
+      - "Agregar una bolita, con lo que las tres repartijas quedan exactas."
+      - "Buscar el primer múltiplo común de las tres cantidades."
+      - "Restar la bolita agregada."
   # ---- disc ---------------------------------------------------------------
 
   ch.disc.handshakes_at_the_table:
@@ -572,6 +754,19 @@ challenges:
       - "Agregar el ángulo compañero con la misma altura en la rueda."
       - "Reunir todas las soluciones dentro de una vuelta."
 
+
+  ch.trig.wheel_mark_height_from_arc:
+    title: "La marca de la rueda"
+    statement: "Una rueda de radio {r} gira sobre su eje. Una marca pintada en el borde arrancó justo a la derecha del eje y recorrió {s} a lo largo del borde. ¿A qué altura del eje quedó?"
+    hints:
+      - "Para la altura necesitás el ángulo que giró la rueda, y no te lo dieron. ¿Qué dato lo esconde?"
+      - "Un radián es el ángulo que abarca un arco del largo del radio. ¿Cuántos radios entran en el arco recorrido?"
+      - "Dividí el arco recorrido por el radio: ese cociente es el ángulo en radianes. Bajá la vertical desde la marca hasta la horizontal que pasa por el eje, y esa altura es el radio por el seno del ángulo."
+    solution_steps:
+      - "Dividir el arco recorrido por el radio para obtener el ángulo en radianes."
+      - "Ubicar la marca en el círculo a ese ángulo."
+      - "Bajar la vertical desde la marca hasta la horizontal del eje."
+      - "La altura es el radio multiplicado por el seno del ángulo."
   # ---- calc ---------------------------------------------------------------
 
   ch.calc.fence_along_the_river:
@@ -665,6 +860,32 @@ challenges:
       - "Sobreviven el primer término y uno que tiende a cero."
       - "Tomar el límite."
 
+
+  ch.calc.instant_rate_between_two_chords:
+    title: "La velocidad justo ahí"
+    statement: "La curva muestra la posición de un móvil a lo largo del tiempo. Te piden la velocidad exacta en el instante {t}, pero no hay ninguna recta dibujada y la velocidad promedio de todo el tramo no sirve."
+    hints:
+      - "La velocidad promedio entre dos instantes sí sabés calcularla. ¿Qué le falta para ser la velocidad de un solo instante?"
+      - "¿Qué le pasa a ese promedio si acercás cada vez más el segundo instante al primero?"
+      - "Trazá la cuerda desde el punto hasta un vecino de cada lado y armá el escalón de cada una. Achicá el intervalo a la mitad y repetí: los dos lados se van acercando al mismo número."
+    solution_steps:
+      - "Trazar una cuerda hacia cada lado del punto."
+      - "Calcular la velocidad promedio de cada cuerda como subida sobre avance."
+      - "Achicar el intervalo a la mitad y repetir."
+      - "El número al que se acercan los dos lados es la velocidad instantánea."
+
+  ch.calc.tank_from_the_rate_graph:
+    title: "El tanque y el caudal tapado"
+    statement: "El gráfico muestra a qué ritmo entra agua en un tanque durante {T} minutos, pero un cartel tapa un tramo del medio. Calculá cuánta agua entró en total."
+    hints:
+      - "El gráfico da el ritmo, no la cantidad. ¿Qué parte del dibujo representa el agua acumulada?"
+      - "Debajo del cartel el ritmo no hace nada raro: los tramos que se ven a los costados son rectos. ¿Qué pasa si los prolongás?"
+      - "Prolongá el tramo recto por debajo del cartel hasta encontrarlo con el otro extremo. La región de abajo se corta entonces en un rectángulo y un triángulo, y esa área, ritmo por tiempo, es el agua que entró."
+    solution_steps:
+      - "Prolongar el tramo recto del caudal por debajo del cartel."
+      - "Cortar la región bajo el gráfico en rectángulos y triángulos."
+      - "Sumar las áreas de las piezas."
+      - "Leer el resultado con sus unidades: caudal por tiempo es volumen."
   # ---- linalg -------------------------------------------------------------
 
   ch.linalg.matrix_of_a_composed_move:
@@ -706,6 +927,32 @@ challenges:
       - "Pitágoras entre v y su sombra da la altura."
       - "Área: base por altura, y también el determinante; deben coincidir."
 
+
+  ch.linalg.the_leg_that_closes_the_walk:
+    title: "El tramo que falta"
+    statement: "Un dron sale de un punto, hace {n} tramos y termina en otro punto marcado. Una nube tapa uno de los tramos. ¿Qué desplazamiento hizo en ese tramo y cuánto midió?"
+    hints:
+      - "Los tramos se encadenan punta con cola. ¿Adónde llega la cadena si sacás el tramo tapado?"
+      - "El desplazamiento total no depende del orden de los tramos: solo del punto de salida y del de llegada."
+      - "Encadená punta con cola las flechas que sí se ven. Desde la punta de la última, dibujá la flecha que llega a la meta: esa es la que falta. Su largo sale del triángulo rectángulo que forman sus dos componentes."
+    solution_steps:
+      - "Encadenar las flechas conocidas punta con cola."
+      - "Dibujar la flecha que va desde la última punta hasta la meta."
+      - "Leer sus componentes en la grilla."
+      - "Armar el triángulo rectángulo con esas componentes para obtener el largo."
+
+  ch.linalg.count_the_moves_to_the_treasure:
+    title: "Dos movidas hasta el tesoro"
+    statement: "En este tablero solo se puede avanzar con dos movidas fijas, cada una repetida las veces que quieras, para adelante o para atrás. El tesoro está marcado. ¿Cuántas movidas de cada tipo hacen falta, o no se llega?"
+    hints:
+      - "Antes de contar, preguntate si el tesoro se puede alcanzar. ¿Cuándo dos movidas no alcanzan para llegar a cualquier lado?"
+      - "Las dos movidas arman su propia grilla, torcida, encima del tablero. ¿Cae el tesoro en un cruce de esa grilla?"
+      - "Dibujá la grilla torcida que generan las dos flechas y caminá por ella hasta el tesoro, contando cuántos pasos diste a lo largo de cada flecha. Si las dos flechas apuntan en la misma dirección, la grilla es una sola recta y solo se llega a los puntos de esa recta."
+    solution_steps:
+      - "Comprobar que ninguna de las dos flechas es múltiplo de la otra."
+      - "Dibujar la grilla torcida que generan."
+      - "Caminar hasta el tesoro contando los pasos de cada flecha."
+      - "Verificar haciendo las movidas contadas."
   # ---- graph ---------------------------------------------------------------
 
   ch.graph.count_edges_from_degrees:

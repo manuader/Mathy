@@ -94,7 +94,7 @@ minigames:
   - ledger_pair_fruit_to_fruit
   - sorter_number_card_on_bin
   misconceptions: []
-  challenges: []
+  challenges: [ch.arith.covered_row_count, ch.arith.pair_them_to_compare]
   demonstration: pairing_fruit_to_fruit_bridge
 - id: found.count.number_line
   node: found.count.number_line
@@ -162,7 +162,7 @@ minigames:
   - gear_track_numbers_in_order
   - gear_one_step_one_number
   misconceptions: []
-  challenges: []
+  challenges: [ch.arith.covered_row_count, ch.arith.hidden_numerator_on_the_line]
   demonstration: crank_one_tooth_one_stone
 - id: arith.add.displacement
   node: arith.add.displacement
@@ -236,7 +236,7 @@ minigames:
   - ledger_join_two_piles
   misconceptions:
   - equals_as_operator
-  challenges: []
+  challenges: [ch.arith.covered_row_count, ch.arith.ledger_with_hidden_debts, ch.arith.where_the_parentheses_went]
   demonstration: token_dropped_on_crank_walks_forward
 - id: arith.sub.undo_add
   node: arith.sub.undo_add
@@ -306,8 +306,10 @@ minigames:
   - chest_step_back_undoes_step
   - gear_walk_back_same_count
   - chest_scene_key_intro
-  misconceptions: []
-  challenges: []
+  misconceptions:
+  - subtrahend_order_swapped
+  - endpoint_read_as_distance
+  challenges: [ch.arith.ledger_with_hidden_debts, ch.arith.pair_them_to_compare, ch.arith.same_remainder_hidden_divisor]
   demonstration: key_turns_manivela_backward_three_stones
 - id: arith.mul.scaling
   node: arith.mul.scaling
@@ -390,7 +392,7 @@ minigames:
   - grid_stretch_by_factor
   misconceptions:
   - negative_times_negative
-  challenges: []
+  challenges: [ch.arith.where_the_parentheses_went]
   demonstration: pinch_band_to_target_mark
 - id: arith.div.undo_mul
   node: arith.div.undo_mul
@@ -474,8 +476,10 @@ minigames:
   scenes:
   - chest_shrink_key_undoes_stretch
   - tile_split_rectangle_into_rows
-  misconceptions: []
-  challenges: []
+  misconceptions:
+  - division_order_swapped
+  - wrong_inverse_choice
+  challenges: [ch.arith.hidden_numerator_on_the_line, ch.arith.one_more_makes_it_divide, ch.arith.same_remainder_hidden_divisor]
   demonstration: shrink_key_turn_to_witness_mark
 - id: arith.int.negatives
   node: arith.int.negatives
@@ -562,7 +566,7 @@ minigames:
   - ledger_debt_tokens
   misconceptions:
   - negative_times_negative
-  challenges: []
+  challenges: [ch.arith.ledger_with_hidden_debts]
   demonstration: crank_backward_crosses_zero_turns_around
 - id: arith.frac.parts_and_ratio
   node: arith.frac.parts_and_ratio
@@ -647,7 +651,7 @@ minigames:
   - urn_fraction_of_balls
   misconceptions:
   - fraction_add_across
-  challenges: []
+  challenges: [ch.arith.hidden_numerator_on_the_line]
   demonstration: finger_drags_to_cut_bar_and_shade
 - id: arith.expr.precedence_tree
   node: arith.expr.precedence_tree
@@ -730,7 +734,7 @@ minigames:
   - pipe_two_machines_order_matters
   misconceptions:
   - unwrap_order_inverted
-  challenges: []
+  challenges: [ch.arith.where_the_parentheses_went]
   demonstration: outer_key_spins_free_until_inner_opens
 - id: prealg.var.unknown_as_box
   node: prealg.var.unknown_as_box
@@ -809,7 +813,7 @@ minigames:
   - ledger_morph_fruit_to_symbol
   misconceptions:
   - variable_as_label
-  challenges: []
+  challenges: [ch.alg.chained_scales_hidden_weight, ch.alg.meter_hidden_flat_fee]
   demonstration: apples_and_boxes_sorted_into_rows
 - id: prealg.eq.balance
   node: prealg.eq.balance
@@ -885,7 +889,7 @@ minigames:
   misconceptions:
   - equals_as_operator
   - inverse_applied_one_side
-  challenges: []
+  challenges: [ch.alg.chained_scales_hidden_weight, ch.alg.second_equation_in_the_picture]
   demonstration: touch_weight_left_then_matching_weight_right
 - id: prealg.inv.operation_as_key
   node: prealg.inv.operation_as_key
@@ -957,7 +961,7 @@ minigames:
   - chest_scene_key_intro
   misconceptions:
   - wrong_inverse_choice
-  challenges: []
+  challenges: [ch.alg.machine_inside_a_machine]
   demonstration: wrong_shaped_key_turns_and_opens
 - id: alg.eq.one_step
   node: alg.eq.one_step
@@ -1037,7 +1041,7 @@ minigames:
   - sign_flip_on_move
   - wrong_inverse_choice
   - inverse_applied_one_side
-  challenges: []
+  challenges: [ch.alg.chained_scales_hidden_weight, ch.alg.garden_wider_and_narrower]
   demonstration: key_passes_through_both_pans
 - id: alg.eq.multi_step
   node: alg.eq.multi_step
@@ -1188,7 +1192,7 @@ minigames:
   misconceptions:
   - distribute_over_wrong_op
   - variable_as_label
-  challenges: []
+  challenges: [ch.alg.garden_wider_and_narrower, ch.alg.second_equation_in_the_picture]
   demonstration: tiles_fill_left_room_column_counts_alone
 - id: alg.sys.two_by_two
   node: alg.sys.two_by_two
@@ -1265,7 +1269,8 @@ minigames:
   scenes:
   - balance_two_scales_shared_boxes
   - grid_two_lines_cross
-  misconceptions: []
+  misconceptions:
+  - substitution_ignores_other_row
   challenges:
   - ch.alg.two_receipts_system
   - ch.alg.symmetric_sum_of_squares
@@ -1338,8 +1343,9 @@ minigames:
   scenes:
   - pipe_machine_named_f
   - network_each_input_one_arrow
-  misconceptions: []
-  challenges: []
+  misconceptions:
+  - machine_gives_two_outputs
+  challenges: [ch.alg.machine_inside_a_machine]
   demonstration: token_drops_in_slot_machine_vibrates_row_fills
 - id: alg.fn.graph_as_picture
   node: alg.fn.graph_as_picture
@@ -1417,8 +1423,10 @@ minigames:
   scenes:
   - slope_walker_leaves_trace
   - grid_four_quadrants_with_signs
-  misconceptions: []
-  challenges: []
+  misconceptions:
+  - machine_gives_two_outputs
+  - graph_read_axes_swapped
+  challenges: [ch.alg.meter_hidden_flat_fee, ch.alg.read_the_inverse_off_the_graph, ch.calc.tank_from_the_rate_graph, ch.linalg.the_leg_that_closes_the_walk]
   demonstration: hand_drags_walker_drops_leave_trace
 - id: alg.fn.linear_slope
   node: alg.fn.linear_slope
@@ -1493,8 +1501,10 @@ minigames:
   - slope_same_steepness_any_step
   - slope_intercept_is_start_height
   - slope_scene_hill_intro
-  misconceptions: []
-  challenges: []
+  misconceptions:
+  - slope_confuses_step_with_rate
+  - slope_as_rise_only
+  challenges: [ch.alg.meter_hidden_flat_fee, ch.alg.read_the_inverse_off_the_graph, ch.calc.instant_rate_between_two_chords]
   demonstration: step_slides_along_ramp_color_unchanged
 - id: alg.fn.composition
   node: alg.fn.composition
@@ -1569,7 +1579,7 @@ minigames:
   - gear_train_composed_ratio
   misconceptions:
   - chain_rule_missing_inner
-  challenges: []
+  challenges: [ch.alg.machine_inside_a_machine]
   demonstration: pipe_connects_two_machines_ball_drops
 - id: alg.fn.inverse_function
   node: alg.fn.inverse_function
@@ -1647,7 +1657,7 @@ minigames:
   - slope_reflect_graph_over_diagonal
   misconceptions:
   - sqrt_loses_negative_branch
-  challenges: []
+  challenges: [ch.alg.read_the_inverse_off_the_graph]
   demonstration: ball_exits_pulls_lever_reenters_exit
 - id: alg.fn.quadratic_and_sqrt
   node: alg.fn.quadratic_and_sqrt
@@ -2058,7 +2068,7 @@ minigames:
   - slope_scene_hill_intro
   misconceptions:
   - limit_as_reaching
-  challenges: []
+  challenges: [ch.calc.instant_rate_between_two_chords]
   demonstration: hand_drags_walker_one_step_then_shrinks_it
 - id: calc1.deriv.rules_as_structure
   node: calc1.deriv.rules_as_structure
@@ -2231,7 +2241,7 @@ minigames:
   - fill_scene_tank_intro
   misconceptions:
   - integral_ignores_sign
-  challenges: []
+  challenges: [ch.calc.tank_from_the_rate_graph]
   demonstration: faucet_held_open_level_rises_then_partition_refines
 - id: calc1.ftc.integral_undoes_derivative
   node: calc1.ftc.integral_undoes_derivative
@@ -2391,7 +2401,7 @@ minigames:
   - gear_scene_steps_east_then_north
   misconceptions:
   - modulus_of_sum_adds
-  challenges: []
+  challenges: [ch.linalg.count_the_moves_to_the_treasure, ch.linalg.the_leg_that_closes_the_walk]
   demonstration: two_cranks_turn_walker_steps_east_then_north
 - id: linalg.vec.span_and_combination
   node: linalg.vec.span_and_combination
@@ -2462,7 +2472,7 @@ minigames:
   - ledger_scene_recipe_of_steps
   misconceptions:
   - variable_as_label
-  challenges: []
+  challenges: [ch.linalg.count_the_moves_to_the_treasure, ch.linalg.the_leg_that_closes_the_walk]
   demonstration: touch_arrow_a_twice_b_once_walker_takes_three_legs
 - id: linalg.map.linear_transformation_2d
   node: linalg.map.linear_transformation_2d
@@ -3101,8 +3111,10 @@ minigames:
   scenes:
   - gear_scene_turn_as_angle
   - construction_scene_extend_side_exterior_angle
-  misconceptions: []
-  challenges: []
+  misconceptions:
+  - angle_measured_by_side_length
+  - turn_read_as_final_position
+  challenges: [ch.geom.zigzag_between_parallels, ch.trig.wheel_mark_height_from_arc]
   demonstration: arm_dragged_to_goal_dial_clicks_sector_paints
 - id: geom.sim.similarity_as_scale
   node: geom.sim.similarity_as_scale
@@ -3175,7 +3187,9 @@ minigames:
   scenes:
   - grid_scene_dilate_triangle
   - construction_scene_parallel_cut_similar
-  misconceptions: []
+  misconceptions:
+  - area_scales_like_length
+  - area_uses_slant_side
   challenges:
   - ch.geom.parallel_cut_missing_length
   - ch.geom.altitude_hypotenuse_three_similar
@@ -3415,7 +3429,7 @@ minigames:
   - gear_scene_unroll_radius_on_arc
   misconceptions:
   - sin_of_sum_distributes
-  challenges: []
+  challenges: [ch.trig.wheel_mark_height_from_arc]
   demonstration: ribbon_laid_along_rim_repeatedly_until_full_turn
 - id: trig.fn.sine_as_height
   node: trig.fn.sine_as_height
@@ -3492,7 +3506,9 @@ minigames:
   - construction_scene_height_from_radius_tip
   - slope_scene_wheel_rider_trace
   - pipe_scene_angle_to_height
-  misconceptions: []
+  misconceptions:
+  - sin_of_sum_distributes
+  - sine_confused_with_cosine
   challenges:
   - ch.trig.regular_polygon_area_by_radii
   demonstration: passenger_dragged_quarter_turn_height_measured_against_post
