@@ -80,7 +80,7 @@ Ocho niveles. Cada uno cambia la capa o endurece los parámetros, nunca las dos 
 
 Qué endurece cada parámetro: el rango numérico obliga a elegir la llave por la forma de la cerradura y no por reconocer la cuenta; los negativos rompen la balanza física y fuerzan la línea; las fracciones separan "dividir" de "repartir en montones"; la incógnita a la derecha rompe la lectura "lo que está a la izquierda es lo que busco".
 
-Desafíos de olimpíada: el nodo participa en los desafíos de álgebra de [S](../S-desafios/S0-desafios.md), aún no escritos, donde una ecuación de un paso aparece como paso intermedio de un problema de varios nodos con datos ocultos. Hasta que S exista, el nodo no exige desafío para `mastered`.
+Desafíos de olimpíada: los desafíos de álgebra de [S](../S-desafios/S0-desafios.md) están escritos, y en varios una ecuación de un paso aparece como paso intermedio de un problema con datos ocultos. Ninguno lo declara todavía en su campo `requires`, que es de donde se deriva la exigencia, así que el nodo no exige desafío para `mastered`. Es una decisión defendible —el nodo es una herramienta dentro de esos problemas, no lo que evalúan— pero conviene que sea deliberada y no un olvido.
 
 ## Mastery
 

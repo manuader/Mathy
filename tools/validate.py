@@ -554,6 +554,21 @@ def check_challenges(nodes, aliases, catalogs, rep: Report) -> dict[str, set[str
             if known is not None and mechanic not in known:
                 rep.error("desafios", f"`{cid}`: mecánica `{mechanic}` no existe")
 
+    # cobertura: qué nodos de espina no aparecen en el `requires` de ningún desafío
+    spine_ids = {n_id for n_id, n in nodes.items() if n.get("spine")}
+    uncovered = sorted(spine_ids - set(derived))
+    if uncovered:
+        by_area: dict[str, int] = {}
+        for node_id in uncovered:
+            area = nodes[node_id].get("area")
+            by_area[area] = by_area.get(area, 0) + 1
+        resumen = ", ".join(f"{a}:{c}" for a, c in sorted(by_area.items()))
+        rep.warn(
+            "desafios",
+            f"{len(uncovered)} de {len(spine_ids)} nodos de espina no los requiere ningún "
+            f"desafío, así que ninguno exige desafío para `mastered` ({resumen})",
+        )
+
     for node_id, node in nodes.items():
         if "challenges" in node:
             rep.error(
