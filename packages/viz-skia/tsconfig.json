@@ -3,10 +3,14 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "module": "ESNext"
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ]
 }

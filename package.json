@@ -17,5 +17,8 @@
   "devDependencies": {
     "@types/node": "^22.20.2",
     "typescript": "^5.9.2"
+  },
+  "allowScripts": {
+    "@shopify/react-native-skia@2.6.2": true
   }
 }

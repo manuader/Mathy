@@ -42,3 +42,9 @@ node_modules/
 *.tsbuildinfo
 packages/*/dist/
 apps/*/dist/
+
+# Build web de Expo
+apps/*/dist/
+apps/*/.expo/
+# El WASM de CanvasKit lo copia `npx setup-skia-web` en cada instalación
+apps/*/public/canvaskit.wasm
