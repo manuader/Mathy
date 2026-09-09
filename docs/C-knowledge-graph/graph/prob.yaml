@@ -81,6 +81,7 @@ nodes:
     literacy: icons
     layers: [real, intuition, concrete, visual, symbolic, formal, abstract, transfer]
     analogy: balance_point_of_weights
+    analogies_secondary: [fair_ticket_price]
     misconceptions: [equiprobable_assumed]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [adv.num.monte_carlo_pi, csmath.info.entropy_as_surprise, geom.area.area_by_random_darts]

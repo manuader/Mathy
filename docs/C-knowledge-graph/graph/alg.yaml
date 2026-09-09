@@ -30,6 +30,7 @@ nodes:
     mechanics: [balance, chest_key]
     literacy: icons
     analogy: balance_pans
+    analogies_secondary: [chest_single_lock]
     misconceptions: [sign_flip_on_move, wrong_inverse_choice, inverse_applied_one_side]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.map.inverse_and_systems, disc.mod.clock_equivalence, trig.id.double_angle]
@@ -228,6 +229,7 @@ nodes:
     mechanics: [chest_key, gears_sequence, machine_pipe]
     literacy: icons
     analogy: machine_reverse_run
+    analogies_secondary: [paper_folding_doubles]
     misconceptions: [log_of_sum]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [precalc.exp.natural_base, csmath.cplx.big_o_as_slope, csmath.rec.base_case_and_smaller_call, calc1.deriv.rules_as_structure]

@@ -219,6 +219,7 @@ def check_references(nodes, aliases, catalogs, rep: Report) -> None:
     catalog_fields = {
         "mechanics": "mechanics",
         "analogy": "analogies",
+        "analogies_secondary": "analogies",
         "misconceptions": "misconceptions",
         "manim": "scenes",
         "calc_unlocks": "calc_ops",

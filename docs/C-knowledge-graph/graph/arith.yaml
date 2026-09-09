@@ -33,6 +33,7 @@ nodes:
     mechanics: [gears_sequence, ledger]
     literacy: none
     analogy: number_line_walk
+    analogies_secondary: [walker_forward_and_back]
     misconceptions: [equals_as_operator]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.vec.vector_as_displacement, geom.angle.turn_as_measure, graph.path.shortest_path]
@@ -69,6 +70,7 @@ nodes:
     mechanics: [tiles, grid_stretch, gears_sequence]
     literacy: none
     analogy: rubber_band_stretch
+    analogies_secondary: [tile_floor]
     misconceptions: [negative_times_negative]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [geom.area.rect_and_triangle, geom.sim.similarity_as_scale, linalg.vec.span_and_combination, calc1.int.accumulation]
@@ -87,6 +89,7 @@ nodes:
     mechanics: [chest_key, tiles, grid_stretch]
     literacy: none
     analogy: rubber_band_stretch
+    analogies_secondary: [tile_floor]
     misconceptions: [division_order_swapped, wrong_inverse_choice]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.map.inverse_and_systems, geom.sim.similarity_as_scale, prob.basic.probability_as_proportion]
@@ -105,6 +108,7 @@ nodes:
     mechanics: [gears_sequence, ledger, grid_stretch]
     literacy: none
     analogy: elevator_floors
+    analogies_secondary: [debt_ledger]
     misconceptions: [negative_times_negative]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [alg.fn.graph_as_picture, linalg.vec.vector_as_displacement, trig.ang.quadrant_signs]
@@ -123,6 +127,7 @@ nodes:
     mechanics: [tiles, ledger, urn_dice]
     literacy: none
     analogy: pizza_slices
+    analogies_secondary: [urn_of_balls]
     misconceptions: [fraction_add_across]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [prob.basic.probability_as_proportion, geom.angle.turn_as_measure, geom.sim.similarity_as_scale, precalc.lim.approach]

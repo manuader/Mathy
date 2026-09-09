@@ -49,6 +49,7 @@ nodes:
     mechanics: [machine_pipe, tiles, gears_sequence]
     literacy: short_text
     analogy: growing_rectangle
+    analogies_secondary: [gear_train_ratios]
     misconceptions: [chain_rule_missing_inner, derivative_of_product_as_product]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [calc2.tech.substitution_undoes_chain, mvcalc.jac.local_stretch, adv.alg.polynomial_arithmetic, csmath.inv.loop_invariant]
@@ -101,6 +102,7 @@ nodes:
     mechanics: [chest_key, fill_accumulate, slope_walker]
     literacy: short_text
     analogy: odometer_from_speed
+    analogies_secondary: [tank_filling]
     misconceptions: [integral_ignores_sign, wrong_inverse_choice]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [calc2.tech.substitution_undoes_chain, adv.four.inverse_transform, prob.rv.cumulative_distribution, adv.ode.euler_method]

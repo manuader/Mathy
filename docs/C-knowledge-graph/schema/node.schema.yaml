@@ -96,7 +96,8 @@ node:
   literacy:      {type: enum:literacy, required: true, doc: "nivel 0 → none; full_text prohibido antes del nivel 3"}
   spine:         {type: bool, default: false}
   layers:        {type: list<enum:layer>, default: all, doc: "declarar solo para acotar: found.* suele terminar en visual; adv.* puede empezar en symbolic"}
-  analogy:       {type: analogy_id, required: false, doc: "obligatoria si layers incluye real o concrete"}
+  analogy:       {type: analogy_id, required: false, doc: "la analogía principal; obligatoria si layers incluye real o concrete"}
+  analogies_secondary: {type: list<analogy_id>, default: [], doc: "analogías que visten una capacidad distinta del mismo nodo; la convención la fija el nodo 13, donde la balanza sostiene la igualdad y el cofre la operación inversa"}
   misconceptions: {type: list<misconception_id>, default: []}
   transfer_to:   {type: list<id>, default: [], doc: "nodos de OTRA área donde este concepto se evalúa en una mecánica ajena"}
   calc_unlocks:  {type: list<calc_op_id>, default: [], doc: "operaciones que se habilitan cuando el nodo llega a ready"}
