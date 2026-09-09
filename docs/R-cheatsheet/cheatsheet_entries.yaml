@@ -1,0 +1,5553 @@
+# Entradas de cheatsheet de Mathy. DATA, sin texto visible: título y cuerpo viven en
+# ../locales/es/cheatsheet.yaml bajo cheatsheet.<id>.{title, body}. Prosa en R0-cheatsheet.md.
+# Las 535 entradas son las que los nodos del grafo declaran en su campo `cheatsheet`
+# (../C-knowledge-graph/graph/*.yaml) y las que citan por id docs/S-desafios/challenges.yaml
+# (`cheatsheet_refs`, `hidden_data.uses`), docs/I-manim/scenes.yaml, docs/E-mecanicas/mechanics.yaml,
+# docs/G-analogias/analogies.yaml y docs/L-modelo-errores/*.yaml. Este archivo no agrega ni quita
+# entradas respecto de ese conjunto: lo describe.
+#
+# Campos por entrada:
+#   id                      cs.<area>.<slug>; el slug nombra la idea, no el nodo
+#   node                    el nodo del grafo que declara la entrada en su `cheatsheet`.
+#                           Cuando más de un nodo la declara, éste es el de la espina, o si
+#                           ambos lo son (o ninguno), el de nivel más bajo; el resto queda en
+#                           `also_declared_by`.
+#   also_declared_by        opcional; otros nodos que también listan este id en su `cheatsheet`
+#   area, cluster           derivados de `node` (area.cluster.slug)
+#   kind                    qué tipo de contenido es. Enum cerrado, justificado abajo.
+#   display                 { form, scene }. `form` es expression (una expresión matemática),
+#                           statement (un enunciado corto, no una expresión) o figure (una
+#                           construcción o diagrama es el contenido principal). `scene` es un id
+#                           de ../I-manim/scenes.yaml cuando existe una escena real que ilustra
+#                           la entrada, o `null`: la mayoría de las entradas no espina no tienen
+#                           escena propia y se muestran con el motor de layout o un asset estático.
+#   unlocked_at             `symbolic` o `formal`: la primera de esas dos capas del nodo en la
+#                           que la entrada aparece. Regla: `notation`, `identity`, `procedure`,
+#                           `definition` y `figure` se desbloquean en `symbolic` (nacen con la
+#                           notación o el diagrama); `property`, `theorem`, `strategy` y
+#                           `constant` se desbloquean en `formal` (piden la condición o la
+#                           justificación de esa capa). Excepción: si el nodo tiene nivel 0–2,
+#                           la entrada nace en `symbolic` como imagen con voz sin importar su
+#                           `kind` (Q §5, N §3.7), y ese `kind` describe el contenido que tendrá
+#                           el texto cuando llegue.
+#   text_at                 presente solo cuando el nodo tiene nivel 0–2: siempre `formal`, la
+#                           capa en la que el texto se agrega debajo de la imagen sin
+#                           reemplazarla (Q §5).
+#   related                 otros ids `cs.*` de este mismo archivo, temáticamente cercanos
+#   replay                  el nodo cuyo minijuego enseña la entrada; el enlace "volver a jugar
+#                           esto" resuelve a docs/F-minijuegos/<replay>.md. Coincide con `node`:
+#                           lo que se rejuega es siempre el minijuego que originó la entrada.
+#   math_locale_sensitive   true cuando la notación de la entrada cambia con el `MathLocale`
+#                           (decimales, separador de miles, sen/sin, log/ln, notación de
+#                           intervalo, tg/tan, unidades)
+#
+# Enum de `kind`, nueve valores:
+#   identity    una igualdad que vale siempre entre expresiones (a² + b² = c², sen² + cos² = 1)
+#   definition  qué es un objeto o una operación (número primo, matriz, límite)
+#   procedure   una serie de pasos para llegar a un resultado (división larga, completar el
+#               cuadrado, eliminación gaussiana)
+#   property    una regla general sobre cómo se comporta una operación o una familia de objetos
+#               (conmutatividad, la derivada de una suma, cuándo una serie converge)
+#   theorem     un resultado con nombre propio que conecta varias ideas (Pitágoras, Bayes, el
+#               teorema fundamental del cálculo, Euler para poliedros)
+#   notation    introduce un símbolo o una convención de escritura sin afirmar nada nuevo
+#               (f(x), Σ, la notación de intervalo)
+#   strategy    una heurística de desafío, no una fórmula: qué construcción probar primero
+#               (trazar la altura, buscar el triángulo rectángulo escondido)
+#   figure      una construcción o un diagrama es el contenido en sí, sin una fórmula que lo
+#               resuma en una línea (una figura de baldosas, un árbol de casos)
+#   constant    un valor o una familia de valores especial que vale la pena recordar (e, los
+#               ángulos notables, las ternas pitagóricas chicas)
+#
+# Nada de este archivo es texto visible al jugador: es id, enum, número o referencia a otro id.
+
+version: 1
+
+defaults:
+  kinds: [identity, definition, procedure, property, theorem, notation, strategy, figure, constant]
+  display_forms: [expression, statement, figure]
+  unlock_layers: [symbolic, formal]
+
+entries:
+
+  # ---- graph ---------------------------------------------------------
+  - id: cs.graph.graph_vocabulary
+    node: graph.basic.graph_and_paths
+    area: graph
+    cluster: basic
+    kind: definition
+    display: {form: figure, scene: network_scene_islands_to_dots}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.graph.walk_path_cycle, cs.graph.connected_components, cs.graph.handshake_lemma]
+    replay: graph.basic.graph_and_paths
+    math_locale_sensitive: false
+  - id: cs.graph.walk_path_cycle
+    node: graph.walk.repeat_rules
+    area: graph
+    cluster: walk
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.graph.graph_vocabulary, cs.graph.connected_components]
+    replay: graph.walk.repeat_rules
+    math_locale_sensitive: false
+  - id: cs.graph.connected_components
+    node: graph.conn.components
+    area: graph
+    cluster: conn
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.graph.graph_vocabulary, cs.graph.tree_edges_n_minus_1]
+    replay: graph.conn.components
+    math_locale_sensitive: false
+  - id: cs.graph.handshake_lemma
+    node: graph.deg.handshake_lemma
+    area: graph
+    cluster: deg
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.graph.graph_vocabulary, cs.graph.tree_edges_n_minus_1]
+    replay: graph.deg.handshake_lemma
+    math_locale_sensitive: false
+  - id: cs.graph.tree_edges_n_minus_1
+    node: graph.tree.tree_no_cycles
+    area: graph
+    cluster: tree
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.graph.connected_components, cs.graph.handshake_lemma]
+    replay: graph.tree.tree_no_cycles
+    math_locale_sensitive: false
+  - id: cs.graph.euler_path_degree_rule
+    node: graph.euler.bridges_konigsberg
+    area: graph
+    cluster: euler
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.graph.euler_formula_planar, cs.graph.hamilton_vs_euler]
+    replay: graph.euler.bridges_konigsberg
+    math_locale_sensitive: false
+  - id: cs.graph.hamilton_vs_euler
+    node: graph.euler.hamilton_visits_every_node
+    area: graph
+    cluster: euler
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.graph.euler_path_degree_rule]
+    replay: graph.euler.hamilton_visits_every_node
+    math_locale_sensitive: false
+  - id: cs.graph.greedy_coloring
+    node: graph.color.map_coloring
+    area: graph
+    cluster: color
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.graph.bipartite_two_colors]
+    replay: graph.color.map_coloring
+    math_locale_sensitive: false
+  - id: cs.graph.euler_formula_planar
+    node: graph.planar.no_crossing_euler_formula
+    area: graph
+    cluster: planar
+    kind: theorem
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.graph.tree_edges_n_minus_1, cs.graph.euler_path_degree_rule]
+    replay: graph.planar.no_crossing_euler_formula
+    math_locale_sensitive: false
+  - id: cs.graph.bfs_dfs_order
+    node: graph.search.bfs_dfs_frontier
+    area: graph
+    cluster: search
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.graph.dijkstra_relax]
+    replay: graph.search.bfs_dfs_frontier
+    math_locale_sensitive: false
+  - id: cs.graph.dijkstra_relax
+    node: graph.path.shortest_path
+    area: graph
+    cluster: path
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.graph.bfs_dfs_order, cs.graph.max_flow_min_cut]
+    replay: graph.path.shortest_path
+    math_locale_sensitive: false
+  - id: cs.graph.bipartite_two_colors
+    node: graph.match.bipartite_matching
+    area: graph
+    cluster: match
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.graph.greedy_coloring, cs.graph.matching_hall]
+    replay: graph.match.bipartite_matching
+    math_locale_sensitive: false
+  - id: cs.graph.matching_hall
+    node: graph.match.bipartite_matching
+    area: graph
+    cluster: match
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.graph.bipartite_two_colors, cs.graph.max_flow_min_cut]
+    replay: graph.match.bipartite_matching
+    math_locale_sensitive: false
+  - id: cs.graph.max_flow_min_cut
+    node: graph.flow.max_flow_min_cut
+    area: graph
+    cluster: flow
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.graph.dijkstra_relax, cs.graph.matching_hall]
+    replay: graph.flow.max_flow_min_cut
+    math_locale_sensitive: false
+  - id: cs.graph.adjacency_matrix_powers
+    node: graph.matrix.two_step_routes_as_product
+    area: graph
+    cluster: matrix
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.graph.graph_vocabulary]
+    replay: graph.matrix.two_step_routes_as_product
+    math_locale_sensitive: false
+
+  # ---- csmath ---------------------------------------------------------
+  - id: cs.csmath.automaton_transitions
+    node: csmath.alg.state_machine
+    area: csmath
+    cluster: alg
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.caesar_shift_undo, cs.csmath.boolean_identities]
+    replay: csmath.alg.state_machine
+    math_locale_sensitive: false
+  - id: cs.csmath.bfs_queue_invariant
+    node: csmath.alg.breadth_first_search
+    area: csmath
+    cluster: alg
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.binary_search_halving, cs.csmath.loop_invariant_template]
+    replay: csmath.alg.breadth_first_search
+    math_locale_sensitive: false
+  - id: cs.csmath.big_o_hierarchy
+    node: csmath.cplx.big_o_as_slope
+    area: csmath
+    cluster: cplx
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.complexity_classes]
+    replay: csmath.cplx.big_o_as_slope
+    math_locale_sensitive: false
+  - id: cs.csmath.binary_place_value
+    node: csmath.bin.place_value_binary
+    area: csmath
+    cluster: bin
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.mod_wraparound]
+    replay: csmath.bin.place_value_binary
+    math_locale_sensitive: false
+  - id: cs.csmath.binary_search_halving
+    node: csmath.rec.base_case_and_smaller_call
+    area: csmath
+    cluster: rec
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.recursion_base_case, cs.csmath.bfs_queue_invariant]
+    replay: csmath.rec.base_case_and_smaller_call
+    math_locale_sensitive: false
+  - id: cs.csmath.boolean_identities
+    node: csmath.bool.logic_gates
+    area: csmath
+    cluster: bool
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.automaton_transitions]
+    replay: csmath.bool.logic_gates
+    math_locale_sensitive: false
+  - id: cs.csmath.caesar_shift_undo
+    node: csmath.crypto.caesar_shift
+    area: csmath
+    cluster: crypto
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.rsa_keys, cs.csmath.mod_wraparound]
+    replay: csmath.crypto.caesar_shift
+    math_locale_sensitive: false
+  - id: cs.csmath.complexity_classes
+    node: csmath.cplx.big_o_as_slope
+    area: csmath
+    cluster: cplx
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.big_o_hierarchy]
+    replay: csmath.cplx.big_o_as_slope
+    math_locale_sensitive: false
+  - id: cs.csmath.entropy_bits
+    node: csmath.info.entropy_as_surprise
+    area: csmath
+    cluster: info
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.rsa_keys]
+    replay: csmath.info.entropy_as_surprise
+    math_locale_sensitive: false
+  - id: cs.csmath.float_gaps_epsilon
+    node: csmath.float.rounding_gaps
+    area: csmath
+    cluster: float
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.binary_place_value]
+    replay: csmath.float.rounding_gaps
+    math_locale_sensitive: true
+  - id: cs.csmath.hash_buckets
+    node: csmath.mod.wraparound
+    area: csmath
+    cluster: mod
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.mod_wraparound]
+    replay: csmath.mod.wraparound
+    math_locale_sensitive: false
+  - id: cs.csmath.loop_invariant_template
+    node: csmath.inv.loop_invariant
+    area: csmath
+    cluster: inv
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.prefix_sum, cs.csmath.sorting_invariant]
+    replay: csmath.inv.loop_invariant
+    math_locale_sensitive: false
+  - id: cs.csmath.mod_wraparound
+    node: csmath.mod.wraparound
+    area: csmath
+    cluster: mod
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.hash_buckets, cs.csmath.binary_place_value]
+    replay: csmath.mod.wraparound
+    math_locale_sensitive: false
+  - id: cs.csmath.pixel_transform_matrix
+    node: csmath.gfx.transform_matrix
+    area: csmath
+    cluster: gfx
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: []
+    replay: csmath.gfx.transform_matrix
+    math_locale_sensitive: false
+  - id: cs.csmath.prefix_sum
+    node: csmath.inv.loop_invariant
+    area: csmath
+    cluster: inv
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.loop_invariant_template]
+    replay: csmath.inv.loop_invariant
+    math_locale_sensitive: false
+  - id: cs.csmath.recursion_base_case
+    node: csmath.rec.base_case_and_smaller_call
+    area: csmath
+    cluster: rec
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.csmath.binary_search_halving]
+    replay: csmath.rec.base_case_and_smaller_call
+    math_locale_sensitive: false
+  - id: cs.csmath.rsa_keys
+    node: csmath.crypto.rsa_trapdoor
+    area: csmath
+    cluster: crypto
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.caesar_shift_undo]
+    replay: csmath.crypto.rsa_trapdoor
+    math_locale_sensitive: false
+  - id: cs.csmath.sorting_invariant
+    node: csmath.alg.sorting_algorithm
+    area: csmath
+    cluster: alg
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.csmath.loop_invariant_template]
+    replay: csmath.alg.sorting_algorithm
+    math_locale_sensitive: false
+
+  # ---- disc ---------------------------------------------------------
+  - id: cs.disc.closed_form_sums
+    node: disc.sum.sigma_notation
+    area: disc
+    cluster: sum
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.sigma_rules]
+    replay: disc.sum.sigma_notation
+    math_locale_sensitive: false
+  - id: cs.disc.combinations_choose
+    node: disc.count.choose_as_pascal_paths
+    area: disc
+    cluster: count
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.pascal_triangle, cs.disc.permutations_factorial]
+    replay: disc.count.choose_as_pascal_paths
+    math_locale_sensitive: false
+  - id: cs.disc.congruence_both_sides
+    node: disc.mod.clock_equivalence
+    area: disc
+    cluster: mod
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.congruence_mod_n]
+    replay: disc.mod.clock_equivalence
+    math_locale_sensitive: false
+  - id: cs.disc.congruence_mod_n
+    node: disc.mod.clock_equivalence
+    area: disc
+    cluster: mod
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.congruence_both_sides, cs.disc.modular_inverse_gcd]
+    replay: disc.mod.clock_equivalence
+    math_locale_sensitive: false
+  - id: cs.disc.counterexample
+    node: disc.proof.counterexample_breaks_forall
+    area: disc
+    cluster: proof
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.direct_proof_template, cs.disc.quantifiers_negation]
+    replay: disc.proof.counterexample_breaks_forall
+    math_locale_sensitive: false
+  - id: cs.disc.direct_proof_template
+    node: disc.proof.chain_of_constructions
+    area: disc
+    cluster: proof
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.induction_template, cs.disc.proof_by_contradiction]
+    replay: disc.proof.chain_of_constructions
+    math_locale_sensitive: false
+  - id: cs.disc.equivalence_relation
+    node: disc.rel.equivalence_classes
+    area: disc
+    cluster: rel
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.relation_vs_function, cs.disc.set_operations]
+    replay: disc.rel.equivalence_classes
+    math_locale_sensitive: false
+  - id: cs.disc.implication_converse_contrapositive
+    node: disc.logic.if_then_direction
+    area: disc
+    cluster: logic
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.quantifiers_negation, cs.disc.direct_proof_template]
+    replay: disc.logic.if_then_direction
+    math_locale_sensitive: false
+  - id: cs.disc.inclusion_exclusion
+    node: disc.count.sum_rule
+    area: disc
+    cluster: count
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.sum_rule, cs.disc.set_operations]
+    replay: disc.count.sum_rule
+    math_locale_sensitive: false
+  - id: cs.disc.induction_template
+    node: disc.ind.domino_induction
+    area: disc
+    cluster: ind
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.direct_proof_template, cs.disc.recurrence_notation]
+    replay: disc.ind.domino_induction
+    math_locale_sensitive: false
+  - id: cs.disc.modular_inverse_gcd
+    node: disc.mod.modular_inverse
+    area: disc
+    cluster: mod
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.congruence_mod_n]
+    replay: disc.mod.modular_inverse
+    math_locale_sensitive: false
+  - id: cs.disc.pascal_triangle
+    node: disc.count.choose_as_pascal_paths
+    area: disc
+    cluster: count
+    kind: identity
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.combinations_choose]
+    replay: disc.count.choose_as_pascal_paths
+    math_locale_sensitive: false
+  - id: cs.disc.permutations_factorial
+    node: disc.count.product_rule
+    area: disc
+    cluster: count
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.combinations_choose, cs.disc.product_rule]
+    replay: disc.count.product_rule
+    math_locale_sensitive: false
+  - id: cs.disc.product_rule
+    node: disc.count.product_rule
+    area: disc
+    cluster: count
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.sum_rule, cs.disc.permutations_factorial]
+    replay: disc.count.product_rule
+    math_locale_sensitive: false
+  - id: cs.disc.proof_by_contradiction
+    node: disc.proof.contradiction_no_exit
+    area: disc
+    cluster: proof
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.counterexample, cs.disc.direct_proof_template]
+    replay: disc.proof.contradiction_no_exit
+    math_locale_sensitive: false
+  - id: cs.disc.quantifiers_negation
+    node: disc.logic.quantifiers_as_search
+    area: disc
+    cluster: logic
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.counterexample, cs.disc.implication_converse_contrapositive]
+    replay: disc.logic.quantifiers_as_search
+    math_locale_sensitive: false
+  - id: cs.disc.recurrence_notation
+    node: disc.rec.recurrence_step
+    area: disc
+    cluster: rec
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.recursion_tree, cs.disc.induction_template]
+    replay: disc.rec.recurrence_step
+    math_locale_sensitive: false
+  - id: cs.disc.recursion_tree
+    node: disc.rec.tree_recursion
+    area: disc
+    cluster: rec
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.recurrence_notation]
+    replay: disc.rec.tree_recursion
+    math_locale_sensitive: false
+  - id: cs.disc.relation_vs_function
+    node: disc.rel.relation_as_arrows
+    area: disc
+    cluster: rel
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.equivalence_relation]
+    replay: disc.rel.relation_as_arrows
+    math_locale_sensitive: false
+  - id: cs.disc.set_builder_notation
+    node: disc.set.membership_rule
+    area: disc
+    cluster: set
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.disc.set_operations]
+    replay: disc.set.membership_rule
+    math_locale_sensitive: false
+  - id: cs.disc.set_operations
+    node: disc.set.union_intersection
+    area: disc
+    cluster: set
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.set_builder_notation, cs.disc.inclusion_exclusion]
+    replay: disc.set.union_intersection
+    math_locale_sensitive: false
+  - id: cs.disc.sigma_rules
+    node: disc.sum.sigma_notation
+    area: disc
+    cluster: sum
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.closed_form_sums]
+    replay: disc.sum.sigma_notation
+    math_locale_sensitive: false
+  - id: cs.disc.sum_rule
+    node: disc.count.sum_rule
+    area: disc
+    cluster: count
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.disc.product_rule, cs.disc.inclusion_exclusion]
+    replay: disc.count.sum_rule
+    math_locale_sensitive: false
+  - id: cs.disc.truth_tables
+    node: disc.logic.and_or_not
+    area: disc
+    cluster: logic
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.disc.implication_converse_contrapositive]
+    replay: disc.logic.and_or_not
+    math_locale_sensitive: false
+
+  # ---- prealg ---------------------------------------------------------
+  - id: cs.prealg.coefficient_counts_boxes
+    node: prealg.var.unknown_as_box
+    area: prealg
+    cluster: var
+    kind: notation
+    display: {form: figure, scene: ledger_box_hides_tokens}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.letter_names_the_box, cs.prealg.combine_like_terms_only]
+    replay: prealg.var.unknown_as_box
+    math_locale_sensitive: false
+  - id: cs.prealg.combine_like_terms_only
+    node: prealg.expr.like_terms
+    area: prealg
+    cluster: expr
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.coefficient_counts_boxes]
+    replay: prealg.expr.like_terms
+    math_locale_sensitive: false
+  - id: cs.prealg.commutative_associative_with_letters
+    node: prealg.prop.order_does_not_matter
+    area: prealg
+    cluster: prop
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.identity_zero_and_one]
+    replay: prealg.prop.order_does_not_matter
+    math_locale_sensitive: false
+  - id: cs.prealg.constant_step_reveals_rule
+    node: prealg.pat.rule_from_table
+    area: prealg
+    cluster: pat
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.table_records_machine, cs.prealg.proportional_means_constant_ratio]
+    replay: prealg.pat.rule_from_table
+    math_locale_sensitive: false
+  - id: cs.prealg.equals_means_level_pans
+    node: prealg.eq.balance
+    area: prealg
+    cluster: eq
+    kind: definition
+    display: {form: figure, scene: balance_equal_pans_stay_level}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.same_action_both_sides, cs.prealg.lt_gt_as_tilt]
+    replay: prealg.eq.balance
+    math_locale_sensitive: false
+  - id: cs.prealg.every_operation_has_a_key
+    node: prealg.inv.operation_as_key
+    area: prealg
+    cluster: inv
+    kind: property
+    display: {form: figure, scene: chest_key_matches_lock}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.inverse_pairs_table]
+    replay: prealg.inv.operation_as_key
+    math_locale_sensitive: false
+  - id: cs.prealg.fraction_bar_groups
+    node: prealg.expr.implicit_grouping
+    area: prealg
+    cluster: expr
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.juxtaposition_means_times]
+    replay: prealg.expr.implicit_grouping
+    math_locale_sensitive: false
+  - id: cs.prealg.identity_zero_and_one
+    node: prealg.prop.order_does_not_matter
+    area: prealg
+    cluster: prop
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.commutative_associative_with_letters]
+    replay: prealg.prop.order_does_not_matter
+    math_locale_sensitive: false
+  - id: cs.prealg.inverse_pairs_table
+    node: prealg.inv.operation_as_key
+    area: prealg
+    cluster: inv
+    kind: figure
+    display: {form: figure, scene: chest_wrong_key_stays_shut}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.every_operation_has_a_key]
+    replay: prealg.inv.operation_as_key
+    math_locale_sensitive: false
+  - id: cs.prealg.juxtaposition_means_times
+    node: prealg.expr.implicit_grouping
+    area: prealg
+    cluster: expr
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.fraction_bar_groups, cs.prealg.coefficient_counts_boxes]
+    replay: prealg.expr.implicit_grouping
+    math_locale_sensitive: false
+  - id: cs.prealg.letter_names_the_box
+    node: prealg.var.unknown_as_box
+    area: prealg
+    cluster: var
+    kind: notation
+    display: {form: figure, scene: chest_box_as_tree_leaf}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.coefficient_counts_boxes, cs.prealg.substitute_then_evaluate]
+    replay: prealg.var.unknown_as_box
+    math_locale_sensitive: false
+  - id: cs.prealg.lt_gt_as_tilt
+    node: prealg.ineq.compare_expressions
+    area: prealg
+    cluster: ineq
+    kind: notation
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.equals_means_level_pans]
+    replay: prealg.ineq.compare_expressions
+    math_locale_sensitive: false
+  - id: cs.prealg.percent_change_as_fill_delta
+    node: prealg.pct.percent_fill
+    area: prealg
+    cluster: pct
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.percent_decimal_fraction_triangle]
+    replay: prealg.pct.percent_fill
+    math_locale_sensitive: false
+  - id: cs.prealg.percent_decimal_fraction_triangle
+    node: prealg.pct.hundredths
+    area: prealg
+    cluster: pct
+    kind: identity
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.percent_change_as_fill_delta]
+    replay: prealg.pct.hundredths
+    math_locale_sensitive: true
+  - id: cs.prealg.place_value_as_power_of_ten
+    node: prealg.exp.powers_of_ten
+    area: prealg
+    cluster: exp
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.scientific_notation]
+    replay: prealg.exp.powers_of_ten
+    math_locale_sensitive: false
+  - id: cs.prealg.proportional_graph_line_through_origin
+    node: prealg.ratio.proportion_as_line
+    area: prealg
+    cluster: ratio
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.proportional_means_constant_ratio]
+    replay: prealg.ratio.proportion_as_line
+    math_locale_sensitive: false
+  - id: cs.prealg.proportional_means_constant_ratio
+    node: prealg.ratio.rate_per_unit
+    area: prealg
+    cluster: ratio
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.ratio_scales_both_parts, cs.prealg.proportional_graph_line_through_origin]
+    replay: prealg.ratio.rate_per_unit
+    math_locale_sensitive: false
+  - id: cs.prealg.ratio_scales_both_parts
+    node: prealg.ratio.scaling_recipe
+    area: prealg
+    cluster: ratio
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.proportional_means_constant_ratio]
+    replay: prealg.ratio.scaling_recipe
+    math_locale_sensitive: false
+  - id: cs.prealg.same_action_both_sides
+    node: prealg.eq.balance
+    area: prealg
+    cluster: eq
+    kind: property
+    display: {form: figure, scene: balance_remove_one_side_tilts}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.equals_means_level_pans]
+    replay: prealg.eq.balance
+    math_locale_sensitive: false
+  - id: cs.prealg.scientific_notation
+    node: prealg.exp.powers_of_ten
+    area: prealg
+    cluster: exp
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.place_value_as_power_of_ten]
+    replay: prealg.exp.powers_of_ten
+    math_locale_sensitive: true
+  - id: cs.prealg.sign_rules_four_operations
+    node: prealg.int.sign_rules
+    area: prealg
+    cluster: int
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: []
+    replay: prealg.int.sign_rules
+    math_locale_sensitive: false
+  - id: cs.prealg.substitute_then_evaluate
+    node: prealg.expr.substitute_value
+    area: prealg
+    cluster: expr
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.letter_names_the_box, cs.prealg.table_records_machine]
+    replay: prealg.expr.substitute_value
+    math_locale_sensitive: false
+  - id: cs.prealg.table_records_machine
+    node: prealg.fn.input_output_table
+    area: prealg
+    cluster: fn
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.prealg.substitute_then_evaluate, cs.prealg.constant_step_reveals_rule]
+    replay: prealg.fn.input_output_table
+    math_locale_sensitive: false
+
+  # ---- mvcalc ---------------------------------------------------------
+  - id: cs.mvcalc.conservative_field_test
+    node: mvcalc.line.conservative_path_independent
+    area: mvcalc
+    cluster: line
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.fundamental_theorem_line_integrals, cs.mvcalc.line_integral]
+    replay: mvcalc.line.conservative_path_independent
+    math_locale_sensitive: false
+  - id: cs.mvcalc.critical_points_2d
+    node: mvcalc.opt.hessian_curvature
+    area: mvcalc
+    cluster: opt
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.second_derivative_test, cs.mvcalc.gradient_vector]
+    replay: mvcalc.opt.hessian_curvature
+    math_locale_sensitive: false
+  - id: cs.mvcalc.curl
+    node: mvcalc.divrot.curl_as_spin
+    area: mvcalc
+    cluster: divrot
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.green_theorem, cs.mvcalc.stokes_theorem, cs.mvcalc.divergence]
+    replay: mvcalc.divrot.curl_as_spin
+    math_locale_sensitive: false
+  - id: cs.mvcalc.directional_derivative
+    node: mvcalc.grad.terrain_walker
+    area: mvcalc
+    cluster: grad
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.gradient_vector, cs.mvcalc.partial_derivative]
+    replay: mvcalc.grad.terrain_walker
+    math_locale_sensitive: false
+  - id: cs.mvcalc.divergence
+    node: mvcalc.divrot.divergence_as_source
+    area: mvcalc
+    cluster: divrot
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.divergence_theorem, cs.mvcalc.curl]
+    replay: mvcalc.divrot.divergence_as_source
+    math_locale_sensitive: false
+  - id: cs.mvcalc.divergence_theorem
+    node: mvcalc.thm.divergence_flux_equals_sources
+    area: mvcalc
+    cluster: thm
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.divergence, cs.mvcalc.flux]
+    replay: mvcalc.thm.divergence_flux_equals_sources
+    math_locale_sensitive: false
+  - id: cs.mvcalc.double_integral
+    node: mvcalc.int.double_integral_tank
+    area: mvcalc
+    cluster: int
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.fubini_iterated, cs.mvcalc.triple_integral]
+    replay: mvcalc.int.double_integral_tank
+    math_locale_sensitive: false
+  - id: cs.mvcalc.flux
+    node: mvcalc.surf.flux_through_surface
+    area: mvcalc
+    cluster: surf
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.surface_integral, cs.mvcalc.divergence_theorem]
+    replay: mvcalc.surf.flux_through_surface
+    math_locale_sensitive: false
+  - id: cs.mvcalc.fubini_iterated
+    node: mvcalc.int.iterated_slices
+    area: mvcalc
+    cluster: int
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.double_integral, cs.mvcalc.triple_integral]
+    replay: mvcalc.int.iterated_slices
+    math_locale_sensitive: false
+  - id: cs.mvcalc.function_of_two_variables
+    node: mvcalc.fn.two_inputs_one_output
+    area: mvcalc
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.level_curves, cs.mvcalc.partial_derivative]
+    replay: mvcalc.fn.two_inputs_one_output
+    math_locale_sensitive: false
+  - id: cs.mvcalc.fundamental_theorem_line_integrals
+    node: mvcalc.line.conservative_path_independent
+    area: mvcalc
+    cluster: line
+    kind: theorem
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.conservative_field_test, cs.mvcalc.line_integral]
+    replay: mvcalc.line.conservative_path_independent
+    math_locale_sensitive: false
+  - id: cs.mvcalc.gradient_field
+    node: mvcalc.field.arrow_at_every_point
+    area: mvcalc
+    cluster: field
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.gradient_vector, cs.mvcalc.vector_field]
+    replay: mvcalc.field.arrow_at_every_point
+    math_locale_sensitive: false
+  - id: cs.mvcalc.gradient_vector
+    node: mvcalc.grad.terrain_walker
+    area: mvcalc
+    cluster: grad
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.directional_derivative, cs.mvcalc.critical_points_2d]
+    replay: mvcalc.grad.terrain_walker
+    math_locale_sensitive: false
+  - id: cs.mvcalc.green_theorem
+    node: mvcalc.thm.green_boundary_counts_interior
+    area: mvcalc
+    cluster: thm
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.curl, cs.mvcalc.stokes_theorem]
+    replay: mvcalc.thm.green_boundary_counts_interior
+    math_locale_sensitive: false
+  - id: cs.mvcalc.jacobian_change_of_variables
+    node: mvcalc.int.change_of_variables_jacobian
+    area: mvcalc
+    cluster: int
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.jacobian_matrix, cs.mvcalc.polar_double_integral]
+    replay: mvcalc.int.change_of_variables_jacobian
+    math_locale_sensitive: false
+  - id: cs.mvcalc.jacobian_matrix
+    node: mvcalc.jac.local_stretch
+    area: mvcalc
+    cluster: jac
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.jacobian_change_of_variables]
+    replay: mvcalc.jac.local_stretch
+    math_locale_sensitive: false
+  - id: cs.mvcalc.lagrange_multiplier
+    node: mvcalc.lagr.tangent_level_curves
+    area: mvcalc
+    cluster: lagr
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.level_curves, cs.mvcalc.gradient_vector]
+    replay: mvcalc.lagr.tangent_level_curves
+    math_locale_sensitive: false
+  - id: cs.mvcalc.level_curves
+    node: mvcalc.fn.two_inputs_one_output
+    area: mvcalc
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.function_of_two_variables, cs.mvcalc.gradient_field]
+    replay: mvcalc.fn.two_inputs_one_output
+    math_locale_sensitive: false
+  - id: cs.mvcalc.line_integral
+    node: mvcalc.line.work_along_path
+    area: mvcalc
+    cluster: line
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.conservative_field_test]
+    replay: mvcalc.line.work_along_path
+    math_locale_sensitive: false
+  - id: cs.mvcalc.partial_derivative
+    node: mvcalc.part.slice_of_surface
+    area: mvcalc
+    cluster: part
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.directional_derivative, cs.mvcalc.function_of_two_variables]
+    replay: mvcalc.part.slice_of_surface
+    math_locale_sensitive: false
+  - id: cs.mvcalc.polar_double_integral
+    node: mvcalc.int.change_of_variables_jacobian
+    area: mvcalc
+    cluster: int
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.jacobian_change_of_variables]
+    replay: mvcalc.int.change_of_variables_jacobian
+    math_locale_sensitive: false
+  - id: cs.mvcalc.second_derivative_test
+    node: mvcalc.opt.hessian_curvature
+    area: mvcalc
+    cluster: opt
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.critical_points_2d]
+    replay: mvcalc.opt.hessian_curvature
+    math_locale_sensitive: false
+  - id: cs.mvcalc.stokes_theorem
+    node: mvcalc.thm.stokes_curl_through_surface
+    area: mvcalc
+    cluster: thm
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.mvcalc.green_theorem, cs.mvcalc.curl]
+    replay: mvcalc.thm.stokes_curl_through_surface
+    math_locale_sensitive: false
+  - id: cs.mvcalc.surface_integral
+    node: mvcalc.surf.flux_through_surface
+    area: mvcalc
+    cluster: surf
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.flux, cs.mvcalc.triple_integral]
+    replay: mvcalc.surf.flux_through_surface
+    math_locale_sensitive: false
+  - id: cs.mvcalc.triple_integral
+    node: mvcalc.int.iterated_slices
+    area: mvcalc
+    cluster: int
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.double_integral, cs.mvcalc.surface_integral]
+    replay: mvcalc.int.iterated_slices
+    math_locale_sensitive: false
+  - id: cs.mvcalc.vector_field
+    node: mvcalc.field.arrow_at_every_point
+    area: mvcalc
+    cluster: field
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.mvcalc.gradient_field]
+    replay: mvcalc.field.arrow_at_every_point
+    math_locale_sensitive: false
+
+  # ---- calc2 ---------------------------------------------------------
+  - id: cs.calc2.absolute_vs_conditional
+    node: calc2.ser.alternating_cancels
+    area: calc2
+    cluster: ser
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.alternating_series_test, cs.calc2.comparison_tests]
+    replay: calc2.ser.alternating_cancels
+    math_locale_sensitive: false
+  - id: cs.calc2.alternating_series_test
+    node: calc2.ser.alternating_cancels
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.absolute_vs_conditional]
+    replay: calc2.ser.alternating_cancels
+    math_locale_sensitive: false
+  - id: cs.calc2.arc_length
+    node: calc2.parpol.parametric_speed
+    area: calc2
+    cluster: parpol
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.parametric_derivative]
+    replay: calc2.parpol.parametric_speed
+    math_locale_sensitive: false
+  - id: cs.calc2.area_between_curves
+    node: calc2.int.area_between
+    area: calc2
+    cluster: int
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.volume_by_cross_sections]
+    replay: calc2.int.area_between
+    math_locale_sensitive: false
+  - id: cs.calc2.by_parts_choice_liate
+    node: calc2.tech.by_parts_undoes_product
+    area: calc2
+    cluster: tech
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.integration_by_parts]
+    replay: calc2.tech.by_parts_undoes_product
+    math_locale_sensitive: false
+  - id: cs.calc2.common_maclaurin
+    node: calc2.taylor.polynomial_copies_derivatives
+    area: calc2
+    cluster: taylor
+    kind: constant
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.taylor_polynomial]
+    replay: calc2.taylor.polynomial_copies_derivatives
+    math_locale_sensitive: false
+  - id: cs.calc2.comparison_tests
+    node: calc2.ser.comparison_squeeze
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.ratio_test, cs.calc2.integral_test]
+    replay: calc2.ser.comparison_squeeze
+    math_locale_sensitive: false
+  - id: cs.calc2.disc_washer_method
+    node: calc2.parpol.solid_of_revolution
+    area: calc2
+    cluster: parpol
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.shell_method]
+    replay: calc2.parpol.solid_of_revolution
+    math_locale_sensitive: false
+  - id: cs.calc2.divergence_test
+    node: calc2.ser.terms_vs_sum
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.harmonic_diverges, cs.calc2.partial_sums_sequence]
+    replay: calc2.ser.terms_vs_sum
+    math_locale_sensitive: false
+  - id: cs.calc2.exponential_ode_solution
+    node: calc2.ode.rate_equation_as_rule
+    area: calc2
+    cluster: ode
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.ode_meaning, cs.calc2.separable_ode]
+    replay: calc2.ode.rate_equation_as_rule
+    math_locale_sensitive: false
+  - id: cs.calc2.geometric_series_sum
+    node: calc2.ser.geometric_sum
+    area: calc2
+    cluster: ser
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.radius_of_convergence]
+    replay: calc2.ser.geometric_sum
+    math_locale_sensitive: false
+  - id: cs.calc2.harmonic_diverges
+    node: calc2.ser.terms_vs_sum
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.divergence_test, cs.calc2.p_series]
+    replay: calc2.ser.terms_vs_sum
+    math_locale_sensitive: false
+  - id: cs.calc2.improper_integral
+    node: calc2.impr.limit_of_bounded_area
+    area: calc2
+    cluster: impr
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.p_integral_threshold]
+    replay: calc2.impr.limit_of_bounded_area
+    math_locale_sensitive: false
+  - id: cs.calc2.integral_test
+    node: calc2.ser.p_series_threshold
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.p_series, cs.calc2.improper_integral]
+    replay: calc2.ser.p_series_threshold
+    math_locale_sensitive: false
+  - id: cs.calc2.integration_by_parts
+    node: calc2.tech.by_parts_undoes_product
+    area: calc2
+    cluster: tech
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.by_parts_choice_liate, cs.calc2.u_substitution]
+    replay: calc2.tech.by_parts_undoes_product
+    math_locale_sensitive: false
+  - id: cs.calc2.ode_meaning
+    node: calc2.ode.rate_equation_as_rule
+    area: calc2
+    cluster: ode
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.exponential_ode_solution, cs.calc2.separable_ode]
+    replay: calc2.ode.rate_equation_as_rule
+    math_locale_sensitive: false
+  - id: cs.calc2.p_integral_threshold
+    node: calc2.impr.limit_of_bounded_area
+    area: calc2
+    cluster: impr
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.improper_integral, cs.calc2.p_series]
+    replay: calc2.impr.limit_of_bounded_area
+    math_locale_sensitive: false
+  - id: cs.calc2.p_series
+    node: calc2.ser.p_series_threshold
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.p_integral_threshold, cs.calc2.harmonic_diverges]
+    replay: calc2.ser.p_series_threshold
+    math_locale_sensitive: false
+  - id: cs.calc2.parametric_derivative
+    node: calc2.parpol.parametric_speed
+    area: calc2
+    cluster: parpol
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.arc_length]
+    replay: calc2.parpol.parametric_speed
+    math_locale_sensitive: false
+  - id: cs.calc2.partial_fractions
+    node: calc2.tech.partial_fractions_split
+    area: calc2
+    cluster: tech
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.u_substitution]
+    replay: calc2.tech.partial_fractions_split
+    math_locale_sensitive: false
+  - id: cs.calc2.partial_sums_sequence
+    node: calc2.ser.partial_sums
+    area: calc2
+    cluster: ser
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.divergence_test]
+    replay: calc2.ser.partial_sums
+    math_locale_sensitive: false
+  - id: cs.calc2.polar_area
+    node: calc2.parpol.polar_area_as_sectors
+    area: calc2
+    cluster: parpol
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.arc_length]
+    replay: calc2.parpol.polar_area_as_sectors
+    math_locale_sensitive: false
+  - id: cs.calc2.radius_of_convergence
+    node: calc2.ser.power_series_radius
+    area: calc2
+    cluster: ser
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.geometric_series_sum, cs.calc2.taylor_polynomial]
+    replay: calc2.ser.power_series_radius
+    math_locale_sensitive: false
+  - id: cs.calc2.ratio_test
+    node: calc2.ser.comparison_squeeze
+    area: calc2
+    cluster: ser
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.comparison_tests, cs.calc2.radius_of_convergence]
+    replay: calc2.ser.comparison_squeeze
+    math_locale_sensitive: false
+  - id: cs.calc2.separable_ode
+    node: calc2.ode.separate_and_integrate
+    area: calc2
+    cluster: ode
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.ode_meaning]
+    replay: calc2.ode.separate_and_integrate
+    math_locale_sensitive: false
+  - id: cs.calc2.shell_method
+    node: calc2.parpol.solid_of_revolution
+    area: calc2
+    cluster: parpol
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.disc_washer_method]
+    replay: calc2.parpol.solid_of_revolution
+    math_locale_sensitive: false
+  - id: cs.calc2.taylor_polynomial
+    node: calc2.taylor.polynomial_copies_derivatives
+    area: calc2
+    cluster: taylor
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.common_maclaurin, cs.calc2.taylor_remainder]
+    replay: calc2.taylor.polynomial_copies_derivatives
+    math_locale_sensitive: false
+  - id: cs.calc2.taylor_remainder
+    node: calc2.taylor.remainder_bounds_error
+    area: calc2
+    cluster: taylor
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.taylor_polynomial]
+    replay: calc2.taylor.remainder_bounds_error
+    math_locale_sensitive: false
+  - id: cs.calc2.trig_integrals_powers
+    node: calc2.tech.trig_substitution_as_triangle
+    area: calc2
+    cluster: tech
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.trig_substitution]
+    replay: calc2.tech.trig_substitution_as_triangle
+    math_locale_sensitive: false
+  - id: cs.calc2.trig_substitution
+    node: calc2.tech.trig_substitution_as_triangle
+    area: calc2
+    cluster: tech
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.calc2.trig_integrals_powers]
+    replay: calc2.tech.trig_substitution_as_triangle
+    math_locale_sensitive: false
+  - id: cs.calc2.u_substitution
+    node: calc2.tech.substitution_undoes_chain
+    area: calc2
+    cluster: tech
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.integration_by_parts, cs.calc2.partial_fractions]
+    replay: calc2.tech.substitution_undoes_chain
+    math_locale_sensitive: false
+  - id: cs.calc2.volume_by_cross_sections
+    node: calc2.int.volume_by_slices
+    area: calc2
+    cluster: int
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc2.disc_washer_method, cs.calc2.area_between_curves]
+    replay: calc2.int.volume_by_slices
+    math_locale_sensitive: false
+
+  # ---- trig ---------------------------------------------------------
+  - id: cs.trig.amplitude_period_phase
+    node: trig.fn.transform_wave
+    area: trig
+    cluster: fn
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.sine_graph_shape, cs.trig.cosine_graph_shape]
+    replay: trig.fn.transform_wave
+    math_locale_sensitive: true
+  - id: cs.trig.arc_length_r_theta
+    node: trig.circle.radian_as_arc_length
+    area: trig
+    cluster: circle
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.sector_area_half_r_squared_theta, cs.trig.radian_as_arc_over_radius]
+    replay: trig.circle.radian_as_arc_length
+    math_locale_sensitive: false
+  - id: cs.trig.arcsin_arccos_arctan_ranges
+    node: trig.inv.arcsin_two_branches
+    area: trig
+    cluster: inv
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.strategy_all_solutions_from_one]
+    replay: trig.inv.arcsin_two_branches
+    math_locale_sensitive: true
+  - id: cs.trig.cartesian_to_polar
+    node: trig.polar.point_by_angle_and_radius
+    area: trig
+    cluster: polar
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.polar_to_cartesian]
+    replay: trig.polar.point_by_angle_and_radius
+    math_locale_sensitive: false
+  - id: cs.trig.cos_is_sin_shifted
+    node: trig.fn.sine_as_height
+    area: trig
+    cluster: fn
+    kind: identity
+    display: {form: figure, scene: construction_scene_height_from_radius_tip}
+    unlocked_at: symbolic
+    related: [cs.trig.sin_cos_as_coordinates, cs.trig.sine_graph_shape]
+    replay: trig.fn.sine_as_height
+    math_locale_sensitive: true
+  - id: cs.trig.cosine_graph_shape
+    node: trig.fn.wave_unrolls_circle
+    area: trig
+    cluster: fn
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.cos_is_sin_shifted, cs.trig.sine_graph_shape]
+    replay: trig.fn.wave_unrolls_circle
+    math_locale_sensitive: true
+  - id: cs.trig.degrees_radians_conversion
+    node: trig.circle.unit_circle_radians
+    area: trig
+    cluster: circle
+    kind: procedure
+    display: {form: expression, scene: gear_scene_unroll_radius_on_arc}
+    unlocked_at: symbolic
+    related: [cs.trig.radian_as_arc_over_radius, cs.trig.unit_circle_key_points]
+    replay: trig.circle.unit_circle_radians
+    math_locale_sensitive: false
+  - id: cs.trig.double_angle
+    node: trig.id.double_angle
+    area: trig
+    cluster: id
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.half_angle_power_reduce, cs.trig.sin_cos_angle_sum]
+    replay: trig.id.double_angle
+    math_locale_sensitive: true
+  - id: cs.trig.euler_formula
+    node: trig.euler.cis_as_rotation
+    area: trig
+    cluster: euler
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.multiply_complex_add_angles]
+    replay: trig.euler.cis_as_rotation
+    math_locale_sensitive: false
+  - id: cs.trig.half_angle_power_reduce
+    node: trig.id.double_angle
+    area: trig
+    cluster: id
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.double_angle]
+    replay: trig.id.double_angle
+    math_locale_sensitive: true
+  - id: cs.trig.law_of_cosines
+    node: trig.law.cosines_extends_pythagoras
+    area: trig
+    cluster: law
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.strategy_which_law, cs.trig.law_of_sines]
+    replay: trig.law.cosines_extends_pythagoras
+    math_locale_sensitive: true
+  - id: cs.trig.law_of_sines
+    node: trig.law.sines_from_altitude
+    area: trig
+    cluster: law
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.strategy_which_law, cs.trig.law_of_cosines, cs.trig.strategy_drop_altitude_two_right_triangles]
+    replay: trig.law.sines_from_altitude
+    math_locale_sensitive: true
+  - id: cs.trig.multiply_complex_add_angles
+    node: trig.euler.cis_as_rotation
+    area: trig
+    cluster: euler
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.euler_formula]
+    replay: trig.euler.cis_as_rotation
+    math_locale_sensitive: false
+  - id: cs.trig.period_2pi_reduce_angle
+    node: trig.fn.periodic_wraps
+    area: trig
+    cluster: fn
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.unit_circle_key_points]
+    replay: trig.fn.periodic_wraps
+    math_locale_sensitive: true
+  - id: cs.trig.polar_to_cartesian
+    node: trig.polar.point_by_angle_and_radius
+    area: trig
+    cluster: polar
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.cartesian_to_polar]
+    replay: trig.polar.point_by_angle_and_radius
+    math_locale_sensitive: false
+  - id: cs.trig.quadrant_signs_table
+    node: trig.ang.quadrant_signs
+    area: trig
+    cluster: ang
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.reference_angle]
+    replay: trig.ang.quadrant_signs
+    math_locale_sensitive: true
+  - id: cs.trig.radian_as_arc_over_radius
+    node: trig.circle.unit_circle_radians
+    area: trig
+    cluster: circle
+    kind: definition
+    display: {form: figure, scene: construction_scene_radius_and_dropped_height}
+    unlocked_at: symbolic
+    related: [cs.trig.arc_length_r_theta, cs.trig.degrees_radians_conversion]
+    replay: trig.circle.unit_circle_radians
+    math_locale_sensitive: false
+  - id: cs.trig.reference_angle
+    node: trig.ang.quadrant_signs
+    area: trig
+    cluster: ang
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.quadrant_signs_table]
+    replay: trig.ang.quadrant_signs
+    math_locale_sensitive: true
+  - id: cs.trig.rotation_matrix_columns
+    node: trig.rot.rotation_matrix
+    area: trig
+    cluster: rot
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.multiply_complex_add_angles]
+    replay: trig.rot.rotation_matrix
+    math_locale_sensitive: false
+  - id: cs.trig.sector_area_half_r_squared_theta
+    node: trig.circle.radian_as_arc_length
+    area: trig
+    cluster: circle
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.arc_length_r_theta]
+    replay: trig.circle.radian_as_arc_length
+    math_locale_sensitive: false
+  - id: cs.trig.sin2_plus_cos2
+    node: trig.id.pythagorean_identity
+    area: trig
+    cluster: id
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.strategy_pythagoras_on_unit_triangle, cs.trig.sin_cos_as_coordinates]
+    replay: trig.id.pythagorean_identity
+    math_locale_sensitive: true
+  - id: cs.trig.sin_cos_angle_sum
+    node: trig.id.angle_sum
+    area: trig
+    cluster: id
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.double_angle, cs.trig.strategy_rotate_twice]
+    replay: trig.id.angle_sum
+    math_locale_sensitive: true
+  - id: cs.trig.sin_cos_as_coordinates
+    node: trig.fn.sine_as_height
+    area: trig
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: slope_scene_wheel_rider_trace}
+    unlocked_at: symbolic
+    related: [cs.trig.sin2_plus_cos2, cs.trig.cos_is_sin_shifted]
+    replay: trig.fn.sine_as_height
+    math_locale_sensitive: true
+  - id: cs.trig.sin_cos_values_key_angles
+    node: trig.fn.sine_as_height
+    area: trig
+    cluster: fn
+    kind: constant
+    display: {form: figure, scene: pipe_scene_angle_to_height}
+    unlocked_at: formal
+    related: [cs.trig.special_triangles_30_45_60, cs.trig.unit_circle_key_points]
+    replay: trig.fn.sine_as_height
+    math_locale_sensitive: true
+  - id: cs.trig.sine_graph_shape
+    node: trig.fn.wave_unrolls_circle
+    area: trig
+    cluster: fn
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.cosine_graph_shape, cs.trig.amplitude_period_phase]
+    replay: trig.fn.wave_unrolls_circle
+    math_locale_sensitive: true
+  - id: cs.trig.sohcahtoa
+    node: trig.ratio.similar_shadows
+    area: trig
+    cluster: ratio
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.special_triangles_30_45_60, cs.trig.tan_as_sin_over_cos]
+    replay: trig.ratio.similar_shadows
+    math_locale_sensitive: true
+  - id: cs.trig.special_triangles_30_45_60
+    node: trig.ratio.similar_shadows
+    area: trig
+    cluster: ratio
+    kind: constant
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.sohcahtoa, cs.trig.sin_cos_values_key_angles]
+    replay: trig.ratio.similar_shadows
+    math_locale_sensitive: true
+  - id: cs.trig.strategy_all_solutions_from_one
+    node: trig.inv.arcsin_two_branches
+    area: trig
+    cluster: inv
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.arcsin_arccos_arctan_ranges, cs.trig.period_2pi_reduce_angle]
+    replay: trig.inv.arcsin_two_branches
+    math_locale_sensitive: false
+  - id: cs.trig.strategy_drop_altitude_two_right_triangles
+    node: trig.law.sines_from_altitude
+    area: trig
+    cluster: law
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.law_of_sines]
+    replay: trig.law.sines_from_altitude
+    math_locale_sensitive: false
+  - id: cs.trig.strategy_pythagoras_on_unit_triangle
+    node: trig.id.pythagorean_identity
+    area: trig
+    cluster: id
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.sin2_plus_cos2]
+    replay: trig.id.pythagorean_identity
+    math_locale_sensitive: false
+  - id: cs.trig.strategy_rotate_twice
+    node: trig.id.angle_sum
+    area: trig
+    cluster: id
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.sin_cos_angle_sum]
+    replay: trig.id.angle_sum
+    math_locale_sensitive: false
+  - id: cs.trig.strategy_which_law
+    node: trig.law.cosines_extends_pythagoras
+    area: trig
+    cluster: law
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.law_of_cosines, cs.trig.law_of_sines]
+    replay: trig.law.cosines_extends_pythagoras
+    math_locale_sensitive: false
+  - id: cs.trig.tan_as_sin_over_cos
+    node: trig.fn.tangent_as_slope
+    area: trig
+    cluster: fn
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.trig.tan_vertical_asymptotes, cs.trig.sohcahtoa]
+    replay: trig.fn.tangent_as_slope
+    math_locale_sensitive: true
+  - id: cs.trig.tan_vertical_asymptotes
+    node: trig.fn.tangent_as_slope
+    area: trig
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.trig.tan_as_sin_over_cos]
+    replay: trig.fn.tangent_as_slope
+    math_locale_sensitive: true
+  - id: cs.trig.unit_circle_key_points
+    node: trig.circle.unit_circle_radians
+    area: trig
+    cluster: circle
+    kind: figure
+    display: {form: figure, scene: construction_scene_radius_and_dropped_height}
+    unlocked_at: symbolic
+    related: [cs.trig.sin_cos_values_key_angles, cs.trig.degrees_radians_conversion]
+    replay: trig.circle.unit_circle_radians
+    math_locale_sensitive: true
+
+  # ---- precalc ---------------------------------------------------------
+  - id: cs.precalc.absolute_value_as_piecewise
+    node: precalc.fn.piecewise_machine
+    area: precalc
+    cluster: fn
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.piecewise_notation]
+    replay: precalc.fn.piecewise_machine
+    math_locale_sensitive: false
+  - id: cs.precalc.arithmetic_nth_term
+    node: precalc.seq.arithmetic_sequence
+    area: precalc
+    cluster: seq
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.arithmetic_sum_pairing, cs.precalc.geometric_nth_term]
+    replay: precalc.seq.arithmetic_sequence
+    math_locale_sensitive: false
+  - id: cs.precalc.arithmetic_sum_pairing
+    node: precalc.seq.arithmetic_sequence
+    area: precalc
+    cluster: seq
+    kind: strategy
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.arithmetic_nth_term]
+    replay: precalc.seq.arithmetic_sequence
+    math_locale_sensitive: false
+  - id: cs.precalc.binomial_theorem
+    node: precalc.binom.pascal_triangle_expansion
+    area: precalc
+    cluster: binom
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.pascal_triangle]
+    replay: precalc.binom.pascal_triangle_expansion
+    math_locale_sensitive: false
+  - id: cs.precalc.complex_add_multiply
+    node: precalc.cplx.plane_intro
+    area: precalc
+    cluster: cplx
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.i_squared_minus_one, cs.precalc.modulus_conjugate]
+    replay: precalc.cplx.plane_intro
+    math_locale_sensitive: false
+  - id: cs.precalc.conic_distance_definitions
+    node: precalc.conic.slice_of_cone
+    area: precalc
+    cluster: conic
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.conic_equations_standard]
+    replay: precalc.conic.slice_of_cone
+    math_locale_sensitive: false
+  - id: cs.precalc.conic_equations_standard
+    node: precalc.conic.slice_of_cone
+    area: precalc
+    cluster: conic
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.conic_distance_definitions]
+    replay: precalc.conic.slice_of_cone
+    math_locale_sensitive: false
+  - id: cs.precalc.continuous_means_limit_equals_value
+    node: precalc.lim.continuity_unbroken_pen
+    area: precalc
+    cluster: lim
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.limit_ignores_value_at_point]
+    replay: precalc.lim.continuity_unbroken_pen
+    math_locale_sensitive: false
+  - id: cs.precalc.e_as_limit_compounding
+    node: precalc.exp.natural_base
+    area: precalc
+    cluster: exp
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.exp_slope_equals_value, cs.precalc.ln_inverse_of_exp]
+    replay: precalc.exp.natural_base
+    math_locale_sensitive: true
+  - id: cs.precalc.eliminate_parameter
+    node: precalc.param.time_as_hidden_input
+    area: precalc
+    cluster: param
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.parametric_x_t_y_t]
+    replay: precalc.param.time_as_hidden_input
+    math_locale_sensitive: false
+  - id: cs.precalc.end_behavior_by_leading_term
+    node: precalc.lim.infinity_and_asymptote
+    area: precalc
+    cluster: lim
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.horizontal_vertical_asymptotes]
+    replay: precalc.lim.infinity_and_asymptote
+    math_locale_sensitive: false
+  - id: cs.precalc.even_odd_definitions
+    node: precalc.fntr.reflect_and_symmetry
+    area: precalc
+    cluster: fntr
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.reflection_rules_minus_f_f_minus_x]
+    replay: precalc.fntr.reflect_and_symmetry
+    math_locale_sensitive: false
+  - id: cs.precalc.exp_slope_equals_value
+    node: precalc.exp.natural_base
+    area: precalc
+    cluster: exp
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.e_as_limit_compounding]
+    replay: precalc.exp.natural_base
+    math_locale_sensitive: false
+  - id: cs.precalc.geometric_nth_term
+    node: precalc.seq.geometric_sequence
+    area: precalc
+    cluster: seq
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.arithmetic_nth_term, cs.precalc.geometric_sum_finite]
+    replay: precalc.seq.geometric_sequence
+    math_locale_sensitive: false
+  - id: cs.precalc.geometric_sum_finite
+    node: precalc.seq.geometric_sequence
+    area: precalc
+    cluster: seq
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.geometric_nth_term, cs.precalc.infinite_geometric_sum_ratio_less_one]
+    replay: precalc.seq.geometric_sequence
+    math_locale_sensitive: false
+  - id: cs.precalc.horizontal_vertical_asymptotes
+    node: precalc.lim.infinity_and_asymptote
+    area: precalc
+    cluster: lim
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.end_behavior_by_leading_term]
+    replay: precalc.lim.infinity_and_asymptote
+    math_locale_sensitive: false
+  - id: cs.precalc.i_squared_minus_one
+    node: precalc.cplx.plane_intro
+    area: precalc
+    cluster: cplx
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.complex_add_multiply]
+    replay: precalc.cplx.plane_intro
+    math_locale_sensitive: false
+  - id: cs.precalc.increasing_decreasing_intervals
+    node: precalc.fn.increasing_decreasing
+    area: precalc
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.local_max_min_turning_points]
+    replay: precalc.fn.increasing_decreasing
+    math_locale_sensitive: false
+  - id: cs.precalc.infinite_geometric_sum_ratio_less_one
+    node: precalc.seq.sum_as_pattern
+    area: precalc
+    cluster: seq
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.geometric_sum_finite]
+    replay: precalc.seq.sum_as_pattern
+    math_locale_sensitive: false
+  - id: cs.precalc.limit_by_table_of_values
+    node: precalc.lim.approach
+    area: precalc
+    cluster: lim
+    kind: procedure
+    display: {form: figure, scene: slope_scene_walker_approaches_wall}
+    unlocked_at: symbolic
+    related: [cs.precalc.limit_notation, cs.precalc.limit_ignores_value_at_point]
+    replay: precalc.lim.approach
+    math_locale_sensitive: false
+  - id: cs.precalc.limit_ignores_value_at_point
+    node: precalc.lim.approach
+    area: precalc
+    cluster: lim
+    kind: property
+    display: {form: statement, scene: gear_scene_zeno_halving}
+    unlocked_at: formal
+    related: [cs.precalc.continuous_means_limit_equals_value, cs.precalc.limit_by_table_of_values]
+    replay: precalc.lim.approach
+    math_locale_sensitive: false
+  - id: cs.precalc.limit_notation
+    node: precalc.lim.approach
+    area: precalc
+    cluster: lim
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.limit_by_table_of_values]
+    replay: precalc.lim.approach
+    math_locale_sensitive: false
+  - id: cs.precalc.ln_inverse_of_exp
+    node: precalc.exp.natural_base
+    area: precalc
+    cluster: exp
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.precalc.e_as_limit_compounding]
+    replay: precalc.exp.natural_base
+    math_locale_sensitive: true
+  - id: cs.precalc.local_max_min_turning_points
+    node: precalc.fn.increasing_decreasing
+    area: precalc
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.increasing_decreasing_intervals]
+    replay: precalc.fn.increasing_decreasing
+    math_locale_sensitive: false
+  - id: cs.precalc.modulus_conjugate
+    node: precalc.cplx.plane_intro
+    area: precalc
+    cluster: cplx
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.complex_add_multiply]
+    replay: precalc.cplx.plane_intro
+    math_locale_sensitive: false
+  - id: cs.precalc.parametric_x_t_y_t
+    node: precalc.param.time_as_hidden_input
+    area: precalc
+    cluster: param
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.eliminate_parameter]
+    replay: precalc.param.time_as_hidden_input
+    math_locale_sensitive: false
+  - id: cs.precalc.pascal_triangle
+    node: precalc.binom.pascal_triangle_expansion
+    area: precalc
+    cluster: binom
+    kind: identity
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.binomial_theorem]
+    replay: precalc.binom.pascal_triangle_expansion
+    math_locale_sensitive: false
+  - id: cs.precalc.piecewise_notation
+    node: precalc.fn.piecewise_machine
+    area: precalc
+    cluster: fn
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.absolute_value_as_piecewise]
+    replay: precalc.fn.piecewise_machine
+    math_locale_sensitive: false
+  - id: cs.precalc.reflection_rules_minus_f_f_minus_x
+    node: precalc.fntr.reflect_and_symmetry
+    area: precalc
+    cluster: fntr
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.even_odd_definitions]
+    replay: precalc.fntr.reflect_and_symmetry
+    math_locale_sensitive: false
+  - id: cs.precalc.shift_rules_f_x_minus_h_plus_k
+    node: precalc.fntr.shift_as_displace
+    area: precalc
+    cluster: fntr
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.stretch_rules_a_f_bx]
+    replay: precalc.fntr.shift_as_displace
+    math_locale_sensitive: false
+  - id: cs.precalc.sigma_notation
+    node: precalc.seq.sum_as_pattern
+    area: precalc
+    cluster: seq
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.infinite_geometric_sum_ratio_less_one]
+    replay: precalc.seq.sum_as_pattern
+    math_locale_sensitive: false
+  - id: cs.precalc.stretch_rules_a_f_bx
+    node: precalc.fntr.stretch_as_scale
+    area: precalc
+    cluster: fntr
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.shift_rules_f_x_minus_h_plus_k]
+    replay: precalc.fntr.stretch_as_scale
+    math_locale_sensitive: false
+  - id: cs.precalc.vector_components_add
+    node: precalc.vec.arrow_2d_intro
+    area: precalc
+    cluster: vec
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.vector_length_pythagoras]
+    replay: precalc.vec.arrow_2d_intro
+    math_locale_sensitive: false
+  - id: cs.precalc.vector_length_pythagoras
+    node: precalc.vec.arrow_2d_intro
+    area: precalc
+    cluster: vec
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.precalc.vector_components_add]
+    replay: precalc.vec.arrow_2d_intro
+    math_locale_sensitive: false
+
+  # ---- adv ---------------------------------------------------------
+  - id: cs.adv.cauchy_sequence
+    node: adv.real.cauchy_terms_huddle
+    area: adv
+    cluster: real
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.supremum_completeness]
+    replay: adv.real.cauchy_terms_huddle
+    math_locale_sensitive: false
+  - id: cs.adv.cayley_graph_generators
+    node: adv.alg.cayley_graph
+    area: adv
+    cluster: alg
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.group_axioms]
+    replay: adv.alg.cayley_graph
+    math_locale_sensitive: false
+  - id: cs.adv.compactness_heine_borel
+    node: adv.topo.compact_finite_cover
+    area: adv
+    cluster: topo
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.open_closed_sets, cs.adv.connectedness]
+    replay: adv.topo.compact_finite_cover
+    math_locale_sensitive: false
+  - id: cs.adv.complex_map_as_deformation
+    node: adv.cplx.function_deforms_plane
+    area: adv
+    cluster: cplx
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.complex_multiply_polar]
+    replay: adv.cplx.function_deforms_plane
+    math_locale_sensitive: false
+  - id: cs.adv.complex_multiply_polar
+    node: adv.cplx.multiplication_rotates_scales
+    area: adv
+    cluster: cplx
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.complex_plane_modulus, cs.adv.roots_of_unity]
+    replay: adv.cplx.multiplication_rotates_scales
+    math_locale_sensitive: false
+  - id: cs.adv.complex_plane_modulus
+    node: adv.cplx.plane_and_modulus
+    area: adv
+    cluster: cplx
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.i_squared_minus_one, cs.adv.complex_multiply_polar]
+    replay: adv.cplx.plane_and_modulus
+    math_locale_sensitive: false
+  - id: cs.adv.connectedness
+    node: adv.topo.connected_one_piece
+    area: adv
+    cluster: topo
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.compactness_heine_borel, cs.adv.open_closed_sets]
+    replay: adv.topo.connected_one_piece
+    math_locale_sensitive: false
+  - id: cs.adv.convexity_test
+    node: adv.opt.convex_bowl_one_minimum
+    area: adv
+    cluster: opt
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.gradient_descent_step]
+    replay: adv.opt.convex_bowl_one_minimum
+    math_locale_sensitive: false
+  - id: cs.adv.epsilon_delta_template
+    node: adv.real.epsilon_delta_challenge
+    area: adv
+    cluster: real
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.uniform_vs_pointwise, cs.adv.cauchy_sequence]
+    replay: adv.real.epsilon_delta_challenge
+    math_locale_sensitive: false
+  - id: cs.adv.euler_characteristic_surfaces
+    node: adv.topo.euler_characteristic_invariant
+    area: adv
+    cluster: topo
+    kind: theorem
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.connectedness]
+    replay: adv.topo.euler_characteristic_invariant
+    math_locale_sensitive: false
+  - id: cs.adv.euler_formula
+    node: adv.cplx.euler_formula_circle
+    area: adv
+    cluster: cplx
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.complex_multiply_polar, cs.adv.roots_of_unity]
+    replay: adv.cplx.euler_formula_circle
+    math_locale_sensitive: false
+  - id: cs.adv.euler_step
+    node: adv.ode.euler_method
+    area: adv
+    cluster: ode
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.slope_field_reading, cs.adv.finite_difference_error]
+    replay: adv.ode.euler_method
+    math_locale_sensitive: false
+  - id: cs.adv.field_axioms_zp
+    node: adv.alg.field_every_nonzero_invertible
+    area: adv
+    cluster: alg
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.ring_axioms_polynomials, cs.adv.group_axioms]
+    replay: adv.alg.field_every_nonzero_invertible
+    math_locale_sensitive: false
+  - id: cs.adv.finite_difference_error
+    node: adv.num.finite_difference_step
+    area: adv
+    cluster: num
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.euler_step]
+    replay: adv.num.finite_difference_step
+    math_locale_sensitive: false
+  - id: cs.adv.fourier_coefficients
+    node: adv.four.projection_onto_sines
+    area: adv
+    cluster: four
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.fourier_transform_pairs]
+    replay: adv.four.projection_onto_sines
+    math_locale_sensitive: false
+  - id: cs.adv.fourier_transform_pairs
+    node: adv.four.transform_as_machine
+    area: adv
+    cluster: four
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.inverse_fourier, cs.adv.fourier_coefficients]
+    replay: adv.four.transform_as_machine
+    math_locale_sensitive: false
+  - id: cs.adv.gradient_descent_step
+    node: adv.opt.gradient_descent_downhill
+    area: adv
+    cluster: opt
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.convexity_test]
+    replay: adv.opt.gradient_descent_downhill
+    math_locale_sensitive: false
+  - id: cs.adv.group_axioms
+    node: adv.alg.group_as_reversible_actions
+    area: adv
+    cluster: alg
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.field_axioms_zp, cs.adv.lagrange_cosets, cs.adv.homomorphism_kernel]
+    replay: adv.alg.group_as_reversible_actions
+    math_locale_sensitive: false
+  - id: cs.adv.homomorphism_kernel
+    node: adv.alg.homomorphism_preserves_structure
+    area: adv
+    cluster: alg
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.group_axioms, cs.adv.lagrange_cosets]
+    replay: adv.alg.homomorphism_preserves_structure
+    math_locale_sensitive: false
+  - id: cs.adv.i_squared_minus_one
+    node: adv.cplx.i_as_new_axis
+    area: adv
+    cluster: cplx
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.complex_plane_modulus]
+    replay: adv.cplx.i_as_new_axis
+    math_locale_sensitive: false
+  - id: cs.adv.integrating_factor
+    node: adv.ode.linear_first_order_factor
+    area: adv
+    cluster: ode
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.separable_ode]
+    replay: adv.ode.linear_first_order_factor
+    math_locale_sensitive: false
+  - id: cs.adv.inverse_fourier
+    node: adv.four.inverse_transform
+    area: adv
+    cluster: four
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.fourier_transform_pairs]
+    replay: adv.four.inverse_transform
+    math_locale_sensitive: false
+  - id: cs.adv.lagrange_cosets
+    node: adv.alg.cosets_partition
+    area: adv
+    cluster: alg
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.group_axioms, cs.adv.homomorphism_kernel]
+    replay: adv.alg.cosets_partition
+    math_locale_sensitive: false
+  - id: cs.adv.lp_corner_rule
+    node: adv.opt.linear_program_corners_dual
+    area: adv
+    cluster: opt
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.lp_duality, cs.adv.convexity_test]
+    replay: adv.opt.linear_program_corners_dual
+    math_locale_sensitive: false
+  - id: cs.adv.lp_duality
+    node: adv.opt.linear_program_corners_dual
+    area: adv
+    cluster: opt
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.lp_corner_rule]
+    replay: adv.opt.linear_program_corners_dual
+    math_locale_sensitive: false
+  - id: cs.adv.monte_carlo_error
+    node: adv.num.monte_carlo_pi
+    area: adv
+    cluster: num
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.finite_difference_error]
+    replay: adv.num.monte_carlo_pi
+    math_locale_sensitive: false
+  - id: cs.adv.newton_step
+    node: adv.num.newton_tangent_iteration
+    area: adv
+    cluster: num
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.euler_step]
+    replay: adv.num.newton_tangent_iteration
+    math_locale_sensitive: false
+  - id: cs.adv.open_closed_sets
+    node: adv.topo.open_or_closed
+    area: adv
+    cluster: topo
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.compactness_heine_borel, cs.adv.connectedness]
+    replay: adv.topo.open_or_closed
+    math_locale_sensitive: false
+  - id: cs.adv.phase_portrait_equilibria
+    node: adv.ode.system_equilibrium_phase
+    area: adv
+    cluster: ode
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.slope_field_reading]
+    replay: adv.ode.system_equilibrium_phase
+    math_locale_sensitive: false
+  - id: cs.adv.riemann_sums_formal
+    node: adv.real.riemann_upper_lower_squeeze
+    area: adv
+    cluster: real
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.weierstrass_m_test]
+    replay: adv.real.riemann_upper_lower_squeeze
+    math_locale_sensitive: false
+  - id: cs.adv.ring_axioms_polynomials
+    node: adv.alg.polynomial_arithmetic
+    area: adv
+    cluster: alg
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.field_axioms_zp]
+    replay: adv.alg.polynomial_arithmetic
+    math_locale_sensitive: false
+  - id: cs.adv.roots_of_unity
+    node: adv.cplx.roots_of_unity_polygon
+    area: adv
+    cluster: cplx
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.complex_multiply_polar, cs.adv.euler_formula]
+    replay: adv.cplx.roots_of_unity_polygon
+    math_locale_sensitive: false
+  - id: cs.adv.separable_ode
+    node: adv.ode.separable_variables
+    area: adv
+    cluster: ode
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.integrating_factor]
+    replay: adv.ode.separable_variables
+    math_locale_sensitive: false
+  - id: cs.adv.slope_field_reading
+    node: adv.ode.slope_field
+    area: adv
+    cluster: ode
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.adv.phase_portrait_equilibria, cs.adv.euler_step]
+    replay: adv.ode.slope_field
+    math_locale_sensitive: false
+  - id: cs.adv.supremum_completeness
+    node: adv.real.supremum_least_ceiling
+    area: adv
+    cluster: real
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.cauchy_sequence]
+    replay: adv.real.supremum_least_ceiling
+    math_locale_sensitive: false
+  - id: cs.adv.uniform_vs_pointwise
+    node: adv.real.uniform_continuity_one_delta
+    area: adv
+    cluster: real
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.epsilon_delta_template]
+    replay: adv.real.uniform_continuity_one_delta
+    math_locale_sensitive: false
+  - id: cs.adv.weierstrass_m_test
+    node: adv.real.function_series_uniform_limit
+    area: adv
+    cluster: real
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.adv.riemann_sums_formal]
+    replay: adv.real.function_series_uniform_limit
+    math_locale_sensitive: false
+
+  # ---- prob ---------------------------------------------------------
+  - id: cs.prob.addition_rule_inclusion_exclusion
+    node: prob.basic.union_intersection
+    area: prob
+    cluster: basic
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.complement_rule]
+    replay: prob.basic.union_intersection
+    math_locale_sensitive: false
+  - id: cs.prob.bayes_rule
+    node: prob.cond.bayes_reverses_condition
+    area: prob
+    cluster: cond
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.total_probability, cs.prob.conditional_definition]
+    replay: prob.cond.bayes_reverses_condition
+    math_locale_sensitive: false
+  - id: cs.prob.biased_sample
+    node: prob.samp.sample_vs_population
+    area: prob
+    cluster: samp
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.sample_mean_estimates]
+    replay: prob.samp.sample_vs_population
+    math_locale_sensitive: false
+  - id: cs.prob.binomial_formula
+    node: prob.dist.binomial_counts
+    area: prob
+    cluster: dist
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.binomial_mean_variance, cs.prob.permutations_combinations]
+    replay: prob.dist.binomial_counts
+    math_locale_sensitive: false
+  - id: cs.prob.binomial_mean_variance
+    node: prob.dist.binomial_counts
+    area: prob
+    cluster: dist
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.binomial_formula, cs.prob.variance_formula]
+    replay: prob.dist.binomial_counts
+    math_locale_sensitive: false
+  - id: cs.prob.cdf_definition
+    node: prob.rv.cumulative_distribution
+    area: prob
+    cluster: rv
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.pmf_table, cs.prob.density_area]
+    replay: prob.rv.cumulative_distribution
+    math_locale_sensitive: false
+  - id: cs.prob.central_limit_theorem
+    node: prob.samp.central_limit_bell
+    area: prob
+    cluster: samp
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.standard_error, cs.prob.normal_68_95_99]
+    replay: prob.samp.central_limit_bell
+    math_locale_sensitive: false
+  - id: cs.prob.complement_rule
+    node: prob.basic.complement_fills_the_rest
+    area: prob
+    cluster: basic
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.addition_rule_inclusion_exclusion]
+    replay: prob.basic.complement_fills_the_rest
+    math_locale_sensitive: false
+  - id: cs.prob.conditional_definition
+    node: prob.cond.conditional_and_independence
+    area: prob
+    cluster: cond
+    kind: definition
+    display: {form: expression, scene: urn_scene_restricted_urn}
+    unlocked_at: symbolic
+    related: [cs.prob.bayes_rule, cs.prob.independence_product_rule, cs.prob.multiplication_rule]
+    replay: prob.cond.conditional_and_independence
+    math_locale_sensitive: false
+  - id: cs.prob.confidence_interval
+    node: prob.inf.confidence_interval_net
+    area: prob
+    cluster: inf
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.standard_error]
+    replay: prob.inf.confidence_interval_net
+    math_locale_sensitive: false
+  - id: cs.prob.confounders_and_causation
+    node: prob.stat.correlation_vs_cause
+    area: prob
+    cluster: stat
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.correlation_coefficient]
+    replay: prob.stat.correlation_vs_cause
+    math_locale_sensitive: false
+  - id: cs.prob.continuous_uniform
+    node: prob.dist.density_area_is_probability
+    area: prob
+    cluster: dist
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.density_area]
+    replay: prob.dist.density_area_is_probability
+    math_locale_sensitive: false
+  - id: cs.prob.correlation_coefficient
+    node: prob.stat.correlation_vs_cause
+    area: prob
+    cluster: stat
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.confounders_and_causation, cs.prob.least_squares_line]
+    replay: prob.stat.correlation_vs_cause
+    math_locale_sensitive: false
+  - id: cs.prob.counting_principle
+    node: prob.basic.count_outcomes_by_structure
+    area: prob
+    cluster: basic
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.permutations_combinations, cs.prob.sample_space_grid_two_dice]
+    replay: prob.basic.count_outcomes_by_structure
+    math_locale_sensitive: false
+  - id: cs.prob.density_area
+    node: prob.dist.density_area_is_probability
+    area: prob
+    cluster: dist
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.continuous_uniform, cs.prob.cdf_definition]
+    replay: prob.dist.density_area_is_probability
+    math_locale_sensitive: false
+  - id: cs.prob.expectation_variance_of_ax_plus_b
+    node: prob.rv.linear_change_of_variable
+    area: prob
+    cluster: rv
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.linearity_of_expectation, cs.prob.variance_formula]
+    replay: prob.rv.linear_change_of_variable
+    math_locale_sensitive: false
+  - id: cs.prob.expected_value_formula
+    node: prob.rv.expectation_as_weighted_average
+    area: prob
+    cluster: rv
+    kind: identity
+    display: {form: expression, scene: ledger_scene_prize_ledger}
+    unlocked_at: symbolic
+    related: [cs.prob.linearity_of_expectation, cs.prob.pmf_table]
+    replay: prob.rv.expectation_as_weighted_average
+    math_locale_sensitive: false
+  - id: cs.prob.frequency_and_relative_frequency
+    node: prob.stat.frequency_table
+    area: prob
+    cluster: stat
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.histogram_reading]
+    replay: prob.stat.frequency_table
+    math_locale_sensitive: false
+  - id: cs.prob.histogram_reading
+    node: prob.stat.frequency_table
+    area: prob
+    cluster: stat
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.frequency_and_relative_frequency]
+    replay: prob.stat.frequency_table
+    math_locale_sensitive: false
+  - id: cs.prob.independence_product_rule
+    node: prob.cond.conditional_and_independence
+    area: prob
+    cluster: cond
+    kind: property
+    display: {form: expression, scene: network_scene_tree_of_draws}
+    unlocked_at: formal
+    related: [cs.prob.conditional_definition, cs.prob.multiplication_rule]
+    replay: prob.cond.conditional_and_independence
+    math_locale_sensitive: false
+  - id: cs.prob.least_squares_line
+    node: prob.stat.regression_line
+    area: prob
+    cluster: stat
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.correlation_coefficient]
+    replay: prob.stat.regression_line
+    math_locale_sensitive: false
+  - id: cs.prob.linearity_of_expectation
+    node: prob.rv.expectation_as_weighted_average
+    area: prob
+    cluster: rv
+    kind: property
+    display: {form: expression, scene: balance_scene_plank_with_weights}
+    unlocked_at: formal
+    related: [cs.prob.expected_value_formula]
+    replay: prob.rv.expectation_as_weighted_average
+    math_locale_sensitive: false
+  - id: cs.prob.long_run_proportion
+    node: prob.basic.probability_as_proportion
+    area: prob
+    cluster: basic
+    kind: definition
+    display: {form: figure, scene: urn_scene_draw_and_tally}
+    unlocked_at: symbolic
+    related: [cs.prob.probability_as_fraction, cs.prob.probability_between_0_and_1]
+    replay: prob.basic.probability_as_proportion
+    math_locale_sensitive: false
+  - id: cs.prob.mean_median_mode
+    node: prob.stat.mean_as_leveling
+    area: prob
+    cluster: stat
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.outlier_pulls_mean]
+    replay: prob.stat.mean_as_leveling
+    math_locale_sensitive: false
+  - id: cs.prob.multiplication_rule
+    node: prob.cond.conditional_and_independence
+    area: prob
+    cluster: cond
+    kind: identity
+    display: {form: expression, scene: sorter_scene_bins_then_pick}
+    unlocked_at: symbolic
+    related: [cs.prob.conditional_definition, cs.prob.independence_product_rule]
+    replay: prob.cond.conditional_and_independence
+    math_locale_sensitive: false
+  - id: cs.prob.normal_68_95_99
+    node: prob.dist.normal_bell_from_sums
+    area: prob
+    cluster: dist
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.z_score, cs.prob.central_limit_theorem]
+    replay: prob.dist.normal_bell_from_sums
+    math_locale_sensitive: false
+  - id: cs.prob.null_hypothesis_test
+    node: prob.inf.hypothesis_test_surprise
+    area: prob
+    cluster: inf
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.p_value]
+    replay: prob.inf.hypothesis_test_surprise
+    math_locale_sensitive: false
+  - id: cs.prob.outlier_pulls_mean
+    node: prob.stat.mean_as_leveling
+    area: prob
+    cluster: stat
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.mean_median_mode]
+    replay: prob.stat.mean_as_leveling
+    math_locale_sensitive: false
+  - id: cs.prob.p_value
+    node: prob.inf.hypothesis_test_surprise
+    area: prob
+    cluster: inf
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.null_hypothesis_test]
+    replay: prob.inf.hypothesis_test_surprise
+    math_locale_sensitive: false
+  - id: cs.prob.permutations_combinations
+    node: prob.basic.count_outcomes_by_structure
+    area: prob
+    cluster: basic
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.counting_principle]
+    replay: prob.basic.count_outcomes_by_structure
+    math_locale_sensitive: false
+  - id: cs.prob.pmf_table
+    node: prob.rv.random_variable_as_machine
+    area: prob
+    cluster: rv
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.random_variable_definition, cs.prob.cdf_definition]
+    replay: prob.rv.random_variable_as_machine
+    math_locale_sensitive: false
+  - id: cs.prob.probability_as_fraction
+    node: prob.basic.probability_as_proportion
+    area: prob
+    cluster: basic
+    kind: definition
+    display: {form: figure, scene: urn_scene_fraction_of_total}
+    unlocked_at: symbolic
+    related: [cs.prob.long_run_proportion]
+    replay: prob.basic.probability_as_proportion
+    math_locale_sensitive: false
+  - id: cs.prob.probability_between_0_and_1
+    node: prob.basic.probability_as_proportion
+    area: prob
+    cluster: basic
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.probability_as_fraction, cs.prob.uniform_vs_weighted_outcomes]
+    replay: prob.basic.probability_as_proportion
+    math_locale_sensitive: false
+  - id: cs.prob.random_variable_definition
+    node: prob.rv.random_variable_as_machine
+    area: prob
+    cluster: rv
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.pmf_table]
+    replay: prob.rv.random_variable_as_machine
+    math_locale_sensitive: false
+  - id: cs.prob.sample_mean_estimates
+    node: prob.samp.sample_vs_population
+    area: prob
+    cluster: samp
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.biased_sample, cs.prob.standard_error]
+    replay: prob.samp.sample_vs_population
+    math_locale_sensitive: false
+  - id: cs.prob.sample_space_grid_two_dice
+    node: prob.basic.sample_space_grid
+    area: prob
+    cluster: basic
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.counting_principle]
+    replay: prob.basic.sample_space_grid
+    math_locale_sensitive: false
+  - id: cs.prob.standard_deviation
+    node: prob.rv.variance_as_spread
+    area: prob
+    cluster: rv
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.variance_formula]
+    replay: prob.rv.variance_as_spread
+    math_locale_sensitive: false
+  - id: cs.prob.standard_error
+    node: prob.samp.central_limit_bell
+    area: prob
+    cluster: samp
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.central_limit_theorem, cs.prob.confidence_interval]
+    replay: prob.samp.central_limit_bell
+    math_locale_sensitive: false
+  - id: cs.prob.total_probability
+    node: prob.cond.bayes_reverses_condition
+    area: prob
+    cluster: cond
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.bayes_rule]
+    replay: prob.cond.bayes_reverses_condition
+    math_locale_sensitive: false
+  - id: cs.prob.transition_matrix
+    node: prob.cond.markov_chain_walk
+    area: prob
+    cluster: cond
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.bayes_rule]
+    replay: prob.cond.markov_chain_walk
+    math_locale_sensitive: false
+  - id: cs.prob.uniform_vs_weighted_outcomes
+    node: prob.basic.equally_likely_or_weighted
+    area: prob
+    cluster: basic
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.probability_between_0_and_1]
+    replay: prob.basic.equally_likely_or_weighted
+    math_locale_sensitive: false
+  - id: cs.prob.variance_formula
+    node: prob.rv.variance_as_spread
+    area: prob
+    cluster: rv
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.standard_deviation, cs.prob.expectation_variance_of_ax_plus_b]
+    replay: prob.rv.variance_as_spread
+    math_locale_sensitive: false
+  - id: cs.prob.variance_of_independent_sum
+    node: prob.rv.linear_change_of_variable
+    area: prob
+    cluster: rv
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.prob.expectation_variance_of_ax_plus_b]
+    replay: prob.rv.linear_change_of_variable
+    math_locale_sensitive: false
+  - id: cs.prob.z_score
+    node: prob.dist.normal_bell_from_sums
+    area: prob
+    cluster: dist
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.prob.normal_68_95_99]
+    replay: prob.dist.normal_bell_from_sums
+    math_locale_sensitive: false
+
+  # ---- arith ---------------------------------------------------------
+  - id: cs.arith.add_as_join_groups
+    node: arith.add.combine_groups
+    area: arith
+    cluster: add
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.add_as_step_forward, cs.arith.add_order_irrelevant]
+    replay: arith.add.combine_groups
+    math_locale_sensitive: false
+  - id: cs.arith.add_as_step_forward
+    node: arith.add.displacement
+    area: arith
+    cluster: add
+    kind: definition
+    display: {form: figure, scene: gear_step_forward_adds}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.add_as_join_groups, cs.arith.add_order_irrelevant]
+    replay: arith.add.displacement
+    math_locale_sensitive: false
+  - id: cs.arith.add_fractions_same_unit
+    node: arith.frac.add_same_denominator
+    area: arith
+    cluster: frac
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.common_denominator, cs.arith.compare_fractions_same_unit]
+    replay: arith.frac.add_same_denominator
+    math_locale_sensitive: false
+  - id: cs.arith.add_order_irrelevant
+    node: arith.add.displacement
+    area: arith
+    cluster: add
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.add_as_step_forward, cs.arith.mul_order_irrelevant]
+    replay: arith.add.displacement
+    math_locale_sensitive: false
+  - id: cs.arith.add_signed_as_net_steps
+    node: arith.int.add_signed
+    area: arith
+    cluster: int
+    kind: procedure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.subtract_is_add_opposite, cs.arith.negative_as_opposite_direction]
+    replay: arith.int.add_signed
+    math_locale_sensitive: false
+  - id: cs.arith.column_add_and_borrow
+    node: arith.place.base_ten_carry
+    area: arith
+    cluster: place
+    kind: procedure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.ten_ones_make_one_ten]
+    replay: arith.place.base_ten_carry
+    math_locale_sensitive: false
+  - id: cs.arith.column_multiply
+    node: arith.mul.partial_products
+    area: arith
+    cluster: mul
+    kind: procedure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.split_factor_tens_and_ones]
+    replay: arith.mul.partial_products
+    math_locale_sensitive: false
+  - id: cs.arith.common_denominator
+    node: arith.frac.common_unit
+    area: arith
+    cluster: frac
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.add_fractions_same_unit, cs.arith.compare_fractions_same_unit]
+    replay: arith.frac.common_unit
+    math_locale_sensitive: false
+  - id: cs.arith.compare_fractions_same_unit
+    node: arith.frac.common_unit
+    area: arith
+    cluster: frac
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.common_denominator]
+    replay: arith.frac.common_unit
+    math_locale_sensitive: false
+  - id: cs.arith.convert_units_by_scaling
+    node: arith.meas.unit_conversion
+    area: arith
+    cluster: meas
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: []
+    replay: arith.meas.unit_conversion
+    math_locale_sensitive: false
+  - id: cs.arith.decimal_as_tenths_hundredths
+    node: arith.dec.tenths_as_place
+    area: arith
+    cluster: dec
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.decimal_fraction_bridge]
+    replay: arith.dec.tenths_as_place
+    math_locale_sensitive: true
+  - id: cs.arith.decimal_fraction_bridge
+    node: arith.dec.tenths_as_place
+    area: arith
+    cluster: dec
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.decimal_as_tenths_hundredths]
+    replay: arith.dec.tenths_as_place
+    math_locale_sensitive: true
+  - id: cs.arith.div_by_zero_no_key
+    node: arith.div.undo_mul
+    area: arith
+    cluster: div
+    kind: property
+    display: {form: figure, scene: chest_shrink_key_undoes_stretch}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.div_undoes_mul]
+    replay: arith.div.undo_mul
+    math_locale_sensitive: false
+  - id: cs.arith.div_undoes_mul
+    node: arith.div.undo_mul
+    area: arith
+    cluster: div
+    kind: property
+    display: {form: figure, scene: tile_split_rectangle_into_rows}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.div_by_zero_no_key]
+    replay: arith.div.undo_mul
+    math_locale_sensitive: false
+  - id: cs.arith.divide_by_fraction_flip
+    node: arith.frac.multiply
+    area: arith
+    cluster: frac
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.fraction_of_fraction]
+    replay: arith.frac.multiply
+    math_locale_sensitive: false
+  - id: cs.arith.divisibility_shortcuts
+    node: arith.num.divisible_or_not
+    area: arith
+    cluster: num
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.factor_tree_same_leaves]
+    replay: arith.num.divisible_or_not
+    math_locale_sensitive: false
+  - id: cs.arith.equivalent_fraction_scale_both
+    node: arith.frac.equivalent
+    area: arith
+    cluster: frac
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.fraction_as_parts_of_whole]
+    replay: arith.frac.equivalent
+    math_locale_sensitive: false
+  - id: cs.arith.exponent_counts_scalings
+    node: arith.pow.repeated_scaling
+    area: arith
+    cluster: pow
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.square_and_cube_as_shapes]
+    replay: arith.pow.repeated_scaling
+    math_locale_sensitive: false
+  - id: cs.arith.expression_is_a_tree
+    node: arith.expr.precedence_tree
+    area: arith
+    cluster: expr
+    kind: figure
+    display: {form: figure, scene: chest_nested_open_inside_first}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.inner_chest_first]
+    replay: arith.expr.precedence_tree
+    math_locale_sensitive: false
+  - id: cs.arith.factor_tree_same_leaves
+    node: arith.num.factor_tree
+    area: arith
+    cluster: num
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.prime_has_one_rectangle, cs.arith.divisibility_shortcuts]
+    replay: arith.num.factor_tree
+    math_locale_sensitive: false
+  - id: cs.arith.fraction_as_division
+    node: arith.frac.parts_and_ratio
+    area: arith
+    cluster: frac
+    kind: definition
+    display: {form: figure, scene: urn_fraction_of_balls}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.fraction_as_parts_of_whole]
+    replay: arith.frac.parts_and_ratio
+    math_locale_sensitive: false
+  - id: cs.arith.fraction_as_parts_of_whole
+    node: arith.frac.parts_and_ratio
+    area: arith
+    cluster: frac
+    kind: definition
+    display: {form: figure, scene: tile_bar_cut_into_equal_parts}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.fraction_as_division, cs.arith.equivalent_fraction_scale_both]
+    replay: arith.frac.parts_and_ratio
+    math_locale_sensitive: false
+  - id: cs.arith.fraction_of_fraction
+    node: arith.frac.multiply
+    area: arith
+    cluster: frac
+    kind: procedure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.divide_by_fraction_flip]
+    replay: arith.frac.multiply
+    math_locale_sensitive: false
+  - id: cs.arith.inner_chest_first
+    node: arith.expr.precedence_tree
+    area: arith
+    cluster: expr
+    kind: property
+    display: {form: figure, scene: pipe_two_machines_order_matters}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.expression_is_a_tree]
+    replay: arith.expr.precedence_tree
+    math_locale_sensitive: false
+  - id: cs.arith.mul_as_repeated_add
+    node: arith.mul.repeated_groups
+    area: arith
+    cluster: mul
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.skip_count_is_constant_step, cs.arith.mul_as_scaling]
+    replay: arith.mul.repeated_groups
+    math_locale_sensitive: false
+  - id: cs.arith.mul_as_scaling
+    node: arith.mul.scaling
+    area: arith
+    cluster: mul
+    kind: definition
+    display: {form: figure, scene: tile_rows_become_rectangle}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.mul_as_repeated_add, cs.arith.mul_by_one_and_zero]
+    replay: arith.mul.scaling
+    math_locale_sensitive: false
+  - id: cs.arith.mul_by_one_and_zero
+    node: arith.mul.scaling
+    area: arith
+    cluster: mul
+    kind: property
+    display: {form: expression, scene: grid_stretch_by_factor}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.mul_as_scaling]
+    replay: arith.mul.scaling
+    math_locale_sensitive: false
+  - id: cs.arith.mul_grouping_irrelevant
+    node: arith.mul.rows_and_columns
+    area: arith
+    cluster: mul
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.mul_order_irrelevant]
+    replay: arith.mul.rows_and_columns
+    math_locale_sensitive: false
+  - id: cs.arith.mul_order_irrelevant
+    node: arith.mul.rows_and_columns
+    area: arith
+    cluster: mul
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.mul_grouping_irrelevant, cs.arith.add_order_irrelevant]
+    replay: arith.mul.rows_and_columns
+    math_locale_sensitive: false
+  - id: cs.arith.negative_as_opposite_direction
+    node: arith.int.negatives
+    area: arith
+    cluster: int
+    kind: definition
+    display: {form: figure, scene: gear_walk_past_zero}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.sub_past_zero, cs.arith.subtract_is_add_opposite]
+    replay: arith.int.negatives
+    math_locale_sensitive: false
+  - id: cs.arith.percent_is_per_hundred
+    node: arith.pct.percent_of_total
+    area: arith
+    cluster: pct
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.percent_of_amount]
+    replay: arith.pct.percent_of_total
+    math_locale_sensitive: false
+  - id: cs.arith.percent_of_amount
+    node: arith.pct.percent_of_total
+    area: arith
+    cluster: pct
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.percent_is_per_hundred]
+    replay: arith.pct.percent_of_total
+    math_locale_sensitive: false
+  - id: cs.arith.prime_has_one_rectangle
+    node: arith.num.factor_tree
+    area: arith
+    cluster: num
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.factor_tree_same_leaves]
+    replay: arith.num.factor_tree
+    math_locale_sensitive: false
+  - id: cs.arith.quotient_times_divisor_plus_remainder
+    node: arith.div.remainder
+    area: arith
+    cluster: div
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: []
+    replay: arith.div.remainder
+    math_locale_sensitive: false
+  - id: cs.arith.rate_per_unit_is_division
+    node: arith.rate.per_unit
+    area: arith
+    cluster: rate
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.convert_units_by_scaling]
+    replay: arith.rate.per_unit
+    math_locale_sensitive: false
+  - id: cs.arith.running_total_is_sum_so_far
+    node: arith.add.running_total
+    area: arith
+    cluster: add
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.add_as_join_groups]
+    replay: arith.add.running_total
+    math_locale_sensitive: false
+  - id: cs.arith.sign_of_product
+    node: arith.int.mul_signed
+    area: arith
+    cluster: int
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.negative_as_opposite_direction]
+    replay: arith.int.mul_signed
+    math_locale_sensitive: false
+  - id: cs.arith.skip_count_is_constant_step
+    node: arith.mul.repeated_groups
+    area: arith
+    cluster: mul
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.mul_as_repeated_add]
+    replay: arith.mul.repeated_groups
+    math_locale_sensitive: false
+  - id: cs.arith.split_factor_tens_and_ones
+    node: arith.mul.partial_products
+    area: arith
+    cluster: mul
+    kind: strategy
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.column_multiply]
+    replay: arith.mul.partial_products
+    math_locale_sensitive: false
+  - id: cs.arith.square_and_cube_as_shapes
+    node: arith.pow.repeated_scaling
+    area: arith
+    cluster: pow
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.exponent_counts_scalings]
+    replay: arith.pow.repeated_scaling
+    math_locale_sensitive: false
+  - id: cs.arith.sub_as_distance_between
+    node: arith.sub.undo_add
+    area: arith
+    cluster: sub
+    kind: definition
+    display: {form: figure, scene: chest_step_back_undoes_step}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.sub_undoes_add]
+    replay: arith.sub.undo_add
+    math_locale_sensitive: false
+  - id: cs.arith.sub_past_zero
+    node: arith.int.negatives
+    area: arith
+    cluster: int
+    kind: property
+    display: {form: figure, scene: ledger_debt_tokens}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.negative_as_opposite_direction]
+    replay: arith.int.negatives
+    math_locale_sensitive: false
+  - id: cs.arith.sub_undoes_add
+    node: arith.sub.undo_add
+    area: arith
+    cluster: sub
+    kind: property
+    display: {form: figure, scene: gear_walk_back_same_count}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.sub_as_distance_between, cs.arith.div_undoes_mul]
+    replay: arith.sub.undo_add
+    math_locale_sensitive: false
+  - id: cs.arith.subtract_is_add_opposite
+    node: arith.int.add_signed
+    area: arith
+    cluster: int
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.add_signed_as_net_steps]
+    replay: arith.int.add_signed
+    math_locale_sensitive: false
+  - id: cs.arith.ten_ones_make_one_ten
+    node: arith.place.base_ten_carry
+    area: arith
+    cluster: place
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.arith.column_add_and_borrow]
+    replay: arith.place.base_ten_carry
+    math_locale_sensitive: false
+
+  # ---- linalg ---------------------------------------------------------
+  - id: cs.linalg.adjacency_matrix_powers
+    node: linalg.map.matrix_counts_routes
+    area: linalg
+    cluster: map
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.matrix_product]
+    replay: linalg.map.matrix_counts_routes
+    math_locale_sensitive: false
+  - id: cs.linalg.angle_between_vectors
+    node: linalg.orth.dot_product_as_alignment
+    area: linalg
+    cluster: orth
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.dot_product]
+    replay: linalg.orth.dot_product_as_alignment
+    math_locale_sensitive: false
+  - id: cs.linalg.basis_and_dimension
+    node: linalg.basis.unique_recipe
+    area: linalg
+    cluster: basis
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.coordinates_in_basis, cs.linalg.linear_independence]
+    replay: linalg.basis.unique_recipe
+    math_locale_sensitive: false
+  - id: cs.linalg.change_of_basis_matrix
+    node: linalg.basis.change_of_basis_as_translation
+    area: linalg
+    cluster: basis
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.coordinates_in_basis]
+    replay: linalg.basis.change_of_basis_as_translation
+    math_locale_sensitive: false
+  - id: cs.linalg.characteristic_polynomial
+    node: linalg.eig.characteristic_polynomial
+    area: linalg
+    cluster: eig
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.eigenvector_definition, cs.linalg.trace_and_det_from_eigen]
+    replay: linalg.eig.characteristic_polynomial
+    math_locale_sensitive: false
+  - id: cs.linalg.cofactor_expansion
+    node: linalg.det.cofactor_by_slices
+    area: linalg
+    cluster: det
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.determinant_3x3]
+    replay: linalg.det.cofactor_by_slices
+    math_locale_sensitive: false
+  - id: cs.linalg.coordinates_in_basis
+    node: linalg.basis.unique_recipe
+    area: linalg
+    cluster: basis
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.basis_and_dimension, cs.linalg.change_of_basis_matrix]
+    replay: linalg.basis.unique_recipe
+    math_locale_sensitive: false
+  - id: cs.linalg.det_of_product
+    node: linalg.det.factor_multiplies_under_composition
+    area: linalg
+    cluster: det
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.det_zero_singular]
+    replay: linalg.det.factor_multiplies_under_composition
+    math_locale_sensitive: false
+  - id: cs.linalg.det_zero_singular
+    node: linalg.det.factor_multiplies_under_composition
+    area: linalg
+    cluster: det
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.det_of_product, cs.linalg.singular_no_inverse]
+    replay: linalg.det.factor_multiplies_under_composition
+    math_locale_sensitive: false
+  - id: cs.linalg.determinant_2x2
+    node: linalg.map.determinant_as_area
+    area: linalg
+    cluster: map
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.negative_det_flips, cs.linalg.determinant_3x3]
+    replay: linalg.map.determinant_as_area
+    math_locale_sensitive: false
+  - id: cs.linalg.determinant_3x3
+    node: linalg.det.cofactor_by_slices
+    area: linalg
+    cluster: det
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.determinant_2x2, cs.linalg.cofactor_expansion]
+    replay: linalg.det.cofactor_by_slices
+    math_locale_sensitive: false
+  - id: cs.linalg.diagonalization
+    node: linalg.eig.diagonalize_as_change_of_view
+    area: linalg
+    cluster: eig
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.characteristic_polynomial, cs.linalg.matrix_powers_via_eigen]
+    replay: linalg.eig.diagonalize_as_change_of_view
+    math_locale_sensitive: false
+  - id: cs.linalg.dot_product
+    node: linalg.orth.dot_product_as_alignment
+    area: linalg
+    cluster: orth
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.angle_between_vectors, cs.linalg.projection_formula]
+    replay: linalg.orth.dot_product_as_alignment
+    math_locale_sensitive: false
+  - id: cs.linalg.eigenvector_definition
+    node: linalg.eig.eigenvector_stays_on_line
+    area: linalg
+    cluster: eig
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.characteristic_polynomial]
+    replay: linalg.eig.eigenvector_stays_on_line
+    math_locale_sensitive: false
+  - id: cs.linalg.free_variables
+    node: linalg.sys.solution_set_shape
+    area: linalg
+    cluster: sys
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.rank_and_solutions]
+    replay: linalg.sys.solution_set_shape
+    math_locale_sensitive: false
+  - id: cs.linalg.gaussian_elimination
+    node: linalg.sys.elimination_to_echelon
+    area: linalg
+    cluster: sys
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.row_operations_preserve_solutions, cs.linalg.pivots_and_back_substitution]
+    replay: linalg.sys.elimination_to_echelon
+    math_locale_sensitive: false
+  - id: cs.linalg.gram_schmidt
+    node: linalg.orth.orthonormal_makes_coordinates_easy
+    area: linalg
+    cluster: orth
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.orthogonal_matrix_inverse_is_transpose, cs.linalg.projection_formula]
+    replay: linalg.orth.orthonormal_makes_coordinates_easy
+    math_locale_sensitive: false
+  - id: cs.linalg.inverse_2x2
+    node: linalg.map.inverse_and_systems
+    area: linalg
+    cluster: map
+    kind: identity
+    display: {form: expression, scene: grid_scene_undo_stretch}
+    unlocked_at: symbolic
+    related: [cs.linalg.singular_no_inverse, cs.linalg.solve_ax_equals_b]
+    replay: linalg.map.inverse_and_systems
+    math_locale_sensitive: false
+  - id: cs.linalg.linear_combination
+    node: linalg.vec.span_and_combination
+    area: linalg
+    cluster: vec
+    kind: definition
+    display: {form: figure, scene: grid_scene_two_kinds_of_steps}
+    unlocked_at: symbolic
+    related: [cs.linalg.span, cs.linalg.linear_independence]
+    replay: linalg.vec.span_and_combination
+    math_locale_sensitive: false
+  - id: cs.linalg.linear_independence
+    node: linalg.basis.in_span_or_not
+    area: linalg
+    cluster: basis
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.linear_combination, cs.linalg.basis_and_dimension]
+    replay: linalg.basis.in_span_or_not
+    math_locale_sensitive: false
+  - id: cs.linalg.matrix_3x3_columns
+    node: linalg.map.linear_transformation_3d
+    area: linalg
+    cluster: map
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.matrix_columns_are_basis_images]
+    replay: linalg.map.linear_transformation_3d
+    math_locale_sensitive: false
+  - id: cs.linalg.matrix_columns_are_basis_images
+    node: linalg.map.linear_transformation_2d
+    area: linalg
+    cluster: map
+    kind: property
+    display: {form: figure, scene: grid_scene_basis_arrows_land}
+    unlocked_at: symbolic
+    related: [cs.linalg.matrix_vector_product, cs.linalg.rotation_shear_reflection_matrices]
+    replay: linalg.map.linear_transformation_2d
+    math_locale_sensitive: false
+  - id: cs.linalg.matrix_powers_via_eigen
+    node: linalg.eig.diagonalize_as_change_of_view
+    area: linalg
+    cluster: eig
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.diagonalization]
+    replay: linalg.eig.diagonalize_as_change_of_view
+    math_locale_sensitive: false
+  - id: cs.linalg.matrix_product
+    node: linalg.map.compose_as_multiply
+    area: linalg
+    cluster: map
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.product_not_commutative]
+    replay: linalg.map.compose_as_multiply
+    math_locale_sensitive: false
+  - id: cs.linalg.matrix_vector_product
+    node: linalg.map.linear_transformation_2d
+    area: linalg
+    cluster: map
+    kind: procedure
+    display: {form: expression, scene: pipe_scene_vector_in_vector_out}
+    unlocked_at: symbolic
+    related: [cs.linalg.matrix_columns_are_basis_images]
+    replay: linalg.map.linear_transformation_2d
+    math_locale_sensitive: false
+  - id: cs.linalg.negative_det_flips
+    node: linalg.map.determinant_as_area
+    area: linalg
+    cluster: map
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.determinant_2x2]
+    replay: linalg.map.determinant_as_area
+    math_locale_sensitive: false
+  - id: cs.linalg.normal_equations
+    node: linalg.svd.least_squares_as_projection
+    area: linalg
+    cluster: svd
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: []
+    replay: linalg.svd.least_squares_as_projection
+    math_locale_sensitive: false
+  - id: cs.linalg.orthogonal_matrix_inverse_is_transpose
+    node: linalg.orth.orthonormal_makes_coordinates_easy
+    area: linalg
+    cluster: orth
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.gram_schmidt]
+    replay: linalg.orth.orthonormal_makes_coordinates_easy
+    math_locale_sensitive: false
+  - id: cs.linalg.pivots_and_back_substitution
+    node: linalg.sys.elimination_to_echelon
+    area: linalg
+    cluster: sys
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.gaussian_elimination]
+    replay: linalg.sys.elimination_to_echelon
+    math_locale_sensitive: false
+  - id: cs.linalg.product_not_commutative
+    node: linalg.map.compose_as_multiply
+    area: linalg
+    cluster: map
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.matrix_product]
+    replay: linalg.map.compose_as_multiply
+    math_locale_sensitive: false
+  - id: cs.linalg.projection_formula
+    node: linalg.orth.projection_as_shadow
+    area: linalg
+    cluster: orth
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.dot_product]
+    replay: linalg.orth.projection_as_shadow
+    math_locale_sensitive: false
+  - id: cs.linalg.rank_and_solutions
+    node: linalg.sys.solution_set_shape
+    area: linalg
+    cluster: sys
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.free_variables]
+    replay: linalg.sys.solution_set_shape
+    math_locale_sensitive: false
+  - id: cs.linalg.rotation_matrices_3d
+    node: linalg.map.linear_transformation_3d
+    area: linalg
+    cluster: map
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.matrix_3x3_columns]
+    replay: linalg.map.linear_transformation_3d
+    math_locale_sensitive: false
+  - id: cs.linalg.rotation_shear_reflection_matrices
+    node: linalg.map.linear_transformation_2d
+    area: linalg
+    cluster: map
+    kind: notation
+    display: {form: expression, scene: grid_scene_rubber_sheet_house}
+    unlocked_at: symbolic
+    related: [cs.linalg.matrix_columns_are_basis_images]
+    replay: linalg.map.linear_transformation_2d
+    math_locale_sensitive: false
+  - id: cs.linalg.row_operations_preserve_solutions
+    node: linalg.sys.row_operations
+    area: linalg
+    cluster: sys
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.gaussian_elimination]
+    replay: linalg.sys.row_operations
+    math_locale_sensitive: false
+  - id: cs.linalg.scalar_multiple
+    node: linalg.vec.scale_and_reverse
+    area: linalg
+    cluster: vec
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.vector_addition_components]
+    replay: linalg.vec.scale_and_reverse
+    math_locale_sensitive: false
+  - id: cs.linalg.singular_no_inverse
+    node: linalg.map.inverse_and_systems
+    area: linalg
+    cluster: map
+    kind: property
+    display: {form: figure, scene: chest_scene_matrix_as_key}
+    unlocked_at: symbolic
+    related: [cs.linalg.det_zero_singular, cs.linalg.inverse_2x2]
+    replay: linalg.map.inverse_and_systems
+    math_locale_sensitive: false
+  - id: cs.linalg.singular_values_as_stretch
+    node: linalg.svd.rotate_stretch_rotate
+    area: linalg
+    cluster: svd
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.svd_decomposition]
+    replay: linalg.svd.rotate_stretch_rotate
+    math_locale_sensitive: false
+  - id: cs.linalg.solve_ax_equals_b
+    node: linalg.map.inverse_and_systems
+    area: linalg
+    cluster: map
+    kind: procedure
+    display: {form: expression, scene: balance_scene_two_equations_one_grid}
+    unlocked_at: symbolic
+    related: [cs.linalg.inverse_2x2]
+    replay: linalg.map.inverse_and_systems
+    math_locale_sensitive: false
+  - id: cs.linalg.span
+    node: linalg.vec.span_and_combination
+    area: linalg
+    cluster: vec
+    kind: definition
+    display: {form: figure, scene: ledger_scene_recipe_of_steps}
+    unlocked_at: symbolic
+    related: [cs.linalg.linear_combination, cs.linalg.linear_independence]
+    replay: linalg.vec.span_and_combination
+    math_locale_sensitive: false
+  - id: cs.linalg.svd_decomposition
+    node: linalg.svd.rotate_stretch_rotate
+    area: linalg
+    cluster: svd
+    kind: theorem
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.singular_values_as_stretch]
+    replay: linalg.svd.rotate_stretch_rotate
+    math_locale_sensitive: false
+  - id: cs.linalg.trace_and_det_from_eigen
+    node: linalg.eig.characteristic_polynomial
+    area: linalg
+    cluster: eig
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.linalg.characteristic_polynomial]
+    replay: linalg.eig.characteristic_polynomial
+    math_locale_sensitive: false
+  - id: cs.linalg.vector_addition_components
+    node: linalg.vec.add_tip_to_tail
+    area: linalg
+    cluster: vec
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.linalg.scalar_multiple]
+    replay: linalg.vec.add_tip_to_tail
+    math_locale_sensitive: false
+  - id: cs.linalg.vector_components
+    node: linalg.vec.vector_as_displacement
+    area: linalg
+    cluster: vec
+    kind: definition
+    display: {form: figure, scene: grid_scene_arrow_on_map}
+    unlocked_at: symbolic
+    related: [cs.linalg.vector_length]
+    replay: linalg.vec.vector_as_displacement
+    math_locale_sensitive: false
+  - id: cs.linalg.vector_length
+    node: linalg.vec.vector_as_displacement
+    area: linalg
+    cluster: vec
+    kind: identity
+    display: {form: expression, scene: gear_scene_steps_east_then_north}
+    unlocked_at: symbolic
+    related: [cs.linalg.vector_components]
+    replay: linalg.vec.vector_as_displacement
+    math_locale_sensitive: false
+
+  # ---- geom ---------------------------------------------------------
+  - id: cs.geom.angle_names_right_straight
+    node: geom.angle.turn_as_measure
+    area: geom
+    cluster: angle
+    kind: definition
+    display: {form: figure, scene: gear_scene_turn_as_angle}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.full_turn_360, cs.geom.exterior_angle_completes_turn]
+    replay: geom.angle.turn_as_measure
+    math_locale_sensitive: false
+  - id: cs.geom.arc_length_fraction_of_turn
+    node: geom.circle.radius_and_arc
+    area: geom
+    cluster: circle
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.circumference_2_pi_r]
+    replay: geom.circle.radius_and_arc
+    math_locale_sensitive: false
+  - id: cs.geom.area_by_proportion_of_hits
+    node: geom.area.area_by_random_darts
+    area: geom
+    cluster: area
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.pi_as_ratio]
+    replay: geom.area.area_by_random_darts
+    math_locale_sensitive: false
+  - id: cs.geom.area_circle_pi_r_squared
+    node: geom.area.circle_by_slices
+    area: geom
+    cluster: area
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.pi_as_ratio, cs.geom.circumference_2_pi_r]
+    replay: geom.area.circle_by_slices
+    math_locale_sensitive: false
+  - id: cs.geom.area_parallelogram_base_height
+    node: geom.area.shear_invariant
+    area: geom
+    cluster: area
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.area_rectangle]
+    replay: geom.area.shear_invariant
+    math_locale_sensitive: false
+  - id: cs.geom.area_rectangle
+    node: geom.area.rect_and_triangle
+    area: geom
+    cluster: area
+    kind: identity
+    display: {form: figure, scene: tile_scene_rectangle_rows}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.area_triangle_half_base_height, cs.geom.area_parallelogram_base_height]
+    replay: geom.area.rect_and_triangle
+    math_locale_sensitive: false
+  - id: cs.geom.area_scales_by_k_squared
+    node: geom.sim.similarity_as_scale
+    area: geom
+    cluster: sim
+    kind: property
+    display: {form: expression, scene: grid_scene_dilate_triangle}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.similar_ratios_equal]
+    replay: geom.sim.similarity_as_scale
+    math_locale_sensitive: false
+  - id: cs.geom.area_trapezoid
+    node: geom.area.trapezoid_as_two_triangles
+    area: geom
+    cluster: area
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.strategy_draw_diagonal, cs.geom.area_triangle_half_base_height]
+    replay: geom.area.trapezoid_as_two_triangles
+    math_locale_sensitive: false
+  - id: cs.geom.area_triangle_half_base_height
+    node: geom.area.rect_and_triangle
+    area: geom
+    cluster: area
+    kind: identity
+    display: {form: figure, scene: construction_scene_triangle_half_rectangle}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.area_rectangle, cs.geom.strategy_draw_altitude]
+    replay: geom.area.rect_and_triangle
+    math_locale_sensitive: false
+  - id: cs.geom.circumference_2_pi_r
+    node: geom.circle.radius_and_arc
+    area: geom
+    cluster: circle
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.pi_as_ratio, cs.geom.area_circle_pi_r_squared]
+    replay: geom.circle.radius_and_arc
+    math_locale_sensitive: false
+  - id: cs.geom.congruence_sss_sas_asa
+    node: geom.tri.congruence_rigid_fit
+    area: geom
+    cluster: tri
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.rigid_motions_preserve_lengths_angles]
+    replay: geom.tri.congruence_rigid_fit
+    math_locale_sensitive: false
+  - id: cs.geom.dilation_center_and_factor
+    node: geom.trans.dilation
+    area: geom
+    cluster: trans
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.area_scales_by_k_squared]
+    replay: geom.trans.dilation
+    math_locale_sensitive: false
+  - id: cs.geom.distance_formula
+    node: geom.coord.distance_as_pythagoras
+    area: geom
+    cluster: coord
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.geom.midpoint_formula, cs.geom.pythagoras]
+    replay: geom.coord.distance_as_pythagoras
+    math_locale_sensitive: false
+  - id: cs.geom.euler_v_minus_e_plus_f
+    node: geom.top.euler_characteristic
+    area: geom
+    cluster: top
+    kind: theorem
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: []
+    replay: geom.top.euler_characteristic
+    math_locale_sensitive: false
+  - id: cs.geom.exterior_angle_completes_turn
+    node: geom.angle.turn_as_measure
+    area: geom
+    cluster: angle
+    kind: property
+    display: {form: figure, scene: construction_scene_extend_side_exterior_angle}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.angle_names_right_straight, cs.geom.full_turn_360]
+    replay: geom.angle.turn_as_measure
+    math_locale_sensitive: false
+  - id: cs.geom.full_turn_360
+    node: geom.angle.turn_as_measure
+    area: geom
+    cluster: angle
+    kind: constant
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.angle_names_right_straight]
+    replay: geom.angle.turn_as_measure
+    math_locale_sensitive: false
+  - id: cs.geom.inscribed_angle_half_central
+    node: geom.circle.inscribed_half_central
+    area: geom
+    cluster: circle
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.strategy_draw_radii_isosceles]
+    replay: geom.circle.inscribed_half_central
+    math_locale_sensitive: false
+  - id: cs.geom.inverse_transformations_table
+    node: geom.trans.undo_transformation
+    area: geom
+    cluster: trans
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.dilation_center_and_factor]
+    replay: geom.trans.undo_transformation
+    math_locale_sensitive: false
+  - id: cs.geom.midpoint_formula
+    node: geom.coord.distance_as_pythagoras
+    area: geom
+    cluster: coord
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.geom.distance_formula]
+    replay: geom.coord.distance_as_pythagoras
+    math_locale_sensitive: false
+  - id: cs.geom.parallel_angles_equal_or_supplementary
+    node: geom.angle.parallel_transversal
+    area: geom
+    cluster: angle
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.polygon_angle_sum]
+    replay: geom.angle.parallel_transversal
+    math_locale_sensitive: false
+  - id: cs.geom.parallel_same_slope
+    node: geom.line.parallel_same_slope
+    area: geom
+    cluster: line
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.perpendicular_negative_reciprocal]
+    replay: geom.line.parallel_same_slope
+    math_locale_sensitive: false
+  - id: cs.geom.perimeter_sum_of_sides
+    node: geom.area.perimeter_vs_area
+    area: geom
+    cluster: area
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.area_rectangle]
+    replay: geom.area.perimeter_vs_area
+    math_locale_sensitive: false
+  - id: cs.geom.perpendicular_from_center_bisects_chord
+    node: geom.circle.radius_bisects_chord
+    area: geom
+    cluster: circle
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.strategy_drop_perpendicular_from_center]
+    replay: geom.circle.radius_bisects_chord
+    math_locale_sensitive: false
+  - id: cs.geom.perpendicular_negative_reciprocal
+    node: geom.line.parallel_same_slope
+    area: geom
+    cluster: line
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.parallel_same_slope]
+    replay: geom.line.parallel_same_slope
+    math_locale_sensitive: false
+  - id: cs.geom.pi_as_ratio
+    node: geom.area.circle_by_slices
+    area: geom
+    cluster: area
+    kind: constant
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.circumference_2_pi_r, cs.geom.area_circle_pi_r_squared]
+    replay: geom.area.circle_by_slices
+    math_locale_sensitive: false
+  - id: cs.geom.polygon_angle_sum
+    node: geom.angle.triangle_sum_half_turn
+    area: geom
+    cluster: angle
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.triangle_angles_180]
+    replay: geom.angle.triangle_sum_half_turn
+    math_locale_sensitive: false
+  - id: cs.geom.polygons_by_sides
+    node: geom.class.polygon_by_sides
+    area: geom
+    cluster: class
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.quadrilateral_family_tree]
+    replay: geom.class.polygon_by_sides
+    math_locale_sensitive: false
+  - id: cs.geom.pythagoras
+    node: geom.tri.pythagoras_as_tiles
+    area: geom
+    cluster: tri
+    kind: theorem
+    display: {form: figure, scene: tile_scene_pythagoras_rearrangement}
+    unlocked_at: formal
+    related: [cs.geom.pythagorean_triples, cs.geom.strategy_find_right_triangle]
+    replay: geom.tri.pythagoras_as_tiles
+    math_locale_sensitive: false
+  - id: cs.geom.pythagorean_triples
+    node: geom.tri.pythagoras_as_tiles
+    area: geom
+    cluster: tri
+    kind: constant
+    display: {form: expression, scene: construction_scene_altitude_to_hypotenuse}
+    unlocked_at: formal
+    related: [cs.geom.pythagoras]
+    replay: geom.tri.pythagoras_as_tiles
+    math_locale_sensitive: false
+  - id: cs.geom.quadrilateral_family_tree
+    node: geom.class.quadrilateral_hierarchy
+    area: geom
+    cluster: class
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.polygons_by_sides]
+    replay: geom.class.quadrilateral_hierarchy
+    math_locale_sensitive: false
+  - id: cs.geom.rigid_motions_preserve_lengths_angles
+    node: geom.trans.rotation_reflection
+    area: geom
+    cluster: trans
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.congruence_sss_sas_asa]
+    replay: geom.trans.rotation_reflection
+    math_locale_sensitive: false
+  - id: cs.geom.similar_ratios_equal
+    node: geom.sim.similarity_as_scale
+    area: geom
+    cluster: sim
+    kind: property
+    display: {form: figure, scene: construction_scene_parallel_cut_similar}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.area_scales_by_k_squared, cs.geom.strategy_parallel_cuts_similar_triangle]
+    replay: geom.sim.similarity_as_scale
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_draw_altitude
+    node: geom.area.rect_and_triangle
+    also_declared_by: [geom.cons.auxiliary_lines]
+    area: geom
+    cluster: area
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.area_triangle_half_base_height, cs.geom.strategy_find_right_triangle]
+    replay: geom.area.rect_and_triangle
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_draw_diagonal
+    node: geom.cons.auxiliary_lines
+    also_declared_by: [geom.area.trapezoid_as_two_triangles]
+    area: geom
+    cluster: cons
+    kind: strategy
+    display: {form: figure, scene: construction_scene_composite_figure_altitude}
+    unlocked_at: formal
+    related: [cs.geom.area_trapezoid, cs.geom.strategy_extend_side]
+    replay: geom.cons.auxiliary_lines
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_draw_radii_isosceles
+    node: geom.circle.inscribed_half_central
+    area: geom
+    cluster: circle
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.inscribed_angle_half_central]
+    replay: geom.circle.inscribed_half_central
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_drop_perpendicular_from_center
+    node: geom.circle.radius_bisects_chord
+    area: geom
+    cluster: circle
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.perpendicular_from_center_bisects_chord]
+    replay: geom.circle.radius_bisects_chord
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_extend_side
+    node: geom.cons.auxiliary_lines
+    area: geom
+    cluster: cons
+    kind: strategy
+    display: {form: figure, scene: construction_scene_choose_the_line}
+    unlocked_at: formal
+    related: [cs.geom.strategy_draw_diagonal]
+    replay: geom.cons.auxiliary_lines
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_find_right_triangle
+    node: geom.tri.pythagoras_as_tiles
+    area: geom
+    cluster: tri
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.pythagoras, cs.geom.strategy_draw_altitude]
+    replay: geom.tri.pythagoras_as_tiles
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_list_what_you_know
+    node: geom.cons.hidden_data_hunt
+    area: geom
+    cluster: cons
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.strategy_work_backwards_from_goal]
+    replay: geom.cons.hidden_data_hunt
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_mark_equal_parts
+    node: geom.cons.auxiliary_lines
+    area: geom
+    cluster: cons
+    kind: strategy
+    display: {form: figure, scene: construction_scene_composite_figure_altitude}
+    unlocked_at: formal
+    related: [cs.geom.strategy_draw_diagonal]
+    replay: geom.cons.auxiliary_lines
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_parallel_cuts_similar_triangle
+    node: geom.sim.similarity_as_scale
+    area: geom
+    cluster: sim
+    kind: strategy
+    display: {form: figure, scene: grid_scene_dilate_triangle}
+    unlocked_at: formal
+    related: [cs.geom.similar_ratios_equal]
+    replay: geom.sim.similarity_as_scale
+    math_locale_sensitive: false
+  - id: cs.geom.strategy_work_backwards_from_goal
+    node: geom.cons.hidden_data_hunt
+    area: geom
+    cluster: cons
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.geom.strategy_list_what_you_know]
+    replay: geom.cons.hidden_data_hunt
+    math_locale_sensitive: false
+  - id: cs.geom.triangle_angles_180
+    node: geom.angle.triangle_sum_half_turn
+    area: geom
+    cluster: angle
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.polygon_angle_sum]
+    replay: geom.angle.triangle_sum_half_turn
+    math_locale_sensitive: false
+  - id: cs.geom.triangle_inequality
+    node: geom.tri.inequality_shortest_path
+    area: geom
+    cluster: tri
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: []
+    replay: geom.tri.inequality_shortest_path
+    math_locale_sensitive: false
+  - id: cs.geom.volume_cone_third_cylinder
+    node: geom.solid.cone_sphere_by_pouring
+    area: geom
+    cluster: solid
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.geom.volume_sphere_two_thirds_cylinder, cs.geom.volume_cylinder]
+    replay: geom.solid.cone_sphere_by_pouring
+    math_locale_sensitive: false
+  - id: cs.geom.volume_cylinder
+    node: geom.solid.volume_as_layers
+    area: geom
+    cluster: solid
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.volume_prism_base_times_height, cs.geom.area_circle_pi_r_squared]
+    replay: geom.solid.volume_as_layers
+    math_locale_sensitive: false
+  - id: cs.geom.volume_prism_base_times_height
+    node: geom.solid.volume_as_layers
+    area: geom
+    cluster: solid
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    text_at: formal
+    related: [cs.geom.volume_cylinder]
+    replay: geom.solid.volume_as_layers
+    math_locale_sensitive: false
+  - id: cs.geom.volume_sphere_two_thirds_cylinder
+    node: geom.solid.cone_sphere_by_pouring
+    area: geom
+    cluster: solid
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.geom.volume_cone_third_cylinder]
+    replay: geom.solid.cone_sphere_by_pouring
+    math_locale_sensitive: false
+
+  # ---- calc1 ---------------------------------------------------------
+  - id: cs.calc1.antiderivative_table
+    node: calc1.ftc.antiderivative_family
+    area: calc1
+    cluster: ftc
+    kind: constant
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.plus_c_family_of_curves, cs.calc1.derivatives_of_basic_functions]
+    replay: calc1.ftc.antiderivative_family
+    math_locale_sensitive: false
+  - id: cs.calc1.chain_rule
+    node: calc1.deriv.chain_as_gears
+    area: calc1
+    cluster: deriv
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.strategy_outer_inner_layers]
+    replay: calc1.deriv.chain_as_gears
+    math_locale_sensitive: false
+  - id: cs.calc1.continuity_three_conditions
+    node: calc1.lim.continuous_or_not
+    area: calc1
+    cluster: lim
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.discontinuity_types, cs.calc1.intermediate_value_theorem]
+    replay: calc1.lim.continuous_or_not
+    math_locale_sensitive: false
+  - id: cs.calc1.critical_points_derivative_zero
+    node: calc1.apply.max_where_slope_zero
+    area: calc1
+    cluster: apply
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.first_second_derivative_tests, cs.calc1.strategy_optimization_steps]
+    replay: calc1.apply.max_where_slope_zero
+    math_locale_sensitive: false
+  - id: cs.calc1.derivative_as_rate_units
+    node: calc1.deriv.rate_as_slope_limit
+    area: calc1
+    cluster: deriv
+    kind: property
+    display: {form: statement, scene: grid_scene_zoom_curve_looks_straight}
+    unlocked_at: symbolic
+    related: [cs.calc1.derivative_definition_limit, cs.calc1.position_velocity_acceleration]
+    replay: calc1.deriv.rate_as_slope_limit
+    math_locale_sensitive: false
+  - id: cs.calc1.derivative_definition_limit
+    node: calc1.deriv.rate_as_slope_limit
+    area: calc1
+    cluster: deriv
+    kind: definition
+    display: {form: expression, scene: slope_scene_secants_collapse_to_tangent}
+    unlocked_at: symbolic
+    related: [cs.calc1.derivative_notations, cs.calc1.derivative_as_rate_units]
+    replay: calc1.deriv.rate_as_slope_limit
+    math_locale_sensitive: false
+  - id: cs.calc1.derivative_notations
+    node: calc1.deriv.rate_as_slope_limit
+    area: calc1
+    cluster: deriv
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.derivative_definition_limit]
+    replay: calc1.deriv.rate_as_slope_limit
+    math_locale_sensitive: false
+  - id: cs.calc1.derivatives_of_basic_functions
+    node: calc1.deriv.rules_as_structure
+    area: calc1
+    cluster: deriv
+    kind: constant
+    display: {form: expression, scene: pipe_scene_rules_as_pipeline}
+    unlocked_at: symbolic
+    related: [cs.calc1.antiderivative_table, cs.calc1.power_rule]
+    replay: calc1.deriv.rules_as_structure
+    math_locale_sensitive: false
+  - id: cs.calc1.differential_dy
+    node: calc1.apply.linearization_tangent_approx
+    area: calc1
+    cluster: apply
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.linear_approximation]
+    replay: calc1.apply.linearization_tangent_approx
+    math_locale_sensitive: false
+  - id: cs.calc1.discontinuity_types
+    node: calc1.lim.continuous_or_not
+    area: calc1
+    cluster: lim
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.continuity_three_conditions]
+    replay: calc1.lim.continuous_or_not
+    math_locale_sensitive: false
+  - id: cs.calc1.epsilon_delta_definition
+    node: calc1.lim.epsilon_delta_tolerance
+    area: calc1
+    cluster: lim
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.strategy_find_delta_from_epsilon]
+    replay: calc1.lim.epsilon_delta_tolerance
+    math_locale_sensitive: false
+  - id: cs.calc1.first_second_derivative_tests
+    node: calc1.apply.max_where_slope_zero
+    area: calc1
+    cluster: apply
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.critical_points_derivative_zero]
+    replay: calc1.apply.max_where_slope_zero
+    math_locale_sensitive: false
+  - id: cs.calc1.ftc_part_one_accumulation_derivative
+    node: calc1.ftc.integral_undoes_derivative
+    area: calc1
+    cluster: ftc
+    kind: theorem
+    display: {form: expression, scene: fill_scene_accumulation_rate_equals_height}
+    unlocked_at: formal
+    related: [cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a, cs.calc1.strategy_integral_is_a_key]
+    replay: calc1.ftc.integral_undoes_derivative
+    math_locale_sensitive: false
+  - id: cs.calc1.ftc_part_two_evaluate_f_b_minus_f_a
+    node: calc1.ftc.integral_undoes_derivative
+    area: calc1
+    cluster: ftc
+    kind: theorem
+    display: {form: expression, scene: chest_scene_integral_key_opens_derivative}
+    unlocked_at: formal
+    related: [cs.calc1.ftc_part_one_accumulation_derivative]
+    replay: calc1.ftc.integral_undoes_derivative
+    math_locale_sensitive: false
+  - id: cs.calc1.implicit_differentiation
+    node: calc1.deriv.implicit_as_constraint
+    area: calc1
+    cluster: deriv
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.strategy_treat_y_as_y_of_x]
+    replay: calc1.deriv.implicit_as_constraint
+    math_locale_sensitive: false
+  - id: cs.calc1.integral_linearity
+    node: calc1.int.split_and_scale_properties
+    area: calc1
+    cluster: int
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.integral_split_interval_reverse_bounds]
+    replay: calc1.int.split_and_scale_properties
+    math_locale_sensitive: false
+  - id: cs.calc1.integral_notation_meaning
+    node: calc1.int.accumulation
+    area: calc1
+    cluster: int
+    kind: notation
+    display: {form: expression, scene: fill_scene_rectangles_under_curve}
+    unlocked_at: symbolic
+    related: [cs.calc1.riemann_sum_notation, cs.calc1.integral_units_rate_times_time]
+    replay: calc1.int.accumulation
+    math_locale_sensitive: false
+  - id: cs.calc1.integral_split_interval_reverse_bounds
+    node: calc1.int.split_and_scale_properties
+    area: calc1
+    cluster: int
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.integral_linearity]
+    replay: calc1.int.split_and_scale_properties
+    math_locale_sensitive: false
+  - id: cs.calc1.integral_units_rate_times_time
+    node: calc1.int.accumulation
+    area: calc1
+    cluster: int
+    kind: property
+    display: {form: statement, scene: tile_scene_riemann_refine}
+    unlocked_at: symbolic
+    related: [cs.calc1.integral_notation_meaning]
+    replay: calc1.int.accumulation
+    math_locale_sensitive: false
+  - id: cs.calc1.intermediate_value_theorem
+    node: calc1.lim.continuous_or_not
+    area: calc1
+    cluster: lim
+    kind: theorem
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.continuity_three_conditions]
+    replay: calc1.lim.continuous_or_not
+    math_locale_sensitive: false
+  - id: cs.calc1.left_right_midpoint_trapezoid
+    node: calc1.int.riemann_refines_to_limit
+    area: calc1
+    cluster: int
+    kind: procedure
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.riemann_limit_definition]
+    replay: calc1.int.riemann_refines_to_limit
+    math_locale_sensitive: false
+  - id: cs.calc1.limit_exists_iff_sides_agree
+    node: calc1.lim.one_sided_and_jump
+    area: calc1
+    cluster: lim
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.one_sided_limits_notation]
+    replay: calc1.lim.one_sided_and_jump
+    math_locale_sensitive: false
+  - id: cs.calc1.linear_approximation
+    node: calc1.apply.linearization_tangent_approx
+    area: calc1
+    cluster: apply
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.differential_dy]
+    replay: calc1.apply.linearization_tangent_approx
+    math_locale_sensitive: false
+  - id: cs.calc1.newton_iteration_formula
+    node: calc1.apply.newton_tangent_root
+    area: calc1
+    cluster: apply
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.newton_when_it_fails]
+    replay: calc1.apply.newton_tangent_root
+    math_locale_sensitive: false
+  - id: cs.calc1.newton_when_it_fails
+    node: calc1.apply.newton_tangent_root
+    area: calc1
+    cluster: apply
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.newton_iteration_formula]
+    replay: calc1.apply.newton_tangent_root
+    math_locale_sensitive: false
+  - id: cs.calc1.one_sided_limits_notation
+    node: calc1.lim.one_sided_and_jump
+    area: calc1
+    cluster: lim
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.limit_exists_iff_sides_agree]
+    replay: calc1.lim.one_sided_and_jump
+    math_locale_sensitive: false
+  - id: cs.calc1.plus_c_family_of_curves
+    node: calc1.ftc.antiderivative_family
+    area: calc1
+    cluster: ftc
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.antiderivative_table]
+    replay: calc1.ftc.antiderivative_family
+    math_locale_sensitive: false
+  - id: cs.calc1.position_velocity_acceleration
+    node: calc1.apply.motion_position_velocity_accel
+    area: calc1
+    cluster: apply
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.speed_vs_velocity_sign, cs.calc1.derivative_as_rate_units]
+    replay: calc1.apply.motion_position_velocity_accel
+    math_locale_sensitive: false
+  - id: cs.calc1.power_rule
+    node: calc1.deriv.rules_as_structure
+    area: calc1
+    cluster: deriv
+    kind: identity
+    display: {form: expression, scene: tile_scene_growing_square_power_rule}
+    unlocked_at: symbolic
+    related: [cs.calc1.derivatives_of_basic_functions, cs.calc1.sum_and_constant_multiple_rules]
+    replay: calc1.deriv.rules_as_structure
+    math_locale_sensitive: false
+  - id: cs.calc1.product_rule
+    node: calc1.deriv.product_as_growing_rectangle
+    area: calc1
+    cluster: deriv
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.quotient_rule]
+    replay: calc1.deriv.product_as_growing_rectangle
+    math_locale_sensitive: false
+  - id: cs.calc1.quotient_rule
+    node: calc1.deriv.quotient_from_product
+    area: calc1
+    cluster: deriv
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.product_rule, cs.calc1.strategy_quotient_as_product_with_negative_power]
+    replay: calc1.deriv.quotient_from_product
+    math_locale_sensitive: false
+  - id: cs.calc1.riemann_limit_definition
+    node: calc1.int.riemann_refines_to_limit
+    area: calc1
+    cluster: int
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.left_right_midpoint_trapezoid]
+    replay: calc1.int.riemann_refines_to_limit
+    math_locale_sensitive: false
+  - id: cs.calc1.riemann_sum_notation
+    node: calc1.int.accumulation
+    area: calc1
+    cluster: int
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.integral_notation_meaning]
+    replay: calc1.int.accumulation
+    math_locale_sensitive: false
+  - id: cs.calc1.signed_area_negative_below
+    node: calc1.int.signed_area_below_axis
+    area: calc1
+    cluster: int
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.strategy_split_at_zeros_for_total_area]
+    replay: calc1.int.signed_area_below_axis
+    math_locale_sensitive: false
+  - id: cs.calc1.speed_vs_velocity_sign
+    node: calc1.apply.motion_position_velocity_accel
+    area: calc1
+    cluster: apply
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.position_velocity_acceleration]
+    replay: calc1.apply.motion_position_velocity_accel
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_factor_and_cancel
+    node: calc1.lim.zero_over_zero_cancel
+    area: calc1
+    cluster: lim
+    kind: strategy
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.strategy_rationalize_conjugate]
+    replay: calc1.lim.zero_over_zero_cancel
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_find_delta_from_epsilon
+    node: calc1.lim.epsilon_delta_tolerance
+    area: calc1
+    cluster: lim
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.epsilon_delta_definition]
+    replay: calc1.lim.epsilon_delta_tolerance
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_guess_and_check_derivative
+    node: calc1.ftc.antiderivative_family
+    area: calc1
+    cluster: ftc
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.plus_c_family_of_curves]
+    replay: calc1.ftc.antiderivative_family
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_integral_is_a_key
+    node: calc1.ftc.integral_undoes_derivative
+    area: calc1
+    cluster: ftc
+    kind: strategy
+    display: {form: figure, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.ftc_part_one_accumulation_derivative]
+    replay: calc1.ftc.integral_undoes_derivative
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_optimization_steps
+    node: calc1.apply.max_where_slope_zero
+    area: calc1
+    cluster: apply
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.critical_points_derivative_zero]
+    replay: calc1.apply.max_where_slope_zero
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_outer_inner_layers
+    node: calc1.deriv.chain_as_gears
+    area: calc1
+    cluster: deriv
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.chain_rule]
+    replay: calc1.deriv.chain_as_gears
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_point_slope_from_derivative
+    node: calc1.deriv.tangent_line
+    area: calc1
+    cluster: deriv
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.tangent_line_equation]
+    replay: calc1.deriv.tangent_line
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_quotient_as_product_with_negative_power
+    node: calc1.deriv.quotient_from_product
+    area: calc1
+    cluster: deriv
+    kind: strategy
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.quotient_rule]
+    replay: calc1.deriv.quotient_from_product
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_rationalize_conjugate
+    node: calc1.lim.zero_over_zero_cancel
+    area: calc1
+    cluster: lim
+    kind: strategy
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.strategy_factor_and_cancel]
+    replay: calc1.lim.zero_over_zero_cancel
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_related_rates_steps
+    node: calc1.apply.related_rates_chain
+    area: calc1
+    cluster: apply
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: []
+    replay: calc1.apply.related_rates_chain
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_rewrite_before_differentiating
+    node: calc1.deriv.rules_as_structure
+    area: calc1
+    cluster: deriv
+    kind: strategy
+    display: {form: expression, scene: pipe_scene_rules_as_pipeline}
+    unlocked_at: formal
+    related: [cs.calc1.sum_and_constant_multiple_rules]
+    replay: calc1.deriv.rules_as_structure
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_split_at_zeros_for_total_area
+    node: calc1.int.signed_area_below_axis
+    area: calc1
+    cluster: int
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.signed_area_negative_below]
+    replay: calc1.int.signed_area_below_axis
+    math_locale_sensitive: false
+  - id: cs.calc1.strategy_treat_y_as_y_of_x
+    node: calc1.deriv.implicit_as_constraint
+    area: calc1
+    cluster: deriv
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.calc1.implicit_differentiation]
+    replay: calc1.deriv.implicit_as_constraint
+    math_locale_sensitive: false
+  - id: cs.calc1.sum_and_constant_multiple_rules
+    node: calc1.deriv.rules_as_structure
+    area: calc1
+    cluster: deriv
+    kind: property
+    display: {form: expression, scene: tile_scene_growing_square_power_rule}
+    unlocked_at: symbolic
+    related: [cs.calc1.power_rule, cs.calc1.derivatives_of_basic_functions]
+    replay: calc1.deriv.rules_as_structure
+    math_locale_sensitive: false
+  - id: cs.calc1.tangent_line_equation
+    node: calc1.deriv.tangent_line
+    area: calc1
+    cluster: deriv
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.calc1.strategy_point_slope_from_derivative]
+    replay: calc1.deriv.tangent_line
+    math_locale_sensitive: false
+
+  # ---- alg ---------------------------------------------------------
+  - id: cs.alg.abs_as_distance_from_zero
+    node: alg.abs.distance_two_branches
+    area: alg
+    cluster: abs
+    kind: definition
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.abs_equation_two_cases]
+    replay: alg.abs.distance_two_branches
+    math_locale_sensitive: false
+  - id: cs.alg.abs_equation_two_cases
+    node: alg.abs.distance_two_branches
+    area: alg
+    cluster: abs
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.abs_as_distance_from_zero]
+    replay: alg.abs.distance_two_branches
+    math_locale_sensitive: false
+  - id: cs.alg.add_polynomials_by_degree
+    node: alg.poly.coefficients_as_counts
+    area: alg
+    cluster: poly
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.polynomial_degree_and_terms]
+    replay: alg.poly.coefficients_as_counts
+    math_locale_sensitive: false
+  - id: cs.alg.area_model_of_product
+    node: alg.expr.distributive_tiles
+    area: alg
+    cluster: expr
+    kind: figure
+    display: {form: figure, scene: tile_two_rooms_one_width}
+    unlocked_at: symbolic
+    related: [cs.alg.distributive_law]
+    replay: alg.expr.distributive_tiles
+    math_locale_sensitive: false
+  - id: cs.alg.binomial_product_four_tiles
+    node: alg.expr.binomial_product
+    area: alg
+    cluster: expr
+    kind: figure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.square_of_a_sum, cs.alg.difference_of_squares]
+    replay: alg.expr.binomial_product
+    math_locale_sensitive: false
+  - id: cs.alg.cancel_common_factor_only
+    node: alg.rat.division_by_zero_hole
+    area: alg
+    cluster: rat
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.rational_domain_excludes_zero_denominator]
+    replay: alg.rat.division_by_zero_hole
+    math_locale_sensitive: false
+  - id: cs.alg.change_of_base
+    node: alg.pow.log_rules_from_stack
+    area: alg
+    cluster: pow
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.log_rules_mirror_exponent_rules]
+    replay: alg.pow.log_rules_from_stack
+    math_locale_sensitive: false
+  - id: cs.alg.check_by_substituting
+    node: alg.eq.one_step
+    area: alg
+    cluster: eq
+    kind: procedure
+    display: {form: figure, scene: balance_key_both_sides}
+    unlocked_at: symbolic
+    related: [cs.alg.one_key_both_sides]
+    replay: alg.eq.one_step
+    math_locale_sensitive: false
+  - id: cs.alg.collect_boxes_on_one_side
+    node: alg.eq.variable_both_sides
+    area: alg
+    cluster: eq
+    kind: procedure
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.one_key_both_sides]
+    replay: alg.eq.variable_both_sides
+    math_locale_sensitive: false
+  - id: cs.alg.complete_square_recipe
+    node: alg.expr.complete_square
+    area: alg
+    cluster: expr
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.vertex_from_completed_square, cs.alg.quadratic_formula]
+    replay: alg.expr.complete_square
+    math_locale_sensitive: false
+  - id: cs.alg.compose_inner_first
+    node: alg.fn.composition
+    area: alg
+    cluster: fn
+    kind: procedure
+    display: {form: figure, scene: pipe_chain_two_machines}
+    unlocked_at: symbolic
+    related: [cs.alg.composition_order_matters]
+    replay: alg.fn.composition
+    math_locale_sensitive: false
+  - id: cs.alg.composition_order_matters
+    node: alg.fn.composition
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: gear_train_composed_ratio}
+    unlocked_at: formal
+    related: [cs.alg.compose_inner_first]
+    replay: alg.fn.composition
+    math_locale_sensitive: false
+  - id: cs.alg.delta_means_change
+    node: alg.fn.linear_slope
+    area: alg
+    cluster: fn
+    kind: notation
+    display: {form: expression, scene: slope_intercept_is_start_height}
+    unlocked_at: symbolic
+    related: [cs.alg.slope_rise_over_run]
+    replay: alg.fn.linear_slope
+    math_locale_sensitive: false
+  - id: cs.alg.difference_of_squares
+    node: alg.expr.binomial_product
+    area: alg
+    cluster: expr
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.binomial_product_four_tiles, cs.alg.square_of_a_sum]
+    replay: alg.expr.binomial_product
+    math_locale_sensitive: false
+  - id: cs.alg.distributive_law
+    node: alg.expr.distributive_tiles
+    area: alg
+    cluster: expr
+    kind: property
+    display: {form: expression, scene: ledger_a_times_sum}
+    unlocked_at: symbolic
+    related: [cs.alg.area_model_of_product]
+    replay: alg.expr.distributive_tiles
+    math_locale_sensitive: false
+  - id: cs.alg.domain_inputs_range_outputs
+    node: alg.fn.domain_range
+    area: alg
+    cluster: fn
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.one_input_one_output]
+    replay: alg.fn.domain_range
+    math_locale_sensitive: false
+  - id: cs.alg.elimination_method
+    node: alg.sys.two_by_two
+    area: alg
+    cluster: sys
+    kind: procedure
+    display: {form: figure, scene: balance_two_scales_shared_boxes}
+    unlocked_at: symbolic
+    related: [cs.alg.substitution_method]
+    replay: alg.sys.two_by_two
+    math_locale_sensitive: false
+  - id: cs.alg.exponential_multiplies_each_step
+    node: alg.fn.exponential_growth
+    area: alg
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: gear_doubling_track}
+    unlocked_at: symbolic
+    related: [cs.alg.linear_adds_exponential_multiplies, cs.alg.fractional_base_decays]
+    replay: alg.fn.exponential_growth
+    math_locale_sensitive: false
+  - id: cs.alg.factor_out_shared_side
+    node: alg.expr.factor_common
+    area: alg
+    cluster: expr
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.distributive_law]
+    replay: alg.expr.factor_common
+    math_locale_sensitive: false
+  - id: cs.alg.factor_trinomial_find_pair
+    node: alg.expr.factor_trinomial
+    area: alg
+    cluster: expr
+    kind: strategy
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.zero_product_rule]
+    replay: alg.expr.factor_trinomial
+    math_locale_sensitive: false
+  - id: cs.alg.fractional_base_decays
+    node: alg.fn.exponential_growth
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: slope_linear_vs_exponential_race}
+    unlocked_at: symbolic
+    related: [cs.alg.exponential_multiplies_each_step]
+    replay: alg.fn.exponential_growth
+    math_locale_sensitive: false
+  - id: cs.alg.function_notation_f_of_x
+    node: alg.fn.function_as_machine
+    area: alg
+    cluster: fn
+    kind: notation
+    display: {form: figure, scene: pipe_machine_named_f}
+    unlocked_at: symbolic
+    related: [cs.alg.one_input_one_output]
+    replay: alg.fn.function_as_machine
+    math_locale_sensitive: false
+  - id: cs.alg.inequality_same_key_both_sides
+    node: alg.ineq.inequality_tilts
+    area: alg
+    cluster: ineq
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.negative_factor_flips_tilt]
+    replay: alg.ineq.inequality_tilts
+    math_locale_sensitive: false
+  - id: cs.alg.inverse_needs_one_to_one
+    node: alg.fn.inverse_function
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.inverse_undoes_f, cs.alg.vertical_line_test]
+    replay: alg.fn.inverse_function
+    math_locale_sensitive: false
+  - id: cs.alg.inverse_reflects_over_diagonal
+    node: alg.fn.inverse_function
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: slope_reflect_graph_over_diagonal}
+    unlocked_at: symbolic
+    related: [cs.alg.inverse_undoes_f]
+    replay: alg.fn.inverse_function
+    math_locale_sensitive: false
+  - id: cs.alg.inverse_undoes_f
+    node: alg.fn.inverse_function
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: pipe_run_machine_backwards}
+    unlocked_at: symbolic
+    related: [cs.alg.inverse_needs_one_to_one, cs.alg.inverse_reflects_over_diagonal]
+    replay: alg.fn.inverse_function
+    math_locale_sensitive: false
+  - id: cs.alg.linear_adds_exponential_multiplies
+    node: alg.fn.exponential_growth
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.exponential_multiplies_each_step, cs.alg.start_value_plus_rate_times_steps]
+    replay: alg.fn.exponential_growth
+    math_locale_sensitive: false
+  - id: cs.alg.log_counts_scalings
+    node: alg.fn.logarithm
+    area: alg
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: chest_log_key_counts_turns}
+    unlocked_at: symbolic
+    related: [cs.alg.log_undoes_exponential]
+    replay: alg.fn.logarithm
+    math_locale_sensitive: false
+  - id: cs.alg.log_of_product_is_sum
+    node: alg.fn.logarithm
+    area: alg
+    cluster: fn
+    kind: identity
+    display: {form: expression, scene: gear_track_read_backwards}
+    unlocked_at: formal
+    related: [cs.alg.log_rules_mirror_exponent_rules]
+    replay: alg.fn.logarithm
+    math_locale_sensitive: false
+  - id: cs.alg.log_rules_mirror_exponent_rules
+    node: alg.pow.log_rules_from_stack
+    area: alg
+    cluster: pow
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.log_of_product_is_sum, cs.alg.change_of_base]
+    replay: alg.pow.log_rules_from_stack
+    math_locale_sensitive: false
+  - id: cs.alg.log_undoes_exponential
+    node: alg.fn.logarithm
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.log_counts_scalings]
+    replay: alg.fn.logarithm
+    math_locale_sensitive: false
+  - id: cs.alg.negative_factor_flips_tilt
+    node: alg.ineq.inequality_tilts
+    area: alg
+    cluster: ineq
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.inequality_same_key_both_sides]
+    replay: alg.ineq.inequality_tilts
+    math_locale_sensitive: false
+  - id: cs.alg.one_input_one_output
+    node: alg.fn.function_as_machine
+    area: alg
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: network_each_input_one_arrow}
+    unlocked_at: symbolic
+    related: [cs.alg.function_notation_f_of_x, cs.alg.domain_inputs_range_outputs]
+    replay: alg.fn.function_as_machine
+    math_locale_sensitive: false
+  - id: cs.alg.one_key_both_sides
+    node: alg.eq.one_step
+    area: alg
+    cluster: eq
+    kind: property
+    display: {form: figure, scene: chest_pick_key_for_lock}
+    unlocked_at: symbolic
+    related: [cs.alg.check_by_substituting, cs.alg.collect_boxes_on_one_side]
+    replay: alg.eq.one_step
+    math_locale_sensitive: false
+  - id: cs.alg.parabola_from_square_tile
+    node: alg.fn.quadratic_and_sqrt
+    area: alg
+    cluster: fn
+    kind: figure
+    display: {form: figure, scene: tile_square_from_area}
+    unlocked_at: symbolic
+    related: [cs.alg.sqrt_two_branches]
+    replay: alg.fn.quadratic_and_sqrt
+    math_locale_sensitive: false
+  - id: cs.alg.point_is_input_output_pair
+    node: alg.fn.graph_as_picture
+    area: alg
+    cluster: fn
+    kind: definition
+    display: {form: figure, scene: grid_four_quadrants_with_signs}
+    unlocked_at: symbolic
+    related: [cs.alg.vertical_line_test]
+    replay: alg.fn.graph_as_picture
+    math_locale_sensitive: false
+  - id: cs.alg.polynomial_degree_and_terms
+    node: alg.poly.coefficients_as_counts
+    area: alg
+    cluster: poly
+    kind: definition
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.add_polynomials_by_degree]
+    replay: alg.poly.coefficients_as_counts
+    math_locale_sensitive: false
+  - id: cs.alg.power_multiplies_exponents
+    node: alg.pow.same_base_stack
+    area: alg
+    cluster: pow
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.product_adds_exponents]
+    replay: alg.pow.same_base_stack
+    math_locale_sensitive: false
+  - id: cs.alg.product_adds_exponents
+    node: alg.pow.same_base_stack
+    area: alg
+    cluster: pow
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.power_multiplies_exponents, cs.alg.zero_and_negative_exponent]
+    replay: alg.pow.same_base_stack
+    math_locale_sensitive: false
+  - id: cs.alg.quadratic_formula
+    node: alg.eq.quadratic_roots
+    area: alg
+    cluster: eq
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.complete_square_recipe, cs.alg.zero_product_rule]
+    replay: alg.eq.quadratic_roots
+    math_locale_sensitive: false
+  - id: cs.alg.rational_domain_excludes_zero_denominator
+    node: alg.rat.division_by_zero_hole
+    area: alg
+    cluster: rat
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.cancel_common_factor_only]
+    replay: alg.rat.division_by_zero_hole
+    math_locale_sensitive: false
+  - id: cs.alg.root_is_fractional_exponent
+    node: alg.rad.root_as_fractional_power
+    area: alg
+    cluster: rad
+    kind: notation
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.simplify_radicals_by_squares]
+    replay: alg.rad.root_as_fractional_power
+    math_locale_sensitive: false
+  - id: cs.alg.shade_the_half_plane
+    node: alg.ineq.inequality_as_region
+    area: alg
+    cluster: ineq
+    kind: procedure
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: []
+    replay: alg.ineq.inequality_as_region
+    math_locale_sensitive: false
+  - id: cs.alg.simplify_radicals_by_squares
+    node: alg.rad.root_as_fractional_power
+    area: alg
+    cluster: rad
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.root_is_fractional_exponent]
+    replay: alg.rad.root_as_fractional_power
+    math_locale_sensitive: false
+  - id: cs.alg.slope_rise_over_run
+    node: alg.fn.linear_slope
+    area: alg
+    cluster: fn
+    kind: definition
+    display: {form: expression, scene: slope_same_steepness_any_step}
+    unlocked_at: symbolic
+    related: [cs.alg.delta_means_change, cs.alg.y_equals_mx_plus_b]
+    replay: alg.fn.linear_slope
+    math_locale_sensitive: false
+  - id: cs.alg.solution_is_crossing_point
+    node: alg.sys.lines_intersect
+    area: alg
+    cluster: sys
+    kind: definition
+    display: {form: figure, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.zero_or_infinite_solutions]
+    replay: alg.sys.lines_intersect
+    math_locale_sensitive: false
+  - id: cs.alg.solving_steps_checklist
+    node: alg.eq.multi_step
+    area: alg
+    cluster: eq
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.unwrap_outermost_first]
+    replay: alg.eq.multi_step
+    math_locale_sensitive: false
+  - id: cs.alg.sqrt_two_branches
+    node: alg.fn.quadratic_and_sqrt
+    area: alg
+    cluster: fn
+    kind: property
+    display: {form: figure, scene: chest_one_key_two_chests}
+    unlocked_at: formal
+    related: [cs.alg.parabola_from_square_tile]
+    replay: alg.fn.quadratic_and_sqrt
+    math_locale_sensitive: false
+  - id: cs.alg.square_of_a_sum
+    node: alg.expr.binomial_product
+    area: alg
+    cluster: expr
+    kind: identity
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.binomial_product_four_tiles, cs.alg.difference_of_squares]
+    replay: alg.expr.binomial_product
+    math_locale_sensitive: false
+  - id: cs.alg.start_value_plus_rate_times_steps
+    node: alg.fn.word_to_linear
+    area: alg
+    cluster: fn
+    kind: procedure
+    display: {form: expression, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.y_equals_mx_plus_b]
+    replay: alg.fn.word_to_linear
+    math_locale_sensitive: false
+  - id: cs.alg.substitution_method
+    node: alg.sys.two_by_two
+    area: alg
+    cluster: sys
+    kind: procedure
+    display: {form: figure, scene: grid_two_lines_cross}
+    unlocked_at: symbolic
+    related: [cs.alg.elimination_method]
+    replay: alg.sys.two_by_two
+    math_locale_sensitive: false
+  - id: cs.alg.unwrap_outermost_first
+    node: alg.eq.multi_step
+    area: alg
+    cluster: eq
+    kind: property
+    display: {form: figure, scene: chest_unwrap_outer_to_inner}
+    unlocked_at: symbolic
+    related: [cs.alg.solving_steps_checklist]
+    replay: alg.eq.multi_step
+    math_locale_sensitive: false
+  - id: cs.alg.vertex_from_completed_square
+    node: alg.expr.complete_square
+    area: alg
+    cluster: expr
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.complete_square_recipe]
+    replay: alg.expr.complete_square
+    math_locale_sensitive: false
+  - id: cs.alg.vertical_line_test
+    node: alg.fn.graph_as_picture
+    area: alg
+    cluster: fn
+    kind: procedure
+    display: {form: figure, scene: slope_walker_leaves_trace}
+    unlocked_at: symbolic
+    related: [cs.alg.point_is_input_output_pair, cs.alg.inverse_needs_one_to_one]
+    replay: alg.fn.graph_as_picture
+    math_locale_sensitive: false
+  - id: cs.alg.words_to_symbols_table
+    node: alg.eq.word_to_equation
+    area: alg
+    cluster: eq
+    kind: strategy
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: []
+    replay: alg.eq.word_to_equation
+    math_locale_sensitive: false
+  - id: cs.alg.y_equals_mx_plus_b
+    node: alg.fn.linear_slope
+    area: alg
+    cluster: fn
+    kind: notation
+    display: {form: expression, scene: slope_intercept_is_start_height}
+    unlocked_at: symbolic
+    related: [cs.alg.slope_rise_over_run, cs.alg.start_value_plus_rate_times_steps]
+    replay: alg.fn.linear_slope
+    math_locale_sensitive: false
+  - id: cs.alg.zero_and_negative_exponent
+    node: alg.pow.same_base_stack
+    area: alg
+    cluster: pow
+    kind: property
+    display: {form: expression, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.product_adds_exponents]
+    replay: alg.pow.same_base_stack
+    math_locale_sensitive: false
+  - id: cs.alg.zero_or_infinite_solutions
+    node: alg.sys.parallel_or_same_line
+    area: alg
+    cluster: sys
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: formal
+    related: [cs.alg.solution_is_crossing_point]
+    replay: alg.sys.parallel_or_same_line
+    math_locale_sensitive: false
+  - id: cs.alg.zero_product_rule
+    node: alg.eq.quadratic_roots
+    area: alg
+    cluster: eq
+    kind: property
+    display: {form: statement, scene: null}
+    unlocked_at: symbolic
+    related: [cs.alg.factor_trinomial_find_pair, cs.alg.quadratic_formula]
+    replay: alg.eq.quadratic_roots
+    math_locale_sensitive: false
