@@ -142,7 +142,7 @@ La placa de regla separada del cuerpo de la máquina es deliberada: evita la ana
 
 ### ledger → `fruit_ledger`
 
-Nodos: `arith.add.displacement`, `arith.sub.undo_add`, `prealg.var.unknown_as_box`, `alg.eq.one_step`, `alg.expr.like_terms`.
+Nodos: `arith.add.displacement`, `arith.sub.undo_add`, `prealg.var.unknown_as_box`, `alg.eq.one_step`, `prealg.expr.like_terms`.
 
 Mapa: tipo de fruta → unidad o variable; montón de un tipo → término; juntar montones → suma; sacar fruta → resta; cuenco tapado → incógnita; solo se juntan frutas iguales → términos semejantes; tarjeta con número junto al montón → coeficiente.
 
@@ -182,7 +182,7 @@ El teorema fundamental aparece como sorpresa: el jugador que ya sabe que el medi
 
 ### grid_stretch → `rubber_grid_with_house`
 
-Nodos: `linalg.map.linear_transformation_2d`, `linalg.mat.matrix_columns`.
+Nodos: `linalg.map.linear_transformation_2d`.
 
 Mapa: lámina elástica → plano; casa dibujada → figura a transformar; estirar parejo → aplicación lineal; líneas que siguen rectas y equiespaciadas → linealidad; dónde caen los dos clavos unitarios → columnas de la matriz; clavo en el centro → origen fijo; estirar y volver a estirar → producto de matrices.
 
@@ -192,7 +192,7 @@ Su continuación `rubber_grid_undo_stretch` aporta el punto de ruptura más did�
 
 ### network_routes → `city_routes`
 
-Nodos: `graph.basic.graph_and_paths`, `graph.path.shortest`, `graph.conn.components`.
+Nodos: `graph.basic.graph_and_paths`, `graph.path.shortest_path`, `graph.conn.components`.
 
 Mapa: lugar → vértice; camino → arista; viaje → camino en el grafo; largo del camino → peso; isla sin puente → componente desconexa; viaje que vuelve → ciclo; viaje más barato → camino mínimo.
 
@@ -212,7 +212,7 @@ La proporción, no la frecuencia, es lo que se mapea a probabilidad. Ver la anal
 
 ### gears_sequence → `paper_folding_doubles`
 
-Nodos: `alg.fn.exponential_growth`, `alg.fn.logarithm`, `calc2.seq.geometric`.
+Nodos: `alg.fn.exponential_growth`, `alg.fn.logarithm`, `calc2.ser.geometric_sum`.
 
 Mapa: hoja → valor inicial; un doblez → multiplicar por dos; cantidad de dobleces → exponente; capas → `2ⁿ`; contar dobleces para llegar a un grosor → logaritmo en base 2; desdoblar una vez → dividir por dos.
 

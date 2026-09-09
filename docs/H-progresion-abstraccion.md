@@ -218,8 +218,8 @@ La tabla registra la historia de los símbolos principales. La columna de nodo u
 | Vector (flecha) | Describir un desplazamiento que tiene dirección, no solo tamaño | `visual` | Una flecha en la grilla | `linalg.vec.vector_as_displacement` |
 | Matriz A | Escribir una deformación del espacio anotando solo dónde van los vectores de la base | `symbolic` | La grilla deformada con las dos flechas de base resaltadas | `linalg.map.linear_transformation_2d` |
 | A⁻¹ | Nombrar la deformación que devuelve la grilla a su estado original | `symbolic` | La deformación reproducida al revés | `linalg.map.inverse_and_systems` |
-| det | Medir cuánto cambió el área de la grilla, y cuándo se aplastó a cero | `visual` | El paralelogramo en que se convierte el cuadrado unidad | `linalg.map.determinant_as_area_factor` |
-| ∇ | Indicar en qué dirección sube más rápido una superficie | `visual` | Una flecha sobre un terreno con curvas de nivel | `mvcalc.deriv.gradient_as_steepest_ascent` |
+| det | Medir cuánto cambió el área de la grilla, y cuándo se aplastó a cero | `visual` | El paralelogramo en que se convierte el cuadrado unidad | `linalg.map.determinant_as_area` |
+| ∇ | Indicar en qué dirección sube más rápido una superficie | `visual` | Una flecha sobre un terreno con curvas de nivel | `mvcalc.grad.terrain_walker` |
 | P(A) | Escribir qué fracción del blanco corresponde a un resultado | `symbolic` | La urna con bolas de colores; el blanco con regiones | `prob.basic.probability_as_proportion` |
 | P(A\|B) | Escribir la fracción cuando solo se mira una parte del blanco | `symbolic` | El blanco recortado a la región B | `prob.cond.conditional_and_independence` |
 | E[X] | Resumir un juego de azar con un número que diga cuánto se gana en promedio | `symbolic` | Un ledger de resultados con sus frecuencias | `prob.rv.expectation_as_weighted_average` |

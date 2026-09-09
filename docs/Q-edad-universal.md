@@ -130,7 +130,7 @@ El verbo más delicado es `explain`, porque en un formato escolar se responde co
 - `manipulate`: arrastrar pesas iguales fuera de ambos platos hasta dejar la caja sola.
 - `apply`: una situación dibujada (una bolsa cerrada y tres frutas sueltas pesan lo mismo que ocho frutas); armar la balanza y resolverla.
 - `generalize`: la balanza ahora tiene dos cajas iguales en un plato; descubrir qué pesa cada una.
-- `transfer`: en `disc.mod.congruence_both_sides`, una balanza que solo mira el resto; comprobar que quitar lo mismo de ambos lados conserva la igualdad.
+- `transfer`: en `disc.mod.clock_equivalence`, una balanza que solo mira el resto; comprobar que quitar lo mismo de ambos lados conserva la igualdad.
 
 **Nivel 5: `calc1.deriv.rate_as_slope_limit`** (mecánica `slope_walker`, `literacy: short_text`). Un caminante sobre una colina.
 
