@@ -115,7 +115,7 @@ Los distractores de `explain` y las opciones de `apply` se generan desde las reg
 
 - `gen_composite_figure`: `shape` en {trapezoid, l_shape, triangle_on_rectangle, quadrilateral_with_two_right_angles, frustum_section}; `piece_count` (2 en los niveles 2 a 5, 3 desde el 6); `side_range` (enteros de 3 a 15 hasta el nivel 5, hasta 40 después); `triples` para las ternas pitagóricas disponibles; `hidden_side`; `altitude_falls` en {inside, outside}; `seed`.
 - `gen_candidate_lines`: `count` (3 a 5 candidatas); `useful` (cuántas revelan un dato, 1 hasta el nivel 6 y 2 después); distractores desde `detect` (la diagonal que no parte nada, la paralela que no toca lo que falta, la altura desde el vértice equivocado).
-- `gen_marked_figure`: figuras con marcas ya puestas, algunas derivadas y una falsa por instancia, para el trabajo de justificar del nivel 8.
+- `gen_marked_figure`: `marks` (las marcas ya puestas sobre la figura); `derived` (cuántas de ellas se deducen de las demás); `include_false_mark` (habilita la marca falsa, una por instancia); `seed`. Alimenta el trabajo de justificar del nivel 8.
 
 **Literacy soportada:** de `short_text` a `full_text`. La capa concreta se juega sin leer (trazar es un gesto y las marcas son formas), pero dos de las cuatro entradas de cheatsheet del nodo son estrategias escritas y el nivel 8 pide justificar, así que el mínimo es `short_text`. La versión sin lectura de esta misma idea son los desafíos de baldosas con datos ocultos de [S0](../S-desafios/S0-desafios.md), que se juegan mucho antes.
 

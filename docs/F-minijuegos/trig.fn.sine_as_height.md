@@ -110,7 +110,7 @@ Los movimientos no equivalentes que el clasificador no atribuye (medir la altura
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 
 - `gen_wheel_angle`: `angle_set` en {upper_half, full_turn, notable_fractions, arbitrary}; `sign` en {positive, both}; `winding` (0 hasta el nivel 6, hasta 3 vueltas en el 7); `radius` (1 salvo en el nivel 7, donde va de 2 a 5); `ask` en {height, shadow, both}; `seed`.
-- `gen_angle_table`: cuántas filas tiene la tabla de entradas y salidas, cuáles vienen llenas y cuáles las llena el jugador; incluye siempre una entrada repetida para que el fantasma aparezca.
+- `gen_angle_table`: `rows` (cuántas filas tiene la tabla de entradas y salidas); `prefilled` (cuáles vienen llenas y cuáles las llena el jugador); `repeated_input` (la entrada repetida que hace aparecer el fantasma, siempre presente); `seed`.
 - `gen_wave_trace`: `turns` (media, una, dos), `direction`, `speed` de la manivela y `overlay` (si se ofrece el rastro del coseno para apoyar encima).
 
 **Literacy soportada:** de `icons` a `full_text`. La primera capa se juega sin leer (girar es arrastrar, medir es apoyar la barra contra el poste, la máquina se opera metiendo fichas), pero desde el segundo nivel el poste muestra números con signo, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.

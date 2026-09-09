@@ -121,7 +121,7 @@ Ninguna lleva texto rasterizado: contadores, fracciones y la barra vertical los 
 - `gen_two_trait_urn`: `trait_a` y `trait_b` con sus cantidades de valores (2 hasta el nivel 6, hasta 3 en el 7); `total_range` (16 a 40); `dependence` (grado de desvío entre la mezcla de la caja y la de la mesa, de cero, que es independencia exacta, a máximo); `seed`.
 - `gen_condition_query`: arma la pregunta; `direction` en {a dado b, b dado a}; `compound` (condición sobre un rasgo o sobre dos); `asks` en {condicional, intersección, independiente o no}.
 - `gen_draw_tree`: `stages` (2); `with_replacement`; `stage_probs` derivadas de la urna; `highlighted_path`; `seed`.
-- `gen_independence_puzzle`: repartos con solución múltiple para el verbo `manipulate`, y el caso de tres eventos independientes de a pares pero no de a tres, reservado al nivel 7.
+- `gen_independence_puzzle`: `n_events` (2 en los repartos con solución múltiple, 3 en el caso reservado al nivel 7); `multiple_solutions` (habilita los repartos con más de una solución, para el verbo `manipulate`); `pairwise_only` (eventos independientes de a pares pero no de a tres, solo en el nivel 7); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. Repartir, elegir caja y sacar se juegan sin leer, y la barra vertical se introduce como objeto gráfico, la franja parada de canto, antes de tener nombre. El mínimo es `icons` porque los contadores de las celdas llevan dígitos y la ficha de fracción tiene numerador y denominador. En `full_text` las tres frases de la definición se muestran escritas además de narradas.
 

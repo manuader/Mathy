@@ -120,7 +120,7 @@ Los distractores se generan desde las reglas `detect` de `negative_times_negativ
 - `gen_signed_track`: `start`; `step`; `crossings`; `range` (3 a cada lado en los niveles 1 a 4, hasta 20 en el 6); `zero_offset` (distinto de cero desde el nivel 7); `seed`.
 - `gen_ledger_board`: `credits`; `debts`; `pair_size` (fichas iguales hasta el nivel 5, mezcladas después); `prefilled_pairs`; `seed`.
 - `gen_floor_pair`: `low`; `high`; `both_below` (desde el nivel 7); `distractors` desde `detect` (el simétrico, el vecino, la suma de los dos valores absolutos); `seed`.
-- `gen_arbitrary_direction`: filas de dibujos con un origen marcado y fichas de dirección sin numerales, con la cantidad de pasos por repetición de un ícono.
+- `gen_arbitrary_direction`: `row_length` (largo de la fila de dibujos); `origin_position` (en qué dibujo de la fila cae el origen marcado); `direction_tokens` (las fichas de dirección, sin numerales); `steps` (la cantidad de pasos, dada por repetición de un ícono); `seed`.
 
 **Literacy soportada:** de `none` a `full_text`. Los niveles 1 a 4 no tienen ningún numeral: los pisos se distinguen por altura y por la luz de garaje, las monedas y los vales por forma, y la dirección por la bandera. Desde el nivel 5 el panel del ascensor muestra numerales y el mínimo real sube a `icons`, que es lo que declaran las dos analogías. En `full_text` la definición corta se muestra escrita además de narrada.
 

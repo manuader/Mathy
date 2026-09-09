@@ -124,7 +124,7 @@ Ninguna lleva texto rasterizado: valores, chances y el corchete de `E[X]` los di
 - `gen_prize_book`: `n_prizes` (2 en el nivel 1, hasta 10 en el 7); `value_range` (0 a 10 hasta el nivel 6, con negativos desde el 7); `prob_shape` en {uniforme, sesgada, muy sesgada}; `prob_format` en {fracción, porcentaje}; `integer_values`; `seed`.
 - `gen_plank_layout`: coloca las marcas del eje; `mark_spacing`; `pivot_on_mark` (falso desde el nivel 4, para que el apoyo caiga entre marcas); `pivot_guess` inicial para los ítems de `recognize`.
 - `gen_long_run`: `n_tickets` (por potencias, de 100 a 5000); `seed`. Alimenta la curva del promedio acumulado.
-- `gen_linear_pair`: dos juegos, con opción de amarrarlos para que no sean independientes, usado en el nivel 8 para la linealidad.
+- `gen_linear_pair`: `games` (siempre dos, cada uno con su libro de premios); `coupled` (amarra los dos juegos para que dejen de ser independientes); `seed`. Se usa en el nivel 8 para la linealidad.
 
 **Literacy soportada:** de `icons` a `full_text`. El gesto central, arrastrar el apoyo hasta que la tabla quede horizontal, se juega sin leer y sin números: es motricidad y equilibrio, y el nivel 1 no muestra dígitos. El mínimo es `icons` porque desde el nivel 2 las marcas del eje llevan dígitos y el libro trae chances escritas como fracciones. En `full_text` las tres frases de la definición se muestran escritas además de narradas.
 

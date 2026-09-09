@@ -113,7 +113,7 @@ Los distractores de `explain` y las opciones de `apply` se generan desde las reg
 
 - `gen_one_step_equation`: `op` en {add, sub, mul, div}; `operand_range` (constante o coeficiente, de 1 a 9 en los niveles 1 a 5, hasta 30 en el 6 y 7); `solution_range` (enteros positivos hasta el nivel 5, negativos desde el 6, fracciones simples desde el 7); `allow_negative_constant`; `unknown_side` en {left, right}; `seed`.
 - `gen_key_ring`: `size` (2 a 4 llaves); `distractors` desde `detect` (misma operación, inversa de la otra pareja, número cercano); `labeled` (falso en los niveles 1 y 2).
-- `gen_arbitrary_lock`: acciones no aritméticas con inversa (rotación, agregar un objeto, permutar colores) y una acción sin inversa por instancia.
+- `gen_arbitrary_lock`: `action_kinds` en {rotación, agregar un objeto, permutar colores}, las acciones no aritméticas que tienen inversa; `count` (cuántas acciones trae la instancia); `include_uninvertible` (habilita la acción sin inversa, una por instancia); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. La capa concreta se juega sin leer, pero desde el nivel 2 las llaves llevan una etiqueta de un dígito con operador, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

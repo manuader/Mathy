@@ -118,7 +118,7 @@ Ninguna lleva texto rasterizado, y acá eso no es solo una regla de internaciona
 - `gen_island_map`: `n_nodes` (4 a 6 en los niveles 1 y 2, hasta 12 en el 6); `edge_density`; `components` (1 hasta el nivel 5, hasta 3 en el 6); `guarantee_path` (verdadero o falso, para que a veces no se llegue); `seed`.
 - `gen_layout_pair`: dos disposiciones distintas de la misma red para el verbo `recognize` y para la escena de deformación; `spread`, `crossings_allowed` (falso hasta el nivel 5, verdadero en el 6).
 - `gen_bridge_budget`: `wood` (tablones disponibles, siempre mayor que el mínimo necesario) y `min_edges_needed`, calculado desde la red.
-- `gen_situation_to_graph`: situaciones para el verbo `generalize`, mostradas como animación sin palabras (saludos de a dos, parejas de baile, quién le pasó la pelota a quién) con la red esperada como respuesta.
+- `gen_situation_to_graph`: `situation` en {saludos de a dos, parejas de baile, pases de pelota}, mostradas como animación sin palabras; `expected_graph` (la red esperada como respuesta); `seed`. Es el generador del verbo `generalize`.
 
 **Literacy soportada:** de `none` a `full_text`, y `none` es el mínimo real, no una declaración formal. No hay dígitos escritos en ningún nivel: `apply` se responde con fichas de puntos, los puntos se identifican con íconos y la cheatsheet es una imagen. En `short_text` y `full_text` las tres frases de la definición se muestran escritas además de narradas, y los íconos de los puntos pueden reemplazarse por letras. La voz es opcional: el juego funciona entero con el sonido apagado ([Q](../Q-edad-universal.md)).
 

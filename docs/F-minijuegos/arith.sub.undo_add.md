@@ -116,7 +116,7 @@ Los distractores de `recognize` y las animaciones de `explain` se generan desde 
 
 - `gen_walk_undo`: `start` (piedra de partida); `step` (tramo de ida, de 2 a 4 en los niveles 1 a 3, de 1 a 9 en el 4 y 5, hasta 30 en el 6); `mode` en {undo, distance} (`undo` hasta el nivel 3, `distance` desde el 4, mezclados en el 5); `allow_zero` (falso hasta el nivel 5); `allow_full_return` (restar un número de sí mismo, desde el nivel 6); `unknown` en {none, subtrahend, minuend} (`none` hasta el 5, `minuend` en el 6); `seed`.
 - `gen_key_ring`: `size` (2 a 4 llaves); `distractors` (un diente de más, un diente de menos, el numeral de la piedra de llegada); `labeled` (falso en el nivel 1, verdadero desde el 2).
-- `gen_arbitrary_lock`: acciones no aritméticas con inversa (giro, prenda, color) y una acción sin inversa por instancia; solo en el nivel 7.
+- `gen_arbitrary_lock`: `action_kinds` en {giro, prenda, color}, las acciones no aritméticas que tienen vuelta; `count` (cuántas acciones trae la instancia); `include_uninvertible` (habilita la acción sin inversa, una por instancia); `seed`. Solo en el nivel 7.
 
 **Literacy soportada:** `none` en todos los niveles. Los numerales y el `−` son dibujos, no texto; las llaves se distinguen por forma en el nivel 1 y por cantidad de dientes desde el 2, nunca por palabras. La definición existe solo como voz sobre la pista; en un perfil con lectura se agregan subtítulos, sin cambiar ningún ítem.
 

@@ -117,7 +117,7 @@ Los distractores se generan desde las reglas `detect` de los prerequisitos direc
 - `gen_stretched_band`: `factor` (2 a 4 en los niveles 1 a 4, hasta 12 en el 6); `marks`; `witness_visible`; `dial_start` (cerca o en cero); `seed`.
 - `gen_shrink_key_ring`: `size` (2 a 5 llaves); `classes` en {encoger, recortar, estirar}; `distractors` desde `detect` de los prerequisitos; `labeled` (falso en los niveles 1 a 4).
 - `gen_tiled_floor`: `total`; `known_side`; `exact` (falso desde el nivel 7, con `leftover` entre 1 y el lado menos uno); `wall_side` en {arriba, izquierda}; `seed`.
-- `gen_arbitrary_undo`: acciones no aritméticas con vuelta y parámetro, y una sin vuelta por instancia.
+- `gen_arbitrary_undo`: `action_kinds` en {giro, separación}, las acciones no aritméticas que tienen vuelta; `dial_range` (los valores del parámetro que hay que calibrar); `count` (cuántas acciones trae la instancia); `include_uninvertible` (habilita la cerradura sin vuelta, una por instancia); `seed`.
 
 **Literacy soportada:** de `none` a `full_text`. Hasta el nivel 4 no hay numerales: las llaves se distinguen por forma y el dial por posición. Los numerales aparecen en el nivel 5 y la definición corta en el 8. En `full_text` la definición se muestra escrita además de narrada.
 

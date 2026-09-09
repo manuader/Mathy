@@ -37,3 +37,7 @@ Antes de dar por bueno un cambio, correr el validador desde la raíz. Tiene que 
 ```bash
 python3 tools/validate.py
 ```
+
+## Licencia
+
+[MIT](LICENSE). El documento de diseño y el código que lo acompañe se pueden usar, modificar y redistribuir citando la autoría.

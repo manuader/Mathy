@@ -112,7 +112,7 @@ Los movimientos no equivalentes que el clasificador no atribuye (confundir el ar
 
 - `gen_circle_angle`: `angle_set` en {whole_turns, quarters, notable_fractions, arbitrary}; `sign` en {positive, both}; `winding` (0 hasta el nivel 6, hasta 2 vueltas desde el 7); `radius` (1 en casi todos, 2 a 5 en el nivel 5); `seed`.
 - `gen_arc_ribbon`: `steps` (cuántas cintas enteras avanza la manivela por vuelta de manija), `show_counter`, `ribbon_scales` (falso solo en el contraejemplo de la cinta con candado).
-- `gen_quadrant_point`: puntos del círculo con una coordenada tapada, por cuadrante, para los ítems de `apply` y para preparar `ch.trig.unit_circle_hidden_cosine`.
+- `gen_quadrant_point`: `quadrant` en {1, 2, 3, 4}; `hidden_coordinate` en {x, y}, cuál de las dos se tapa; `seed`. Alimenta los ítems de `apply` y prepara `ch.trig.unit_circle_hidden_cosine`.
 
 **Literacy soportada:** de `icons` a `full_text`. La primera capa se juega sin leer (girar es arrastrar, medir es apoyar la cinta), pero desde el segundo nivel el contador muestra un número con la etiqueta de la unidad, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

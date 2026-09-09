@@ -108,9 +108,9 @@ Los acomodos que dejan huecos y las alturas torcidas no son misconceptions: la m
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 
 - `gen_right_triangle`: `legs` (ternas enteras en los niveles 1 a 5, catetos que dan hipotenusa irracional desde el 6); `unknown_side` en {hipotenusa, cateto}; `orientation`, el giro del triángulo, que decide si algún cateto queda horizontal; `show_squares`; `seed`.
-- `gen_four_copies`: patrón de acomodo (hueco central o dos huecos en diagonal), orden en que las copias entran, y si una copia se ofrece ya colocada como pista.
-- `gen_hidden_right_triangle`: figura contenedora (rectángulo, trapecio, rombo, semicírculo), qué trazo la parte, y cuál de las medidas se oculta.
-- `gen_triple_check`: ternas de lados, la mitad de ellas rectangulares y la otra mitad cerca de serlo, para la vuelta del teorema del nivel 7.
+- `gen_four_copies`: `layout` en {hueco central, dos huecos en diagonal}; `order` (en qué orden entran las cuatro copias); `prefilled_copy` (ofrece una copia ya colocada como pista); `seed`.
+- `gen_hidden_right_triangle`: `container` en {rectángulo, trapecio, rombo, semicírculo}; `splitting_line` (qué trazo parte la figura contenedora); `hidden_measure` (cuál de las medidas se oculta); `seed`.
+- `gen_triple_check`: `triples` (las ternas de lados que se ofrecen); `right_share` (la mitad rectangulares y la otra mitad cerca de serlo); `seed`. Alimenta la vuelta del teorema del nivel 7.
 
 **Literacy soportada:** de `icons` a `full_text`. El mínimo es `icons` y no `none` porque desde el nivel 4 los lados llevan un número y la ecuación aparece con exponentes. La primera capa se juega sin leer: se arrastran baldosas de un marco a otro, se acomodan cuatro triángulos, se baja una altura con el dedo, y `explain` es elegir entre animaciones. En `full_text` la definición corta se muestra escrita además de narrada.
 

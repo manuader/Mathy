@@ -110,7 +110,7 @@ Ninguna lleva texto rasterizado: las etiquetas las dibuja el runtime según el l
 
 - `gen_chest_lock`: `op` en {add, sub, mul, div}; `operand_range` (1 a 9 en los niveles 1 a 5, hasta 30 en el 6); `start_value_range`; `allow_negative_result` (desde el nivel 6); `chain_depth` (1 hasta el nivel 5, 2 en el 6); `seed`.
 - `gen_key_ring`: `size` (2 a 5 llaves); `distractors` desde `detect` (misma operación, inversa de la otra pareja, número cercano); `labeled` (falso en los niveles 1 a 4); `assembled` (verdadero desde el nivel 3, donde la llave se arma en vez de elegirse). El nodo 13 lo reúsa con sus propios rangos.
-- `gen_arbitrary_lock`: acciones no aritméticas con inversa (rotación, agregar un objeto, permutar colores) y una acción sin inversa por instancia. También lo reúsa el nodo 13.
+- `gen_arbitrary_lock`: `action_kinds` en {rotación, agregar un objeto, permutar colores}, las acciones no aritméticas que tienen inversa; `count` (cuántas acciones trae la instancia); `include_uninvertible` (habilita la acción sin inversa, una por instancia); `seed`. También lo reúsa el nodo 13.
 
 **Literacy soportada:** de `none` a `full_text`. Las capas concreta y visual se juegan sin leer: cerraduras y llaves por forma, color y cantidad de puntitos, la silueta de la tapa como verificación, `explain` entre dos animaciones y prompts de voz, en formas que sirven igual para tú y para vos. Desde la capa simbólica las llaves llevan una ficha con operador y número, que se trata como ícono porque el jugador la vio nacer del dibujo de la cerradura; es la misma ficha que hace que el nodo 13 declare `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

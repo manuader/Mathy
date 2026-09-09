@@ -110,9 +110,9 @@ Los distractores de `explain` y las opciones de `apply` se generan desde las reg
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 
 - `gen_dial`: `target_turn` (fracción de vuelta en los niveles 1 a 3, grados desde el 4); `arm_lengths` (uno o dos brazos, con la razón entre ellos como distractor); `show_marks`; `allow_overshoot`, que habilita giros de más de una vuelta y hacia atrás; `seed`.
-- `gen_turn_partition`: en cuántas partes iguales se parte la vuelta (2, 4, 8 en el nivel 3; 5, 7, 12 en el 7), y si el resultado por parte cae entero.
-- `gen_figure_exterior`: cantidad de lados de la figura, qué vértice se prolonga, y cuál de los dos sectores queda oculto.
-- `gen_stretched_figure`: factor de estiramiento de la malla y dirección, para los ítems donde la figura crece y el ángulo no.
+- `gen_turn_partition`: `parts` (en cuántas partes iguales se parte la vuelta, 2, 4 y 8 en el nivel 3, 5, 7 y 12 en el 7); `integer_result` (si el grado por parte cae entero); `seed`.
+- `gen_figure_exterior`: `sides` (cantidad de lados de la figura); `extended_vertex` (qué vértice se prolonga); `hidden_sector` en {interior, exterior}; `seed`.
+- `gen_stretched_figure`: `stretch_factor` (cuánto se estira la malla); `direction` (en qué dirección se estira); `seed`. Alimenta los ítems donde la figura crece y el ángulo no.
 
 **Literacy soportada:** de `none` a `full_text`. El nodo entero se juega sin leer y por eso el mínimo es `none`: se gira con el dedo, se parte la pista con dos dedos, se prolonga un lado arrastrando, y `explain` es elegir entre animaciones. Los números aparecen desde el nivel 4 y son cifras, no palabras. En `full_text` la definición corta se muestra escrita además de narrada.
 

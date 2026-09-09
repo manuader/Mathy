@@ -301,7 +301,11 @@ minigames:
     - distractors
     - labeled
   - name: gen_arbitrary_lock
-    params: []
+    params:
+    - action_kinds
+    - count
+    - include_uninvertible
+    - seed
   scenes:
   - chest_step_back_undoes_step
   - gear_walk_back_same_count
@@ -472,7 +476,12 @@ minigames:
     - wall_side
     - seed
   - name: gen_arbitrary_undo
-    params: []
+    params:
+    - action_kinds
+    - dial_range
+    - count
+    - include_uninvertible
+    - seed
   scenes:
   - chest_shrink_key_undoes_stretch
   - tile_split_rectangle_into_rows
@@ -560,7 +569,12 @@ minigames:
     - distractors
     - seed
   - name: gen_arbitrary_direction
-    params: []
+    params:
+    - row_length
+    - origin_position
+    - direction_tokens
+    - steps
+    - seed
   scenes:
   - gear_walk_past_zero
   - ledger_debt_tokens
@@ -645,7 +659,10 @@ minigames:
     - exact
     - seed
   - name: gen_arbitrary_whole
-    params: []
+    params:
+    - part_marking
+    - outline_only
+    - seed
   scenes:
   - tile_bar_cut_into_equal_parts
   - urn_fraction_of_balls
@@ -728,7 +745,11 @@ minigames:
     - swapped
     - seed
   - name: gen_arbitrary_nesting
-    params: []
+    params:
+    - lock_kinds
+    - orders
+    - target_figure
+    - seed
   scenes:
   - chest_nested_open_inside_first
   - pipe_two_machines_order_matters
@@ -882,7 +903,11 @@ minigames:
     - side_to_repair
     - distractors
   - name: gen_arbitrary_action
-    params: []
+    params:
+    - action_kinds
+    - count
+    - include_non_preserving
+    - seed
   scenes:
   - balance_equal_pans_stay_level
   - balance_remove_one_side_tilts
@@ -954,7 +979,11 @@ minigames:
     - labeled
     - assembled
   - name: gen_arbitrary_lock
-    params: []
+    params:
+    - action_kinds
+    - count
+    - include_uninvertible
+    - seed
   scenes:
   - chest_key_matches_lock
   - chest_wrong_key_stays_shut
@@ -1033,7 +1062,11 @@ minigames:
     - distractors
     - labeled
   - name: gen_arbitrary_lock
-    params: []
+    params:
+    - action_kinds
+    - count
+    - include_uninvertible
+    - seed
   scenes:
   - balance_key_both_sides
   - chest_pick_key_for_lock
@@ -1419,7 +1452,11 @@ minigames:
     - quadrants
     - distractors
   - name: gen_curve_to_judge
-    params: []
+    params:
+    - is_graph
+    - violation_kind
+    - violation_count
+    - seed
   scenes:
   - slope_walker_leaves_trace
   - grid_four_quadrants_with_signs
@@ -1496,7 +1533,11 @@ minigames:
     - slope
     - intercept
   - name: gen_line_form
-    params: []
+    params:
+    - line
+    - forms
+    - distractors
+    - seed
   scenes:
   - slope_same_steepness_any_step
   - slope_intercept_is_start_height
@@ -1573,7 +1614,11 @@ minigames:
     - turns
     - show_counter
   - name: gen_incompatible_chain
-    params: []
+    params:
+    - ops
+    - reason
+    - incompatibility_count
+    - seed
   scenes:
   - pipe_chain_two_machines
   - gear_train_composed_ratio
@@ -1651,7 +1696,10 @@ minigames:
     - distractors
     - labeled
   - name: gen_non_injective_machine
-    params: []
+    params:
+    - collapse_kind
+    - domain_cuts
+    - seed
   scenes:
   - pipe_run_machine_backwards
   - slope_reflect_graph_over_diagonal
@@ -2319,7 +2367,10 @@ minigames:
     - variable_upper_bound
     - given_point_for_c
   - name: gen_lossy_pair
-    params: []
+    params:
+    - operations
+    - returns
+    - seed
   - name: gen_tile_keyboard
     params:
     - symbols
@@ -2395,7 +2446,10 @@ minigames:
     - landmarks
     - grid_size
   - name: gen_arrow_distractors
-    params: []
+    params:
+    - kinds
+    - count
+    - seed
   scenes:
   - grid_scene_arrow_on_map
   - gear_scene_steps_east_then_north
@@ -2466,7 +2520,10 @@ minigames:
     - rows
     - third_card
   - name: gen_span_distractors
-    params: []
+    params:
+    - kinds
+    - count
+    - seed
   scenes:
   - grid_scene_two_kinds_of_steps
   - ledger_scene_recipe_of_steps
@@ -2704,7 +2761,11 @@ minigames:
     - size
     - rule_kind
   - name: gen_weighted_space
-    params: []
+    params:
+    - space_kind
+    - grid_size
+    - sector_weights
+    - seed
   scenes:
   - urn_scene_draw_and_tally
   - urn_scene_fraction_of_total
@@ -2785,7 +2846,11 @@ minigames:
     - highlighted_path
     - seed
   - name: gen_independence_puzzle
-    params: []
+    params:
+    - n_events
+    - multiple_solutions
+    - pairwise_only
+    - seed
   scenes:
   - sorter_scene_bins_then_pick
   - urn_scene_restricted_urn
@@ -2874,7 +2939,10 @@ minigames:
     - n_tickets
     - seed
   - name: gen_linear_pair
-    params: []
+    params:
+    - games
+    - coupled
+    - seed
   scenes:
   - ledger_scene_prize_ledger
   - balance_scene_plank_with_weights
@@ -2947,7 +3015,10 @@ minigames:
     - wood
     - min_edges_needed
   - name: gen_situation_to_graph
-    params: []
+    params:
+    - situation
+    - expected_graph
+    - seed
   scenes:
   - network_scene_islands_to_dots
   - network_scene_same_graph_redrawn
@@ -3022,9 +3093,15 @@ minigames:
     - orientation
     - seed
   - name: gen_composite_floor
-    params: []
+    params:
+    - rect_count
+    - cut_shape
+    - hidden_measure
+    - seed
   - name: gen_unit_swap
-    params: []
+    params:
+    - tile_side
+    - seed
   scenes:
   - tile_scene_rectangle_rows
   - construction_scene_triangle_half_rectangle
@@ -3103,11 +3180,21 @@ minigames:
     - allow_overshoot
     - seed
   - name: gen_turn_partition
-    params: []
+    params:
+    - parts
+    - integer_result
+    - seed
   - name: gen_figure_exterior
-    params: []
+    params:
+    - sides
+    - extended_vertex
+    - hidden_sector
+    - seed
   - name: gen_stretched_figure
-    params: []
+    params:
+    - stretch_factor
+    - direction
+    - seed
   scenes:
   - gear_scene_turn_as_angle
   - construction_scene_extend_side_exterior_angle
@@ -3177,13 +3264,27 @@ minigames:
     - hidden_side
     - seed
   - name: gen_shadow_scene
-    params: []
+    params:
+    - stick_heights
+    - sun_angle
+    - hidden_measure
+    - seed
   - name: gen_parallel_cut
-    params: []
+    params:
+    - vertices
+    - cut_fraction
+    - unknown_in
+    - seed
   - name: gen_area_scale_item
-    params: []
+    params:
+    - side_factor
+    - ask
+    - seed
   - name: gen_stretch_distractor
-    params: []
+    params:
+    - stretch_direction
+    - matching_pair
+    - seed
   scenes:
   - grid_scene_dilate_triangle
   - construction_scene_parallel_cut_similar
@@ -3254,11 +3355,22 @@ minigames:
     - show_squares
     - seed
   - name: gen_four_copies
-    params: []
+    params:
+    - layout
+    - order
+    - prefilled_copy
+    - seed
   - name: gen_hidden_right_triangle
-    params: []
+    params:
+    - container
+    - splitting_line
+    - hidden_measure
+    - seed
   - name: gen_triple_check
-    params: []
+    params:
+    - triples
+    - right_share
+    - seed
   scenes:
   - tile_scene_pythagoras_rearrangement
   - construction_scene_altitude_to_hypotenuse
@@ -3340,7 +3452,11 @@ minigames:
     - count
     - useful
   - name: gen_marked_figure
-    params: []
+    params:
+    - marks
+    - derived
+    - include_false_mark
+    - seed
   scenes:
   - construction_scene_composite_figure_altitude
   - construction_scene_choose_the_line
@@ -3423,7 +3539,10 @@ minigames:
     - show_counter
     - ribbon_scales
   - name: gen_quadrant_point
-    params: []
+    params:
+    - quadrant
+    - hidden_coordinate
+    - seed
   scenes:
   - construction_scene_radius_and_dropped_height
   - gear_scene_unroll_radius_on_arc
@@ -3495,7 +3614,11 @@ minigames:
     - ask
     - seed
   - name: gen_angle_table
-    params: []
+    params:
+    - rows
+    - prefilled
+    - repeated_input
+    - seed
   - name: gen_wave_trace
     params:
     - turns

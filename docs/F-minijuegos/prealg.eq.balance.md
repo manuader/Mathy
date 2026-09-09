@@ -111,7 +111,7 @@ Ninguna lleva texto rasterizado: las etiquetas las dibuja el runtime según el l
 - `gen_balance_state`: `left` y `right` (fichas por lado, una sola hasta el nivel 5 y varias desde el 6); `starts_level`; `token_range`; `box_side` en {none, left, right}; `seed`.
 - `gen_token_set`: `sizes` (valores de las pesas disponibles en la reserva); `exact_match_available` (falso en algunas instancias del nivel 6, para que haya que combinar); `seed`.
 - `gen_false_equality`: igualdades desequilibradas con la diferencia y el lado a reparar como parámetros; `distractors` desde `detect` (tocar los dos lados cuando había que tocar uno).
-- `gen_arbitrary_action`: acciones no aritméticas aplicables a un plato entero (rotar, pintar, agregar una figura), con una que no conserva nada por instancia.
+- `gen_arbitrary_action`: `action_kinds` en {rotar, pintar, agregar una figura}, aplicables a un plato entero; `count` (cuántas acciones se ofrecen por instancia); `include_non_preserving` (habilita la acción que no conserva nada, una por instancia); `seed`.
 
 **Literacy soportada:** de `none` a `full_text`. Todo se juega sin leer: las pesas y la caja son objetos, se toca y se arrastra, `explain` se responde entre animaciones y los prompts son de voz, en formas que sirven igual para tú y para vos. El `=` llega como morph de la barra, es un dibujo antes que un signo, y por eso el mínimo se mantiene en `none`. En `full_text` la definición corta se muestra escrita además de narrada.
 

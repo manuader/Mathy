@@ -117,7 +117,7 @@ Ninguna lleva texto rasterizado: contadores y fracciones los dibuja el runtime s
 - `gen_urn`: `colors` (2 en los niveles 1 y 2, hasta 4 desde el 4); `total_range` (4 a 6 en el nivel 1, hasta 60 desde el 3); `target_share` (fracción pedida, con denominador simple hasta el nivel 5); `equal_weights` (verdadero hasta el nivel 6, falso en el 7); `seed`.
 - `gen_draw_run`: `n_draws` (por potencias, de 10 a 2000); `with_replacement` (siempre verdadero en este nodo); `seed`.
 - `gen_event_bin`: define el evento del clasificador; `size` (uno o más colores por cajón); `rule_kind` en {color, tamaño, color o tamaño}.
-- `gen_weighted_space`: espacios con resultados de pesos desiguales, incluido el par de dados con su grilla de seis por seis y el disco con sectores desparejos. Es el generador de los contraejemplos del nivel 7.
+- `gen_weighted_space`: `space_kind` en {par de dados, disco de sectores}; `grid_size` (seis por seis en el par de dados); `sector_weights` (los pesos desiguales de los sectores del disco); `seed`. Es el generador de los contraejemplos del nivel 7.
 
 **Literacy soportada:** de `icons` a `full_text`. La corrida con el dedo apretado y la comparación de urnas se juegan sin leer, pero desde el segundo nivel los contadores llevan dígitos y la ficha de fracción tiene numerador y denominador, y por eso el mínimo es `icons`. En `full_text` las tres frases de la definición se muestran escritas además de narradas.
 

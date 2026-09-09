@@ -121,7 +121,7 @@ Los distractores de `explain` y las opciones de `apply` se generan desde estas r
 
 - `gen_ramp`: `slope` (entera positiva hasta el nivel 6, negativa desde el 7, fraccionaria simple desde el 7); `intercept` (cero hasta el nivel 6); `x_range`; `step_width` (fijo en uno hasta el nivel 3, libre desde el 4); `seed`.
 - `gen_two_points`: dos puntos de una recta con `slope` e `intercept` dados, con control de si las diferencias son enteras y de si el orden de lectura invita a medir hacia atrás.
-- `gen_line_form`: la misma recta escrita en varias formas, despejada y sin despejar, con distractores que intercambian `m` y `b` o que copian un coeficiente sin su signo.
+- `gen_line_form`: `line` (la recta, la misma en todas las formas de una instancia); `forms` en {despejada, sin despejar}; `distractors` (`m` y `b` intercambiados, un coeficiente copiado sin su signo); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. Los dos primeros niveles se juegan sin leer y la comparación por color no usa números, pero desde el nivel 3 el escalón muestra cantidades y desde el 6 aparecen letras, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

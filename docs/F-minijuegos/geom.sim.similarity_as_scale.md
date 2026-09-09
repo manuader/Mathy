@@ -108,10 +108,10 @@ Los distractores de `explain` y las opciones de `apply` se generan desde la regl
 **Generadores** (por nombre, desde el registro de [O](../O-arquitectura-tecnica.md)):
 
 - `gen_scale_pair`: `shape` (triángulo, cuadrilátero, figura de cinco lados); `factor` (enteros 2 y 3 en los niveles 2 a 5, fraccionarios desde el 6, menores que 1 desde el 7); `direction`, que decide si la ficha va de la chica a la grande o al revés; `orientation_shift`, el giro de la copia; `hidden_side`, cuál lado se pide; `seed`.
-- `gen_shadow_scene`: alturas de los palos, ángulo del sol, y cuál de las cuatro medidas se oculta.
-- `gen_parallel_cut`: vértices del triángulo, en qué fracción del lado cae el corte, y si el dato desconocido está en el triángulo chico o en el grande.
-- `gen_area_scale_item`: factor de lados y qué se pide, el área de la copia o el factor de lados a partir del de área.
-- `gen_stretch_distractor`: figuras deformadas en una sola dirección, con la razón de un par de lados coincidiendo a propósito para que el distractor exija mirar más de un par.
+- `gen_shadow_scene`: `stick_heights` (alturas de los palos clavados); `sun_angle` (el ángulo del sol, común a toda la escena); `hidden_measure` (cuál de las cuatro medidas se oculta); `seed`.
+- `gen_parallel_cut`: `vertices` (los vértices del triángulo); `cut_fraction` (en qué fracción del lado cae el corte); `unknown_in` en {chico, grande}, si el dato desconocido cae en el triángulo recortado o en el entero; `seed`.
+- `gen_area_scale_item`: `side_factor` (el factor de lados); `ask` en {área de la copia, factor de lados desde el de área}; `seed`.
+- `gen_stretch_distractor`: `stretch_direction` (la única dirección en la que se deforma la figura); `matching_pair` (el par de lados cuya razón coincide a propósito con la del original, para que el distractor exija mirar más de un par); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. El mínimo es `icons` y no `none` porque desde el segundo nivel la regla muestra un número y desde el cuarto las razones se escriben como fracción; sin cifras, comprobar que todos los pares dan lo mismo no se puede jugar. Todo lo demás va sin leer: estirar con dos dedos, hacer calzar el contorno, tocar pares de lados, trazar la paralela, contar baldosas, y `explain` entre animaciones. En `full_text` la definición corta se muestra escrita además de narrada.
 

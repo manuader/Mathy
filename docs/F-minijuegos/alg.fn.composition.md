@@ -119,7 +119,7 @@ Los distractores de `explain` y las opciones de `apply` se generan desde estas r
 
 - `gen_machine_chain`: `length` (2 en los niveles 3 a 6, 3 en el 7); `ops` (subconjunto de sumar, restar, multiplicar, dividir, con resta y división desde el nivel 7); `operand_range`; `input_range`; `commuting_pair` (booleano, para mezclar pares que sí conmutan desde el nivel 7); `include_identity`; `seed`.
 - `gen_gear_train`: `ratio_a` y `ratio_b` como razones simples; `turns`; `show_counter` (falso cuando el jugador tiene que anticipar).
-- `gen_incompatible_chain`: cadenas donde la salida de la primera no sirve como entrada de la segunda, con una sola incompatibilidad por instancia y su motivo declarado.
+- `gen_incompatible_chain`: `ops` (las dos máquinas de la cadena); `reason` (el motivo por el que la salida de la primera no sirve como entrada de la segunda); `incompatibility_count` (una sola incompatibilidad por instancia); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. Los niveles 1 a 3 se juegan sin leer, pero desde el nivel 4 las bolas llevan números y desde el 6 las cajas llevan letras, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

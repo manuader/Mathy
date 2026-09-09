@@ -121,7 +121,7 @@ Los distractores se generan desde las reglas `detect` de `unwrap_order_inverted`
 - `gen_nested_chest`: `depth` (2 en los niveles 1 y 3, 3 desde el 2); `ops` en {add, sub, mul, div}; `operand_range`; `visible_chests` (falso desde el nivel 6); `direction` en {evaluate, undo}; `seed`.
 - `gen_expression_tree`: `nodes`; `same_level_pairs` (desde el nivel 6); `paren_positions` (una o dos ubicaciones para el mismo conjunto de fichas); `distractors` desde `detect` (agrupamiento vecino, lectura de izquierda a derecha); `seed`.
 - `gen_machine_pipe`: `ops` (dos máquinas hasta el nivel 6, tres después); `input`; `swapped`; `seed`.
-- `gen_arbitrary_nesting`: cerraduras no aritméticas con dos órdenes posibles y una figura objetivo por instancia.
+- `gen_arbitrary_nesting`: `lock_kinds` (las cerraduras no aritméticas disponibles, sin operaciones ni números); `orders` (los dos órdenes posibles de apertura, siempre dos por instancia); `target_figure` (la figura objetivo, una por instancia); `seed`.
 
 **Literacy soportada:** de `none` a `full_text`. Los niveles 1 a 4 no tienen numerales: los cofres se distinguen por material y tamaño, las cerraduras por forma y los tesoros por color, y la tubería usa bolitas de distinto tamaño en vez de números. Los numerales y los paréntesis aparecen en el nivel 5 y la definición corta en el 8. En `full_text` la definición se muestra escrita además de narrada.
 

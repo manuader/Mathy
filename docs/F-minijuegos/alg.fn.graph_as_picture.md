@@ -117,7 +117,7 @@ Los distractores de `explain` y las opciones de `apply` se generan desde estas r
 
 - `gen_terrain_profile`: `bumps` (1 a 4 lomas); `height_range` (positivo hasta el nivel 3, con negativos desde el 4); `position_range`; `flat_segments` (booleano, desde el nivel 7); `jump_at` (posición del salto, desde el nivel 7); `gap_at` (posición sin altura, desde el nivel 7); `seed`.
 - `gen_coordinate_pair`: `x_range`; `y_range`; `quadrants` (subconjunto de las cuatro regiones); `distractors` (par invertido, signo cambiado en uno de los dos, valor cercano).
-- `gen_curve_to_judge`: curvas que son gráfica y curvas que no, con el tipo de violación declarado (dos alturas en un punto, curva cerrada, tramo vertical) y una sola violación por instancia.
+- `gen_curve_to_judge`: `is_graph` (si la curva sorteada es gráfica o no); `violation_kind` en {dos alturas en un punto, curva cerrada, tramo vertical}; `violation_count` (una sola violación por instancia); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. Los tres primeros niveles se juegan sin leer, pero desde el paso 3 de la transición hay números escritos en los ejes y en el par, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

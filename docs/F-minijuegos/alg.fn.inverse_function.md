@@ -120,7 +120,7 @@ Los distractores de `explain` y las opciones de `apply` se generan desde estas r
 
 - `gen_invertible_machine`: `steps` (1 en los niveles 3 a 6, 2 desde el 7); `ops` (sumar y restar en el nivel 3, las cuatro desde el 4); `operand_range`; `input_range`; `output_positive_only` (para las máquinas que anticipan el dominio); `seed`.
 - `gen_machine_key_ring`: `size` (2 a 4 candidatas); `distractors` desde `detect` (la misma operación sin invertir, la inversa de la otra pareja, el orden invertido en las de dos pasos); `labeled` (falso en el nivel 3).
-- `gen_non_injective_machine`: máquinas que juntan entradas, con el tipo de confluencia declarado (dos entradas simétricas, muchas entradas periódicas, aplastamiento total) y los recortes de entrada admisibles para cada una.
+- `gen_non_injective_machine`: `collapse_kind` en {dos entradas simétricas, muchas entradas periódicas, aplastamiento total}, el tipo de confluencia con que la máquina junta entradas; `domain_cuts` (los recortes de entrada admisibles para cada tipo de confluencia); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. Los niveles 1 a 3 se juegan sin leer, pero desde el nivel 4 las máquinas llevan etiquetas y las bolas números, y desde el 6 aparece la marca escrita, y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

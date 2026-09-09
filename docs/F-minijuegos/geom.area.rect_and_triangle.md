@@ -107,8 +107,8 @@ Los errores de conteo y las baldosas mal encastradas no son misconceptions: la m
 
 - `gen_floor`: `width` y `height` (enteros de 2 a 6 en los niveles 1 a 3, hasta 20 en el 6); `tile_supply` (justo, de sobra, faltante); `show_grid`; `seed`.
 - `gen_triangle`: `base`; `height`; `apex_offset`, que decide si el triángulo es rectángulo, acutángulo u obtuso y por lo tanto si la altura cae adentro o afuera; `orientation`, que decide si algún lado queda horizontal; `seed`.
-- `gen_composite_floor`: cantidad de rectángulos (2 o 3), forma del recorte (L, T, escalón), y qué medida se oculta.
-- `gen_unit_swap`: el lado de la baldosa unidad, para los ítems donde la misma figura se mide con otra unidad.
+- `gen_composite_floor`: `rect_count` (2 o 3 rectángulos); `cut_shape` en {L, T, escalón}; `hidden_measure` (qué medida se oculta); `seed`.
+- `gen_unit_swap`: `tile_side` (el lado de la baldosa unidad); `seed`. Alimenta los ítems donde la misma figura se mide con otra unidad.
 
 **Literacy soportada:** de `none` a `full_text`. El nodo entero se juega sin leer y por eso el mínimo es `none`: se arrastra, se toca, se traza con el dedo, y los prompts son de voz. En `icons` y arriba aparecen los números sobre las llaves desde el nivel 5. En `full_text` la definición corta se muestra escrita además de narrada.
 

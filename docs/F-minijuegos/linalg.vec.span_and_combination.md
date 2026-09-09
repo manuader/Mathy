@@ -111,7 +111,7 @@ Una receta que llega a un lugar distinto de la cruz no dispara nada: es válida 
 - `gen_step_pair`: las dos clases de paso, con `component_range` (de −4 a 4), `angle_separation` (amplia en los niveles 1 a 3, angosta desde el 5, cero en las instancias alineadas), `collinear` (booleano), `seed`.
 - `gen_target_on_map`: el destino, con `coefficient_range` (1 a 4, hasta 9 desde el nivel 5), `allow_negative_coefficients` (desde el nivel 3), `fractional_coefficients` (desde el 6), y `reachable` (falso en las instancias del caso alineado).
 - `gen_recipe_ledger`: la disposición del libro, con `rows` fijo en 2 y `third_card` (la tarjeta que sobra, desde el nivel 6) generada dentro o fuera del span.
-- `gen_span_distractors`: distractores desde `detect`, con la fila fusionada, los coeficientes intercambiados y una región de span que corresponde a otro par.
+- `gen_span_distractors`: `kinds` desde `detect`, en {fila fusionada, coeficientes intercambiados, región de span de otro par}; `count` (cuántos distractores acompañan a la respuesta correcta); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. La primera capa se juega sin leer, pero los números de las filas llevan dígitos con signo desde el segundo nivel y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

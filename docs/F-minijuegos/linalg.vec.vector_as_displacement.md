@@ -112,7 +112,7 @@ Confundir el desplazamiento con el lugar no está catalogado y no dispara explic
 - `gen_map_arrow`: `east_range` y `north_range` (de 1 a 5 en los niveles 1 a 3, hasta 12 en el 5); `allow_negative` (falso hasta el nivel 4); `fractional` (desde el nivel 6); `origin_at` en {origin, landmark, free}; `seed`.
 - `gen_arrow_pair`: dos flechas para encadenar, con `angle_spread` para que la cadena no quede alineada y `chain_length` en {2, 3}.
 - `gen_map_scene`: la disposición del mapa, con `landmarks` (cofre, faro, molino, cruz) y `grid_size`; sin palabras.
-- `gen_arrow_distractors`: distractores desde `detect`, con las reglas de componentes intercambiadas, un signo dado vuelta y la misma dirección con otro largo.
+- `gen_arrow_distractors`: `kinds` desde `detect`, en {componentes intercambiadas, signo dado vuelta, misma dirección con otro largo}; `count` (cuántos distractores acompañan a la flecha correcta); `seed`.
 
 **Literacy soportada:** de `icons` a `full_text`. La primera capa se juega sin leer, pero los contadores de las manivelas muestran un dígito con signo desde el primer nivel y por eso el mínimo es `icons`. En `full_text` la definición corta se muestra escrita además de narrada.
 

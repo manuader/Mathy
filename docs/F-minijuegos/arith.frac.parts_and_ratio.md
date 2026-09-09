@@ -120,7 +120,7 @@ Los distractores se generan desde las reglas `detect` de `fraction_add_across` y
 - `gen_cut_bar`: `parts` (2 a 4 en los niveles 1 a 4, hasta 12 en el 7); `shaded`; `equal_cuts` (falso solo para distractores); `bar_length` (dos largos distintos desde el nivel 5, para la misma fracción); `seed`.
 - `gen_urn`: `composition`; `highlighted`; `refill_same_ratio` (verdadero en el nivel de proporción estable); `seed`.
 - `gen_share_plates`: `bars`; `plates`; `exact` (verdadero solo cuando el reparto da partes enteras); `seed`.
-- `gen_arbitrary_whole`: todos que no se cortan, con la parte marcada por otra vía (figuras giradas, tramo recorrido, altura de llenado) y el todo dibujado como contorno.
+- `gen_arbitrary_whole`: `part_marking` en {figura girada, tramo recorrido, altura de llenado}, la vía por la que se señala la parte cuando el todo no se corta; `outline_only` (el todo queda dibujado como contorno, sin líneas de corte); `seed`.
 
 **Literacy soportada:** de `none` a `full_text`. Los niveles 1 a 4 no tienen numerales: la ficha se muestra como una barra corta con puntos arriba y abajo del tamaño del montón. Los numerales aparecen en el nivel 5 y la definición corta en el 8. En `full_text` la definición se muestra escrita además de narrada.
 
