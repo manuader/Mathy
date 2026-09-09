@@ -33,3 +33,6 @@ videos/
 
 # Claude local state
 .claude/avo/
+
+# Workspaces de herramientas
+.conductor/
