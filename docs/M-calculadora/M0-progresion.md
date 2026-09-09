@@ -120,6 +120,8 @@ Un niño de cinco años abre la calculadora y ve la tecla `contar` y la tecla `+
 
 ## 10. Cómo se consolidaron las operaciones
 
+<!-- alias-ok: esta sección documenta qué ids se absorbieron en cuál, así que cita aliases a propósito -->
+
 El grafo declaró 351 ids `op_*` en `calc_unlocks`, escritos por cuatro lotes de autores en paralelo. Muchos eran sinónimos y muchos otros eran la misma tecla vista desde nodos distintos. `calculator_ops.yaml` los reduce a **118 operaciones canónicas**, y cada uno de los 351 ids aparece exactamente una vez, como `id` o dentro de `aliases`. El validador reescribe los `calc_unlocks` del grafo a los ids canónicos con esa tabla.
 
 Los criterios, en orden:
@@ -140,6 +142,8 @@ Casos que conviene conocer:
 - `op_gradient_step` (descenso por gradiente) se absorbió en `op_gradient`; `op_least_squares` en `op_regression_line`; `op_sup_inf_of_set` en `op_set_ops`; `op_adjacency_matrix` en `op_graph_properties`. En cada caso el resultado es del mismo tipo que el de la operación que lo absorbe.
 - `op_caesar` conserva codificar y decodificar en una sola tecla con signo: la llave de `+k` es `−k`, y la tecla lo muestra.
 - `op_inverse_op` es la única operación con `sandbox: false` por diseño; `op_proof_check` y `op_topology_check` también lo son porque verifican una afirmación contra un target y no producen un objeto nuevo.
+
+<!-- /alias-ok -->
 
 ## 11. Verificación
 
