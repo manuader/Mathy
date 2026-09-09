@@ -19,7 +19,11 @@ Toda actividad genera ítems etiquetados con uno de seis verbos. La etiqueta la 
 | `generalize` | reconoce la misma estructura con otros objetos | un cofre con cerradura "rotar 90°": nombrar la llave |
 | `transfer` | usa el concepto en otra área y otra mecánica | la llave de "cifrado César +3" en `csmath` |
 
-Los ítems `transfer` siempre provienen de los nodos listados en `transfer_to` del nodo evaluado, y siempre usan una mecánica distinta de la que se usó para aprenderlo.
+Los ítems `transfer` siempre provienen de los nodos listados en `transfer_to` del nodo evaluado, y siempre caen en **otra área**. Esa es la condición dura: la transferencia mide que el jugador reconozca la misma estructura donde no la aprendió, y lo que tiene que cambiar es la matemática, no necesariamente el gesto.
+
+La mecánica puede repetirse, y con frecuencia conviene que se repita. Los tres regresos de la llave que organizan el curriculum (la resta deshace la suma, la función inversa, la matriz inversa y el teorema fundamental) ocurren en cuatro áreas distintas con la misma mecánica, y es justamente el gesto idéntico sobre un objeto nuevo lo que hace visible que la estructura es la misma ([E](E-mecanicas/E0-catalogo.md)). Exigir una mecánica ajena volvería ilegales los ejemplos de transferencia más fuertes del diseño.
+
+Un ítem de transferencia que además cambia de mecánica es más exigente y vale como evidencia más fuerte, pero no es la norma. Lo que sí está prohibido es que un ítem `transfer` repita la actividad de origen: si no cambia ni el área ni el objeto matemático, no es transferencia sino repaso.
 
 ## Las seis dimensiones
 

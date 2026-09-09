@@ -414,21 +414,22 @@ def check_skin_mechanics(nodes, rep: Report) -> None:
 
 
 def check_transfer_mechanics(nodes, rep: Report) -> None:
-    """K exige que un ítem `transfer` corra sobre una mecánica ajena a la del origen."""
+    """K exige que un ítem `transfer` caiga en otra área.
+
+    La mecánica puede repetirse: los regresos de la llave cruzan cuatro áreas con
+    `chest_key` y son los ejemplos de transferencia más fuertes del diseño. Lo que
+    no puede repetirse es el área, porque entonces es repaso y no transferencia.
+    """
     for node_id, node in sorted(nodes.items()):
-        source = set(as_list(node.get("mechanics")))
-        if not source:
-            continue
         for ref in as_list(node.get("transfer_to")):
             target = nodes.get(ref)
             if not target:
                 continue
-            shared = set(as_list(target.get("mechanics")))
-            if shared and shared <= source:
-                rep.warn(
+            if target.get("area") == node.get("area"):
+                rep.error(
                     "transfer",
-                    f"`{node_id}` → `{ref}`: el destino no aporta ninguna mecánica nueva "
-                    f"({sorted(shared)}); K pide una mecánica ajena",
+                    f"`{node_id}` → `{ref}`: el destino es de la misma área "
+                    f"(`{node.get('area')}`); K pide otra área",
                 )
 
 
