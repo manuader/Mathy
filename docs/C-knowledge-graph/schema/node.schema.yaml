@@ -136,3 +136,4 @@ validator_rules:
   - challenges: se derivan de S-desafios/challenges.yaml; todo nodo requerido por un desafío existe
   - aliases: una referencia puede apuntar a un alias; el validador la resuelve al id vigente y avisa
   - unlocks se calcula, no se lee
+  - "`reused_by` y `areas` de mechanics.yaml se derivan del grafo, igual que unlocks; no se escriben a mano"
