@@ -36,3 +36,9 @@ videos/
 
 # Workspaces de herramientas
 .conductor/
+
+# Node
+node_modules/
+*.tsbuildinfo
+packages/*/dist/
+apps/*/dist/
