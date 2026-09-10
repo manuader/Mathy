@@ -213,9 +213,18 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
    **no se activó**. O sea que depende de cómo esté configurada la activación del gesto,
    no de la receta.
 
-   **La conducta correcta**: probá con `pointerId: 1` y `pressure`; si no responde, no
-   supongas que tu código está mal. Verificá ese camino con un toque —si el toque hace lo
-   mismo que la suelta, cubre la misma línea de código— o con un oráculo determinista. Un arrastre
+   **Y cuando sí se activa, entrega de menos.** Gesture-handler mide `translationX` desde
+   donde el gesto **se activó**, no desde el apoyo, así que con pocos eventos sintéticos
+   se descuenta un tramo entero: medido, **87,5 % del recorrido con 16 movimientos**. La
+   receta que llega al **96 %** es despachar un temblor corto sobre el punto de origen
+   antes de empezar a moverse, para que el gesto se despierte con descuento casi cero.
+   Con un dedo o un mouse real el error es de unos pocos píxeles y no importa; desde el
+   arnés, un arrastre que "casi llega" puede ser esto y no tu umbral.
+
+   **La conducta correcta**: probá con `pointerId: 1` y `pressure`, y con el temblor
+   inicial; si no responde, no supongas que tu código está mal. Verificá ese camino con
+   un toque —si el toque hace lo mismo que la suelta, cubre la misma línea de código— o
+   con un oráculo determinista. Un arrastre
    sintético hecho con eventos de mouse no la despierta. La receta que funciona es
    despachar `pointerdown`, doce o más `pointermove` con ~20 ms entre medio y `pointerup`,
    todos con el mismo `pointerId`. Además, `setPointerCapture` con un `pointerId`
