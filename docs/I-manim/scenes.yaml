@@ -509,6 +509,36 @@ scenes:
     text_free: true
     threed: false
 
+  - id: ledger_bars_compare_overhang
+    family: ledger_scene
+    nodes: [found.cmp.bigger_smaller]
+    route: native
+    primitives: [SVGMobject, VGroup, Rectangle, Line, DashedLine, LaggedStartMap, ShowCreation, Integer, CountInFrom, Brace, FlashAround, Indicate]
+    native_equivalents: [ConcreteToken, Group, Polygon, Line, LaggedStart, Write, DecimalNumber, Brace, Flash, Indicate]
+    params: ["count_a: int", "count_b: int"]
+    text_free: true
+    threed: false
+
+  - id: ledger_two_rows_become_one
+    family: ledger_scene
+    nodes: [arith.add.combine_groups]
+    route: native
+    primitives: [SVGMobject, VGroup, Rectangle, ApplyMethod, LaggedStartMap, Integer, CountInFrom, ShowIncreasingSubsets, Transform, Indicate]
+    native_equivalents: [ConcreteToken, Group, Polygon, Tween, LaggedStart, DecimalNumber, Transform, Indicate]
+    params: ["a: int", "b: int"]
+    text_free: true
+    threed: false
+
+  - id: ledger_unlike_rows_stay_apart
+    family: ledger_scene
+    nodes: [arith.add.combine_groups]
+    route: native
+    primitives: [SVGMobject, VGroup, Rectangle, ApplyMethod, LaggedStartMap, Integer, CountInFrom, FadeToColor, WiggleOutThenIn, Indicate, there_and_back]
+    native_equivalents: [ConcreteToken, Group, Polygon, Tween, LaggedStart, DecimalNumber, Wiggle, Indicate, RateFunctions]
+    params: ["a: int", "b: int", "kinds: int[]"]
+    text_free: true
+    threed: false
+
   - id: ledger_morph_fruit_to_symbol
     family: ledger_scene
     nodes: [prealg.var.unknown_as_box, alg.expr.distributive_tiles]
@@ -521,6 +551,26 @@ scenes:
     threed: false
 
   # ---------------------------------------------------------------- tile_scene
+  - id: tile_array_turns_quarter
+    family: tile_scene
+    nodes: [arith.mul.rows_and_columns]
+    route: native
+    primitives: [Square, Rectangle, VGroup, Rotate, ApplyMethod, LaggedStartMap, Brace, BraceLabel, Integer, CountInFrom, Indicate, smooth]
+    native_equivalents: [Polygon, Group, Rotate, Tween, LaggedStart, Brace, DecimalNumber, Indicate, RateFunctions]
+    params: ["rows: int", "cols: int"]
+    text_free: true
+    threed: false
+
+  - id: tile_regroup_factors_same_total
+    family: tile_scene
+    nodes: [arith.mul.rows_and_columns]
+    route: native
+    primitives: [Square, Rectangle, VGroup, DashedLine, ShowCreation, ApplyMethod, LaggedStartMap, Transform, Brace, BraceLabel, Integer, CountInFrom, FlashAround]
+    native_equivalents: [Polygon, Group, Line, Write, Tween, LaggedStart, Transform, Brace, DecimalNumber, Flash]
+    params: ["factors: int[]", "grouping: TilingId"]
+    text_free: true
+    threed: false
+
   - id: tile_bar_cut_into_equal_parts
     family: tile_scene
     nodes: [arith.frac.parts_and_ratio]
@@ -920,6 +970,16 @@ scenes:
     duration_s: 8
     threed: false
 
+  - id: grid_scene_turn_and_flip_the_sheet
+    family: grid_scene
+    nodes: [geom.trans.rotation_reflection]
+    route: native
+    primitives: [NumberPlane, Polygon, Dot, DashedLine, ApplyMatrix, apply_matrix, Rotate, TransformFromCopy, save_state, Restore, Succession, Indicate, smooth]
+    native_equivalents: [NumberPlane, Polygon, Dot, Line, GridDeform, Rotate, Transform, Tween, Succession, Indicate, RateFunctions]
+    params: ["figure: Point[]", "angle: Angle", "axis: Segment", "order_swapped: bool"]
+    text_free: true
+    threed: false
+
   - id: grid_scene_two_kinds_of_steps
     family: grid_scene
     nodes: [linalg.vec.span_and_combination]
@@ -1026,6 +1086,16 @@ scenes:
     threed: false
 
   # ---------------------------------------------------------------- sorter_scene
+  - id: sorter_rail_orders_by_amount
+    family: sorter_scene
+    nodes: [found.cmp.bigger_smaller]
+    route: native
+    primitives: [Rectangle, SVGMobject, VGroup, Line, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, Transform, Indicate, WiggleOutThenIn, smooth]
+    native_equivalents: [Polygon, ConcreteToken, Group, Line, MoveAlongPath, LaggedStart, DecimalNumber, Transform, Indicate, Wiggle, RateFunctions]
+    params: ["bins: int[]", "seed: Seed"]
+    text_free: true
+    threed: false
+
   - id: sorter_number_card_on_bin
     family: sorter_scene
     nodes: [found.count.cardinality]
@@ -1043,6 +1113,57 @@ scenes:
     primitives: [Rectangle, Dot, VGroup, MoveAlongPath, LaggedStartMap, Sector, BarChart, DecimalNumber, ChangeDecimalToValue, FadeOut, FadeToColor, Indicate, Brace]
     native_equivalents: [Polygon, Dot, Group, MoveAlongPath, LaggedStart, Arc, BarChart, DecimalNumber, Tween, FadeOut, Indicate, Brace]
     params: ["bins: Composition[]", "picked_bin: int"]
+    text_free: true
+    threed: false
+
+  - id: sorter_scene_rule_card_decides
+    family: sorter_scene
+    nodes: [disc.set.membership_rule]
+    route: native
+    primitives: [Rectangle, SVGMobject, Dot, VGroup, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, FadeIn, Indicate, WiggleOutThenIn, Cross, FlashAround, smooth]
+    native_equivalents: [Polygon, SvgAsset, ConcreteToken, Dot, Group, MoveAlongPath, LaggedStart, DecimalNumber, Tween, FadeIn, Indicate, Wiggle, Flash, RateFunctions]
+    params: ["objects: Composition", "rule_id: int", "card_face_up: bool", "seed: Seed"]
+    text_free: true
+    threed: false
+
+  - id: sorter_scene_bin_to_set_builder
+    family: sorter_scene
+    nodes: [disc.set.membership_rule]
+    route: both
+    primitives: [Rectangle, Circle, Dot, VGroup, Tex, TransformMatchingShapes, Transform, Brace, ShowCreation, FadeIn, Indicate, smooth]
+    native_equivalents: [Polygon, Circle, Dot, Group, MathMobject, TransformMatchingIds, Transform, Brace, Write, FadeIn, Indicate, RateFunctions]
+    params: ["rule_id: int", "members: int[]", "empty_bin: bool"]
+    text_free: true
+    duration_s: 6
+    threed: false
+
+  - id: sorter_scene_two_hoops_connective
+    family: sorter_scene
+    nodes: [disc.logic.and_or_not]
+    route: native
+    primitives: [Circle, Rectangle, Dot, VGroup, Union, Intersection, Difference, Exclusion, FadeToColor, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, ShowPassingFlash, Indicate, Cross]
+    native_equivalents: [Circle, Polygon, Dot, Group, Tween, MoveAlongPath, LaggedStart, DecimalNumber, PassingFlash, Indicate, MathMobject]
+    params: ["overlap: float", "regions: Composition", "connective: int", "negated: bool"]
+    text_free: true
+    threed: false
+
+  - id: sorter_scene_regions_become_table_rows
+    family: sorter_scene
+    nodes: [disc.logic.and_or_not]
+    route: native
+    primitives: [Circle, Rectangle, VGroup, Intersection, Difference, Exclusion, Transform, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, Line, FadeIn, Indicate, ShowPassingFlash]
+    native_equivalents: [Circle, Polygon, Group, Transform, MoveAlongPath, LaggedStart, DecimalNumber, Line, FadeIn, Indicate, PassingFlash]
+    params: ["overlap: float", "regions: Composition", "connective: int", "highlighted_row: int"]
+    text_free: true
+    threed: false
+
+  - id: sorter_scene_sides_into_bins
+    family: sorter_scene
+    nodes: [geom.class.polygon_by_sides]
+    route: native
+    primitives: [Rectangle, Polygon, Dot, VGroup, MoveAlongPath, LaggedStartMap, Integer, CountInFrom, ShowCreation, FadeToColor, FadeIn, Indicate]
+    native_equivalents: [Polygon, Dot, Group, MoveAlongPath, LaggedStart, DecimalNumber, Write, Tween, FadeIn, Indicate]
+    params: ["side_counts: int[]", "bins: int[]", "seed: Seed"]
     text_free: true
     threed: false
 
@@ -1149,6 +1270,16 @@ scenes:
     text_free: true
     threed: false
 
+  - id: construction_scene_lift_copy_and_land_it
+    family: construction_scene
+    nodes: [geom.trans.rotation_reflection]
+    route: native
+    primitives: [Polygon, Line, DashedLine, Dot, Arc, Square, ShowCreation, TransformFromCopy, Rotate, ApplyMethod, MoveAlongPath, save_state, Restore, Indicate, FlashAround, smooth]
+    native_equivalents: [Polygon, Line, Dot, Angle, Write, Transform, Rotate, Tween, MoveAlongPath, Indicate, Flash, RateFunctions]
+    params: ["figure: Point[]", "mould: Point[]", "allow_flip: bool", "axis: Segment"]
+    text_free: true
+    threed: false
+
   - id: construction_scene_parallel_cut_similar
     family: construction_scene
     nodes: [geom.sim.similarity_as_scale]
@@ -1176,5 +1307,15 @@ scenes:
     primitives: [Polygon, Rectangle, Square, Line, DashedLine, Dot, ShowCreation, TransformFromCopy, Rotate, ApplyMethod, FadeToColor, Brace, BraceLabel, Indicate]
     native_equivalents: [Polygon, Line, Dot, Write, Transform, Rotate, Tween, Brace, Indicate]
     params: ["base: float", "height: float", "apex_x: float"]
+    text_free: true
+    threed: false
+
+  - id: construction_scene_walk_the_boundary
+    family: construction_scene
+    nodes: [geom.class.polygon_by_sides]
+    route: native
+    primitives: [Polygon, Line, Dot, ShowCreation, LaggedStartMap, Integer, CountInFrom, FadeToColor, ShowPassingFlash, FlashAround, Indicate, Arc]
+    native_equivalents: [Polygon, Line, Dot, Write, LaggedStart, DecimalNumber, Tween, PassingFlash, Flash, Indicate, Angle]
+    params: ["vertices: Point[]", "start_vertex: int", "skip_side: int", "count_corners: bool"]
     text_free: true
     threed: false

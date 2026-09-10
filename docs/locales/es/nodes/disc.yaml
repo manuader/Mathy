@@ -4,10 +4,24 @@
 nodes:
   disc.set.membership_rule:
     name: "Pertenecer es cumplir la regla"
+    probes:
+      recognize: Entre cuatro cajones con tarjetas distintas, tocá el que acepta la pieza que tenés en la mano.
+      explain: Soltá la misma pieza en dos cajones y mostrá por qué uno la acepta y el otro la devuelve.
+      manipulate: Repartí todas las piezas de la lona según la tarjeta que tiene el cajón en la tapa.
+      apply: Antes de soltar la pieza, marcá si entra o no entra, y recién después probá.
+      generalize: Armá una tarjeta que deje el cajón vacío y otra que acepte todo lo que hay en la lona.
+      transfer: En la familia de los cuadriláteros, soltá el cuadrado en todos los cajones que lo aceptan.
   disc.set.union_intersection:
     name: "Juntar aros y donde se cruzan"
   disc.logic.and_or_not:
     name: "Y, O y NO como filtros"
+    probes:
+      recognize: Entre cuatro tarjetas armadas con fichas, tocá la que ilumina la parte encimada de los dos aros.
+      explain: Soltá una pieza roja y grande con la tarjeta "rojo o grande" y mostrá por qué la acepta.
+      manipulate: Armá con las tres fichas la tarjeta que deja afuera solo las piezas rojas y chicas.
+      apply: Antes de repartir, marcá cuántas piezas va a aceptar la tarjeta que acabás de armar.
+      generalize: Armá dos tarjetas distintas que iluminen la misma región y mostralo en la tabla.
+      transfer: En las compuertas, armá con dos entradas la combinación que enciende la luz.
   disc.logic.if_then_direction:
     name: "La flecha si-entonces tiene dirección"
   disc.logic.quantifiers_as_search:

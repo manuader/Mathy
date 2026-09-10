@@ -61,6 +61,14 @@ misconceptions:
     name: "Dar vuelta la implicación"
     prompt: "Todas las {p} son {q}, pero esta {q} no es {p}. ¿Vale al revés?"
 
+  set_as_list_not_rule:
+    name: "El conjunto como lista"
+    prompt: "La tarjeta dice que sí. ¿Hace falta que alguien la ponga adentro?"
+
+  inclusive_or_read_as_exclusive:
+    name: "O como una cosa o la otra"
+    prompt: "Estas {n} piezas cumplen las dos. ¿Cumplen 'al menos una'?"
+
   correlation_implies_causation:
     name: "Correlación como causa"
     prompt: "Dos redes distintas producen los mismos puntos. ¿Cuál es la verdadera?"
@@ -96,6 +104,14 @@ misconceptions:
   inverse_applied_one_side:
     name: "Aplicar la inversa a un solo lado"
     prompt: "Restaste {a} solo de un lado. ¿Qué le falta al otro?"
+
+  unlike_units_joined:
+    name: "Juntar en una fila cosas distintas"
+    prompt: "Esa fila quedó con dos clases de cosas. ¿Cuántas hay de cada una?"
+
+  factors_added_not_multiplied:
+    name: "Sumar los lados en vez de multiplicarlos"
+    prompt: "Con esas baldosas quedó un hueco. ¿Cuántas entran en cada fila?"
 
   fraction_add_across:
     name: "Sumar numeradores y denominadores"
@@ -160,6 +176,10 @@ misconceptions:
   area_scales_like_length:
     name: "El área escalada como un lado"
     prompt: "Quedó piso sin cubrir. ¿Cuántas filas nuevas entraron y cuánto creció cada una?"
+
+  negation_distributes_over_and:
+    name: "Repartir el no sobre las dos partes"
+    prompt: "Esta pieza es roja pero no es grande. ¿Cumple 'rojo y grande'?"
 
   modulus_of_sum_adds:
     name: "Sumar longitudes de dos pasos"

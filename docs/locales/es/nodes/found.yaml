@@ -25,6 +25,13 @@ nodes:
     name: "Cero es el plato vacío"
   found.cmp.bigger_smaller:
     name: "Dónde hay más, dónde menos"
+    probes:
+      recognize: "Tres canastas con distinta cantidad de piedras y un riel con una punta gruesa; el jugador toca la canasta que va en la punta gruesa, la que tiene más."
+      explain: "Dos animaciones sobre las mismas dos canastas: en una se emparejan de a una y sobra en la de la izquierda; en la otra se emparejan y sobra en la de la derecha. El jugador toca la que miente."
+      manipulate: "El jugador arrastra las tres canastas al riel hasta dejarlas de la que tiene menos a la que tiene más; una canasta fuera de lugar se corre sola un poco y late."
+      apply: "Dos canastas desparramadas, sin filas: el jugador empareja piedra con piedra y toca la que sobra, sin contar en voz alta."
+      generalize: "Las mismas cantidades con objetos de distinto tamaño y con barras de distinto grosor; el jugador ordena igual, aunque la más grande no sea la que tiene más."
+      transfer: "En dos caminos entre las mismas dos islas, el jugador toca el camino más corto emparejando tramo con tramo, sin medir."
   found.cmp.same_amount:
     name: "La misma cantidad, uno por uno"
   found.cmp.likely_unlikely:

@@ -155,14 +155,48 @@ nodes:
     next: prealg.var.unknown_as_box
     doc: docs/D-curriculum/D1-espina/09-arith.expr.precedence_tree.md
 
+  - id: arith.add.combine_groups
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [found.count.cardinality]
+    grammar: partition
+    mechanics: [ledger]
+    literacy: none
+    analogy: fruit_ledger
+    misconceptions: [unlike_units_joined]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [prealg.expr.like_terms, disc.count.sum_rule, graph.deg.handshake_lemma]
+    calc_unlocks: []
+    cheatsheet: [cs.arith.add_as_join_groups, cs.arith.join_only_like_groups]
+    manim: [ledger_two_rows_become_one, ledger_unlike_rows_stay_apart]
+    next: arith.place.base_ten_carry
+    doc: docs/D-curriculum/D1-espina/46-arith.add.combine_groups.md
+
+  - id: arith.mul.rows_and_columns
+    area: arith
+    level: 1
+    spine: true
+    prereqs: [arith.mul.scaling]
+    grammar: scale
+    mechanics: [tiles]
+    literacy: none
+    analogy: tile_floor
+    misconceptions: [factors_added_not_multiplied]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [disc.count.product_rule, prob.basic.sample_space_grid, geom.area.rect_and_triangle]
+    calc_unlocks: [op_mul]
+    cheatsheet: [cs.arith.mul_order_irrelevant, cs.arith.mul_grouping_irrelevant]
+    manim: [tile_array_turns_quarter, tile_regroup_factors_same_total]
+    next: arith.mul.partial_products
+    doc: docs/D-curriculum/D1-espina/47-arith.mul.rows_and_columns.md
+
   # ---- add / sub / place -------------------------------------------------------------------
-  - {id: arith.add.combine_groups, area: arith, level: 1, prereqs: [found.count.cardinality], grammar: partition, mechanics: [ledger], literacy: none, analogy: fruit_ledger, cheatsheet: [cs.arith.add_as_join_groups]}
   - {id: arith.add.running_total, area: arith, level: 1, prereqs: [arith.add.displacement], grammar: accumulate, mechanics: [fill_accumulate, ledger], literacy: none, analogy: tank_filling, cheatsheet: [cs.arith.running_total_is_sum_so_far]}
   - {id: arith.place.base_ten_carry, area: arith, level: 1, prereqs: [arith.add.combine_groups, arith.add.displacement], grammar: partition, mechanics: [ledger, gears_sequence], literacy: none, analogy: odometer_dials, cheatsheet: [cs.arith.ten_ones_make_one_ten, cs.arith.column_add_and_borrow], calc_unlocks: [op_add, op_sub]}
 
   # ---- mul / div -----------------------------------------------------------------------------
   - {id: arith.mul.repeated_groups, area: arith, level: 1, prereqs: [arith.add.displacement], grammar: displace, mechanics: [ledger, gears_sequence], literacy: none, analogy: fruit_ledger, aliases: [arith.mul.skip_counting, arith.seq.skip_count, arith.seq.arithmetic], cheatsheet: [cs.arith.mul_as_repeated_add, cs.arith.skip_count_is_constant_step]}
-  - {id: arith.mul.rows_and_columns, area: arith, level: 1, prereqs: [arith.mul.scaling], grammar: scale, mechanics: [tiles], literacy: none, analogy: tile_floor, cheatsheet: [cs.arith.mul_order_irrelevant, cs.arith.mul_grouping_irrelevant], calc_unlocks: [op_mul]}
   - {id: arith.mul.partial_products, area: arith, level: 1, prereqs: [arith.mul.rows_and_columns, arith.place.base_ten_carry], grammar: scale, mechanics: [tiles, ledger], literacy: icons, analogy: tile_floor, cheatsheet: [cs.arith.split_factor_tens_and_ones, cs.arith.column_multiply], calc_unlocks: [op_mul]}
   - {id: arith.div.remainder, area: arith, level: 1, prereqs: [arith.div.undo_mul], grammar: partition, mechanics: [tiles, sorter], literacy: none, analogy: sharing_into_plates, aliases: [arith.div.remainder_classes], cheatsheet: [cs.arith.quotient_times_divisor_plus_remainder], calc_unlocks: [op_mod]}
 

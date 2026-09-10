@@ -186,6 +186,45 @@ challenges:
       - "El ángulo de arriba se copia como alterno interno por encima de la recta nueva."
       - "El de abajo se copia como alterno interno por debajo."
       - "El ángulo del codo es la suma de las dos partes."
+  ch.geom.cut_a_polygon_in_two:
+    title: "Un corte y dos pedazos"
+    statement: "Una figura de {n} lados y un corte recto de lado a lado. ¿Cuántos lados tiene cada pedazo?"
+    hints:
+      - "Los pedazos tienen lados que la figura ya tenía y uno que apareció. ¿Cuál apareció?"
+      - "Mirá bien dónde termina el corte: ¿cae justo en una esquina o en el medio de un lado?"
+      - "Recorré el borde de cada pedazo por separado, arrancando en una punta del corte. Un lado partido al medio cuenta una vez en cada pedazo; un corte que cae en una esquina no parte ningún lado."
+    solution_steps:
+      - "Marcar los dos puntos donde el corte deja la figura."
+      - "Repartir los lados originales entre los dos pedazos, partiendo en dos los que el corte atraviesa."
+      - "Agregar el corte, que es un lado nuevo para cada uno de los dos pedazos."
+      - "Sumar las dos cuentas y comparar con la de la figura entera."
+
+  ch.geom.symmetries_reveal_the_shape:
+    title: "La figura tapada"
+    statement: "Detrás de una pantalla hay una figura que no se ve. La máquina solo contesta una cosa: si le pedís un movimiento, se enciende en verde cuando la figura queda igual que antes y en rojo cuando no. Con {n} preguntas, averiguá qué figura es."
+    hints:
+      - "No podés ver la figura, pero podés ver qué movimientos no la cambian. ¿Cuál es el giro más chico que da verde?"
+      - "Si el giro más chico que funciona entra cierta cantidad de veces en una vuelta entera, esa cantidad te dice algo sobre los lados."
+      - "Un molinete y una figura de lados iguales dan verde con los mismos giros. Lo que los separa es un doblez: probá reflejar sobre una línea que pase por el centro."
+    solution_steps:
+      - "Buscar el giro más chico que deja la figura igual."
+      - "Contar cuántos de esos giros entran en una vuelta entera: esa es la cantidad de lados iguales."
+      - "Probar un doblez para saber si la figura además se refleja sobre sí misma."
+      - "Con las dos respuestas, decidir si es la figura de lados iguales o el molinete."
+
+  ch.geom.two_folds_make_a_turn:
+    title: "Dos dobleces, un solo giro"
+    statement: "Dos líneas que se cruzan y una pieza apoyada al costado. La pieza se refleja primero sobre una línea y después sobre la otra, y queda en un lugar nuevo. Encontrá el único giro que la lleva del lugar donde estaba al lugar donde quedó."
+    hints:
+      - "La pieza terminó del mismo lado que empezó, así que dos reflexiones juntas no reflejaron nada. ¿Qué movimiento puede ser?"
+      - "El dato que falta no está escrito en ninguna parte: es el ángulo que forman las dos líneas donde se cruzan."
+      - "Elegí una esquina de la pieza y seguila en los dos dobleces. El punto donde las líneas se cruzan no se mueve nunca, así que el giro es alrededor de él; medí cuánto barrió esa esquina."
+    solution_steps:
+      - "Marcar el ángulo que forman las dos líneas donde se cruzan."
+      - "Reflejar la pieza sobre la primera línea y después sobre la segunda, siguiendo una sola esquina."
+      - "Medir el giro desde donde arrancó esa esquina hasta donde terminó."
+      - "El giro mide el doble del ángulo entre las dos líneas, y cambiar el orden de los dobleces lo hace para el otro lado."
+
   # ---- alg ----------------------------------------------------------------
 
   ch.alg.hidden_equation_ages:
@@ -536,6 +575,19 @@ challenges:
       - "Estudiantes en al menos un club: total menos los que no están en ninguno."
       - "Sumar los dos clubes cuenta dos veces a los que están en ambos."
       - "La diferencia entre la suma y el 'al menos uno' es la intersección."
+
+  ch.disc.which_or_did_the_sign_mean:
+    title: "Qué quiso decir el cartel"
+    statement: "El cartel del club dice que a la excursión van los que juegan al ajedrez o nadan. En el club hay {total} chicos: {a} juegan al ajedrez y {b} nadan. Se anotaron {signed}. ¿El cartel usó el 'o' que incluye a los que hacen las dos cosas, y cuántos las hacen?"
+    hints:
+      - "Los que hacen las dos cosas, ¿se anotaron o no? Las dos respuestas dan totales distintos."
+      - "Sumá los dos grupos. Esa suma cuenta dos veces a los que hacen las dos cosas. Compará con los que se anotaron."
+      - "Poné dos aros que se cruzan y repartí a todos en las cuatro regiones. Si los anotados son la suma menos los del cruce, el cartel incluye el cruce; si son la suma menos dos veces el cruce, lo deja afuera. Solo una de las dos cuentas da un número entero que no supera el total del club."
+    solution_steps:
+      - "Repartir a todos en las cuatro regiones de los dos aros."
+      - "Sumar los dos grupos: el cruce quedó contado dos veces."
+      - "Comparar esa suma con los que se anotaron y ver cuánto sobra."
+      - "Elegir la lectura de 'o' que cierra y dar la cantidad del cruce."
 
   ch.disc.grid_paths_avoiding_corner:
     title: "Caminos que esquivan una esquina"

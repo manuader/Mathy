@@ -92,7 +92,7 @@ Ejemplo: los valores de seno y coseno en 0°, 30°, 45°, 60° y 90°, o las ter
 pitagóricas 3-4-5 y 5-12-13. Un ejemplo no generaliza nada por sí mismo; es una tabla
 de referencia rápida.
 
-De las 535 entradas que declaran los nodos del grafo, 527 quedan como entradas
+De las 543 entradas que declaran los nodos del grafo, 535 quedan como entradas
 canónicas y 8 se fusionan como alias de una entrada hermana, cuando dos áreas
 declararon el mismo hecho exacto por caminos distintos (sección 5). Entre las
 canónicas, definición es el tipo más común, seguido de fórmula y regla; estrategia y
@@ -306,7 +306,7 @@ sincronización opcional de progreso ([Q](../Q-edad-universal.md)).
 
 ## 12. Tabla resumen por tema
 
-Conteos sobre las 527 entradas canónicas, agrupadas por tema general. "Primer nodo"
+Conteos sobre las 535 entradas canónicas, agrupadas por tema general. "Primer nodo"
 es, dentro de cada tema, el nodo de menor nivel que agrega alguna de sus entradas.
 
 | Tema | Entradas | Primer nodo que abre el tema |
@@ -334,7 +334,7 @@ expande tanto como para necesitar más de cuatro subtemas.
 ## 13. Verificación
 
 - `cheatsheet_entries.yaml` y `locales/es/cheatsheet.yaml` cargan con `yaml.safe_load`.
-- Cada uno de los 535 ids declarados por los nodos del grafo aparece exactamente una vez,
+- Cada uno de los 543 ids declarados por los nodos del grafo aparece exactamente una vez,
   como `id` de una entrada canónica o dentro de sus `aliases`. Ningún alias aparece en
   dos entradas.
 - Todo nodo en `added_by` y todo `play_again` existen en

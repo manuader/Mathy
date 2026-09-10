@@ -1599,6 +1599,17 @@ entries:
   play_again: arith.expr.precedence_tree
   literacy_min: none
   locale_dependent: false
+- id: cs.arith.join_only_like_groups
+  topic: topic.numbers.operations
+  kind: rule
+  added_by:
+  - arith.add.combine_groups
+  added_at_layer: symbolic
+  display: image:img.arith.join_only_like_groups
+  related: []
+  play_again: arith.add.combine_groups
+  literacy_min: none
+  locale_dependent: false
 - id: cs.arith.mul_as_repeated_add
   topic: topic.numbers.operations
   kind: definition
@@ -2955,6 +2966,19 @@ entries:
   play_again: disc.count.choose_as_pascal_paths
   literacy_min: short_text
   locale_dependent: false
+- id: cs.disc.connective_regions
+  topic: topic.discrete.logic
+  kind: rule
+  added_by:
+  - disc.logic.and_or_not
+  added_at_layer: symbolic
+  display: \neg p, \; p \land q, \; p \lor q
+  related:
+  - cs.disc.truth_tables
+  - cs.disc.set_operations
+  play_again: disc.logic.and_or_not
+  literacy_min: short_text
+  locale_dependent: false
 - id: cs.disc.congruence_both_sides
   topic: topic.discrete.modular_arithmetic
   kind: rule
@@ -2998,6 +3022,18 @@ entries:
   related: []
   play_again: disc.proof.chain_of_constructions
   literacy_min: full_text
+  locale_dependent: false
+- id: cs.disc.element_of
+  topic: topic.discrete.sets
+  kind: definition
+  added_by:
+  - disc.set.membership_rule
+  added_at_layer: symbolic
+  display: a \in A, \; b \notin A
+  related:
+  - cs.disc.set_builder_notation
+  play_again: disc.set.membership_rule
+  literacy_min: icons
   locale_dependent: false
 - id: cs.disc.equivalence_relation
   topic: topic.discrete.relations
@@ -3502,6 +3538,18 @@ entries:
   play_again: geom.angle.triangle_sum_half_turn
   literacy_min: icons
   locale_dependent: false
+- id: cs.geom.polygon_sides_equal_vertices
+  topic: topic.geometry.classification
+  kind: theorem
+  added_by:
+  - geom.class.polygon_by_sides
+  added_at_layer: symbolic
+  display: image:img.geom.polygon_sides_equal_vertices
+  related:
+  - cs.geom.what_is_not_a_polygon
+  play_again: geom.class.polygon_by_sides
+  literacy_min: none
+  locale_dependent: false
 - id: cs.geom.polygons_by_sides
   topic: topic.geometry.classification
   kind: definition
@@ -3664,6 +3712,17 @@ entries:
   play_again: geom.cons.auxiliary_lines
   literacy_min: short_text
   locale_dependent: false
+- id: cs.geom.strategy_move_a_copy_to_compare
+  topic: topic.geometry.transformations
+  kind: strategy
+  added_by:
+  - geom.trans.rotation_reflection
+  added_at_layer: symbolic
+  display: text
+  related: []
+  play_again: geom.trans.rotation_reflection
+  literacy_min: icons
+  locale_dependent: false
 - id: cs.geom.strategy_parallel_cuts_similar_triangle
   topic: topic.geometry.similarity
   kind: strategy
@@ -3686,6 +3745,18 @@ entries:
   play_again: geom.cons.hidden_data_hunt
   literacy_min: short_text
   locale_dependent: false
+- id: cs.geom.symmetry_axes_and_order
+  topic: topic.geometry.transformations
+  kind: definition
+  added_by:
+  - geom.trans.rotation_reflection
+  added_at_layer: symbolic
+  display: image:img.geom.symmetry_axes_and_order
+  related:
+  - cs.geom.two_flips_make_a_turn
+  play_again: geom.trans.rotation_reflection
+  literacy_min: icons
+  locale_dependent: false
 - id: cs.geom.triangle_angles_180
   topic: topic.geometry.angles
   kind: theorem
@@ -3707,6 +3778,18 @@ entries:
   related: []
   play_again: geom.tri.inequality_shortest_path
   literacy_min: none
+  locale_dependent: false
+- id: cs.geom.two_flips_make_a_turn
+  topic: topic.geometry.transformations
+  kind: theorem
+  added_by:
+  - geom.trans.rotation_reflection
+  added_at_layer: symbolic
+  display: image:img.geom.two_flips_make_a_turn
+  related:
+  - cs.geom.symmetry_axes_and_order
+  play_again: geom.trans.rotation_reflection
+  literacy_min: icons
   locale_dependent: false
 - id: cs.geom.volume_cone_third_cylinder
   topic: topic.geometry.solids
@@ -3751,6 +3834,18 @@ entries:
   related: []
   play_again: geom.solid.cone_sphere_by_pouring
   literacy_min: icons
+  locale_dependent: false
+- id: cs.geom.what_is_not_a_polygon
+  topic: topic.geometry.classification
+  kind: definition
+  added_by:
+  - geom.class.polygon_by_sides
+  added_at_layer: symbolic
+  display: image:img.geom.what_is_not_a_polygon
+  related:
+  - cs.geom.polygon_sides_equal_vertices
+  play_again: geom.class.polygon_by_sides
+  literacy_min: none
   locale_dependent: false
 - id: cs.graph.bfs_dfs_order
   topic: topic.discrete.graphs

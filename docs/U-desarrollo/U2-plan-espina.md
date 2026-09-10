@@ -1,12 +1,14 @@
 # U2 — Plan de construcción de la espina
 
-Los 44 conceptos de la espina, en olas de tres, hasta que todos sean jugables.
+Los conceptos de la espina, en olas de tres, hasta que todos sean jugables. Eran 44
+cuando se escribió este plan; los siete que se ascendieron después llevan los números
+45 a 47 y 51 a 54, y sus olas se agregan al final de la tabla.
 Este documento es el contrato que sigue cada agente que construye un nodo, para
 que los prompts sean cortos y las decisiones no se vuelvan a discutir.
 
 ## Por qué son trece escenas y no cuarenta y cuatro
 
-Los 44 nodos usan **trece mecánicas**, y el diseño ya exige que ninguna aparezca
+Los nodos de la espina usan **trece mecánicas**, y el diseño ya exige que ninguna aparezca
 en menos de tres áreas ([E0](../E-mecanicas/E0-catalogo.md)). El código tiene que
 reflejar eso: una mecánica se construye una vez y se configura, y un nodo es su
 lista de niveles más la configuración de una o dos mecánicas.

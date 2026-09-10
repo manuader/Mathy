@@ -148,6 +148,24 @@ misconceptions:
     mechanic: sorter
     severity: 2
 
+  - id: set_as_list_not_rule
+    category: conceptual
+    nodes: [disc.set.membership_rule]
+    detect:
+      - {from: "x in {y | p(y)}", guard: "p(x) true and x arrived after the sort", to: "not_member", correct: "member"}
+      - {from: "x in {y | p(y)}", guard: "p(x) true and x not physically inside the bin", to: "not_member", correct: "member"}
+    pattern: replay_on_mechanic
+    mechanic: sorter
+    severity: 3
+
+  - id: inclusive_or_read_as_exclusive
+    category: conceptual
+    nodes: [disc.logic.and_or_not]
+    detect: {from: "p or q", guard: "p true and q true", to: "false", correct: "true"}
+    pattern: two_paths_diverge
+    mechanic: sorter
+    severity: 3
+
   - id: correlation_implies_causation
     category: conceptual
     nodes: [prob.stat.correlation_vs_cause]
@@ -224,6 +242,22 @@ misconceptions:
     detect: {from: "x + a = b", to: ["x = b", "x + a = b - a"], correct: "x = b - a"}
     pattern: replay_on_mechanic
     mechanic: balance
+    severity: 3
+
+  - id: unlike_units_joined
+    category: procedural
+    nodes: [arith.add.combine_groups]
+    detect: {from: "a * x + b * y", guard: "x != y", to: "(a + b) * x", correct: "a * x + b * y"}
+    pattern: replay_on_mechanic
+    mechanic: ledger
+    severity: 3
+
+  - id: factors_added_not_multiplied
+    category: procedural
+    nodes: [arith.mul.rows_and_columns]
+    detect: {from: "a * b", guard: "a > 1 and b > 1", to: "a + b", correct: "a * b"}
+    pattern: missing_piece_tiles
+    mechanic: tiles
     severity: 3
 
   - id: fraction_add_across
@@ -342,7 +376,7 @@ misconceptions:
 
   - id: matrix_multiplication_commutes
     category: invalid_property
-    nodes: [linalg.map.linear_transformation_2d, linalg.map.compose_as_multiply, csmath.gfx.transform_matrix, graph.matrix.two_step_routes_as_product, linalg.map.inverse_and_systems]
+    nodes: [linalg.map.linear_transformation_2d, linalg.map.compose_as_multiply, csmath.gfx.transform_matrix, graph.matrix.two_step_routes_as_product, linalg.map.inverse_and_systems, geom.trans.rotation_reflection]
     detect: {from: "A * B", to: "B * A", correct: "A * B"}
     pattern: two_paths_diverge
     mechanic: grid_stretch
@@ -362,6 +396,14 @@ misconceptions:
     detect: {from: "area(scale(F, k))", guard: "k != 1", to: "k * area(F)", correct: "k^2 * area(F)"}
     pattern: missing_piece_tiles
     mechanic: tiles
+    severity: 2
+
+  - id: negation_distributes_over_and
+    category: invalid_property
+    nodes: [disc.logic.and_or_not]
+    detect: {from: "not (p and q)", to: "(not p) and (not q)", correct: "(not p) or (not q)"}
+    pattern: two_paths_diverge
+    mechanic: sorter
     severity: 2
 
   - id: modulus_of_sum_adds

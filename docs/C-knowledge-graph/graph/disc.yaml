@@ -17,11 +17,53 @@ clusters:
 nodes:
 
   # ---- set ------------------------------------------------------------------
-  - {id: disc.set.membership_rule, area: disc, level: 2, prereqs: [found.sort.by_attribute, prealg.var.unknown_as_box], grammar: partition, mechanics: [sorter], literacy: icons, analogy: sorting_bins, misconceptions: [], cheatsheet: [cs.disc.set_builder_notation], calc_unlocks: [op_set_ops], aliases: [disc.set.subset_venn]}
+  # Espina 53. `found.sort.by_attribute` es un prerequisito directo que no está en la espina:
+  # es de nivel 0, no tiene prerequisitos propios y ningún concepto de la espina lo contiene.
+  # El diagnóstico lo prueba en el backfill de prerequisitos fuera de la espina (J-adaptativo.md).
+  - id: disc.set.membership_rule
+    area: disc
+    level: 2
+    spine: true
+    prereqs: [found.sort.by_attribute, prealg.var.unknown_as_box]
+    grammar: partition
+    mechanics: [sorter]
+    literacy: icons
+    layers: [real, intuition, concrete, visual, symbolic, formal, abstract, transfer]
+    analogy: sorting_bins
+    misconceptions: [set_as_list_not_rule]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [geom.class.quadrilateral_hierarchy, prob.basic.sample_space_grid, graph.color.map_coloring]
+    calc_unlocks: [op_set_ops]
+    cheatsheet: [cs.disc.element_of, cs.disc.set_builder_notation]
+    manim: [sorter_scene_rule_card_decides, sorter_scene_bin_to_set_builder]
+    next: disc.logic.and_or_not
+    doc: docs/D-curriculum/D1-espina/53-disc.set.membership_rule.md
+    aliases: [disc.set.subset_venn]
+
   - {id: disc.set.union_intersection, area: disc, level: 3, prereqs: [disc.set.membership_rule, disc.logic.and_or_not], grammar: partition, mechanics: [sorter, ledger], literacy: icons, analogy: hula_hoops_overlap, misconceptions: [], cheatsheet: [cs.disc.set_operations], calc_unlocks: [op_set_ops], aliases: [disc.set.venn_overlap]}
 
   # ---- logic ----------------------------------------------------------------
-  - {id: disc.logic.and_or_not, area: disc, level: 3, prereqs: [disc.set.membership_rule], grammar: partition, mechanics: [sorter], literacy: short_text, analogy: hula_hoops_overlap, misconceptions: [], cheatsheet: [cs.disc.truth_tables], calc_unlocks: [op_truth_table], aliases: [disc.logic.and_or]}
+  # Espina 54.
+  - id: disc.logic.and_or_not
+    area: disc
+    level: 3
+    spine: true
+    prereqs: [disc.set.membership_rule]
+    grammar: partition
+    mechanics: [sorter]
+    literacy: short_text
+    layers: [real, intuition, concrete, visual, symbolic, formal, abstract, transfer]
+    analogy: hula_hoops_overlap
+    misconceptions: [inclusive_or_read_as_exclusive, negation_distributes_over_and]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [csmath.bool.logic_gates, prob.basic.union_intersection, geom.class.quadrilateral_hierarchy]
+    calc_unlocks: [op_truth_table]
+    cheatsheet: [cs.disc.connective_regions, cs.disc.truth_tables]
+    manim: [sorter_scene_two_hoops_connective, sorter_scene_regions_become_table_rows]
+    next: disc.set.union_intersection
+    doc: docs/D-curriculum/D1-espina/54-disc.logic.and_or_not.md
+    aliases: [disc.logic.and_or]
+
   - {id: disc.logic.if_then_direction, area: disc, level: 5, prereqs: [disc.logic.and_or_not], grammar: relate, mechanics: [sorter, network_routes], literacy: short_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [converse_assumed], cheatsheet: [cs.disc.implication_converse_contrapositive], calc_unlocks: [op_truth_table]}
   - {id: disc.logic.quantifiers_as_search, area: disc, level: 6, prereqs: [disc.logic.and_or_not, disc.set.membership_rule], grammar: partition, mechanics: [sorter], literacy: full_text, layers: [visual, symbolic, formal, abstract, transfer], misconceptions: [], cheatsheet: [cs.disc.quantifiers_negation], calc_unlocks: [op_proof_check]}
 

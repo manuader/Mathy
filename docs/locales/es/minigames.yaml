@@ -461,3 +461,75 @@ minigames:
     - name: Fichas y gráfico
     - name: Radio y vueltas
     - name: Sin rueda
+  disc.set.membership_rule:
+    name: La tarjeta del cajón
+    levels:
+    - name: Entra o no entra
+    - name: La tarjeta boca abajo
+    - name: La lona y la curva
+    - name: Tres cajones a la vez
+    - name: El tic se vuelve un renglón
+    - name: El cajón vacío
+    - name: Reglas que nunca viste
+  disc.logic.and_or_not:
+    name: Dos aros y tres fichas
+    levels:
+    - name: Los dos aros
+    - name: La ficha "y"
+    - name: La ficha "o"
+    - name: La ficha "no" y la lona
+    - name: Cuatro regiones, cuatro filas
+    - name: Tarjetas dentro de tarjetas
+    - name: Dos tarjetas, una al lado de la otra
+    - name: Sin piezas
+  geom.class.polygon_by_sides:
+    name: El taller de cajones
+    levels:
+    - name: Piedras a los cajones
+    - name: Recorrer el borde
+    - name: La batea
+    - name: Contornos y cifra
+    - name: Giradas y desparejas
+    - name: La cifra y el nombre
+    - name: Demasiados para la cabeza
+    - name: Sin figura
+  geom.trans.rotation_reflection:
+    name: La pieza y el molde
+    levels:
+    - name: La pieza en el molde
+    - name: La que no entra girando
+    - name: Copia y contorno
+    - name: Fichas de movimiento
+    - name: Dos movimientos
+    - name: El molde es la figura
+    - name: Figuras que nunca viste
+  found.cmp.bigger_smaller:
+    name: El riel de los cuencos
+    levels:
+    - name: Cuál tiene más
+    - name: El riel de tres
+    - name: Ni más ni menos
+    - name: La cinta
+    - name: Cinco cuencos, diferencias de a una
+    - name: La escalera
+  arith.add.combine_groups:
+    name: Dos montones, un renglón
+    levels:
+    - name: Un renglón por montón
+    - name: Los dos se funden
+    - name: Manzanas y peras
+    - name: El renglón vacío
+    - name: Conteo y clase
+    - name: Cuatro montones
+    - name: Clases que nunca viste
+  arith.mul.rows_and_columns:
+    name: El piso que gira
+    levels:
+    - name: Cubrir el marco
+    - name: Levantar y girar
+    - name: La ficha que no se mueve
+    - name: Todas las formas del lote
+    - name: Llaves y cruz que se dan vuelta
+    - name: Pisos grandes, uno y cero
+    - name: Tres factores
+    - name: Lotes arbitrarios

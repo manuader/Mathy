@@ -17,7 +17,7 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 |---|---|---|
 | A | [Visión](A-vision.md) | Qué experiencia queremos construir |
 | B | [Filosofía pedagógica](B-filosofia-pedagogica.md) | Las once reglas que gobiernan el diseño |
-| C | [Knowledge graph](C-knowledge-graph/C0-esquema.md) | Schema, convención de ids, validador; [espina](C-knowledge-graph/spine.yaml) de 44 conceptos; [grafo](C-knowledge-graph/graph/) de ~350 nodos en 16 áreas |
+| C | [Knowledge graph](C-knowledge-graph/C0-esquema.md) | Schema, convención de ids, validador; [espina](C-knowledge-graph/spine.yaml) de 51 conceptos; [grafo](C-knowledge-graph/graph/) de ~350 nodos en 16 áreas |
 | D | [Curriculum](D-curriculum/D0-mapa.md) | Niveles, áreas, presupuesto, rutas de lectura; [D1](D-curriculum/D1-espina/): template de 14 pasos por concepto de la espina |
 | E | [Mecánicas](E-mecanicas/E0-catalogo.md) | Trece mecánicas reutilizables y la teoría "funciones como llaves"; [datos](E-mecanicas/mechanics.yaml) |
 | F | [Minijuegos](F-minijuegos/F0-principios.md) | Principios y un minijuego completo por concepto de la espina |
@@ -51,7 +51,7 @@ Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-prog
 | Término | Significado en Mathy |
 |---|---|
 | nodo | una idea matemática con una única dificultad cognitiva |
-| espina | los 44 conceptos desarrollados a fondo, con D1 y minijuego |
+| espina | los 51 conceptos desarrollados a fondo, con D1 y minijuego |
 | capa | una de las ocho etapas de abstracción de un concepto |
 | primitiva | una de las doce transformaciones de la gramática visual |
 | mecánica | interacción física reutilizable que conserva un invariante |

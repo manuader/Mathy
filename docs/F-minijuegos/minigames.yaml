@@ -3635,3 +3635,571 @@ minigames:
   challenges:
   - ch.trig.regular_polygon_area_by_radii
   demonstration: passenger_dragged_quarter_turn_height_measured_against_post
+- id: geom.class.polygon_by_sides
+  node: geom.class.polygon_by_sides
+  mechanics:
+  - sorter
+  - construct
+  analogies:
+  - sorting_bins
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - manipulate
+    hardens: three_bins_even_figures_resting_on_a_side
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: boundary_walk_with_start_corner_and_tick_strip
+  - n: 3
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: non_polygons_and_the_scrap_tray
+  - n: 4
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: outlines_ticks_collapse_into_a_numeral
+  - n: 5
+    layer: visual
+    evidence:
+    - apply
+    hardens: rotated_rescaled_and_concave_figures
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: name_grows_from_the_numeral_and_travels
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    - generalize
+    hardens: ten_to_twelve_sides_grouped_ticks_straight_vertex
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: number_without_a_figure_and_the_bin_that_is_missing
+  generators:
+  - name: gen_polygon_batch
+    params:
+    - side_counts
+    - convex
+    - rotation
+    - scale_spread
+    - include_non_polygons
+    - straight_vertex
+    - seed
+  - name: gen_bin_row
+    params:
+    - bins
+    - front
+    - include_scrap_tray
+    - missing_bin
+    - seed
+  - name: gen_boundary_walk
+    params:
+    - start_vertex
+    - direction
+    - skip_side
+    - count_corners_instead
+    - group_ticks
+    - seed
+  scenes:
+  - sorter_scene_sides_into_bins
+  - construction_scene_walk_the_boundary
+  misconceptions: []
+  challenges:
+  - ch.geom.cut_a_polygon_in_two
+  - ch.geom.symmetries_reveal_the_shape
+  demonstration: tap_start_corner_then_drag_around_the_boundary_and_drop_in_the_bin
+- id: geom.trans.rotation_reflection
+  node: geom.trans.rotation_reflection
+  mechanics:
+  - construct
+  - grid_stretch
+  - gears_sequence
+  analogies:
+  - quarter_turn_dial
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: real
+    evidence:
+    - manipulate
+    hardens: slide_and_turn_only_pieces_that_fit_many_ways
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - manipulate
+    hardens: chiral_pieces_bring_the_axis_and_the_flip
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: outline_coloured_corner_and_the_rubber_grid
+  - n: 4
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: each_gesture_leaves_a_move_token_with_its_turn
+  - n: 5
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: chains_of_two_and_three_moves_and_the_swap
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    - generalize
+    hardens: the_mould_becomes_the_figure_itself
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: unseen_figures_counted_without_moving_anything
+  generators:
+  - name: gen_piece_and_mould
+    params:
+    - sides
+    - chiral
+    - move_kinds
+    - turn_fraction
+    - distance
+    - seed
+  - name: gen_move_chain
+    params:
+    - length
+    - kinds
+    - swap_offered
+    - seed
+  - name: gen_symmetry_figure
+    params:
+    - family
+    - sides
+    - mirrors
+    - rotation_order
+    - seed
+  scenes:
+  - construction_scene_lift_copy_and_land_it
+  - grid_scene_turn_and_flip_the_sheet
+  misconceptions:
+  - matrix_multiplication_commutes
+  challenges:
+  - ch.geom.symmetries_reveal_the_shape
+  - ch.geom.two_folds_make_a_turn
+  - ch.geom.reflect_shortest_path_river
+  demonstration: hold_to_lift_a_copy_turn_it_onto_the_mould_then_trace_an_axis_and_flip
+- id: disc.set.membership_rule
+  node: disc.set.membership_rule
+  mechanics:
+  - sorter
+  analogies:
+  - sorting_bins
+  literacy:
+    min: icons
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: single_bin_card_face_up_one_trait
+  - n: 2
+    layer: concrete
+    evidence:
+    - recognize
+    - explain
+    hardens: card_face_down_second_trait_more_objects
+  - n: 3
+    layer: visual
+    evidence:
+    - explain
+    - manipulate
+    hardens: bin_flattens_to_curve_mat_border_appears
+  - n: 4
+    layer: visual
+    evidence:
+    - apply
+    hardens: three_bins_overlapping_cards_ghost_copies
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: element_of_and_the_letter_on_the_curve
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: empty_bin_and_late_arrival_set_as_list_not_rule
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: hidden_objects_and_cards_over_non_objects
+  generators:
+  - name: gen_object_heap
+    params:
+    - traits
+    - values_per_trait
+    - total_range
+    - off_mat_count
+    - seed
+  - name: gen_rule_card
+    params:
+    - kind
+    - face_down
+    - accepts_none
+    - accepts_all
+    - seed
+  - name: gen_bin_layout
+    params:
+    - bins
+    - nesting
+    - overlapping_cards
+    - seed
+  - name: gen_late_arrival
+    params:
+    - when
+    - satisfies
+    - seed
+  scenes:
+  - sorter_scene_rule_card_decides
+  - sorter_scene_bin_to_set_builder
+  misconceptions:
+  - set_as_list_not_rule
+  challenges:
+  - ch.disc.socks_in_the_dark
+  - ch.disc.which_or_did_the_sign_mean
+  demonstration: object_dropped_stays_then_another_bounces_then_card_is_turned_over
+- id: disc.logic.and_or_not
+  node: disc.logic.and_or_not
+  mechanics:
+  - sorter
+  analogies:
+  - hula_hoops_overlap
+  literacy:
+    min: short_text
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: two_hoops_one_simple_card_each_no_connective
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: and_tile_lights_the_overlap
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: or_tile_overlap_lit_once_inclusive_or_read_as_exclusive
+  - n: 4
+    layer: visual
+    evidence:
+    - manipulate
+    hardens: not_tile_flips_region_mat_border_changes_the_count
+  - n: 5
+    layer: visual
+    evidence:
+    - recognize
+    - apply
+    hardens: disjoint_nested_hoops_four_counters_and_the_table
+  - n: 6
+    layer: symbolic
+    evidence:
+    - manipulate
+    hardens: nested_cards_parentheses_negation_distributes_over_and
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: two_compound_cards_side_by_side_words_contract_to_signs
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: table_without_pieces_cards_over_non_objects
+  generators:
+  - name: gen_two_hoop_board
+    params:
+    - overlap
+    - nesting
+    - total_range
+    - region_counts
+    - off_mat_count
+    - seed
+  - name: gen_compound_card
+    params:
+    - connectives
+    - negation_depth
+    - nested
+    - values_per_trait
+    - seed
+  - name: gen_truth_table_query
+    params:
+    - asks
+    - rows_shown
+    - unused_row
+    - seed
+  - name: gen_equivalent_pair
+    params:
+    - equivalent
+    - distractor_kind
+    - seed
+  scenes:
+  - sorter_scene_two_hoops_connective
+  - sorter_scene_regions_become_table_rows
+  misconceptions:
+  - inclusive_or_read_as_exclusive
+  - negation_distributes_over_and
+  challenges:
+  - ch.disc.which_or_did_the_sign_mean
+  demonstration: and_tile_dragged_between_the_two_cards_and_only_the_overlap_lights_up
+- id: found.cmp.bigger_smaller
+  node: found.cmp.bigger_smaller
+  mechanics:
+  - sorter
+  - ledger
+  analogies:
+  - fruit_bowl_count
+  literacy:
+    min: none
+    max: none
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: duel_by_pairing
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: rail_of_three_slots
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: tie_widens_the_slot
+  - n: 4
+    layer: concrete
+    evidence:
+    - apply
+    hardens: ribbon_records_a_settled_duel
+  - n: 5
+    layer: concrete
+    evidence:
+    - apply
+    hardens: more_bowls_gap_of_one_scattered
+  - n: 6
+    layer: visual
+    evidence:
+    - generalize
+    hardens: bars_become_a_staircase_skin_and_size
+  generators:
+  - name: gen_bowl_rail
+    params:
+    - bowls
+    - counts
+    - min_gap
+    - ties
+    - ribbons
+    - seed
+  - name: gen_compare_pair
+    params:
+    - count_a
+    - count_b
+    - arrangement
+    - lying
+    - seed
+  - name: gen_object_set
+    params:
+    - skin
+    - size_variance
+    - bar_thickness
+    - count
+  scenes:
+  - sorter_rail_orders_by_amount
+  - ledger_bars_compare_overhang
+  misconceptions: []
+  challenges:
+  - ch.arith.pair_them_to_compare
+  demonstration: two_bowls_pair_up_then_go_to_their_slots
+- id: arith.add.combine_groups
+  node: arith.add.combine_groups
+  mechanics:
+  - ledger
+  analogies:
+  - fruit_ledger
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: one_row_per_pile
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: rows_merge_tally_counts_on
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: mixed_kinds_row_splits
+  - n: 4
+    layer: concrete
+    evidence:
+    - apply
+    hardens: empty_pile_changes_nothing
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: marks_collapse_into_count_and_kind
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: four_piles_three_kinds_free_order
+  - n: 7
+    layer: formal
+    evidence:
+    - generalize
+    hardens: mute_labels_as_kinds
+  generators:
+  - name: gen_ledger_rows
+    params:
+    - piles
+    - counts
+    - empty_pile
+    - join_order
+    - seed
+  - name: gen_kind_mix
+    params:
+    - kinds
+    - kind_labels
+    - lying
+  - name: gen_object_set
+    params:
+    - skin
+    - size_variance
+    - count
+  scenes:
+  - ledger_two_rows_become_one
+  - ledger_unlike_rows_stay_apart
+  misconceptions:
+  - unlike_units_joined
+  challenges:
+  - ch.arith.covered_row_count
+  demonstration: one_row_dropped_onto_the_other_and_the_tally_counts_on
+- id: arith.mul.rows_and_columns
+  node: arith.mul.rows_and_columns
+  mechanics:
+  - tiles
+  analogies:
+  - tile_floor
+  literacy:
+    min: none
+    max: full_text
+  levels:
+  - n: 1
+    layer: concrete
+    evidence:
+    - manipulate
+    hardens: cover_the_frame_with_rows
+  - n: 2
+    layer: concrete
+    evidence:
+    - manipulate
+    - recognize
+    hardens: hold_lifts_and_turns_the_floor
+  - n: 3
+    layer: concrete
+    evidence:
+    - explain
+    hardens: total_token_stays_put_on_turn
+  - n: 4
+    layer: concrete
+    evidence:
+    - apply
+    hardens: loose_lot_every_rectangle_as_silhouette
+  - n: 5
+    layer: symbolic
+    evidence:
+    - manipulate
+    - apply
+    hardens: keys_and_cross_swap_sides
+  - n: 6
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: bigger_factors_one_and_zero
+  - n: 7
+    layer: symbolic
+    evidence:
+    - apply
+    hardens: third_factor_and_the_grouping_band
+  - n: 8
+    layer: formal
+    evidence:
+    - generalize
+    hardens: arbitrary_lots_without_a_grid
+  generators:
+  - name: gen_tile_floor
+    params:
+    - rows
+    - cols
+    - orientation
+    - cut
+    - show_keys
+    - seed
+  - name: gen_rectangle_lot
+    params:
+    - total
+    - include_prime
+    - count_turned_once
+    - skin
+    - seed
+  - name: gen_factor_triple
+    params:
+    - factors
+    - grouping
+    - show_band
+    - seed
+  scenes:
+  - tile_array_turns_quarter
+  - tile_regroup_factors_same_total
+  misconceptions:
+  - factors_added_not_multiplied
+  challenges:
+  - ch.arith.count_rectangles_divisors
+  demonstration: floor_is_lifted_and_turned_while_the_total_token_stays

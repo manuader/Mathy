@@ -90,7 +90,7 @@ La `Matrix` de ManimGL se muestra al costado y se actualiza con `TransformMatchi
 | `invariant` | `Indicate`, `FlashAround`, `Rotate` (balanza), `Arc` (ángulos marcados) | `Indicate`, `Flash`, `Rotate`, `Angle` |
 | `random` | `BarChart`, `ValueTracker`, `MoveAlongPath`, `Sector`, `SurroundingRectangle` | `BarChart`, `SharedValue`, `MoveAlongPath`, `Arc`, `Polygon` |
 
-### Tabla: los 44 nodos de la espina
+### Tabla: los 51 nodos de la espina
 
 La columna "primitivas" enumera las que distinguen al nodo; las de la familia base no se repiten. La columna "nativo" nombra las piezas de viz-core que la escena interactiva necesita.
 
@@ -250,7 +250,7 @@ Esta es la lista contra la que el validador comprueba `primitives` en `scenes.ya
 
 Generada desde [`scenes.yaml`](scenes.yaml). Ruta: `native` corre en viz-core; `prerender` es un clip en CI; `both` es clip de introducción con handoff a la escena nativa. Las escenas marcadas con asterisco fueron agregadas por este documento y no aparecen en el campo `manim` de ningún nodo; los nodos que las usan son de la espina y declaran la mecánica de la familia. Las escenas restantes son los 92 ids que el grafo declara.
 
-Conteos: 98 escenas; 82 `native`, 12 `both`, 4 `prerender`; ninguna 3D. Por familia: `chest_scene` 13, `gear_scene` 12, `grid_scene` 11, `tile_scene` 9, `slope_scene` 9, `construction_scene` 8, `ledger_scene` 8, `balance_scene` 7, `pipe_scene` 7, `urn_scene` 5, `network_scene` 4, `fill_scene` 3, `sorter_scene` 2.
+Conteos: 112 escenas; 95 `native`, 13 `both`, 4 `prerender`; ninguna 3D. Por familia: `chest_scene` 13, `gear_scene` 12, `grid_scene` 12, `ledger_scene` 11, `tile_scene` 11, `construction_scene` 10, `slope_scene` 9, `sorter_scene` 8, `balance_scene` 7, `pipe_scene` 7, `urn_scene` 5, `network_scene` 4, `fill_scene` 3.
 
 | Escena | Familia | Nodos | Ruta | Primitivas principales |
 |---|---|---|---|---|

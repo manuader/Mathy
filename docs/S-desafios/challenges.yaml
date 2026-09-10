@@ -420,6 +420,72 @@ challenges:
     generator:
       name: gen_zigzag_between_parallels
       params: {angle_a_range: [20, 70], angle_b_range: [20, 70], vertices: [1, 2], ask: [middle_angle, one_of_the_outer_angles]}
+  - id: ch.geom.cut_a_polygon_in_two
+    area: geom
+    tier: training
+    requires: [geom.class.polygon_by_sides, found.count.cardinality]
+    mechanics: [construct, sorter]
+    literacy_min: none
+    figure: generated:gen_polygon_with_a_straight_cut
+    hidden_data:
+      - {missing: where_the_cut_meets_the_boundary, discovered_by: mark_the_two_points_where_the_cut_leaves_the_figure, uses: cs.geom.polygon_sides_equal_vertices}
+      - {missing: how_many_sides_each_piece_has, discovered_by: walk_the_boundary_of_each_piece_separately, uses: cs.geom.polygons_by_sides}
+    expected_constructions:
+      - [draw_the_straight_cut, walk_the_boundary_of_each_piece, put_each_piece_in_its_bin]
+      - [mark_the_two_points_where_the_cut_leaves_the_figure, count_the_sides_on_each_arc, add_the_cut_once_to_each_piece]
+    cheatsheet_refs: [cs.geom.polygons_by_sides, cs.geom.polygon_sides_equal_vertices, cs.geom.what_is_not_a_polygon]
+    strategy_misconceptions: [counted_twice, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [mark_where_the_cut_meets_the_boundary, split_the_original_sides_between_the_two_pieces, count_the_cut_once_for_each_piece, add_the_two_counts_and_compare_with_the_original]
+    answer_kind: number
+    generator:
+      name: gen_polygon_with_a_straight_cut
+      params: {sides_range: [4, 8], cut_endpoints: [side_side, side_vertex, vertex_vertex], convex: [true, false], ask: [sides_of_each_piece, total_of_both, largest_possible_total]}
+
+  - id: ch.geom.symmetries_reveal_the_shape
+    area: geom
+    tier: regional
+    requires: [geom.trans.rotation_reflection, geom.class.polygon_by_sides]
+    mechanics: [construct, gears_sequence, sorter]
+    literacy_min: none
+    figure: generated:gen_hidden_symmetric_figure
+    hidden_data:
+      - {missing: the_figure_behind_the_screen, discovered_by: ask_the_machine_whether_a_move_leaves_it_unchanged, uses: cs.geom.symmetry_axes_and_order}
+      - {missing: the_number_of_sides, discovered_by: count_how_many_of_the_smallest_turn_fit_in_a_full_turn, uses: cs.geom.polygons_by_sides}
+    expected_constructions:
+      - [try_the_smallest_turn_that_works, count_how_many_fit_in_a_full_turn, try_one_flip, name_the_figure]
+      - [try_flips_until_the_axes_are_counted, match_the_axis_count_with_the_side_count, confirm_with_one_turn]
+    cheatsheet_refs: [cs.geom.symmetry_axes_and_order, cs.geom.polygons_by_sides, cs.geom.rigid_motions_preserve_lengths_angles, cs.geom.full_turn_360]
+    strategy_misconceptions: [ignored_case, counted_twice, strategy_missing_auxiliary_line]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [find_the_smallest_turn_that_leaves_it_unchanged, count_how_many_of_those_fit_in_a_full_turn, ask_whether_any_flip_leaves_it_unchanged, decide_between_the_pinwheel_and_the_regular_figure]
+    answer_kind: number
+    generator:
+      name: gen_hidden_symmetric_figure
+      params: {families: [regular, pinwheel, isosceles, scalene], sides_range: [3, 8], allowed_questions: [turn, flip], question_budget: [3, 5]}
+
+  - id: ch.geom.two_folds_make_a_turn
+    area: geom
+    tier: regional
+    requires: [geom.trans.rotation_reflection, geom.angle.turn_as_measure]
+    mechanics: [construct, grid_stretch, gears_sequence]
+    literacy_min: icons
+    figure: generated:gen_two_crossing_axes
+    hidden_data:
+      - {missing: the_angle_between_the_two_axes, discovered_by: mark_the_angle_where_the_two_lines_cross, uses: cs.geom.angle_names_right_straight}
+      - {missing: the_single_turn_that_does_the_same, discovered_by: follow_one_corner_from_start_to_end_through_both_flips, uses: cs.geom.two_flips_make_a_turn}
+    expected_constructions:
+      - [mark_the_angle_between_the_axes, flip_over_the_first_axis, flip_over_the_second_axis, measure_the_turn_from_start_to_end]
+      - [pick_one_corner, follow_it_through_both_flips, measure_the_angle_it_swept_around_the_crossing_point]
+    cheatsheet_refs: [cs.geom.two_flips_make_a_turn, cs.geom.symmetry_axes_and_order, cs.geom.rigid_motions_preserve_lengths_angles, cs.geom.full_turn_360, cs.geom.strategy_move_a_copy_to_compare]
+    strategy_misconceptions: [assumed_right_angle, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [mark_the_angle_between_the_axes, flip_twice_and_watch_one_corner, read_the_turn_from_start_to_end, state_that_the_turn_is_twice_the_angle]
+    answer_kind: number
+    generator:
+      name: gen_two_crossing_axes
+      params: {axis_angle_range: [15, 75], order: [ab, ba], sides_range: [3, 6], ask: [turn_angle, angle_between_axes, does_order_matter]}
+
   # =========================================================================
   # ÁLGEBRA
   # =========================================================================
@@ -821,7 +887,7 @@ challenges:
   - id: ch.arith.covered_row_count
     area: arith
     tier: training
-    requires: [found.count.cardinality, found.count.number_line, arith.add.displacement]
+    requires: [found.count.cardinality, found.count.number_line, arith.add.displacement, arith.add.combine_groups]
     mechanics: [ledger, gears_sequence]
     literacy_min: none
     figure: generated:gen_covered_row_of_boxes
@@ -843,7 +909,7 @@ challenges:
   - id: ch.arith.pair_them_to_compare
     area: arith
     tier: training
-    requires: [found.count.cardinality, arith.sub.undo_add]
+    requires: [found.count.cardinality, found.cmp.bigger_smaller, arith.sub.undo_add]
     mechanics: [network_routes, sorter]
     literacy_min: none
     figure: generated:gen_two_scattered_groups
@@ -1018,6 +1084,28 @@ challenges:
     generator:
       name: gen_two_sets_overlap
       params: {total_range: [20, 40], ask: [overlap, neither, exactly_one]}
+
+  - id: ch.disc.which_or_did_the_sign_mean
+    area: disc
+    tier: regional
+    requires: [disc.logic.and_or_not, disc.set.membership_rule]
+    mechanics: [sorter, ledger]
+    literacy_min: short_text
+    figure: generated:gen_two_cards_over_a_heap
+    hidden_data:
+      - {missing: which_reading_of_or_the_sign_uses, discovered_by: test_only_the_people_who_satisfy_both_cards, uses: cs.disc.connective_regions}
+      - {missing: how_many_satisfy_both, discovered_by: compare_the_announced_total_against_the_sum_of_the_two_groups, uses: cs.disc.truth_tables}
+    expected_constructions:
+      - [sort_everyone_into_the_four_regions_of_two_hoops, add_the_two_groups_in_a_ledger, compare_with_the_announced_total, name_the_region_that_explains_the_gap, read_off_the_reading_of_or]
+      - [write_the_four_rows_with_the_two_cards, try_the_inclusive_row_for_both_true, try_the_exclusive_row_for_both_true, keep_the_reading_that_matches_the_announced_total]
+    cheatsheet_refs: [cs.disc.connective_regions, cs.disc.truth_tables, cs.disc.set_builder_notation, cs.disc.element_of]
+    strategy_misconceptions: [counted_twice, ignored_case]
+    hints: [what_is_missing, which_line_reveals_it, show_construction]
+    solution_steps: [sort_into_the_four_regions, add_the_two_groups, compare_with_the_announced_total, decide_the_reading_and_answer]
+    answer_kind: expression
+    generator:
+      name: gen_two_cards_over_a_heap
+      params: {total_range: [18, 40], group_a_range: [6, 20], group_b_range: [6, 20], both_range: [2, 8], reading: [inclusive, exclusive], ask: [both, neither, reading]}
 
   - id: ch.disc.grid_paths_avoiding_corner
     area: disc

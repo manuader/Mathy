@@ -1,7 +1,7 @@
 # HANDOFF — Mathy, estado actual
 
-> El diseño está cerrado: 348 nodos de grafo, 44 en la espina, validador en cero errores.
-> La construcción tiene **7 nodos registrados y 5 jugables** de los 44. La app corre en
+> El diseño está cerrado: 348 nodos de grafo, **51 en la espina**, validador en cero errores.
+> La construcción tiene **7 nodos registrados y 5 jugables** de los 51. La app corre en
 > navegador; en iOS y Android todavía **no se probó**.
 > Al momento de escribir esto hay **seis agentes en vuelo**; leé `handoffs/` antes de tocar nada.
 
@@ -95,6 +95,13 @@ de eventos. Después se construyó el andamiaje del curriculum —mapa de concep
 de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y porqués en
 [SESSION-2026-09-09-espina-jugable.md](SESSION-2026-09-09-espina-jugable.md).
 
+### Sesión 2026-09-09 (cont.) — la espina pasa de 44 a 51 conceptos
+Siete nodos del grafo subieron a la espina con tratamiento completo: comparar cantidades,
+juntar montones, filas por columnas, clasificar polígonos, giros y reflexiones, la regla
+de pertenencia y la lógica de los aros. Se eligieron **por cuántos nodos del grafo los
+necesitan**, porque la medida obvia no servía: ningún nodo de fuera de la espina era
+prerequisito de uno de adentro, ya que la espina se había escrito cerrada sobre sí misma.
+
 ## 5. Decisiones que no conviene reabrir
 
 1. **Todo se dibuja con React Native Skia, no con ManimGL.** ManimGL es un renderer de
@@ -122,7 +129,10 @@ de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y
    `chest_key`— serían ilegales. Las 157 aristas `transfer_to` ya cruzaban área.
 9. **i18n desde el día uno.** Ninguna cadena visible dentro de un componente. Una clave
    sin traducción devuelve la clave: un texto sin traducir tiene que doler.
-10. **Presupuesto de ~300 elementos animados** en Android de gama baja y **un solo
+10. **Un nodo entra a la espina por cuántos nodos del grafo lo necesitan**, con el nivel
+    como desempate. La medida intuitiva —cuántos nodos de espina dependen de él— da cero
+    para los 304 candidatos, porque la espina se escribió cerrada sobre sí misma.
+11. **Presupuesto de ~300 elementos animados** en Android de gama baja y **un solo
     `<Canvas>` por pantalla**, porque Android Chrome permite ocho contextos WebGL vivos y
     Skia consume uno por lienzo.
 
@@ -146,7 +156,7 @@ npx tsc --noEmit -p apps/mathy && npx tsc --noEmit -p packages/mechanics
 python3 tools/validate.py
 ```
 
-Esperado: `sin errores · 348 nodos, 44 en la espina, 114 aviso(s)`. Los avisos son
+Esperado: `sin errores · 348 nodos, 51 en la espina, 115 aviso(s)`. Los avisos son
 tolerados; **los errores no**.
 
 Para verlo en el navegador:
@@ -207,7 +217,7 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
 ## 8. Qué falta
 
 **Código:**
-- **37 nodos de la espina** sin construir. El plan por olas está en
+- **44 nodos de la espina** sin construir: los 37 originales que faltaban más los 7 que se ascendieron. El plan por olas está en
   [U2](U-desarrollo/U2-plan-espina.md).
 - **Unificar las escenas duplicadas**: `PathScene` y `TrackScene` son la misma mecánica, y
   `chest_key` está dos veces (`BalanceScene` y `ChestScene`).

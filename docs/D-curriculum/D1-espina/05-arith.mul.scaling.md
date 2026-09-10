@@ -116,12 +116,12 @@ Misconception esperada ([L0](../../L-modelo-errores/L0-taxonomia.md)):
 
 - **`negative_times_negative`**, patrón `double_flip`. Aparece en el borde del nodo, cuando el jugador ve por primera vez una banda que se da vuelta. El patrón corre sobre el caminante: está en el origen mirando a la derecha, la primera vuelta lo pone mirando a la izquierda y avanza, la segunda lo devuelve a mirar a la derecha y avanza más. La respuesta del jugador queda dibujada como una bandera del lado equivocado, donde habría terminado con un solo giro. Voz: "Te diste vuelta dos veces. ¿Hacia dónde mirás ahora?". El jugador vuelve a girar desde el estado real.
 
-Errores que el diseño prevé y que no tienen entrada en el catálogo, y por eso no clasifican ni bloquean `ready`:
+Errores que el diseño prevé y que este nodo no declara, y por eso no bloquean su `ready`:
 
 - **Confundir estirar con desplazar.** Es el distractor de `explain` y el gesto que el clavo bloquea. Si el jugador insiste, el juego reproduce los dos movimientos uno sobre otro con las marcas iluminadas y muestra que en uno las separaciones cambian y en el otro no.
-- **Sumar los dos factores.** Aparece cuando el jugador arrastra la ficha del total sin armar el rectángulo. El juego ejecuta su respuesta: coloca esa cantidad de baldosas en el marco y queda un hueco. Corre como `missing_piece_tiles` sobre `tiles`, sin entrada propia.
+- **Sumar los dos factores.** Aparece cuando el jugador arrastra la ficha del total sin armar el rectángulo. El juego ejecuta su respuesta: coloca esa cantidad de baldosas en el marco y queda un hueco. Corre como `missing_piece_tiles` sobre `tiles`. Su entrada de catálogo, `factors_added_not_multiplied`, la declara `arith.mul.rows_and_columns`, que tiene a este nodo como prerequisito: el clasificador la ve desde acá porque forma parte del vecindario conceptual ([L0](../../L-modelo-errores/L0-taxonomia.md)) y la explicación se ejecuta igual, pero el error no cuenta contra el `ready` de este nodo.
 
-Si el playtest los muestra sistemáticos, merecen entrada propia en `misconceptions.yaml`; hoy el nodo declara solo una.
+Si el primero se muestra sistemático en el playtest, merece entrada propia en `misconceptions.yaml`; hoy el nodo declara solo una.
 
 ## 13. Generalización
 

@@ -49,3 +49,14 @@ spine:
   - {n: 42, id: geom.cons.auxiliary_lines,               prereqs: [geom.tri.pythagoras_as_tiles, geom.sim.similarity_as_scale, geom.angle.turn_as_measure]}
   - {n: 43, id: trig.circle.unit_circle_radians,         prereqs: [geom.angle.turn_as_measure, geom.tri.pythagoras_as_tiles, alg.fn.graph_as_picture]}
   - {n: 44, id: trig.fn.sine_as_height,                  prereqs: [trig.circle.unit_circle_radians, alg.fn.function_as_machine]}
+  - {n: 45, id: found.cmp.bigger_smaller,                prereqs: [found.count.cardinality]}
+  - {n: 46, id: arith.add.combine_groups,                prereqs: [found.count.cardinality]}
+  - {n: 47, id: arith.mul.rows_and_columns,              prereqs: [arith.mul.scaling]}
+  - {n: 51, id: geom.class.polygon_by_sides,             prereqs: [found.count.cardinality]}
+  - {n: 52, id: geom.trans.rotation_reflection,          prereqs: [geom.angle.turn_as_measure, geom.class.polygon_by_sides]}
+  # 53 y 54 son la rama de matemática discreta. `found.sort.by_attribute` es el único prerequisito
+  # de un nodo de espina que no está en esta lista: es de nivel 0, sin prerequisitos propios, y
+  # ningún concepto de la espina lo contiene. J-adaptativo.md lo cubre en el backfill que prueba
+  # los prerequisitos fuera de la espina de la frontera y de su sucesor.
+  - {n: 53, id: disc.set.membership_rule,                prereqs: [found.sort.by_attribute, prealg.var.unknown_as_box]}
+  - {n: 54, id: disc.logic.and_or_not,                   prereqs: [disc.set.membership_rule]}

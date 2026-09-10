@@ -676,6 +676,10 @@ cheatsheet:
   cs.arith.inner_chest_first:
     title: El cofre más interno se abre primero
     body: En una expresión con paréntesis anidados, siempre se resuelve primero lo que está más adentro.
+  cs.arith.join_only_like_groups:
+    title: Solo se juntan montones de lo mismo
+    body: Dos montones se juntan en una sola fila cuando son de la misma clase. Si son de clases
+      distintas, quedan dos filas con su propio conteo cada una.
   cs.arith.mul_as_repeated_add:
     title: Multiplicar es sumar varias veces
     body: a × b es sumar el número a, b veces seguidas.
@@ -1154,6 +1158,10 @@ cheatsheet:
     title: 'Combinaciones: n eligiendo k'
     body: El número de formas de elegir k elementos de un total de n, sin importar el orden, se calcula
       con este coeficiente binomial.
+  cs.disc.connective_regions:
+    title: Y, O y NO como regiones
+    body: '''Y'' deja solo lo que cumple las dos condiciones; ''o'' deja lo que cumple al menos una, incluido
+      lo que cumple las dos; ''no'' deja todo lo que queda dentro del universo.'
   cs.disc.congruence_both_sides:
     title: La misma acción en los dos lados
     body: Sumar, restar o multiplicar el mismo número a los dos lados de una congruencia conserva la congruencia,
@@ -1170,6 +1178,10 @@ cheatsheet:
     title: Plantilla de la prueba directa
     body: Una prueba directa parte de lo que se sabe y encadena pasos válidos, uno detrás de otro, hasta
       llegar exactamente a lo que se quería mostrar.
+  cs.disc.element_of:
+    title: Pertenecer y no pertenecer
+    body: El primer signo dice que un objeto cumple la regla del conjunto y el segundo, tachado, dice que
+      no la cumple; la respuesta es siempre sí o no, nunca a medias.
   cs.disc.equivalence_relation:
     title: Relación de equivalencia
     body: Una relación es de equivalencia si es reflexiva, simétrica y transitiva; parte a todo el conjunto
@@ -1348,6 +1360,10 @@ cheatsheet:
     title: Suma de los ángulos interiores de un polígono
     body: La suma de los ángulos interiores de un polígono de n lados es (n menos dos) veces 180°. Sale
       de partir el polígono en triángulos desde un vértice.
+  cs.geom.polygon_sides_equal_vertices:
+    title: Un polígono tiene tantas esquinas como lados
+    body: Al recorrer el borde de un polígono, cada lado termina en una esquina y cada esquina separa dos
+      lados, así que las dos cuentas dan el mismo número. Contar esquinas es otra manera de contar lados.
   cs.geom.polygons_by_sides:
     title: Los polígonos se nombran por sus lados
     body: 'Un polígono se clasifica por su número de lados: tres es triángulo, cuatro cuadrilátero, cinco
@@ -1404,6 +1420,11 @@ cheatsheet:
     title: Marcar las partes iguales
     body: Señalar en el dibujo los lados o ángulos que son iguales por construcción ayuda a ver qué triángulos
       son congruentes o isósceles.
+  cs.geom.strategy_move_a_copy_to_compare:
+    title: Para comparar dos partes, movele una copia encima
+    body: 'Si sospechás que dos partes de una figura son iguales, levantá una copia de una y llevala sobre
+      la otra deslizando, girando o reflejando: si calzan exactamente, son iguales, y la figura original
+      no se tocó.'
   cs.geom.strategy_parallel_cuts_similar_triangle:
     title: Una paralela corta un triángulo semejante
     body: Trazar una recta paralela a un lado de un triángulo arma un triángulo más chico semejante al
@@ -1412,6 +1433,11 @@ cheatsheet:
     title: Trabajar desde el objetivo hacia atrás
     body: Cuando no se sabe por dónde empezar, conviene preguntar qué dato haría falta para llegar a la
       respuesta, y buscar ese dato primero.
+  cs.geom.symmetry_axes_and_order:
+    title: Los dobleces y los giros de una figura
+    body: Una simetría es un movimiento que deja la figura donde estaba. Una figura de lados y ángulos todos
+      iguales se dobla sobre sí misma por tantas líneas como lados tiene, y vuelve sobre sí misma con un giro
+      de una parte de vuelta por cada lado. La vuelta entera siempre cuenta, aunque no mueva nada.
   cs.geom.triangle_angles_180:
     title: Los ángulos de un triángulo suman 180°
     body: En cualquier triángulo, la suma de sus tres ángulos interiores es siempre media vuelta.
@@ -1419,6 +1445,11 @@ cheatsheet:
     title: Desigualdad triangular
     body: La suma de dos lados cualesquiera de un triángulo tiene que ser mayor que el tercer lado; si
       no, los tres segmentos no pueden cerrar un triángulo.
+  cs.geom.two_flips_make_a_turn:
+    title: Dos reflexiones seguidas son un giro
+    body: Reflejar una figura sobre una línea y después sobre otra que la cruza es lo mismo que girarla
+      alrededor del punto donde las dos líneas se cruzan, y el giro mide el doble del ángulo entre ellas.
+      Sobre la misma línea dos veces, la figura vuelve tal cual.
   cs.geom.volume_cone_third_cylinder:
     title: El cono es un tercio del cilindro
     body: 'Un cono y un cilindro de la misma base y altura: el cono entra exactamente tres veces dentro
@@ -1435,6 +1466,11 @@ cheatsheet:
     title: La esfera es dos tercios de su cilindro
     body: Una esfera ocupa dos tercios del cilindro más chico que la envuelve, de donde sale la fórmula
       del volumen de la esfera.
+  cs.geom.what_is_not_a_polygon:
+    title: Qué no es un polígono
+    body: 'El borde de un polígono tiene que cerrar, tiene que estar hecho de tramos rectos y no se puede
+      cruzar a sí mismo. Una figura con un pedazo curvo, una que queda abierta y una cuyo borde se cruza no
+      entran en ningún cajón. Tampoco existe un polígono de dos lados: con dos tramos rectos el borde no cierra.'
   cs.graph.bfs_dfs_order:
     title: Orden de BFS y DFS
     body: BFS explora el grafo por capas, todos los vecinos antes de alejarse; DFS se mete lo más profundo

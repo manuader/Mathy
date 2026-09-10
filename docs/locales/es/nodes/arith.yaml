@@ -69,14 +69,28 @@ nodes:
       transfer: "En una tubería de pasos de un algoritmo, el jugador ordena los pasos para que el resultado coincida con el árbol."
   arith.add.combine_groups:
     name: "Juntar dos montones"
+    probes:
+      recognize: "Un libro con dos filas de la misma clase y tres tarjetas de conteo; el jugador toca la tarjeta que le corresponde a la fila que resulta de juntarlas."
+      explain: "Dos animaciones sobre el mismo libro: en una las dos filas se juntan y el conteo final es el de las dos sumadas; en la otra se juntan y el conteo queda en el de la fila más larga. El jugador toca la que miente."
+      manipulate: "El jugador arrastra una fila sobre la otra hasta que se funden en una sola; el contador de la fila nueva sube de a uno mientras las cosas entran."
+      apply: "Tres montones desparramados sobre la mesa, uno de ellos de otra clase; el jugador arma el libro y arrastra la tarjeta con el conteo de la fila que quedó más larga."
+      generalize: "Las clases cambian a piedras y conchas, y aparece un montón vacío; el jugador junta igual y comprueba que juntar con el montón vacío no cambia el conteo."
+      transfer: "En una red de islas, el jugador junta la fila de puentes de una isla con la de otra y arrastra la tarjeta del total de puentes contados."
+  arith.mul.rows_and_columns:
+    name: "Filas por columnas, da igual"
+    probes:
+      recognize: "Un piso de baldosas y tres pisos más, uno con las filas y las columnas cambiadas de lado; el jugador toca el que tiene el mismo total que el primero."
+      explain: "Dos animaciones sobre el mismo piso: en una el piso gira un cuarto de vuelta y la ficha del total no se mueve; en la otra gira y la ficha cambia de número. El jugador toca la que miente."
+      manipulate: "El jugador arma con baldosas sueltas el piso que pide el marco, lo gira un cuarto de vuelta y comprueba que el marco girado sigue quedando cubierto."
+      apply: "Un montón de baldosas y dos marcos con los lados cambiados de lado; el jugador reparte las baldosas y arrastra la ficha del total, que es la misma para los dos."
+      generalize: "Tres montones iguales de baldosas: el jugador arma el bloque juntando primero dos y después el tercero, y luego al revés, y comprueba que el total no cambia."
+      transfer: "En la grilla de resultados de dos dados, el jugador toca la cantidad de casillas sin contarlas de a una."
   arith.add.running_total:
     name: "El total va creciendo"
   arith.place.base_ten_carry:
     name: "Diez unidades hacen una decena"
   arith.mul.repeated_groups:
     name: "Grupos iguales, paso constante"
-  arith.mul.rows_and_columns:
-    name: "Filas por columnas, da igual"
   arith.mul.partial_products:
     name: "Multiplicar por partes"
   arith.div.remainder:

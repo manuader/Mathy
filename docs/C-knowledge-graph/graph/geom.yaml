@@ -2,7 +2,8 @@
 # Niveles 1–3: los nodos de nivel 1–2 se juegan sin leer (baldosas, giros, plegar).
 # `construct` es la mecánica de la rama: cada trazo revela un dato que ya estaba.
 # Espina: 38 area.rect_and_triangle · 39 angle.turn_as_measure · 40 sim.similarity_as_scale ·
-#         41 tri.pythagoras_as_tiles · 42 cons.auxiliary_lines.
+#         41 tri.pythagoras_as_tiles · 42 cons.auxiliary_lines · 51 class.polygon_by_sides ·
+#         52 trans.rotation_reflection.
 
 area: geom
 
@@ -23,7 +24,23 @@ clusters:
 nodes:
 
   # ---- class ----------------------------------------------------------------
-  - {id: geom.class.polygon_by_sides, area: geom, level: 1, prereqs: [found.count.cardinality], grammar: partition, mechanics: [sorter, construct], literacy: none, analogy: sorting_bins, misconceptions: [], cheatsheet: [cs.geom.polygons_by_sides], calc_unlocks: []}
+  - id: geom.class.polygon_by_sides
+    area: geom
+    level: 1
+    spine: true
+    prereqs: [found.count.cardinality]
+    grammar: partition
+    mechanics: [sorter, construct]
+    literacy: none
+    analogy: sorting_bins
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [disc.set.membership_rule, disc.count.sum_rule, graph.basic.graph_and_paths]
+    calc_unlocks: []
+    cheatsheet: [cs.geom.polygons_by_sides, cs.geom.polygon_sides_equal_vertices, cs.geom.what_is_not_a_polygon]
+    manim: [sorter_scene_sides_into_bins, construction_scene_walk_the_boundary]
+    next: geom.class.quadrilateral_hierarchy
+    doc: docs/D-curriculum/D1-espina/51-geom.class.polygon_by_sides.md
   - {id: geom.class.quadrilateral_hierarchy, area: geom, level: 2, prereqs: [geom.class.polygon_by_sides, geom.angle.parallel_transversal], grammar: partition, mechanics: [sorter, construct], literacy: icons, analogy: sorting_bins, misconceptions: [], cheatsheet: [cs.geom.quadrilateral_family_tree], calc_unlocks: []}
 
   # ---- angle ----------------------------------------------------------------
@@ -128,7 +145,24 @@ nodes:
   - {id: geom.circle.radius_bisects_chord, area: geom, level: 3, prereqs: [geom.circle.radius_and_arc, geom.tri.pythagoras_as_tiles, geom.tri.congruence_rigid_fit], grammar: invariant, mechanics: [construct], literacy: short_text, layers: [intuition, visual, symbolic, formal, transfer], misconceptions: [], cheatsheet: [cs.geom.perpendicular_from_center_bisects_chord, cs.geom.strategy_drop_perpendicular_from_center], calc_unlocks: [op_pythagoras]}
 
   # ---- trans ----------------------------------------------------------------
-  - {id: geom.trans.rotation_reflection, area: geom, level: 1, prereqs: [geom.angle.turn_as_measure, geom.class.polygon_by_sides], grammar: invariant, mechanics: [grid_stretch, construct, gears_sequence], literacy: icons, analogy: quarter_turn_dial, misconceptions: [], cheatsheet: [cs.geom.rigid_motions_preserve_lengths_angles], calc_unlocks: [op_transform_point]}
+  - id: geom.trans.rotation_reflection
+    area: geom
+    level: 1
+    spine: true
+    prereqs: [geom.angle.turn_as_measure, geom.class.polygon_by_sides]
+    grammar: invariant
+    mechanics: [construct, grid_stretch, gears_sequence]
+    literacy: icons
+    analogy: quarter_turn_dial
+    misconceptions: [matrix_multiplication_commutes]
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [adv.cplx.multiplication_rotates_scales, disc.mod.clock_equivalence, linalg.map.linear_transformation_2d]
+    calc_unlocks: [op_transform_point]
+    cheatsheet: [cs.geom.rigid_motions_preserve_lengths_angles, cs.geom.symmetry_axes_and_order, cs.geom.two_flips_make_a_turn, cs.geom.strategy_move_a_copy_to_compare]
+    t_star: 45
+    manim: [construction_scene_lift_copy_and_land_it, grid_scene_turn_and_flip_the_sheet]
+    next: geom.trans.dilation
+    doc: docs/D-curriculum/D1-espina/52-geom.trans.rotation_reflection.md
   - {id: geom.trans.dilation, area: geom, level: 2, prereqs: [geom.sim.similarity_as_scale, geom.trans.rotation_reflection], grammar: scale, mechanics: [grid_stretch, tiles], literacy: icons, analogy: rubber_band_stretch, misconceptions: [], cheatsheet: [cs.geom.dilation_center_and_factor], calc_unlocks: [op_transform_point]}
   - {id: geom.trans.undo_transformation, area: geom, level: 2, prereqs: [geom.trans.dilation, prealg.inv.operation_as_key], grammar: invert, mechanics: [chest_key, grid_stretch], literacy: icons, analogy: chest_single_lock, misconceptions: [wrong_inverse_choice], cheatsheet: [cs.geom.inverse_transformations_table], calc_unlocks: []}
 

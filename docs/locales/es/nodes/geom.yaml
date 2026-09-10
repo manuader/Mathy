@@ -5,6 +5,13 @@ nodes:
 
   geom.class.polygon_by_sides:
     name: "Figuras por cantidad de lados"
+    probes:
+      recognize: "Aparecen cuatro figuras en fila y un solo cajón abierto con cinco puntos en el frente; el jugador toca la que entra."
+      explain: "El jugador recorre el borde de una figura y elige la animación que muestra por qué el conteo no cambia si se arranca en otra esquina."
+      manipulate: "Recorre el borde de una figura hundida de siete lados marcando la esquina de arranque, y la manda a su cajón."
+      apply: "Cinco figuras seguidas, giradas a ángulos raros y de tamaños muy distintos, cada una a su cajón, sin la mesa de recorrido a la vista."
+      generalize: "Recibe una figura de doce lados y tiene que agrupar los tics para contarla, y otra con una esquina donde el borde sigue derecho, donde tiene que decidir si es un lado o dos."
+      transfer: "En la red de lugares y caminos, cuenta los tramos de un recorrido cerrado que pasa por cinco lugares y dice a qué cajón iría si fuera una figura."
   geom.class.quadrilateral_hierarchy:
     name: "Todo cuadrado es rectángulo"
 
@@ -85,6 +92,13 @@ nodes:
 
   geom.trans.rotation_reflection:
     name: "Deslizar, girar y reflejar"
+    probes:
+      recognize: "Cuatro piezas al lado de un molde; el jugador toca la única que entra girando, sin darla vuelta."
+      explain: "El jugador mueve una copia y elige entre animaciones cuál muestra por qué girar no alcanzaba y hubo que voltear la pieza."
+      manipulate: "Lleva una pieza que solo entra dada vuelta hasta su molde, trazando él mismo la línea sobre la que la voltea."
+      apply: "Cuatro piezas y cuatro moldes seguidos: una entra deslizando, una girando, una hay que voltearla y una necesita voltearla y después deslizarla."
+      generalize: "Sobre figuras que nunca vio, entre ellas un molinete y un trapecio isósceles, dice cuántos dobleces tiene cada una y qué giro la devuelve a sí misma, sin mover nada."
+      transfer: "En el plano de los números complejos, multiplica por un número que solo gira y reconoce que dos cuartos de vuelta son media vuelta."
   geom.trans.dilation:
     name: "Dilatar desde un centro"
   geom.trans.undo_transformation:

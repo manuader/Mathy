@@ -55,7 +55,25 @@ nodes:
     doc: docs/D-curriculum/D1-espina/02-found.count.number_line.md
 
   - {id: found.count.zero_as_empty, area: found, level: 0, prereqs: [found.count.cardinality], grammar: partition, mechanics: [ledger, balance], literacy: none, layers: [real, intuition, concrete, visual], analogy: fruit_bowl_count}
-  - {id: found.cmp.bigger_smaller, area: found, level: 0, prereqs: [found.count.cardinality], grammar: partition, mechanics: [sorter, ledger], literacy: none, layers: [real, intuition, concrete, visual], analogy: fruit_bowl_count, aliases: [found.count.compare_more_less]}
+  - id: found.cmp.bigger_smaller
+    area: found
+    level: 0
+    spine: true
+    prereqs: [found.count.cardinality]
+    grammar: partition
+    mechanics: [sorter, ledger]
+    literacy: none
+    layers: [real, intuition, concrete, visual]
+    analogy: fruit_bowl_count
+    misconceptions: []
+    probes: [recognize, explain, manipulate, apply, generalize, transfer]
+    transfer_to: [prealg.ineq.compare_expressions, csmath.alg.sorting_algorithm, geom.tri.inequality_shortest_path]
+    calc_unlocks: []
+    manim: [sorter_rail_orders_by_amount, ledger_bars_compare_overhang]
+    next: found.cmp.same_amount
+    doc: docs/D-curriculum/D1-espina/45-found.cmp.bigger_smaller.md
+    aliases: [found.count.compare_more_less]
+
   - {id: found.cmp.same_amount, area: found, level: 0, prereqs: [found.cmp.bigger_smaller], grammar: invariant, mechanics: [balance, network_routes], literacy: none, layers: [real, intuition, concrete, visual], analogy: balance_pans, aliases: [found.rel.match_one_to_one]}
   - {id: found.cmp.likely_unlikely, area: found, level: 0, prereqs: [found.cmp.bigger_smaller], grammar: random, mechanics: [urn_dice], literacy: none, layers: [real, intuition, concrete, visual], analogy: spinner_wheel}
   - {id: found.meas.fill_compare, area: found, level: 0, prereqs: [found.cmp.bigger_smaller], grammar: accumulate, mechanics: [fill_accumulate], literacy: none, layers: [real, intuition, concrete, visual], analogy: tank_filling}
