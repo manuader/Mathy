@@ -47,6 +47,9 @@ Construí el minijuego del nodo {N} de la espina, `{ID}`, en
 de tests.
 
 ## Leé primero, completo
+- La skill `mathy-nivel` (`.claude/skills/mathy-nivel/SKILL.md` y sus tres referencias):
+  cómo se arma la lección, la guía con Lumi, las llaves de la chuleta y el estilo de juego
+  de la escena. Es obligatoria: un nodo sin lección ni guía no está terminado.
 - `docs/HANDOFF.md` — reglas (§2), escenas (§3) y las trampas ya pagadas (§7). Las que
   más tiempo ahorran: la 3 (panel oculto), la 4 (cómo probar gestos y qué no se puede), la
   9 y la 21.
@@ -79,6 +82,9 @@ problema nace el símbolo que introduce.}
   `index.ts`, mirá que los módulos que ya referencia existan en disco. Si una clave de
   texto ya existe y dice lo mismo, reusala.
 - Si falta un glifo, horneálo (trampa 24) y comprobá que el diff sea puramente aditivo.
+- La lección del nodo según la skill `mathy-nivel`: `apps/mathy/src/lessons/{SLUG}.ts`
+  registrada en `lessons/index.ts`, sus claves en `i18n.ts`, la actividad emitiendo las
+  señales de la guía y calculando el foco de cada paso, y la escena con el estilo de juego.
 
 ## Eventos
 `sawLayer` al entrar; un `attempt` por cada verbo de `level.evidence` en cada movimiento,

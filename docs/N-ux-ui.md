@@ -2,7 +2,9 @@
 
 Este documento define cómo se ve y cómo se toca Mathy. Fija los principios visuales, el sistema de diseño (tokens compartidos con el pipeline de Manim), cada pantalla con su wireframe, la regla del morph, el modelo de input, la voz, la accesibilidad, el layout responsivo y el microcopy. Lo que el jugador aprende está en [H](H-progresion-abstraccion.md) y [E0](E-mecanicas/E0-catalogo.md); cómo se decide que aprendió, en [K](K-evaluacion.md); cómo se adapta a la edad, en [Q](Q-edad-universal.md); cómo se traduce, en [P](P-internacionalizacion.md); cómo se implementa, en [O](O-arquitectura-tecnica.md).
 
-Una idea resume todo: **Mathy no parece una app escolar ni un juguete.** Parece un instrumento. Un niño de cinco años y una persona de cincuenta ven exactamente la misma interfaz, y ninguno de los dos siente que fue hecha para otro.
+Una idea resume todo: **Mathy no parece una app escolar ni un juguete. Parece un juego que da ganas de jugar, y que enseña de verdad.** Un niño de cinco años y una persona de cincuenta ven exactamente la misma interfaz, y ninguno de los dos siente que fue hecha para otro.
+
+> **Revisión 2026-09-10.** La primera versión de este documento pedía que Mathy pareciera "un instrumento": fondo casi negro, trazos finos, ningún personaje. El dueño la revocó después de jugar los primeros nodos: tiene que llamar la atención de cualquier persona, no solo de quien ya viene con ganas de aprender. Lo que se agregó —un mundo por área, una mascota, objetos con volumen, movimiento con jugo— obedece a una sola regla nueva: **el color, la luz y el movimiento no decoran, explican** (§1). Todo lo que prohibía §10 sigue prohibido. El plan del cambio y su porqué están en [U4](U-desarrollo/U4-rediseno-juego.md).
 
 ---
 
@@ -16,22 +18,26 @@ Una idea resume todo: **Mathy no parece una app escolar ni un juguete.** Parece 
 
 **Científica.** La referencia visual es la ilustración científica y las animaciones de 3Blue1Brown: fondo oscuro, trazos limpios, color con significado. No hay decoración que no informe.
 
-**Moderna.** Formas planas, sin sombras dramáticas ni relieves. La profundidad se comunica con luminancia y con movimiento, no con biseles.
+**Moderna.** Formas limpias, sin sombras dramáticas ni biseles. La profundidad se comunica con luminancia y con movimiento: un objeto tiene un degradado suave y un brillo arriba a la izquierda, un botón tiene un canto inferior más oscuro que se hunde al apretarlo. Eso es volumen legible, no decoración.
 
 **Altamente interactiva.** Todo lo que está en pantalla y representa un objeto matemático se puede tocar, arrastrar o ajustar. Si algo parece manipulable y no lo es, es un error de diseño.
+
+**Estimulante, sin mentir.** Mathy compite por la atención con cualquier otro juego del teléfono, y tiene que ganar esa atención con lo mismo que usan los buenos juegos: un lugar que da ganas de mirar, respuesta inmediata a cada gesto, una meta clara siempre a la vista, y la sensación de estar avanzando. Lo que no puede usar es lo que los juegos usan para retener sin enseñar: premios que miden tiempo de juego, castigos, urgencia artificial (§10).
+
+**El color, la luz y el movimiento explican.** Es la regla que decide todo lo que se agrega para que el juego sea más estimulante. El color dice a qué colección pertenece algo, o si algo coincide, o dónde mirar (§2.2). La luz dice qué se aprendió: la llave que se gana suelta luz, y es la misma luz que ilumina el mapa. El movimiento dice qué pasó: una fruta que cae en su hueco rebota una vez, dos cosas que quedan pareja sueltan chispas en el puente que las une. Si un efecto no dice nada del concepto, no entra.
 
 Lo que se evita, y por qué:
 
 | Se evita | Porque |
 |---|---|
-| Estética infantil (mascotas, caras en los objetos, tipografías redondeadas) | Excluye al adulto y subestima al niño. |
+| Estética infantil (caras en los objetos matemáticos, tipografías redondeadas, colores de caramelo) | Excluye al adulto y subestima al niño. La única cara del juego es la de **Lumi** (§12): un objeto que se cuenta no puede ser a la vez un personaje que se mira. |
 | Exceso de color | Diluye el color que sí significa algo: la primitiva de la gramática visual. |
 | Gamification superficial (puntos, monedas, confeti, cofres de recompensa) | Mide cuánto se jugó, no cuánto se entiende ([K](K-evaluacion.md)). |
 | Badges y medallas | Convierten el mapa en una vitrina; el progreso ya se ve como territorio iluminado. |
 | UI saturada (barras de progreso múltiples, notificaciones, chips) | Compite con el canvas, que es lo único que enseña. |
 | Apariencia de app escolar (pizarras, cuadernos, tildes rojas y verdes) | Trae consigo la ansiedad del examen, que Mathy quiere eliminar. |
 
-Las referencias de tono son Monument Valley y Alto's Odyssey: juegos que un niño juega con placer y un adulto no esconde. Ambos tienen paletas contenidas, geometría limpia, movimiento expresivo pero sereno, y ninguna interfaz que grite. Ese es el registro. Un solo sistema visual para los 5 y los 50 años; la única diferencia entre perfiles es la modalidad de instrucción e input ([Q](Q-edad-universal.md)), nunca el estilo.
+Las referencias de tono son Monument Valley y Alto's Odyssey: juegos que un niño juega con placer y un adulto no esconde. Ambos tienen mundos pintados que dan ganas de recorrer, geometría limpia, movimiento expresivo, y una interfaz que no grita. Ese es el registro. A eso se le suma lo que tienen los puzzles móviles que la gente juega sin que nadie se lo pida: botones que se sienten botones, respuesta con rebote, un sendero de niveles que se ve avanzar. Un solo sistema visual para los 5 y los 50 años; la única diferencia entre perfiles es la modalidad de instrucción e input ([Q](Q-edad-universal.md)), nunca el estilo.
 
 ---
 
@@ -43,20 +49,32 @@ Todos los tokens viven en un único archivo `theme.json` dentro del paquete de t
 
 ### 2.2 Color
 
-Mathy es **dark-first**. El fondo oscuro es el del laboratorio y el de las animaciones de referencia; hace que la tinta y los objetos matemáticos tengan contraste sin esfuerzo y evita el aspecto de documento. Existe un tema claro, derivado de los mismos tokens, para quien lo prefiera o lo necesite por accesibilidad.
+Mathy es **dark-first**, pero ya no negro. El mundo es un crepúsculo: cielo turquesa e índigo, suelo en sombra, faroles dorados. La oscuridad sigue cumpliendo la función de antes —los objetos matemáticos tienen contraste sin esfuerzo— y además es un lugar. Existe un tema claro, derivado de los mismos tokens, para quien lo prefiera o lo necesite por accesibilidad.
 
-La paleta es contenida y semántica. Hay tres familias:
+**El centro es del juego.** Detrás del lienzo hay un paisaje por área (§13), pero el paisaje se oscurece hacia el centro y hacia abajo, donde está el tablero, y **no usa ninguno de los colores que el juego usa para significar algo**. Si el paisaje compite por el color con una colección, deja de ser fondo y pasa a ser ruido. Por la misma razón, el tono propio de cada área vive solo en la interfaz (el nombre del área en los mapas, la franja de una tarjeta), nunca adentro del lienzo.
+
+La paleta es semántica. Cada color vivo tiene un trabajo, y uno solo:
+
+| Token | Valor | Su único trabajo |
+|---|---|---|
+| `accent` · `coral` · `violet` | `#56B8FF` · `#FF7F96` · `#B294FF` | **equipo**: a qué colección pertenece algo (el primer cuenco, el segundo, el tercero) |
+| `ok` | `#3FE0A4` | **coincide**: dos cosas quedaron pareja, la balanza está nivelada, la tarjeta es la de la colección |
+| `warn` | `#FFB547` | **mirá acá**: la fruta sin pareja, la balanza inclinada. Nunca "mal": no hay rojo de error |
+| `gold` | `#FFD166` | **lo aprendido**: la llave, la luz de Lumi, el botón que lleva a la próxima llave |
+
+Adentro del lienzo, un objeto concreto puede tener además el color de lo que es (una manzana es roja, una naranja es naranja) cuando distinguir **qué** se cuenta es parte del nivel. En cuanto el objeto se aplana en su representación, pierde ese color y toma el de su equipo: en la barra ya no importa qué fruta era, importa de qué colección.
 
 **Superficies y tinta.**
 
-| Token | Uso | Valor (oscuro) |
+| Token | Uso | Valor |
 |---|---|---|
-| `bg.base` | fondo del canvas y del mapa | `#0B0F14` |
-| `bg.surface` | paneles, teclado de fichas, tarjetas | `#141A22` |
-| `bg.elevated` | panel lateral, hojas modales | `#1C2430` |
-| `ink.primary` | notación, texto principal | `#E8EDF2` |
-| `ink.secondary` | etiquetas, texto de apoyo | `#9AA6B2` |
-| `ink.muted` | cuadrículas, guías, elementos inactivos | `#5C6975` |
+| `bg` / `bgDeep` | fondo detrás del mundo | `#0C1624` / `#070E18` |
+| `surface` | paneles, tarjetas | `#13233A` |
+| `surfaceHigh` | tarjetas sobre paneles | `#1B304C` |
+| `glass` | carteles que flotan sobre el mundo | `rgba(12, 22, 36, 0.78)` |
+| `ink` | notación, texto principal | `#F4F7FB` |
+| `inkDim` | texto de apoyo | `#AAB8CA` |
+| `inkFaint` | guías, elementos inactivos | `#6F819A` |
 
 **Acento por primitiva.** El color con significado es el de las doce primitivas de la gramática visual de [H](H-progresion-abstraccion.md). Cada primitiva tiene un tono y una **forma**: un glifo pequeño y un patrón de trazo que la identifican aunque el color no se distinga. La regla de daltonismo es simple: ningún significado se codifica solo con color. Doce tonos son demasiados para verlos a la vez; por eso se agrupan en seis tonos y cada par se distingue por forma y por trazo (continuo o punteado).
 
@@ -75,9 +93,9 @@ La paleta es contenida y semántica. Hay tres familias:
 | `relate` | índigo | dos puntos unidos | continuo |
 | `invariant` | índigo | dos barras iguales | punteado |
 
-En una pantalla nunca hay más de tres acentos al mismo tiempo: la primitiva dominante del nodo, una de soporte y el color de estado. Todo lo demás es tinta.
+Adentro del lienzo nunca hay más de tres significados de color al mismo tiempo: los equipos que el nivel compara, `ok` y `warn`. El dorado es de la interfaz y de la llave.
 
-**Estado y feedback.** Un solo tono cálido, `state.attention` (ámbar apagado), sirve para "algo pide atención": la balanza inclinada, el óxido de una operación, un repaso vencido. No existe un rojo de error, porque no existe el error como categoría de interfaz ([L0](L-modelo-errores/L0-taxonomia.md)). Los tres estados del mapa (`in_progress`, `ready`, `mastered`) no son tres colores sino **tres intensidades** del mismo acento del área, de tenue a pleno.
+**Estado y feedback.** Un solo tono cálido, `warn` (ámbar), sirve para "algo pide atención": la balanza inclinada, la fruta sin pareja, el óxido de una operación, un repaso vencido. No existe un rojo de error, porque no existe el error como categoría de interfaz ([L0](L-modelo-errores/L0-taxonomia.md)). Los estados del mapa no son colores nuevos: un nivel pisado es menta, el siguiente es dorado, el que falta está apagado.
 
 ### 2.3 Tipografía
 
@@ -98,6 +116,19 @@ Espaciado en una escala de 4: `4, 8, 12, 16, 24, 32, 48, 64`. Los radios son poc
 Toda animación de la app, tanto de interfaz como de objeto matemático, usa las **rate functions de ManimGL** portadas sin cambios al mini-Manim ([O](O-arquitectura-tecnica.md)): `smooth` para transiciones de estado, `rush_into` y `rush_from` para entradas y salidas, `there_and_back` para llamar la atención sin cambiar nada, `linear` para scrub controlado por el dedo, `lingering` para revelar un resultado. Un morph entre expresiones usa siempre `smooth`.
 
 Duraciones como tokens: `motion.quick 180 ms` (respuesta a un gesto), `motion.base 320 ms` (transición de estado), `motion.morph 700 ms` (cambio de capa), `motion.reveal 1200 ms` (resultado de una predicción). Nada dura más de 1.5 s salvo un clip pre-renderizado, y todo clip se puede saltar.
+
+**Jugo.** Cada gesto tiene una respuesta física, con resortes (`spring.lift` al levantar, `spring.settle` al caer) y no con curvas de tiempo, porque un resorte es lo que hace que algo se sienta objeto:
+
+| Momento | Respuesta | Qué dice |
+|---|---|---|
+| levantar un objeto | crece un 30 % | "lo tenés vos" |
+| soltarlo | viaja desde donde lo dejó el dedo y rebota una vez al llegar | "llegó a un lugar", no "se teletransportó" |
+| dos cosas quedan pareja | el puente crece desde el medio y suelta seis chispas menta y oro | es exactamente lo que el nivel enseña, así que es lo que se celebra |
+| algo queda sin pareja | un anillo ámbar late alrededor | "mirá acá", sin decir "mal" |
+| se gana una llave | la tarjeta entra con un rebote y sube luz desde la llave, una sola vez | lo aprendido ilumina, como el mapa |
+| la guía espera un gesto | un punto dorado late junto a "Te toca" | el turno es del jugador |
+
+Las chispas y la luz salen siempre del objeto que las causó, nunca de la pantalla entera, y no se repiten para pedir atención: eso sería confeti.
 
 **Reducir movimiento.** Cuando el sistema lo pide, los morphs se reemplazan por un fundido cruzado de `motion.quick`, las animaciones ambientales del mapa se detienen y el scrub sigue funcionando porque lo controla el dedo. La información nunca depende de una animación que reducir movimiento elimina: cada morph deja al final un estado estático que lo cuenta por sí solo.
 
@@ -198,7 +229,18 @@ La cheatsheet y la calculadora se abren en un **panel lateral** que se desliza s
 └──────────────────────────────┘
 ```
 
-Los íconos de la barra son, en orden: salir, objeto a demanda, cheatsheet, calculadora, voz. No hay contador de aciertos, barra de progreso de la actividad ni temporizador visible. El progreso dentro de una actividad se ve en el objeto mismo: el cofre que se abre, la balanza que queda derecha.
+Los íconos de la barra son, en orden: salir, objeto a demanda, cheatsheet, calculadora, voz. No hay contador de aciertos ni temporizador visible. El progreso dentro de una actividad se ve en el objeto mismo: el cofre que se abre, la balanza que queda derecha.
+
+**Desde la revisión 2026-09-10**, la pantalla de actividad tiene esta forma, igual en todos los nodos porque la sostiene el marco común y no cada minijuego:
+
+1. **El mundo del área detrás de todo** (§13), oscurecido hacia el centro.
+2. **Una barra de vidrio arriba**: "‹ Niveles" a la izquierda; chuleta y calculadora a la derecha. La chuleta muestra cuántas ideas guarda y un punto dorado cuando hay una llave nueva sin mirar.
+3. **El encabezado**: el nombre del concepto con el tono de su área, el título del nivel en grande, y una marca por nivel del concepto.
+4. **Lumi con su cartel** (§12). Durante la guía dice el paso; después, el objetivo del nivel y una marca por ronda. Es la única excepción a "sin barra de progreso de la actividad", y es deliberada: jugando se vio que la pregunta "¿cuánto me falta?, ¿ya lo cumplí?" era la que más confundía, y una marca por ronda la contesta sin puntos ni porcentajes.
+5. **El tablero**, que sigue siendo el protagonista.
+6. **La línea de lo que pasó**, como un aviso que entra con un pequeño salto: menta si algo coincidió, ámbar si algo pide que lo miren.
+
+Encima de todo, dos tarjetas marcan el principio y el final del nivel. **La de entrada** dice qué idea se va a aprender, cuál es el objetivo, qué llaves ganadas antes sirven acá, y muestra la silueta de la llave que se va a ganar. **La de cierre** dice "superado", muestra la llave nueva con la luz que sube de ella, cuántas llaves del concepto van, qué viene, y un solo botón grande para seguir. Terminar un nivel nunca devuelve a una lista sin decir nada.
 
 ### 3.4 Explicación de error
 
@@ -509,6 +551,8 @@ Para que no se agregue por costumbre:
 - No hay **pantallas de drill**: todo ítem vive dentro de una mecánica ([Q](Q-edad-universal.md)).
 - No hay **temporizadores visibles** en niveles bajos ni cuenta regresiva en ningún ítem de evidencia.
 
+Las imágenes de referencia que motivaron la revisión 2026-09-10 tenían corazones, "+20 por respuesta correcta" y frutas con cara. No entraron: los corazones son vidas, los "+20" son puntos, y una fruta con cara deja de ser algo que se cuenta. Lo que sí entró de esas imágenes es lo que no mide ni castiga: el mundo pintado, la mascota, los botones que se sienten botones, el color vivo con trabajo asignado.
+
 ---
 
 ## 11. Verificación
@@ -519,3 +563,47 @@ Para que no se agregue por costumbre:
 - Ningún asset de objeto concreto es un emoji de plataforma: el build rechaza rangos Unicode de emoji en el canvas.
 - Todo target tocable mide ≥ 44 pt; el test de accesibilidad recorre el árbol de cada pantalla.
 - Playtest con niños de 5 a 7 años en los nodos 1 a 3 y con adultos en el nodo 13, según [Q](Q-edad-universal.md), como criterio de aceptación de la pantalla de actividad.
+
+---
+
+## 12. Lumi
+
+Lumi es **un limón profe**: redondo, amarillo arriba y naranja abajo, con una hoja verde, birrete índigo con borla dorada, ojos grandes y brillantes, nariz naranja, cachetes rosados, bracitos y patitas cortas, y un puntero de madera. Contorno oscuro grueso y sombreado brillante: el registro de las mascotas de los juegos móviles que la gente juega sin que nadie se lo pida. Es **la única cara del juego**.
+
+> La primera versión (2026-09-10, mañana) era una luciérnaga índigo que llevaba la luz del mapa. El dueño la cambió el mismo día por el limón, a partir de sus imágenes de referencia: un personaje de fruta con birrete se lee al instante como "el que enseña", para un chico y para un adulto. La imagen definitiva la eligió el dueño (`automatic-image-generation/projects/mathy-lumi/output/lumi_hero.png`) y las demás poses se generan adjuntándola.
+
+**Qué hace.** Guía: aparece al lado del cartel de la guía y cambia de pose con lo que el paso pide —señala cuando hay que hacer algo, se asombra cuando el paso explica lo que acaba de pasar—; presenta cada nivel pensando; lo cierra levantando la llave; duerme en la chuleta vacía; señala el nivel que sigue en el sendero y el concepto que sigue en el mapa.
+
+**Qué no hace.** No premia ni castiga: no aplaude un acierto ni se entristece con un intento que no avanzó. No habla durante una manipulación: el gesto tiene la atención (§6). No aparece adentro del lienzo: el tablero es de la matemática.
+
+**Por qué un limón, y la regla que eso trae.** Una fruta no tiene edad, ni género, ni cultura que traducir (§7, [P](P-internacionalizacion.md)), y el birrete dice su trabajo sin palabras. La regla que trae: **el limón nunca aparece como fruta para contar.** Las frutas del tablero (manzana, naranja, ciruela) no tienen cara y no incluyen limones, para que nadie confunda a la guía con algo que se cuenta.
+
+| Pose | Momento |
+|---|---|
+| `hero` | mapa de conceptos |
+| `icon` | cartel del objetivo, tarjeta de entrada de un nivel ya jugado |
+| `point` | paso de la guía que espera un gesto; el nivel que sigue en el sendero |
+| `think` | tarjeta de entrada; paso de la guía que se lee |
+| `wow` | paso de la guía que explica lo que acaba de pasar |
+| `key` | tarjeta de cierre con llave nueva |
+| `cheer` | tarjeta de cierre sin llave |
+| `read` | chuleta con entradas |
+| `sleep` | chuleta vacía |
+| `encourage` | reservada para cuando algo no avanzó varias veces seguidas |
+
+Mientras una pose no tiene imagen generada, `ui/Lumi.tsx` la dibuja con vistas. El reemplazo es Lumi más simple, nunca un cuadrado gris.
+
+## 13. El mundo, y el arte ilustrado
+
+Cada área del curriculum es un lugar, pintado detrás del lienzo: la huerta para contar, el río de las piedras para operar, el templo de las llaves para la incógnita, el taller de las máquinas para las ecuaciones y funciones, y así hasta el observatorio. Volver a un nodo es volver a su lugar; el paisaje cambia con el área y nunca con el nivel.
+
+**Imagen o código.** La frontera la pone §4: lo que tiene que poder fundirse en su símbolo es vector dibujado en código. Por eso:
+
+| Imagen generada | Vector en código |
+|---|---|
+| los paisajes de las áreas y el mapa del mundo | frutas, cuencos, tarjetas, marcas, puentes: todo objeto matemático |
+| las poses de Lumi | llaves, botones, carteles, sendero, partículas de luz |
+
+**Nada referencia un archivo directo.** La app pregunta a `apps/mathy/src/art/`, que contesta con la imagen si existe y con nada si no; el que pregunta dibuja su reemplazo. El manifiesto lo reescribe `tools/art/sync_art.py` con lo que hay en disco. Un juego sin ninguna imagen generada anda entero, con cielos de franjas y Lumi vectorial.
+
+**Cómo se genera.** Con la metodología de FisuEvolution, en el generador [`automatic-image-generation`](https://github.com/manuader/automatic-image-generation): un `.md` por imagen en `projects/mathy-lumi/` y `projects/mathy-mundos/`, el estilo primero, una imagen héroe que las demás adjuntan como referencia, prompts en ASCII puro, fondo blanco liso para lo que se recorta. Las reglas de composición de los paisajes son medibles y no negociables: el centro, del 25 % al 85 % de la altura y del 20 % al 80 % del ancho, es suelo oscuro y vacío; en el centro no hay rojo, menta ni ámbar vivo. Las dos héroes las aprueba una persona antes de generar el resto.

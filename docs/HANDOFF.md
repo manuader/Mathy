@@ -6,6 +6,10 @@
 > corre en navegador; en iOS y Android todavía **no se probó**.
 > Antes de tocar nada, mirá `git status`: si hay cambios sin commitear que no son tuyos,
 > hay agentes en vuelo.
+> **Desde la tarde del 2026-09-10 el juego tiene una capa de juego**: tarjetas de entrada y
+> cierre, guía con Lumi, llaves en la chuleta, un mundo por área, estética nueva. El nodo 1
+> la tiene completa; los demás heredan el marco pero les falta su lección. Cómo se hace:
+> la skill `mathy-nivel` (`.claude/skills/mathy-nivel/`).
 
 ## 0. Cómo se usa este documento
 
@@ -114,7 +118,28 @@ trece mecánicas:
 `sorter` (6) y `fill_accumulate` (2). Toda escena que se toca se vuelve a jugar en los
 nodos que la usan.
 
+**La capa de juego** (decisión 15). `ActivityShell` pone detrás de toda actividad el mundo
+del área (`ui/World.tsx`, por el prefijo del id) y encima la barra, la tarjeta de entrada
+(`ui/LevelIntro.tsx`) y la de cierre (`ui/LevelComplete.tsx`). Lo que las tarjetas y la guía
+dicen viene de `src/lessons/` (un `NodeLesson` por nodo) a través de `LessonContext`, que
+también lleva la navegación (siguiente nivel, repetir, siguiente concepto). La actividad
+avisa gestos con `signal`, frena la ronda en los pasos `holds` y le pasa el foco a
+`Spotlight`. El arte ilustrado entra sólo por `src/art/` (decisión 16). El procedimiento
+completo es la skill `mathy-nivel`.
+
 ## 4. Qué cambió, sesión por sesión
+
+### Sesión 2026-09-10 (tarde) — la capa de juego y el arte
+El dueño jugó y encontró que no se entendía cuándo se cumplía un nivel ni cómo seguir, y
+que la pantalla parecía un instrumento. Se construyó la capa de juego para todos los nodos
+(tarjetas de entrada y cierre, guía interactiva, llaves en la chuleta), se rediseñó la
+estética (N reescrito con la regla "el color, la luz y el movimiento explican"), el nodo 1
+quedó como implementación de referencia, y se generó todo el arte: Lumi, el limón profe, en
+10 poses, y 11 mundos. El generador (`automatic-image-generation`) se hizo andar con
+ChatGPT sin permiso de Accesibilidad. La skill `mathy-nivel` fija cómo se hace un nivel.
+Commiteado en la rama `rediseno-juego` (y `chatgpt-multiref` en el generador), sin mergear
+a `main`. Detalle y los cinco diagnósticos que resultaron falsos en
+[SESSION-2026-09-10-rediseno-juego.md](SESSION-2026-09-10-rediseno-juego.md).
 
 ### Sesión 2026-09-10 — de 5 a 21 nodos jugables, y la espina de 44 a 51 conceptos
 Se construyeron los nodos 6 a 21: la aritmética hasta fracciones, la incógnita, la
@@ -194,6 +219,18 @@ de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y
     nodos lo resolvieron así (9, 15, 16, 18, 19, 21). El 20 hizo lo contrario —se quedó en
     la capa anterior para no perder el ensanchamiento— y lo anotó; las dos salidas valen si
     quedan anotadas. No se rediscute nodo por nodo.
+15. **La lección es un dato del nodo y el marco la dibuja.** Tarjetas, guía y llaves viven en
+    `ActivityShell` + `src/lessons/`, no en cada minijuego: así un nodo sin lección igual
+    cierra con "Siguiente nivel", y un nodo con lección no reimplementa nada. La actividad
+    sólo avisa gestos (`signal`) y frena la ronda en `holds`.
+16. **Imagen o vector lo decide N §4.** Paisajes y Lumi son PNG/JPEG generados; todo objeto
+    matemático es vector en Skia, porque tiene que poder fundirse en su símbolo. Nada importa
+    un archivo directo: `src/art/manifest.ts` (lo escribe `tools/art/sync_art.py`) y un
+    reemplazo dibujado para lo que falta. Un juego sin arte anda entero.
+17. **El arte se genera con ChatGPT** (motor `chat-gpt` del generador): es más consistente
+    con un personaje que Gemini, y escribe por CDP y sube referencias por su
+    `input[type=file]`, así que no pide Accesibilidad ni la máquina quieta. `bg_found`
+    salió de Gemini y quedó como referencia de los mundos.
 
 ## 6. Cómo verificar
 
@@ -372,10 +409,29 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 25. **El grafo mezcla dos formas de YAML.** Los nodos de espina están en forma de bloque y
     los otros 304 en forma de flujo, una línea `- {id: …}`. Un regex sobre `- id:` ve solo
     los primeros: devolvió cero candidatos a la espina antes de que me diera cuenta.
+26. **Un índice que comparte valor con "nada agarrado" arrastra de más.** Las tarjetas fijas
+    de `BowlScene` llevaban índice `-1`, que es también `FUERA`: arrastrar una fruta
+    arrastraba todas las tarjetas. Toda comparación con el índice agarrado exige `index >= 0`.
+27. **En web, `Image` toma su tamaño natural** si no se le pisan `width` y `height`, aunque
+    esté anclada a los cuatro bordes: un paisaje de 1024 px dejaba media pantalla sin mundo.
+28. **El permiso de Accesibilidad no se prueba con `keystroke ""`**: pasa aunque falte. La
+    prueba es una corrida real, que sin permiso falla con 1002 antes de enviar nada.
+29. **ChatGPT, con su ventana tapada, no carga las imágenes de la respuesta** (`lazy`,
+    0x0). Parecía un límite de uso; el motor ahora las baja con `fetch` desde la pestaña.
+    Y su HTML trae en scripts frases como "You've reached your limit": los bloqueos se
+    buscan en el texto visible. Detalle en el journal del generador.
 
 ## 8. Qué falta
 
 **Código:**
+- **Mergear a `main`** la rama `rediseno-juego` de Mathy y `chatgpt-multiref` del
+  generador: el trabajo de la tarde del 2026-09-10 está commiteado ahí y en ningún otro lado.
+- **La lección de los nodos 2 a 21**, con la skill `mathy-nivel`. Hoy heredan el marco
+  (mundo, barra, tarjeta de cierre) pero no tienen tarjeta de entrada, guía ni llaves.
+- **El reskin de las diez escenas viejas** al estándar de la skill (volumen, color con
+  trabajo, jugo en el evento). Urgente en `UrnScene`, `TilesScene` y `StretchScene`, que usan
+  `theme.color.bg` para pintar agujeros: sobre el paisaje se ven como parches.
+- **Jugar entero con el marco nuevo al menos un nodo de cada área**: sólo se miró el nodo 1.
 - **30 nodos de la espina sin construir**: 22 a 44 y los siete ascendidos (45–47, 51–54).
   La tabla de qué mecánica pide cada uno está en [U2](U-desarrollo/U2-plan-espina.md).
   **Tres mecánicas no tienen escena y son lo caro**: `construct` (10 nodos, toda la rama de
@@ -407,6 +463,9 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
   definiciones de la capa formal se leen en vez de narrarse.
 
 **Decisión de diseño, no de un agente:**
+- Dónde viven las llaves de la chuleta: hoy en `apps/mathy/src/lessons/` (código de la app);
+  si pasan a YAML en `docs/` (dato contra prosa), R0 se reescribe con ellas. R0 todavía dice
+  que las entradas nacen sólo en `symbolic`/`formal`.
 - Cerrar las discrepancias entre la prosa de los minijuegos y el catálogo de errores.
   Mientras sigan, los agentes no emiten esos ids, que es lo correcto:
   - nodo 14 (`alg.eq.multi_step`): la prosa nombra `wrong_inverse_choice` e
@@ -426,6 +485,10 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 | Documento | Qué contesta |
 |---|---|
 | **este** | punto de entrada: estado, reglas, arquitectura, decisiones, trampas |
+| [`.claude/skills/mathy-nivel/`](../.claude/skills/mathy-nivel/SKILL.md) | cómo se construye un nivel: lección, guía, llaves, estilo de juego. Obligatoria para todo nodo |
+| [`SESSION-2026-09-10-rediseno-juego.md`](SESSION-2026-09-10-rediseno-juego.md) | por qué el juego tiene capa de juego y este arte, y qué diagnósticos resultaron falsos |
+| [`U-desarrollo/U4-rediseno-juego.md`](U-desarrollo/U4-rediseno-juego.md) | el plan del rediseño: qué se conserva de N, qué cambia, imagen o código |
+| [`N-ux-ui.md`](N-ux-ui.md) | la estética: color con trabajo, jugo, Lumi (§12), el mundo y el arte (§13) |
 | [`SESSION-2026-09-10-espina-hasta-21.md`](SESSION-2026-09-10-espina-hasta-21.md) | por qué la espina llegó a 21 nodos con estas escenas, y qué diagnósticos resultaron falsos |
 | [`SESSION-2026-09-09-espina-jugable.md`](SESSION-2026-09-09-espina-jugable.md) | por qué la app quedó como quedó al pasar de prueba vertical a cinco nodos |
 | [`U-desarrollo/U3-prompt-de-nodo.md`](U-desarrollo/U3-prompt-de-nodo.md) | cómo seguir sin supervisión: el bucle de agentes, las plantillas y qué mirar antes de commitear |
