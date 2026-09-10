@@ -18,3 +18,5 @@ export * from "./operation-key.ts";
 export * from "./distributive.ts";
 export * from "./multi-step.ts";
 export * from "./systems.ts";
+export * from "./graph-picture.ts";
+export * from "./machine.ts";

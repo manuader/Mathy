@@ -46,6 +46,16 @@
  *   dominante; 18; 44, donde una entrada repetida es obligatoria).
  * - `tray` y `slots`: el cajón de fichas de operación y las ranuras vacías del
  *   caño (17, 21, 24, 27; el 14 lo usa como llavero).
+ * - `trayItems`: el mismo cajón, pero con fichas de **entrada** en vez de
+ *   máquinas. Es la bandeja del 17, de donde salen las fichas que se dejan caer
+ *   en la ranura. Las dos formas comparten ranuras y asas: un cajón es un cajón.
+ * - `branch`, en el carril: el tubo lateral por donde cae la **segunda** salida,
+ *   con la luz encendida al lado. Es la regla ambigua del 17 —la que no es una
+ *   máquina— y es lo único que la escena dibuja para decirlo: ningún mensaje lo
+ *   dice, la luz es el mensaje.
+ * - `formula`: el renglón de notación debajo del caño, ya compuesto por el nodo
+ *   (`f(x) = 3x + 1`). Es el quinto paso de la transición simbólica del 17, la
+ *   tabla contraída en una línea, y lo van a querer el 18, el 20 y el 21.
  * - `reorderable`: las máquinas se arrastran para cambiar el orden (9, 20, 27).
  * - `box`: la caja cerrada dentro del caño, la incógnita que todavía no tiene
  *   nombre (14, 17).
@@ -58,8 +68,10 @@
  *   `y = x`. Lo piden el 18 (donde es el objeto central) y el 21. Es un objeto
  *   grande y con gestos propios; cuando llegue el 18 conviene que sea su propia
  *   escena y que esta le pase el rastro.
- * - **Las ramas**: el tubo lateral de la máquina ambigua (17) y las dos ramas
- *   paralelas dentro de una misma tubería (27). Hoy un carril es una cadena.
+ * - **Las dos ramas paralelas** dentro de una misma tubería, que pide el 27.
+ *   El tubo lateral del 17 ya está —`branch`—, pero es un desvío que escupe al
+ *   costado y no una segunda cadena que vuelva a juntarse: un carril sigue
+ *   siendo una cadena.
  * - **El deslizador de contraejemplo** con dos barras de salida que se separan
  *   (24, 44). Es el patrón `counterexample_slider` de L0 y vale la pena
  *   construirlo una vez, con la barra, cuando llegue el primero de los dos.
@@ -164,6 +176,12 @@ export interface PipeLane {
   /** La salida que se pide, dibujada aparte del caño. `null`: no hay objetivo. */
   readonly target: PipeItem | null;
   readonly glow: boolean;
+  /**
+   * La segunda salida, la que cae por el tubo lateral. Cuando viene, la regla
+   * mandó la misma entrada a dos ramas y por lo tanto **no es una máquina**. Se
+   * omite en todos los nodos menos el 17.
+   */
+  readonly branch?: PipeItem | null;
 }
 
 /**
@@ -190,6 +208,13 @@ export interface PipeConfig {
   readonly box: boolean;
   /** La tubería llega plegada y se pide con un toque. */
   readonly onDemand: boolean;
+  /**
+   * El cajón lleva fichas de entrada en vez de máquinas. Comparte las ranuras y
+   * las asas con `tray`; un nodo usa uno de los dos, nunca los dos a la vez.
+   */
+  readonly trayItems?: readonly PipeItem[];
+  /** El renglón de notación debajo del caño, ya compuesto por el nodo. */
+  readonly formula?: string;
 }
 
 /** Dónde cae cada cosa de un carril. */
@@ -208,6 +233,10 @@ export interface PipeLaneLayout {
   readonly path: readonly Spot[];
   readonly counter: Spot;
   readonly target: Spot;
+  /** La boca del tubo lateral: por debajo de la última máquina y hacia afuera. */
+  readonly branchSpout: Spot;
+  /** La luz que se enciende cuando salen dos. */
+  readonly lamp: Spot;
 }
 
 export interface PipeLayout {
@@ -221,6 +250,8 @@ export interface PipeLayout {
   readonly table: { readonly x: number; readonly y: number; readonly w: number; readonly rowH: number };
   /** El radio del token más grande. Los tamaños chicos salen de acá. */
   readonly tokenR: number;
+  /** Dónde va el renglón de notación. */
+  readonly formula: Spot;
 }
 
 /** Máquinas montadas siempre por carril, para que el árbol no cambie entre rondas. */
@@ -240,7 +271,8 @@ const PAD = 32;
 export function pipeLayout(config: PipeConfig, width: number, height: number): PipeLayout {
   const carriles = Math.max(config.lanes.length, 1);
   const conTabla = config.table.length > 0;
-  const conCajon = config.tray.length > 0;
+  const fichas = config.trayItems ?? [];
+  const conCajon = config.tray.length > 0 || fichas.length > 0;
 
   // El alto se reparte de arriba abajo: los carriles, la tabla y el cajón. Con
   // un solo carril la tubería se queda con la banda ancha del medio.
@@ -290,6 +322,13 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
       .map((b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 }));
     const camino = [mouth, ...(alReves ? [...centros].reverse() : centros), spout];
 
+    // El tubo lateral sale de la última máquina y baja hacia el pico, pero por
+    // debajo del caño: las dos salidas tienen que verse a la vez, o no se ve que
+    // son dos.
+    const ultima = centros[centros.length - 1] ?? mouth;
+    const haciaAfuera = alReves ? -1 : 1;
+    const branchSpout = { x: ultima.x + haciaAfuera * machineW * 0.9, y: y + machineH * 0.95 };
+
     lanes.push({
       y,
       machines,
@@ -298,6 +337,8 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
       path: camino,
       counter: { x: spout.x + (alReves ? -tokenR * 2.4 : tokenR * 2.4), y },
       target: { x: spout.x + (alReves ? -tokenR * 2.4 : tokenR * 2.4), y: y + machineH * 0.62 },
+      branchSpout,
+      lamp: { x: ultima.x, y: y - machineH * 0.78 },
     });
   }
 
@@ -305,10 +346,11 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
   const trayW = Math.max(44, Math.min(88, (width - 2 * PAD - (PIPE_TRAY_SLOTS - 1) * 12) / PIPE_TRAY_SLOTS));
   const trayTotal = PIPE_TRAY_SLOTS * trayW + (PIPE_TRAY_SLOTS - 1) * 12;
   const trayY = height - trayH / 2 - 18;
+  const ocupadas = Math.max(config.tray.length, fichas.length);
   const tray: Spot[] = [];
   for (let i = 0; i < PIPE_TRAY_SLOTS; i++) {
     tray.push(
-      conCajon && i < config.tray.length
+      conCajon && i < ocupadas
         ? { x: (width - trayTotal) / 2 + trayW / 2 + i * (trayW + 12), y: trayY }
         : { x: width / 2, y: height + trayH * 2 },
     );
@@ -316,6 +358,10 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
 
   const rowH = 26;
   const tableW = Math.min(width - 2 * PAD, 260);
+  // El renglón de notación va entre el caño y la tabla: la fórmula es la tabla
+  // contraída, así que tiene que quedar donde el ojo ya estaba mirando.
+  const conFormula = (config.formula ?? "") !== "";
+  const formulaY = arriba + bandaCarriles + 8;
   return {
     lanes,
     machineW,
@@ -325,11 +371,12 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
     trayH,
     table: {
       x: (width - tableW) / 2,
-      y: arriba + bandaCarriles + 18,
+      y: arriba + bandaCarriles + (conFormula ? 34 : 18),
       w: tableW,
       rowH,
     },
     tokenR,
+    formula: { x: width / 2, y: formulaY },
   };
 }
 
@@ -507,6 +554,10 @@ interface LaneGeom {
   readonly target: SkPath;
   readonly targetDigits: SkPath;
   readonly closed: SkPath;
+  /** El tubo lateral y la luz. Vacíos cuando la regla es una máquina de verdad. */
+  readonly branch: SkPath;
+  readonly lamp: SkPath;
+  readonly branchDigits: SkPath;
 }
 
 function buildLane(
@@ -591,7 +642,37 @@ function buildLane(
     }
   }
 
-  return { pipe, mouths, boxes, faces, marks, digits, counter, target, targetDigits, closed };
+  // El tubo lateral: la segunda salida de una regla que manda la misma entrada a
+  // dos ramas. Ningún mensaje lo dice; la luz encendida es el mensaje.
+  const branch = Skia.Path.Make();
+  const lamp = Skia.Path.Make();
+  const branchDigits = Skia.Path.Make();
+  if (lane.branch) {
+    const desde = l.path[l.path.length - 2] ?? l.mouth;
+    const hasta = l.branchSpout;
+    branch.moveTo(desde.x, l.y);
+    branch.quadTo(desde.x, hasta.y, hasta.x, hasta.y);
+    lamp.addCircle(l.lamp.x, l.lamp.y, 7);
+    if (config.numerals) {
+      addGlyphs(branchDigits, String(lane.branch.value), hasta.x, hasta.y + layout.tokenR + 12, 15);
+    }
+  }
+
+  return {
+    pipe,
+    mouths,
+    boxes,
+    faces,
+    marks,
+    digits,
+    counter,
+    target,
+    targetDigits,
+    closed,
+    branch,
+    lamp,
+    branchDigits,
+  };
 }
 
 /** El dibujo de una máquina, en las coordenadas de su caja. */
@@ -610,6 +691,10 @@ function machineFacePath(config: PipeConfig, m: PipeMachine, b: Box): SkPath {
 /** El rótulo de una máquina, ya compuesto por el nodo o armado con su signo. */
 function machineLabel(config: PipeConfig, m: PipeMachine): string {
   if (!config.numerals) return "";
+  // La máquina opaca no dice nada que no le hayan puesto: armarle el rótulo con
+  // su número sería abrir la panza que el 27 pide cerrada, y le contaría la
+  // regla al nivel 1 del 17, que existe para descubrirla probando.
+  if (m.opaque) return m.label;
   return m.label !== "" ? m.label : `${OP_CHAR[m.kind] ?? ""}${m.value}`;
 }
 
@@ -690,6 +775,7 @@ export function PipeScene({
           ),
         );
         const m = config.tray[i];
+        const ficha = config.trayItems?.[i];
         const face = Skia.Path.Make();
         const digits = Skia.Path.Make();
         if (m) {
@@ -698,10 +784,20 @@ export function PipeScene({
             const texto = m.label !== "" ? m.label : `${OP_CHAR[m.kind] ?? ""}${m.value}`;
             if (texto !== "") addGlyphs(digits, texto, spot.x, spot.y + layout.trayH * 0.3, 15);
           }
+        } else if (ficha) {
+          // La bandeja de fichas de entrada. La ficha se dibuja del tamaño con
+          // el que va a entrar al caño: lo que se agarra es lo que viaja.
+          const forma = tokenShape(ficha, layout.tokenR);
+          forma.transform([1, 0, spot.x, 0, 1, spot.y - 6, 0, 0, 1]);
+          face.addPath(forma);
+          if (config.numerals) {
+            const texto = ficha.label !== "" ? ficha.label : String(ficha.value);
+            addGlyphs(digits, texto, spot.x, spot.y + layout.trayH * 0.3, 15);
+          }
         }
-        return { box, face, digits };
+        return { box, face, digits, esFicha: m === undefined && ficha !== undefined };
       }),
-    [layout, config.tray, config.numerals],
+    [layout, config.tray, config.trayItems, config.numerals],
   );
 
   // La tabla de entradas y salidas. Las filas están todas montadas; la que esta
@@ -728,6 +824,14 @@ export function PipeScene({
     }
     return { lines, cells, lit };
   }, [config.table, layout.table]);
+
+  /** El renglón de notación: la tabla contraída en una línea. */
+  const formula = useMemo(() => {
+    const p = Skia.Path.Make();
+    const texto = config.formula ?? "";
+    if (texto !== "") addGlyphs(p, texto, layout.formula.x, layout.formula.y, 22);
+    return p;
+  }, [config.formula, layout.formula]);
 
   const plegada = config.onDemand;
   const cuerpoO = useDerivedValue(() => (plegada ? unfold.value : 1), [plegada]);
@@ -756,6 +860,24 @@ export function PipeScene({
               <Path path={g.counter} color={theme.color.ink} />
               <Path path={g.target} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
               <Path path={g.targetDigits} color={theme.color.ok} />
+              {/* El tubo lateral y la luz. La paleta del proyecto no tiene rojo
+                  —es contenida y oscura—, así que la alarma es `warn`. */}
+              <Path
+                path={g.branch}
+                color={theme.color.warn}
+                style="stroke"
+                strokeWidth={config.skin === "machines" ? 8 : 4}
+                strokeCap="round"
+              />
+              <Path path={g.branchDigits} color={theme.color.warn} />
+              <Lamp path={g.lamp} flow={flow} />
+              <BranchToken
+                item={data.branch ?? data.output}
+                lane={l}
+                flow={flow}
+                r={layout.tokenR}
+                corre={(lane === -1 || lane === i) && (data.branch ?? null) !== null}
+              />
               <Token
                 item={itemAt(data, 0)}
                 lane={l}
@@ -784,7 +906,8 @@ export function PipeScene({
         })}
       </Group>
 
-      {/* La tabla de entradas y salidas. */}
+      {/* El renglón de notación y la tabla de entradas y salidas. */}
+      <Path path={formula} color={theme.color.ink} />
       <Path path={table.lit} color={theme.color.accent} opacity={0.18} />
       <Path path={table.lines} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
       <Path path={table.cells} color={theme.color.inkDim} />
@@ -797,6 +920,7 @@ export function PipeScene({
           box={g.box}
           face={g.face}
           digits={g.digits}
+          filled={g.esFicha}
         />
       ))}
 
@@ -987,11 +1111,14 @@ function TrayPiece({
   box,
   face,
   digits,
+  filled,
 }: {
   readonly slot: PipeSlot;
   readonly box: SkPath;
   readonly face: SkPath;
   readonly digits: SkPath;
+  /** La ficha de entrada se pinta llena, como el token que va a viajar. */
+  readonly filled: boolean;
 }) {
   const transform = useDerivedValue(() => [
     { translateX: slot.dx.value },
@@ -1001,8 +1128,68 @@ function TrayPiece({
     <Group transform={transform} opacity={slot.alive}>
       <Path path={box} color={theme.color.surfaceHigh} />
       <Path path={box} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      <Path path={face} color={theme.color.warn} style="stroke" strokeWidth={2} strokeCap="round" />
+      {filled ? (
+        <Path path={face} color={theme.color.accent} />
+      ) : (
+        <Path path={face} color={theme.color.warn} style="stroke" strokeWidth={2} strokeCap="round" />
+      )}
       <Path path={digits} color={theme.color.ink} />
+    </Group>
+  );
+}
+
+/**
+ * La luz del tubo lateral. Se enciende cuando la segunda salida ya cayó, no
+ * antes: lo que la prende es haber visto salir dos cosas de una.
+ */
+function Lamp({ path, flow }: { readonly path: SkPath; readonly flow: SharedValue<number> }) {
+  const opacity = useDerivedValue(() => Math.max(0, Math.min(1, (flow.value - 0.55) * 3)));
+  return <Path path={path} color={theme.color.warn} opacity={opacity} />;
+}
+
+/**
+ * La segunda salida, cayendo por el tubo lateral. Sale del **mismo tramo** que
+ * la primera y al mismo tiempo: si saliera después parecería otra entrada, y lo
+ * que hay que ver es que una sola entrada produjo dos cosas.
+ */
+function BranchToken({
+  item,
+  lane,
+  flow,
+  r,
+  corre,
+}: {
+  readonly item: PipeItem;
+  readonly lane: PipeLaneLayout;
+  readonly flow: SharedValue<number>;
+  readonly r: number;
+  readonly corre: boolean;
+}) {
+  const shape = useMemo(() => tokenShape({ ...item, size: 1 }, r), [item, r]);
+  const desde = lane.path[lane.path.length - 2] ?? lane.mouth;
+  const hasta = lane.branchSpout;
+  const tramos = Math.max(lane.path.length - 1, 1);
+  const inicio = (tramos - 1) / tramos;
+  const escala = Math.max(0.18, Math.min(1, item.size));
+
+  const transform = useDerivedValue(() => {
+    const t = Math.max(0, Math.min(1, (flow.value - inicio) / Math.max(1 - inicio, 0.0001)));
+    const e = t * t * (3 - 2 * t);
+    return [
+      { translateX: desde.x + (hasta.x - desde.x) * e },
+      { translateY: lane.y + (hasta.y - lane.y) * e },
+      { scale: escala },
+    ];
+  }, [desde, hasta, inicio, escala, lane.y]);
+
+  const opacity = useDerivedValue(
+    () => (corre ? Math.max(0, Math.min(1, (flow.value - inicio) * 6)) : 0),
+    [corre, inicio],
+  );
+
+  return (
+    <Group transform={transform} opacity={opacity}>
+      <Path path={shape} color={theme.color.warn} />
     </Group>
   );
 }

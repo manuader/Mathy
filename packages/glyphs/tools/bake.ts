@@ -54,6 +54,10 @@ const CHARSET: readonly CharSpec[] = [
   { char: "a", tex: "a", code: "1D44E" },
   { char: "b", tex: "b", code: "1D44F" },
   { char: "n", tex: "n", code: "1D45B" },
+  // Los nombres de función del nodo 17. Sin ellos, `f(x)` no se puede dibujar y
+  // el símbolo que ese nodo inventa quedaría con un hueco donde va el nombre.
+  { char: "f", tex: "f", code: "1D453" },
+  { char: "g", tex: "g", code: "1D454" },
   { char: "+", tex: "+", code: "2B" },
   // El menos de matemática es U+2212, no el guion U+002D que se escribe en TeX.
   { char: "−", tex: "-", code: "2212" },

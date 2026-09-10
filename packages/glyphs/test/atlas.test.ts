@@ -5,7 +5,7 @@ import { atlas, getGlyph } from "../src/index.ts";
 /** El juego de caracteres del primer hito. */
 const CHARSET = [
   ..."0123456789",
-  ..."xyabn",
+  ..."xyabnfg",
   "+",
   "−",
   "×",
