@@ -26,6 +26,7 @@ import { BalanceScene, panZones } from "./scenes/BalanceScene.tsx";
 import { KeyRing, KeyView } from "./ui/KeyRing.tsx";
 import { Header, Hint } from "./ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "./ui/ActivityShell.tsx";
+import { t } from "./i18n.ts";
 import { theme } from "./ui/theme.ts";
 
 const FONT_SIZE = 52;
@@ -340,12 +341,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OneStepGameProps) {
   return (
     <View style={styles.root}>
       <Pressable onPress={onExit} style={styles.back} hitSlop={theme.hitSlop}>
-        <Text style={styles.backLabel}>‹ Mapa</Text>
+        <Text style={styles.backLabel}>{t("game.back")}</Text>
       </Pressable>
 
       <Header
-        title={`Cofres y llaves · nivel ${level.n} de ${TOTAL_LEVELS}`}
-        subtitle={LEVEL_SUBTITLE[level.n] ?? ""}
+        title={`${t(`node.${NODE}.name`)} · nivel ${level.n} de ${TOTAL_LEVELS}`}
+        subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
       />
@@ -438,17 +439,6 @@ function KeyCell({
     <KeyView item={item} labeled={labeled} dx={dx} dy={dy} stuck={stuck} gesture={gesture} dimmed={solved} />
   );
 }
-
-const LEVEL_SUBTITLE: Record<number, string> = {
-  1: "Una llave, dos platos",
-  2: "Cuatro cerraduras",
-  3: "Barras y flechas",
-  4: "Fichas al lado",
-  5: "Balanza fantasma",
-  6: "Números difíciles",
-  7: "La caja a la derecha",
-  8: "Cerraduras que nunca viste",
-};
 
 const styles = StyleSheet.create({
   root: {

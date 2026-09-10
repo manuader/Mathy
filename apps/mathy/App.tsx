@@ -4,16 +4,19 @@
  * El estado del jugador no vive acá: se pliega del registro de eventos, que es
  * lo único que se guarda. `App` solo elige qué pantalla se ve y le pasa a la
  * actividad la manera de anotar lo que pasó.
+ *
+ * Tres pantallas y una jerarquía: los conceptos, los niveles de un concepto, y
+ * la actividad. La actividad es la única que ocupa la pantalla entera.
  */
 
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
-import { NODE, type Level } from "@mathy/mechanics";
-import { unlockedLevel } from "@mathy/progress";
+import type { LevelBase, NodeSpec } from "@mathy/mechanics";
 import { LevelMap } from "./src/LevelMap";
-import { OneStepGame } from "./src/OneStepGame";
+import { NodeMap } from "./src/NodeMap";
+import { activityFor } from "./src/activities/index.tsx";
 import { ProgressProvider, useProgress } from "./src/progress";
 import { theme } from "./src/ui/theme.ts";
 
@@ -33,7 +36,8 @@ export default function App() {
 
 function Root() {
   const { progress, ready, record } = useProgress();
-  const [playing, setPlaying] = useState<Level | null>(null);
+  const [node, setNode] = useState<NodeSpec | null>(null);
+  const [level, setLevel] = useState<LevelBase | null>(null);
 
   // El mapa no debe parpadear de bloqueado a abierto mientras se lee el
   // registro, así que espera. Es un disco local: se ve un cuadro, no una espera.
@@ -45,20 +49,32 @@ function Root() {
     );
   }
 
-  const unlocked = unlockedLevel(progress, NODE);
-  const levelsDone = progress.levelsDone[NODE] ?? 0;
+  if (!node) return <NodeMap levelsDone={progress.levelsDone} onPick={setNode} />;
 
-  return playing ? (
-    <OneStepGame
-      key={playing.n}
-      level={playing}
-      levelsDone={levelsDone}
-      onEvent={record}
-      onLevelDone={() => setPlaying(null)}
-      onExit={() => setPlaying(null)}
+  const done = progress.levelsDone[node.id] ?? 0;
+  const Activity = level ? activityFor(node.id) : undefined;
+
+  if (level && Activity) {
+    return (
+      <Activity
+        key={`${node.id}:${level.n}`}
+        node={node}
+        level={level}
+        levelsDone={done}
+        onEvent={record}
+        onLevelDone={() => setLevel(null)}
+        onExit={() => setLevel(null)}
+      />
+    );
+  }
+
+  return (
+    <LevelMap
+      node={node}
+      unlocked={done + 1}
+      onPick={setLevel}
+      onExit={() => setNode(null)}
     />
-  ) : (
-    <LevelMap unlocked={unlocked} onPick={setPlaying} />
   );
 }
 

@@ -21,6 +21,7 @@ import {
   sym,
 } from "@mathy/math-core";
 import { makeRandom, type Random } from "./random.ts";
+import { registerNode, type LevelBase } from "./node.ts";
 
 /** El nodo del grafo que este minijuego enseña. */
 export const NODE = "alg.eq.one_step";
@@ -55,13 +56,7 @@ export interface LevelParams {
   readonly keyCount: number;
 }
 
-export interface Level {
-  readonly n: number;
-  readonly titleKey: string;
-  readonly layer: Layer;
-  readonly evidence: readonly Evidence[];
-  /** Cuántos problemas hay que resolver para pasar. */
-  readonly rounds: number;
+export interface Level extends LevelBase {
   readonly params: LevelParams;
   /** Las llaves llevan etiqueta con el operador y el número, o se distinguen por forma. */
   readonly labeledKeys: boolean;
@@ -237,3 +232,10 @@ function makeKeys(lockOp: BinOp, lockValue: number, level: Level, rnd: Random): 
 
 export const levelByNumber = (n: number): Level | undefined => LEVELS.find((l) => l.n === n);
 export const TOTAL_LEVELS = LEVELS.length;
+
+registerNode({
+  id: NODE,
+  n: 13,
+  prereqs: ["prealg.eq.balance", "prealg.inv.operation_as_key"],
+  levels: LEVELS,
+});

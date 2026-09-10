@@ -7,46 +7,35 @@
  * atajo aunque el jugador lo quiera.
  */
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { LEVELS, type Level } from "@mathy/mechanics";
+import type { LevelBase, NodeSpec } from "@mathy/mechanics";
+import { t } from "./i18n.ts";
 import { theme } from "./ui/theme.ts";
 
-const SUBTITLE: Record<number, string> = {
-  1: "Una llave, dos platos",
-  2: "Cuatro cerraduras",
-  3: "Barras y flechas",
-  4: "Fichas al lado",
-  5: "Balanza fantasma",
-  6: "Números difíciles",
-  7: "La caja a la derecha",
-  8: "Cerraduras que nunca viste",
-};
-
-const LAYER_LABEL: Record<string, string> = {
-  concrete: "manipulación",
-  visual: "representación",
-  symbolic: "notación",
-  formal: "definición",
-  abstract: "abstracción",
-};
-
 export function LevelMap({
+  node,
   unlocked,
   onPick,
+  onExit,
 }: {
+  readonly node: NodeSpec;
   readonly unlocked: number;
-  readonly onPick: (level: Level) => void;
+  readonly onPick: (level: LevelBase) => void;
+  readonly onExit: () => void;
 }) {
   return (
     <View style={styles.root}>
+      <Pressable onPress={onExit} style={styles.back} hitSlop={theme.hitSlop}>
+        <Text style={styles.backLabel}>{t("map.back")}</Text>
+      </Pressable>
       <View style={styles.head}>
-        <Text style={styles.title}>Ecuaciones de un paso</Text>
+        <Text style={styles.title}>{t(`node.${node.id}.name`)}</Text>
         <Text style={styles.sub}>
-          Una cerradura, una llave. {unlocked - 1} de {LEVELS.length} recorridos.
+          {t(`node.${node.id}.tagline`)}. {unlocked - 1} de {node.levels.length} {t("map.progress")}.
         </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {LEVELS.map((l) => {
+        {node.levels.map((l) => {
           const open = l.n <= unlocked;
           const done = l.n < unlocked;
           const next = l.n === unlocked;
@@ -60,9 +49,9 @@ export function LevelMap({
               <View style={styles.cardRow}>
                 <Text style={[styles.n, !open && styles.dim]}>{l.n}</Text>
                 <View style={styles.cardText}>
-                  <Text style={[styles.cardTitle, !open && styles.dim]}>{SUBTITLE[l.n]}</Text>
+                  <Text style={[styles.cardTitle, !open && styles.dim]}>{t(l.titleKey)}</Text>
                   <Text style={[styles.cardMeta, !open && styles.dim]}>
-                    {LAYER_LABEL[l.layer]} · {l.rounds} problemas
+                    {t(`layer.${l.layer}`)} · {l.rounds} problemas
                   </Text>
                 </View>
                 {done ? <Text style={styles.check}>✓</Text> : null}
@@ -77,6 +66,8 @@ export function LevelMap({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.color.bg, paddingTop: 64 },
+  back: { position: "absolute", top: 24, left: 20, zIndex: 2 },
+  backLabel: { color: theme.color.inkFaint, fontSize: 14 },
   head: { paddingHorizontal: theme.space[4], marginBottom: theme.space[4] },
   title: { color: theme.color.ink, fontSize: 24, letterSpacing: 0.2 },
   sub: { color: theme.color.inkFaint, fontSize: 13, marginTop: 4 },
