@@ -83,6 +83,28 @@ Lo que entrega quien construye un nodo, y nada más:
 - **El error nunca dice "mal"**: el objeto se resiste y el juego muestra por qué.
 - **Nada se da por bueno sin mirarlo en el navegador**, nivel por nivel.
 
+## Deudas abiertas
+
+Cosas que la construcción por olas deja atrás a propósito, para no bloquear un
+nodo con una refactorización de otro. Se pagan al cerrar la ola que las junta.
+
+- **`PathScene` y `TrackScene` son la misma mecánica.** Las dos dibujan la pista
+  y la manivela de `gears_sequence`; la segunda agrega tope, libro, flechas y
+  renglón. Unificar en una escena parametrizada: pista y manivela como base,
+  el resto como capas opcionales. Quince nodos de la espina usan esta mecánica,
+  así que la deuda se paga sola.
+- **`chest_key` vive adentro de `BalanceScene`** (nodo 13) y también en
+  `ChestScene` (nodo 4). Doce nodos la usan: hay que sacarla a su propia escena.
+- **`onLayout` devuelve `{x: 0, y: 0}`** para algunas vistas en React Native Web.
+  El nodo 3 lo evitó calculando el punto de drop con el desplazamiento del
+  gesto. Hay que revisar si el blanco de drop del nodo 2 quedó corrido.
+- **Un worklet captura el callback del render en que se armó el gesto.** Rearmar
+  el gesto en cada cambio de estado no alcanza: la decisión tiene que viajar en
+  un `SharedValue` o en una referencia. Lo pisaron los nodos 1 y 3.
+- **No hay capa de audio.** El "tic" que varios minijuegos piden se reemplaza
+  por un destello. [Q](../Q-edad-universal.md) exige que el juego funcione con
+  el sonido apagado, así que la deuda no bloquea, pero está.
+
 ## Estado
 
 | Ola | Estado |
