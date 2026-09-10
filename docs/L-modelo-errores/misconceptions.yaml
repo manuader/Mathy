@@ -92,7 +92,7 @@ misconceptions:
 
   - id: unwrap_order_inverted
     category: precedence
-    nodes: [alg.eq.multi_step, alg.fn.composition, alg.fn.inverse_function, arith.expr.precedence_tree, linalg.sys.elimination_to_echelon]
+    nodes: [alg.eq.multi_step, alg.fn.inverse_function, arith.expr.precedence_tree, linalg.sys.elimination_to_echelon]
     detect: {from: "a * x + b = c", to: "x = c / a - b", correct: "x = (c - b) / a"}
     pattern: tree_unwrap
     mechanic: chest_key
