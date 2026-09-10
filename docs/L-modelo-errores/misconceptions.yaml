@@ -72,7 +72,7 @@ misconceptions:
 
   - id: wrong_inverse_choice
     category: wrong_inverse
-    nodes: [alg.eq.one_step, prealg.inv.operation_as_key, adv.alg.field_every_nonzero_invertible, arith.div.undo_mul, calc1.ftc.antiderivative_family, calc1.ftc.integral_undoes_derivative, disc.mod.modular_inverse, geom.trans.undo_transformation, linalg.map.inverse_and_systems]
+    nodes: [alg.eq.one_step, alg.fn.inverse_function, prealg.inv.operation_as_key, adv.alg.field_every_nonzero_invertible, arith.div.undo_mul, calc1.ftc.antiderivative_family, calc1.ftc.integral_undoes_derivative, disc.mod.modular_inverse, geom.trans.undo_transformation, linalg.map.inverse_and_systems]
     detect:
       - {from: "a * x = b", to: "x = b - a", correct: "x = b / a"}
       - {from: "x / a = b", to: "x = b / a", correct: "x = b * a"}
@@ -92,7 +92,7 @@ misconceptions:
 
   - id: unwrap_order_inverted
     category: precedence
-    nodes: [alg.eq.multi_step, arith.expr.precedence_tree, linalg.sys.elimination_to_echelon]
+    nodes: [alg.eq.multi_step, alg.fn.composition, alg.fn.inverse_function, arith.expr.precedence_tree, linalg.sys.elimination_to_echelon]
     detect: {from: "a * x + b = c", to: "x = c / a - b", correct: "x = (c - b) / a"}
     pattern: tree_unwrap
     mechanic: chest_key

@@ -175,7 +175,7 @@ nodes:
     mechanics: [chest_key, machine_pipe, slope_walker]
     literacy: icons
     analogy: machine_reverse_run
-    misconceptions: [sqrt_loses_negative_branch]
+    misconceptions: [sqrt_loses_negative_branch, wrong_inverse_choice, unwrap_order_inverted]
     probes: [recognize, explain, manipulate, apply, generalize, transfer]
     transfer_to: [linalg.map.inverse_and_systems, trig.inv.arcsin_two_branches, calc1.ftc.integral_undoes_derivative, prob.cond.bayes_reverses_condition]
     calc_unlocks: [op_inverse_function]
