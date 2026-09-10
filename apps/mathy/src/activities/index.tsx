@@ -24,6 +24,7 @@ import {
   distLevelByNumber,
   sysLevelByNumber,
   gpLevelByNumber,
+  slLevelByNumber,
   fnLevelByNumber,
   balLevelByNumber,
   type LevelBase,
@@ -47,6 +48,7 @@ import { MultiStepGame } from "./MultiStepGame.tsx";
 import { SystemsGame } from "./SystemsGame.tsx";
 import { BalanceEqGame } from "./BalanceEqGame.tsx";
 import { GraphPictureGame } from "./GraphPictureGame.tsx";
+import { SlopeGame } from "./SlopeGame.tsx";
 import { MachineGame } from "./MachineGame.tsx";
 
 export interface ActivityProps {
@@ -162,6 +164,12 @@ const GraphPicture = ({ level, ...rest }: ActivityProps) => {
   return <GraphPictureGame {...rest} level={full} />;
 };
 
+const Slope = ({ level, ...rest }: ActivityProps) => {
+  const full = slLevelByNumber(level.n);
+  if (!full) return null;
+  return <SlopeGame {...rest} level={full} />;
+};
+
 const Machine = ({ level, ...rest }: ActivityProps) => {
   const full = fnLevelByNumber(level.n);
   if (!full) return null;
@@ -187,6 +195,7 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "alg.sys.two_by_two": Systems,
   "alg.fn.function_as_machine": Machine,
   "alg.fn.graph_as_picture": GraphPicture,
+  "alg.fn.linear_slope": Slope,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>

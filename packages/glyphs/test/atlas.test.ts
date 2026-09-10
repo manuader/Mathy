@@ -5,7 +5,7 @@ import { atlas, getGlyph } from "../src/index.ts";
 /** El juego de caracteres del primer hito. */
 const CHARSET = [
   ..."0123456789",
-  ..."xyabnfg",
+  ..."xyabnfgm",
   "+",
   "−",
   "×",
@@ -14,6 +14,10 @@ const CHARSET = [
   "(",
   ")",
   ".",
+  // Los tres del nodo 19: la pendiente se escribe `Δy / Δx` antes de contraerse
+  // en una sola letra, y `y = mx + b` necesita la `m`.
+  "/",
+  "Δ",
 ];
 
 const DIGITS = [..."0123456789"];

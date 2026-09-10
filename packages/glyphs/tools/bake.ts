@@ -54,6 +54,9 @@ const CHARSET: readonly CharSpec[] = [
   { char: "a", tex: "a", code: "1D44E" },
   { char: "b", tex: "b", code: "1D44F" },
   { char: "n", tex: "n", code: "1D45B" },
+  // La pendiente del nodo 19. Sin ella `y = mx + b` quedaría con un hueco donde
+  // va justamente el símbolo que ese nodo inventa.
+  { char: "m", tex: "m", code: "1D45A" },
   // Los nombres de función del nodo 17. Sin ellos, `f(x)` no se puede dibujar y
   // el símbolo que ese nodo inventa quedaría con un hueco donde va el nombre.
   { char: "f", tex: "f", code: "1D453" },
@@ -67,6 +70,10 @@ const CHARSET: readonly CharSpec[] = [
   { char: "(", tex: "(", code: "28" },
   { char: ")", tex: ")", code: "29" },
   { char: ".", tex: ".", code: "2E" },
+  // La barra del cociente y el delta de la diferencia, los dos del nodo 19: la
+  // pendiente se escribe `Δy / Δx` antes de contraerse en una sola letra.
+  { char: "/", tex: "/", code: "2F" },
+  { char: "\u0394", tex: "\\Delta", code: "394" },
 ];
 
 /** MathJax trabaja en unidades donde 1000 es un em. El atlas queda en em. */

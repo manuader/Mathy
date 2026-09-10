@@ -59,7 +59,20 @@
  * - `step`: el escalón con su triángulo de subida y avance. Es el invariante de
  *   la mecánica hecho dibujo: lo estrena el 19, el 26 lo achica hasta que el
  *   triángulo es un punto y el 23 lo usa para mostrar que la cuesta crece con la
- *   altura. El 18 lo deja apagado.
+ *   altura. El 18 lo deja apagado. Con `WalkStep.rise` puesto, la subida es la
+ *   que el dedo forzó: el escalón se despega y la sombra dice dónde apoyaba.
+ * - `stepColor`, `stepMarks`, `stepText`, `ghostStep`: qué lleva el escalón
+ *   encima. El color **codifica la cuesta** y por eso lo decide el nodo; las
+ *   marcas se cuentan en las capas sin lectura y los números las reemplazan en
+ *   las simbólicas; el segundo escalón es el que se superpone con el primero
+ *   para ver que encajan. Todo del 19.
+ * - `stairs`: la escalera de escalones iguales de la etapa `staircase`. La pide
+ *   el 19: un escalón solo insinúa que la cuesta es constante, la escalera lo
+ *   dice en todo el recorrido.
+ * - `stretch`: la hoja de goma de `grid_stretch`. Estira la cuadrícula y lo
+ *   dibujado sobre ella, y **no las dos reglas**, así que la rampa se acuesta y
+ *   su cuesta medida contra la regla queda dividida por el factor. Lo pide el 19
+ *   para mostrar que la pendiente es del par recta y grilla.
  * - `diagonal`: la recta `y = x` sobre la que se refleja el rastro. Es el gesto
  *   central del 21.
  * - `asymptote`: la pared a la que el rastro se acerca y nunca toca. La pide el
@@ -74,9 +87,6 @@
  *
  * ## Lo que esta escena todavía no dibuja, y qué nodo lo va a pedir
  *
- * - **La escalera de escalones iguales** de la etapa `staircase`, que hoy se
- *   insinúa con un solo escalón. La va a pedir el 19, donde la escalera entera
- *   es la que muestra que la cuesta es constante.
  * - **El zoom sobre un punto del rastro**, que en el 26 es el gesto que
  *   convierte la secante en tangente. Necesita que la ventana sea una aguja y
  *   no un dato, y conviene hacerlo cuando llegue el nodo que lo usa.
@@ -124,10 +134,39 @@ export type WalkGround = "shown" | "faded" | "hidden";
 /** De qué está hecho el caminante y sobre qué camina. */
 export type WalkWalker = "ground" | "sheet" | "ghost" | "none";
 
-/** El escalón: cuánto avanza y desde dónde. La subida sale del rastro. */
+/**
+ * El escalón: cuánto avanza y desde dónde. La subida sale del rastro.
+ *
+ * Con `rise` puesto, la subida es la que el dedo forzó y no la que corresponde:
+ * el escalón se despega del rastro y queda flotando. Es un eje del escalón y no
+ * un modo de error, porque el nodo 19 lo usa como consecuencia visible y no como
+ * "incorrecto".
+ */
 export interface WalkStep {
   readonly from: number;
   readonly run: number;
+  readonly rise?: number;
+}
+
+/**
+ * La escalera de escalones iguales a lo largo del rastro: la etapa `staircase`
+ * del catálogo, dibujada entera y no insinuada con un escalón solo. Es lo que
+ * muestra que la cuesta es la misma en todo el recorrido.
+ */
+export interface WalkStairs {
+  readonly from: number;
+  readonly run: number;
+  readonly count: number;
+}
+
+/** Lo que el escalón lleva escrito: un número por tramo y la ficha de la cuesta. */
+export interface WalkStepText {
+  /** Bajo el tramo horizontal. */
+  readonly run: string;
+  /** Junto al tramo vertical. */
+  readonly rise: string;
+  /** Sobre la esquina: la ficha que nombra la cuesta con el color del escalón. */
+  readonly label: string;
 }
 
 /**
@@ -177,6 +216,56 @@ export interface WalkConfig {
   /** La recta vertical se puede bajar con el dedo. */
   readonly verticalLine: boolean;
   readonly step: WalkStep | null;
+  /**
+   * El color del escalón. **Codifica la cuesta**: el mismo en toda la rampa y
+   * distinto en una rampa distinta. Es lo que el nodo 19 pide mirar cuando el
+   * escalón se mueve y se ensancha, así que lo decide el nodo y no la escena.
+   * Ausente: el color de siempre.
+   */
+  readonly stepColor?: string;
+  /** Las marcas contadas sobre los dos tramos del escalón. */
+  readonly stepMarks?: boolean;
+  /** Lo que el escalón lleva escrito. Ausente: no lleva nada. */
+  readonly stepText?: WalkStepText | null;
+  /**
+   * El segundo escalón, dibujado apagado. Es el que se superpone con el primero
+   * para ver que encajan, que es el gesto del que nace la ficha `m`.
+   */
+  readonly ghostStep?: WalkStep | null;
+  /** La escalera de escalones iguales. Ausente o nula: no hay escalera. */
+  readonly stairs?: WalkStairs | null;
+  /**
+   * El estirado de la grilla, de `grid_stretch`.
+   *
+   * Multiplica la posición de todo lo que está **dibujado sobre la hoja** —la
+   * cuadrícula, los rastros, el escalón, la escalera— y **no la de las dos
+   * reglas**: la hoja es de goma y la regla no. Por eso la rampa se acuesta y,
+   * medida contra la regla que no se estiró, su cuesta queda dividida por el
+   * factor. Es la manera de mostrar que la pendiente es propiedad del par recta
+   * y grilla y no del dibujo suelto. En 1, que es como lo dejan todos los demás
+   * nodos, no cambia absolutamente nada.
+   */
+  readonly stretch?: number;
+  /**
+   * La cuadrícula se dibuja cuadrada: una unidad de altura mide lo mismo que una
+   * de avance, y la ventana se centra en lo que sobra.
+   *
+   * Lo pide el 19 y es funcional, no cosmético: con unidades de distinto tamaño
+   * en cada eje, una rampa que sube 3 por paso se ve igual de empinada que una
+   * que sube 1, y lo empinado es el nodo entero. Los nodos que leen alturas y no
+   * cuestas lo dejan apagado y se quedan con toda la caja.
+   */
+  readonly square?: boolean;
+  /**
+   * La hoja con su cuadrícula, sus ejes y sus marcas. Ausente vale `true`, que
+   * es lo que hacen todos los nodos que dibujan algo sobre el plano.
+   *
+   * En `false` no queda nada: es la ronda que se juega **sin dibujo**, con la
+   * recta escrita y nada más. La pide el 19 en su nivel de rectas escritas, y
+   * una cuadrícula detrás de tres ecuaciones no es fondo, es ruido: invita a
+   * leer una pendiente que no está dibujada.
+   */
+  readonly grid?: boolean;
   readonly diagonal: boolean;
   /** La pared a la que el rastro se acerca: horizontal o vertical, en unidades. */
   readonly asymptote: { readonly at: number; readonly vertical: boolean } | null;
@@ -229,11 +318,17 @@ export function walkLayout(config: WalkConfig, width: number, height: number): W
   const sheetX = width - PAD - sheetW;
 
   const alto = Math.max(120, height - 2 * PAD);
+  // Con la cuadrícula cuadrada las dos unidades miden lo mismo y la ventana se
+  // centra en lo que sobra; si no, cada eje se estira hasta llenar su lado.
+  const cruda = { ux: sheetW / anchoU, uy: alto / altoU };
+  const u = config.square ? Math.min(cruda.ux, cruda.uy) : 0;
+  const ux = config.square ? u : cruda.ux;
+  const uy = config.square ? u : cruda.uy;
   const sheet: WalkPlane = {
-    ux: sheetW / anchoU,
-    uy: alto / altoU,
-    cx: sheetX - w.x0 * (sheetW / anchoU),
-    cy: PAD + w.y1 * (alto / altoU),
+    ux,
+    uy,
+    cx: sheetX + (sheetW - anchoU * ux) / 2 - w.x0 * ux,
+    cy: PAD + (alto - altoU * uy) / 2 + w.y1 * uy,
   };
 
   const ground: WalkPlane | null = conTerreno
@@ -346,16 +441,25 @@ function dashed(target: SkPath, x0: number, y0: number, x1: number, y1: number, 
   }
 }
 
-/** La cuadrícula y los dos ejes con sus marcas. */
+/**
+ * La cuadrícula y los dos ejes con sus marcas.
+ *
+ * La cuadrícula se estira con la hoja y los ejes no: son la regla, y una regla
+ * de goma no mediría nada. Con el estirado en 1 las dos cosas coinciden y no se
+ * nota, que es como lo dejan todos los nodos menos el 19.
+ */
 function buildGrid(config: WalkConfig, p: WalkPlane): { grid: SkPath; axes: SkPath; ticks: SkPath } {
   const w = config.window;
+  const k = config.stretch ?? 1;
   const grid = Skia.Path.Make();
   const axes = Skia.Path.Make();
   const ticks = Skia.Path.Make();
 
   for (let x = Math.ceil(w.x0); x <= w.x1; x++) {
-    grid.moveTo(walkPx(p, x), walkPy(p, w.y0));
-    grid.lineTo(walkPx(p, x), walkPy(p, w.y1));
+    const at = x * k;
+    if (at < w.x0 || at > w.x1) continue;
+    grid.moveTo(walkPx(p, at), walkPy(p, w.y0));
+    grid.lineTo(walkPx(p, at), walkPy(p, w.y1));
   }
   for (let y = Math.ceil(w.y0); y <= w.y1; y++) {
     grid.moveTo(walkPx(p, w.x0), walkPy(p, y));
@@ -434,7 +538,7 @@ function buildQuadrants(w: WalkWindow, p: WalkPlane): readonly SkPath[] {
 }
 
 /** La línea de un rastro y sus gotas, cada cosa en un trazo. */
-function buildTrace(trace: GpTrace, p: WalkPlane): { line: SkPath; drops: SkPath } {
+function buildTrace(trace: GpTrace, p: WalkPlane, k = 1): { line: SkPath; drops: SkPath } {
   const line = Skia.Path.Make();
   const drops = Skia.Path.Make();
   for (let x = trace.from; x < gpTo(trace); x++) {
@@ -442,11 +546,11 @@ function buildTrace(trace: GpTrace, p: WalkPlane): { line: SkPath; drops: SkPath
     const a = gpHeightAt(trace, x);
     const b = gpHeightAt(trace, x + 1);
     if (a === null || b === null) continue;
-    line.moveTo(walkPx(p, x), walkPy(p, a));
-    line.lineTo(walkPx(p, x + 1), walkPy(p, b));
+    line.moveTo(walkPx(p, x * k), walkPy(p, a));
+    line.lineTo(walkPx(p, (x + 1) * k), walkPy(p, b));
   }
   for (const punto of gpPoints(trace)) {
-    drops.addCircle(walkPx(p, punto.x), walkPy(p, punto.y), 4.5);
+    drops.addCircle(walkPx(p, punto.x * k), walkPy(p, punto.y), 4.5);
   }
   return { line, drops };
 }
@@ -512,6 +616,85 @@ function buildGround(
   return { body, sea };
 }
 
+/**
+ * Un escalón apoyado contra el rastro, con todo lo que lleva encima.
+ *
+ * El cuerpo son los dos tramos, el horizontal y el vertical. La esquina de
+ * abajo siempre está sobre el rastro; la de arriba está sobre el rastro **solo
+ * si la subida es la que corresponde**, y cuando el nodo la fuerza el escalón
+ * queda flotando con su sombra abajo. Que se despegue no es un error dibujado:
+ * es la consecuencia visible de la que habla el documento del nodo 19.
+ */
+function buildStep(
+  config: WalkConfig,
+  p: WalkPlane,
+  s: WalkStep | null,
+  k: number,
+): { body: SkPath; shadow: SkPath; marks: SkPath; text: SkPath } {
+  const body = Skia.Path.Make();
+  const shadow = Skia.Path.Make();
+  const marks = Skia.Path.Make();
+  const text = Skia.Path.Make();
+  const trace = config.traces[config.mainTrace];
+  if (!s || !trace) return { body, shadow, marks, text };
+
+  const y0 = gpHeightAt(trace, s.from);
+  const debido = gpHeightAt(trace, s.from + s.run);
+  if (y0 === null || debido === null) return { body, shadow, marks, text };
+  const subida = s.rise ?? debido - y0;
+  const apoya = Math.abs(subida - (debido - y0)) < 1e-9;
+
+  const ax = walkPx(p, s.from * k);
+  const ay = walkPy(p, y0);
+  const bx = walkPx(p, (s.from + s.run) * k);
+  const by = walkPy(p, y0 + subida);
+
+  const ele = (target: SkPath, top: number): void => {
+    target.moveTo(ax, ay);
+    target.lineTo(bx, ay);
+    target.lineTo(bx, top);
+  };
+  ele(body, by);
+  // La hipotenusa cierra el triángulo salvo en la etapa de la escalera, donde
+  // el escalón es un escalón y no un triángulo.
+  if (config.skin !== "staircase") body.lineTo(ax, ay);
+  if (!apoya) {
+    ele(shadow, walkPy(p, debido));
+    // Y la esquina que quedó en el aire, marcada: es lo que hay que bajar.
+    shadow.addCircle(bx, by, 5);
+  }
+
+  if (config.stepMarks) {
+    // Una marca por unidad en cada tramo: contarlas es medir, y es lo que el
+    // nivel de las capas sin lectura hace en vez de leer un número.
+    const pasos = Math.max(1, Math.round(Math.abs(s.run)));
+    for (let i = 1; i < pasos; i++) {
+      const x = ax + ((bx - ax) * i) / pasos;
+      marks.moveTo(x, ay - 5);
+      marks.lineTo(x, ay + 5);
+    }
+    const altos = Math.max(1, Math.round(Math.abs(subida)));
+    for (let i = 1; i < altos; i++) {
+      const y = ay + ((by - ay) * i) / altos;
+      marks.moveTo(bx - 5, y);
+      marks.lineTo(bx + 5, y);
+    }
+  }
+
+  const t = config.stepText;
+  if (t) {
+    // El avance va bajo su tramo y la subida al costado del suyo: cada número
+    // pegado al tramo que cuenta, que es el paso 1 de la transición simbólica.
+    addGlyphs(text, t.run, (ax + bx) / 2, ay + (subida >= 0 ? 18 : -18), 16);
+    addGlyphs(text, t.rise, bx + 20, (ay + by) / 2, 16);
+    // La ficha de la cuesta va sobre la esquina de arriba, que es la que las dos
+    // medidas comparten: al costado se le monta encima al eje cuando el escalón
+    // apoya cerca del cero.
+    if (t.label !== "") addGlyphs(text, t.label, bx + 18, by - 16, 20);
+  }
+  return { body, shadow, marks, text };
+}
+
 /** El muñeco: dos círculos y dos piernas, dibujado sobre su propio origen. */
 function buildWalker(r: number): SkPath {
   const p = Skia.Path.Make();
@@ -571,16 +754,27 @@ export function WalkScene({
   appear,
 }: WalkSceneProps) {
   const sheet = layout.sheet;
-  const grid = useMemo(() => buildGrid(config, sheet), [config, sheet]);
-  const axisText = useMemo(() => buildAxisText(config, sheet), [config, sheet]);
+  const conHoja = config.grid !== false;
+  const grid = useMemo(
+    () =>
+      conHoja
+        ? buildGrid(config, sheet)
+        : { grid: Skia.Path.Make(), axes: Skia.Path.Make(), ticks: Skia.Path.Make() },
+    [conHoja, config, sheet],
+  );
+  const axisText = useMemo(
+    () => (conHoja ? buildAxisText(config, sheet) : Skia.Path.Make()),
+    [conHoja, config, sheet],
+  );
   const quadrants = useMemo(
-    () => (config.quadrants ? buildQuadrants(config.window, sheet) : []),
-    [config.quadrants, config.window, sheet],
+    () => (config.quadrants && conHoja ? buildQuadrants(config.window, sheet) : []),
+    [config.quadrants, conHoja, config.window, sheet],
   );
 
+  const stretch = config.stretch ?? 1;
   const traces = useMemo(
-    () => config.traces.map((t) => buildTrace(t, sheet)),
-    [config.traces, sheet],
+    () => config.traces.map((t) => buildTrace(t, sheet, stretch)),
+    [config.traces, sheet, stretch],
   );
 
   const ground = useMemo(
@@ -677,26 +871,49 @@ export function WalkScene({
 
   /**
    * El escalón con su triángulo de subida y avance: el invariante de la mecánica
-   * hecho dibujo. La subida sale del rastro y no de una cuenta de la escena.
+   * hecho dibujo. La subida sale del rastro y no de una cuenta de la escena,
+   * salvo cuando el nodo la fuerza: ahí el escalón se despega y la sombra
+   * muestra dónde tendría que apoyar.
+   *
+   * Devuelve cuatro trazos y no uno porque cada uno se pinta distinto: el
+   * cuerpo lleva el color de la cuesta, la sombra va apagada, las marcas se
+   * cuentan y los números se leen. Juntos serían un solo color.
    */
-  const step = useMemo(() => {
+  const step = useMemo(
+    () => buildStep(config, sheet, config.step, config.stretch ?? 1),
+    [config, sheet],
+  );
+
+  /**
+   * El segundo escalón, apagado. Es el que se superpone con el primero para ver
+   * que encajan, que es el gesto del que nace la ficha de la cuesta.
+   */
+  const ghostStep = useMemo(
+    () => buildStep(config, sheet, config.ghostStep ?? null, config.stretch ?? 1),
+    [config, sheet],
+  );
+
+  /**
+   * La escalera de escalones iguales. Es lo que muestra que la cuesta es la
+   * misma en todo el recorrido: un solo escalón lo insinúa, la escalera lo dice.
+   */
+  const stairs = useMemo(() => {
     const path = Skia.Path.Make();
-    const s = config.step;
+    const st = config.stairs;
     const trace = config.traces[config.mainTrace];
-    if (!s || !trace) return path;
-    const y0 = gpHeightAt(trace, s.from);
-    const y1 = gpHeightAt(trace, s.from + s.run);
-    if (y0 === null || y1 === null) return path;
-    const ax = walkPx(sheet, s.from);
-    const ay = walkPy(sheet, y0);
-    const bx = walkPx(sheet, s.from + s.run);
-    const by = walkPy(sheet, y1);
-    path.moveTo(ax, ay);
-    path.lineTo(bx, ay);
-    path.lineTo(bx, by);
-    if (config.skin !== "staircase") path.lineTo(ax, ay);
+    if (!st || !trace) return path;
+    const k = config.stretch ?? 1;
+    for (let i = 0; i < st.count; i++) {
+      const desde = st.from + i * st.run;
+      const y0 = gpHeightAt(trace, desde);
+      const y1 = gpHeightAt(trace, desde + st.run);
+      if (y0 === null || y1 === null) continue;
+      path.moveTo(walkPx(sheet, desde * k), walkPy(sheet, y0));
+      path.lineTo(walkPx(sheet, (desde + st.run) * k), walkPy(sheet, y0));
+      path.lineTo(walkPx(sheet, (desde + st.run) * k), walkPy(sheet, y1));
+    }
     return path;
-  }, [config.step, config.traces, config.mainTrace, config.skin, sheet]);
+  }, [config.stairs, config.traces, config.mainTrace, config.stretch, sheet]);
 
   // --- Lo que se mueve -------------------------------------------------------
 
@@ -757,6 +974,8 @@ export function WalkScene({
   const handO = useDerivedValue(() => hint.value * 0.5 * Math.sin(demo.value * Math.PI));
 
   const terrenoO = config.ground === "faded" ? 0.28 : 1;
+  /** El color de la cuesta. Lo decide el nodo: la escena no sabe qué es empinado. */
+  const pasoColor = config.stepColor ?? theme.color.ok;
 
   return (
     <Group opacity={appear}>
@@ -838,8 +1057,17 @@ export function WalkScene({
       <Path path={pairLabel} color={theme.color.ink} />
       <Path path={legend} color={theme.color.inkDim} />
 
-      {/* El escalón: subida y avance. */}
-      <Path path={step} color={theme.color.ok} style="stroke" strokeWidth={2} />
+      {/* La escalera de escalones iguales: la cuesta, dicha en todo el recorrido. */}
+      <Path path={stairs} color={pasoColor} style="stroke" strokeWidth={1.5} opacity={0.5} />
+
+      {/* El segundo escalón, apagado: el que se superpone para ver que encajan. */}
+      <Path path={ghostStep.body} color={pasoColor} style="stroke" strokeWidth={2} opacity={0.35} />
+
+      {/* El escalón: subida y avance. El color codifica la cuesta. */}
+      <Path path={step.shadow} color={theme.color.inkFaint} style="stroke" strokeWidth={1.5} />
+      <Path path={step.body} color={pasoColor} style="stroke" strokeWidth={3} strokeCap="round" />
+      <Path path={step.marks} color={pasoColor} style="stroke" strokeWidth={1.5} />
+      <Path path={step.text} color={theme.color.ink} />
 
       {/* La recta vertical del test. */}
       <Group transform={sweepT} opacity={sweepO}>

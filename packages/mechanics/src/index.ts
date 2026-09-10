@@ -20,3 +20,4 @@ export * from "./multi-step.ts";
 export * from "./systems.ts";
 export * from "./graph-picture.ts";
 export * from "./machine.ts";
+export * from "./slope.ts";
