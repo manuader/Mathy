@@ -96,6 +96,14 @@ de eventos. Después se construyó el andamiaje del curriculum —mapa de concep
 de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y porqués en
 [SESSION-2026-09-09-espina-jugable.md](SESSION-2026-09-09-espina-jugable.md).
 
+### Sesión 2026-09-10 — `gears_sequence` deja de estar dibujada tres veces
+`TrackScene` pasa a ser la escena de la mecánica y no la del nodo 3; `PathScene` y
+`ElevatorScene` se borran. Se verificó con **oráculos deterministas A/B contra el build
+anterior** —14450 comparaciones de layout y 14352 de órdenes de dibujo, sin diferencias—
+y no jugando: la receta de gestos de §7.3 no activa el `Pan` sobre el lienzo, y falla
+igual contra el build sin tocar, así que es el arnés. **Queda abierto** confirmarlo
+jugando y arreglar §7.3.
+
 ### Sesión 2026-09-09 (cont.) — la aritmética queda cerrada
 Nueve nodos jugables y verificados: contar, la recta, sumar, restar, multiplicar, dividir,
 los negativos, las fracciones y las ecuaciones de un paso. El nodo 6 es el primero que
@@ -186,7 +194,11 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
 2. **`main` en `apps/mathy/package.json` es `"index"`, sin extensión**, para que Metro
    haga resolución por plataforma y tome `index.web.tsx`. Con `"index.ts"` el navegador
    nunca corre `LoadSkiaWeb` y el primer lienzo se dibuja contra un Skia que no existe.
-3. **La implementación web de gesture-handler escucha eventos de puntero.** Un arrastre
+3. **La implementación web de gesture-handler escucha eventos de puntero.**
+   *Con una advertencia abierta*: la receta funciona sobre las asas del llavero, que son
+   elementos con `touch-action: none` propios; sobre un gesto que cubre el lienzo entero
+   no activó el `Pan` en al menos un intento, y falló igual contra un build sin tocar.
+   Si tu gesto no responde, no supongas que tu código está mal hasta descartar el arnés. Un arrastre
    sintético hecho con eventos de mouse no la despierta. La receta que funciona es
    despachar `pointerdown`, doce o más `pointermove` con ~20 ms entre medio y `pointerup`,
    todos con el mismo `pointerId`. Además, `setPointerCapture` con un `pointerId`

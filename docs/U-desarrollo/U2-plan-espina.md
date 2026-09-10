@@ -95,11 +95,24 @@ nodo con una refactorización de otro. Se pagan al cerrar la ola que las junta.
   renglón. Unificar en una escena parametrizada: pista y manivela como base,
   el resto como capas opcionales. Quince nodos de la espina usan esta mecánica,
   así que la deuda se paga sola.
-- **`gears_sequence` va por su tercera copia**: `PathScene` (nodo 2), `TrackScene` (nodo 3)
-  y ahora `ElevatorScene` (nodo 7). Las tres dibujan una manivela y un soporte graduado.
-  Las tres se escribieron aparte por la misma razón —cada una está tipada contra el
-  problema de su nodo— y esa razón es justamente el diseño que hay que cambiar: la escena
-  tiene que tomar una configuración, no el `Problem` de un nodo. Quince nodos la usan.
+- ~~**`gears_sequence` está dibujada tres veces**~~ — **pagada**. `PathScene` y
+  `ElevatorScene` se borraron; `TrackScene` es ahora la escena de la mecánica y la usan
+  los nodos 2, 3 y 7. El código entró en `a16c222` sin que el mensaje lo diga, porque un
+  `git add -A` mío lo arrastró junto al nodo 10.
+
+  Lo que dejó como método, y vale para las deudas que siguen: **no se pudo copiar el
+  patrón de `ChestScene`**. Ahí se pudo ensanchar a formas estructurales porque el tipo
+  del nodo 4 ya las cumplía; acá los tres nodos le llaman distinto a la misma cosa
+  (`length`/`slots`, `tiles`/`chips`, `flag`/`target`) y ninguno cumple la forma de los
+  otros dos, así que "no tocar el llamador" no estaba disponible. Cada actividad arma su
+  configuración, como en `TilesScene`.
+
+  Y **cómo se verificó**: dos oráculos deterministas contra el build anterior, 21 niveles
+  por 10 semillas por varios tamaños de lienzo. 14450 comparaciones de layout campo por
+  campo y 14352 de órdenes de dibujo, sin una diferencia. Un oráculo encontró un bug que
+  la refactorización había introducido y que nadie habría visto mirando: al caminante del
+  nodo 7 le faltaba el segundo trazo de brazos. Para una refactorización que no debe
+  cambiar nada, un oráculo A/B es más fuerte que veintiuna capturas.
 - **`chest_key` vive adentro de `BalanceScene`** (nodo 13) y también en
   `ChestScene` (nodo 4). Doce nodos la usan: hay que sacarla a su propia escena.
 - **`onLayout` devuelve `{x: 0, y: 0}`** para algunas vistas en React Native Web.
