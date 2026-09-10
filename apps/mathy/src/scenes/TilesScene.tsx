@@ -64,6 +64,49 @@ export type TilesSkin = "loose_tiles" | "grid_rectangle" | "labeled_sides" | "pr
 export interface LooseRow {
   readonly id: string;
   readonly cells: number;
+  /**
+   * Es una pieza sola y no `cells` baldosas sueltas. Una tira de largo
+   * desconocido tiene que verse como una sola cosa: dibujada en celdas se
+   * podría contar, y contarla es justamente lo que no se puede.
+   */
+  readonly solid?: boolean;
+  /** Cuántas celdas mide a lo alto. Una fila mide una. */
+  readonly tall?: number;
+}
+
+/** Una llave de arriba con su etiqueta: un tramo del lado, y qué mide. */
+export interface TilesSpan {
+  readonly cells: number;
+  /** Lo que la llave dice. Sale del atlas: un numeral, una letra, o las dos. */
+  readonly label: string;
+}
+
+/**
+ * La pared entre las habitaciones, y lo que los lados dicen.
+ *
+ * Ausente o nula: el piso es uno solo, el corte cae por la mitad y las llaves
+ * dicen los numerales del marco, que es como lo usan los nodos 5 y 6.
+ *
+ * Con esto puesto la escena dibuja lo que necesita `alg.expr.distributive_tiles`:
+ * la base partida donde el problema la parte, una llave por tramo con su
+ * etiqueta, y las dos escrituras del mismo piso —el producto y la suma—
+ * ocupando el mismo lugar. Cuál se ve la decide `split`, que es el mismo valor
+ * que separa las dos tiras: con la pared puesta se lee el producto, y a medida
+ * que el piso se abre aparece la suma.
+ */
+export interface TilesRooms {
+  /** En qué columna cae la pared. */
+  readonly at: number;
+  /** La pared dibujada adentro del marco. */
+  readonly wall: boolean;
+  /** Las llaves de arriba. La suma de sus `cells` es el ancho del marco. */
+  readonly spans: readonly TilesSpan[];
+  /** Lo que dice la llave del lado izquierdo. Vacío: el numeral del marco. */
+  readonly side: string;
+  /** El producto escrito debajo del piso, con la pared puesta. */
+  readonly product: string;
+  /** La suma escrita, que ocupa el mismo lugar cuando la pared sale. */
+  readonly sum: string;
 }
 
 /**
@@ -161,6 +204,8 @@ export interface TilesConfig {
    * vista y sin nada que las nombre: ese hueco es `arith.div.remainder`.
    */
   readonly leftover?: number;
+  /** Las dos habitaciones y la pared. Ausente o nula: el piso es uno solo. */
+  readonly rooms?: TilesRooms | null;
 }
 
 /** Una fila del montón mientras el dedo la lleva. */
@@ -230,7 +275,11 @@ export function tilesLayout(
   // baldosas y una de dos no pueden repartirse el ancho por partes iguales.
   const drawer: Spot[] = [];
   const top = height * 0.64;
-  const line = unit + 14;
+  // La pieza más alta manda el alto del renglón: con un rectángulo de tres
+  // celdas de alto en la bandeja, un renglón del alto de una baldosa se pisa
+  // con el siguiente.
+  const alto = Math.max(1, ...config.loose.map((r) => r.tall ?? 1));
+  const line = unit * alto + 14;
   const gap = 18;
   let x = 0;
   let row = 0;
@@ -267,7 +316,13 @@ export function tilesLayout(
     floor,
     drawer,
     totalSpot: { x: frame.x + frame.w + unit * 1.4, y: frame.y + frame.h / 2 },
-    cutAt: config.cut > 1 ? Math.max(1, Math.floor(config.cols / 2)) : 0,
+    // La pared cae donde el problema la pone; sin habitaciones, por la mitad.
+    cutAt:
+      config.rooms
+        ? Math.max(0, Math.min(config.cols, config.rooms.at))
+        : config.cut > 1
+          ? Math.max(1, Math.floor(config.cols / 2))
+          : 0,
     ...partitionLayout(config.partition ?? null, width, height),
   };
 }
@@ -468,7 +523,7 @@ function buildKey(
   from: Spot,
   to: Spot,
   out: number,
-  value: number,
+  label: string,
   size: number,
 ): { brace: SkPath; digits: SkPath } {
   const brace = Skia.Path.Make();
@@ -488,7 +543,7 @@ function buildKey(
   brace.lineTo(to.x + ux * 0.4, to.y + uy * 0.4);
 
   const digits = Skia.Path.Make();
-  addGlyphs(digits, String(value), mx + ux * 2.6, my + uy * 2.6, size);
+  addGlyphs(digits, label, mx + ux * 2.6, my + uy * 2.6, size);
   return { brace, digits };
 }
 
@@ -738,6 +793,16 @@ export interface TilesSceneProps {
   readonly rows: readonly RowSlot[];
   readonly appear: SharedValue<number>;
   /**
+   * Cuántas tiras de la habitación derecha entraron, **contadas desde abajo**.
+   *
+   * Desde abajo y no desde arriba porque las dos habitaciones se llenan una
+   * contra la otra, y porque es lo que deja el cuadrado de una suma con sus dos
+   * rectángulos vacíos en esquinas opuestas: el cuadrado chico arriba a la
+   * izquierda, el grande abajo a la derecha. Ausente: la derecha sigue a
+   * `placed`, que es como lo usan los nodos que no parten el piso.
+   */
+  readonly placedRight?: SharedValue<number>;
+  /**
    * En cuántas partes está cortado el todo vivo de la partición. Continuo: las
    * líneas ya puestas se corren solas para repartirse el espacio, que es lo que
    * impide cortar desparejo por accidente.
@@ -766,6 +831,7 @@ export function TilesScene({
   demo,
   rows,
   appear,
+  placedRight: placedRightProp,
   parts: partsProp,
   lit: litProp,
   divide: divideProp,
@@ -779,6 +845,10 @@ export function TilesScene({
   const parts = partsProp ?? partsFallback;
   const lit = litProp ?? litFallback;
   const divide = divideProp ?? divideFallback;
+  const placedRight = placedRightProp ?? placed;
+  // Sin el valor propio, la tira derecha sigue a la izquierda fila por fila,
+  // que es como la usan los nodos que no parten el piso en habitaciones.
+  const derechaDesdeAbajo = placedRightProp !== undefined;
   const floor = useMemo(() => buildFloor(config, layout), [config, layout]);
   const frame = useMemo(() => buildFrame(layout), [layout]);
   const merged = config.skin !== "loose_tiles";
@@ -788,28 +858,82 @@ export function TilesScene({
       layout.drawer.map((spot, i) => {
         const row = config.loose[i];
         const cells = row?.cells ?? 0;
-        return cellsPath(spot.x - (cells * layout.unit) / 2, spot.y - layout.unit / 2, 0, cells, layout.unit);
+        const tall = row?.tall ?? 1;
+        const u = layout.unit;
+        const x0 = spot.x - (cells * u) / 2;
+        const y0 = spot.y - (tall * u) / 2;
+        // Una pieza sola se dibuja de un trazo: sin celdas adentro no se puede
+        // contar, y eso es todo lo que dice la tira de largo desconocido.
+        if (row?.solid === true) {
+          const p = Skia.Path.Make();
+          const inset = u * 0.06;
+          p.addRRect(
+            Skia.RRectXY(
+              Skia.XYWHRect(x0 + inset, y0 + inset, cells * u - inset * 2, tall * u - inset * 2),
+              4,
+              4,
+            ),
+          );
+          return p;
+        }
+        const p = Skia.Path.Make();
+        for (let r = 0; r < tall; r++) p.addPath(cellsPath(x0, y0 + r * u, 0, cells, u));
+        return p;
       }),
     [layout, config.loose],
   );
+
+  const rooms = config.rooms ?? null;
 
   const keyGeom = useMemo(() => {
     const { x, y, w, h } = layout.frame;
     const size = Math.min(layout.unit * 0.7, 22);
     // La normal de cada lado apunta hacia afuera del rectángulo: una llave
     // dibujada por dentro taparía justo las baldosas que está midiendo.
-    const top = buildKey({ x, y }, { x: x + w, y }, 10, config.frameCols, size);
-    const left = buildKey({ x, y: y + h }, { x, y }, 10, config.frameRows, size);
+    const top = buildKey({ x, y }, { x: x + w, y }, 10, String(config.frameCols), size);
+    const left = buildKey(
+      { x, y: y + h },
+      { x, y },
+      10,
+      rooms && rooms.side !== "" ? rooms.side : String(config.frameRows),
+      size,
+    );
     // La expresión va debajo del piso y no encima: arriba se la comen las
     // llaves, y con un piso alto se saldría del lienzo.
-    const expr = Skia.Path.Make();
-    addGlyphs(
-      expr,
-      `${config.frameRows}×${config.frameCols}`,
-      x + w / 2,
-      y + h + layout.unit * 1.2,
-      size * 1.2,
+    const abajo = y + h + layout.unit * 1.2;
+    const escribir = (text: string): SkPath => {
+      const p = Skia.Path.Make();
+      addGlyphs(p, text, x + w / 2, abajo, size * 1.2);
+      return p;
+    };
+    const expr = escribir(
+      rooms ? rooms.product : `${config.frameRows}×${config.frameCols}`,
     );
+    const sum = rooms ? escribir(rooms.sum) : Skia.Path.Make();
+
+    // Una llave por habitación, cada una sobre su tramo de la base. Es lo que
+    // convierte "el lado de arriba mide nueve" en "mide x más cuatro".
+    const spans: { brace: SkPath; digits: SkPath }[] = [];
+    if (rooms) {
+      let celda = 0;
+      for (const span of rooms.spans) {
+        const x0 = x + celda * layout.unit;
+        const x1 = x0 + span.cells * layout.unit;
+        spans.push(buildKey({ x: x0, y }, { x: x1, y }, 10, span.label, size));
+        celda += span.cells;
+      }
+    }
+
+    // La pared: una línea adentro del marco, en la columna donde el problema
+    // parte la base. Se desvanece a medida que las dos tiras se separan, que es
+    // el mismo movimiento visto desde el otro lado.
+    const wall = Skia.Path.Make();
+    if (rooms?.wall === true) {
+      const wx = x + layout.cutAt * layout.unit;
+      wall.moveTo(wx, y - layout.unit * 0.12);
+      wall.lineTo(wx, y + h + layout.unit * 0.12);
+    }
+
     // La llave del lado que la pared tapa va hueca: el corchete se dibuja y el
     // numeral no. Con el numeral puesto no habría nada que leer.
     const hollow = config.hollow ?? null;
@@ -818,8 +942,11 @@ export function TilesScene({
       top: hollow === "cols" ? { brace: top.brace, digits: vacio } : top,
       left: hollow === "rows" ? { brace: left.brace, digits: vacio } : left,
       expr,
+      sum,
+      spans,
+      wall,
     };
-  }, [layout, config.frameRows, config.frameCols, config.hollow]);
+  }, [layout, config.frameRows, config.frameCols, config.hollow, rooms]);
 
   /**
    * Las baldosas que sobraron. Se dibujan al costado del rectángulo, sueltas y
@@ -964,6 +1091,11 @@ export function TilesScene({
   const outlineO = useDerivedValue(() => Math.max(0, Math.min(1, placed.value - 0.9)));
   // Lo que sobró late. No dice nada porque todavía no hay nada que decir.
   const leftoverO = useDerivedValue(() => 0.5 + 0.5 * hint.value);
+  // La pared y el producto se van juntos. Sin habitaciones no hay pared y la
+  // expresión no depende del corte: los nodos 5 y 6 separan las tiras como
+  // demostración y su escritura tiene que quedarse donde está.
+  const hayPared = rooms !== null;
+  const wallO = useDerivedValue(() => (hayPared ? 1 - Math.max(0, Math.min(1, split.value)) : 1));
   const gap = layout.unit * SPLIT;
 
   return (
@@ -985,6 +1117,8 @@ export function TilesScene({
             index={r}
             strip={strip}
             placed={placed}
+            placedRight={placedRight}
+            fromBottom={derechaDesdeAbajo ? floor.strips.length - 1 - r : r}
             split={split}
             gap={gap}
             merged={merged}
@@ -1008,17 +1142,50 @@ export function TilesScene({
         </Group>
       ) : null}
 
+      {/* La pared: el paréntesis dibujado adentro del marco. Se va cuando las
+          dos tiras se separan, que es el mismo movimiento visto de este lado. */}
+      {rooms?.wall === true ? (
+        <Group opacity={wallO}>
+          <Path
+            path={keyGeom.wall}
+            color={theme.color.warn}
+            style="stroke"
+            strokeWidth={3}
+          />
+        </Group>
+      ) : null}
+
       {/* Las llaves con numeral y la expresión con la cruz. El cruce es el morph. */}
       {config.keys ? (
         <>
           <Group opacity={keys}>
-            <Path path={keyGeom.top.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
-            <Path path={keyGeom.top.digits} color={theme.color.ink} />
+            {rooms ? (
+              keyGeom.spans.map((span, i) => (
+                <Group key={`span${i}`}>
+                  <Path path={span.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
+                  <Path path={span.digits} color={theme.color.ink} />
+                </Group>
+              ))
+            ) : (
+              <>
+                <Path path={keyGeom.top.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
+                <Path path={keyGeom.top.digits} color={theme.color.ink} />
+              </>
+            )}
             <Path path={keyGeom.left.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
             <Path path={keyGeom.left.digits} color={theme.color.ink} />
           </Group>
+          {/* Las dos escrituras ocupan el mismo renglón y se cruzan con la
+              pared: no son dos textos, son el mismo piso dicho de dos maneras. */}
           <Group opacity={cross}>
-            <Path path={keyGeom.expr} color={theme.color.ink} />
+            <Group opacity={wallO}>
+              <Path path={keyGeom.expr} color={theme.color.ink} />
+            </Group>
+            {rooms ? (
+              <Group opacity={split}>
+                <Path path={keyGeom.sum} color={theme.color.ink} />
+              </Group>
+            ) : null}
           </Group>
         </>
       ) : null}
@@ -1304,6 +1471,8 @@ function FloorRow({
   index,
   strip,
   placed,
+  placedRight,
+  fromBottom,
   split,
   gap,
   merged,
@@ -1311,25 +1480,32 @@ function FloorRow({
   readonly index: number;
   readonly strip: { readonly left: SkPath; readonly right: SkPath };
   readonly placed: SharedValue<number>;
+  readonly placedRight: SharedValue<number>;
+  /** Qué número de fila es contando desde abajo. */
+  readonly fromBottom: number;
   readonly split: SharedValue<number>;
   readonly gap: number;
   readonly merged: boolean;
 }) {
   const o = useDerivedValue(() => Math.max(0, Math.min(1, placed.value - index)));
+  // La habitación derecha se llena contra la izquierda, así que su fila se
+  // cuenta desde abajo. Cuando las dos comparten el mismo valor el efecto no se
+  // nota, porque entonces las dos están llenas o las dos vacías.
+  const oR = useDerivedValue(() => Math.max(0, Math.min(1, placedRight.value - fromBottom)));
   const leftT = useDerivedValue(() => [{ translateX: -split.value * gap }]);
   const rightT = useDerivedValue(() => [{ translateX: split.value * gap }]);
   const fill = merged ? "#2b3a4d" : "#33445c";
   return (
-    <Group opacity={o}>
-      <Group transform={leftT}>
+    <>
+      <Group opacity={o} transform={leftT}>
         <Path path={strip.left} color={fill} />
         <Path path={strip.left} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
       </Group>
-      <Group transform={rightT}>
+      <Group opacity={oR} transform={rightT}>
         <Path path={strip.right} color={fill} />
         <Path path={strip.right} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
       </Group>
-    </Group>
+    </>
   );
 }
 

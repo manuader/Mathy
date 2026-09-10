@@ -114,6 +114,12 @@ export interface LedgerConfig {
   readonly capacity: number;
   /** La balanza ocupa el costado derecho: el libro se corre y no se tapa. */
   readonly balance: boolean;
+  /**
+   * El mostrador donde esperan los objetos sueltos. Ausente: se dibuja, que es
+   * como lo usa el nodo 10. En falso, el nodo trae su propia bandeja y una
+   * segunda línea abajo sería un mostrador donde nunca se apoya nada.
+   */
+  readonly counter?: boolean;
 }
 
 export interface LedgerBox {
@@ -311,6 +317,23 @@ function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: n
  */
 function shapePath(shape: string, r: number): SkPath {
   const p = Skia.Path.Make();
+  // Las tres piezas de `tiles`: la baldosa cuadrada unidad, la tira de largo
+  // desconocido y el cuadrado de ese mismo lado. Se dibujan con la proporción
+  // que tienen sobre el piso, porque es la proporción lo único que las
+  // distingue: una columna de tiras y una de baldosas no se apilan justamente
+  // porque no tienen la misma forma.
+  if (shape === "tile_unit") {
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.6, -r * 0.6, r * 1.2, r * 1.2), 2, 2));
+    return p;
+  }
+  if (shape === "tile_strip") {
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.4, -r * 1.3, r * 0.8, r * 2.6), 2, 2));
+    return p;
+  }
+  if (shape === "tile_square") {
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 1.1, -r * 1.1, r * 2.2, r * 2.2), 3, 3));
+    return p;
+  }
   if (shape === "crate") {
     p.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 1.1, -r * 0.95, r * 2.2, r * 1.9), 3, 3));
     p.moveTo(-r * 1.1, -r * 0.45);
@@ -497,7 +520,9 @@ export function LedgerScene(props: LedgerSceneProps) {
   return (
     <Group opacity={props.appear}>
       <Path path={book} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      <Path path={tray} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+      {config.counter === false ? null : (
+        <Path path={tray} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+      )}
 
       {l.rows.map((box, i) => (
         <RowView
