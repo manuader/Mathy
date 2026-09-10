@@ -222,6 +222,38 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
     [attempt],
   );
 
+  /**
+   * Llenar no se cierra en el acto: la tarjeta se ilumina y la ronda queda
+   * abierta un momento. Sin esa ventana, la fruta de más nunca podría entrar, y
+   * es entrando y volviéndose a la canasta como el jugador ve que la tarjeta
+   * cuenta lo que hay y no lo que él quiso poner.
+   */
+  const cierre = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (cierre.current) clearTimeout(cierre.current);
+  }, []);
+
+  const igualar = useCallback(
+    (texto: string) => {
+      attempt(true);
+      glow.value = withTiming(1, { duration: theme.motion.morph });
+      demo.value = withTiming(0, { duration: theme.motion.quick });
+      setMessage({ text: texto, tone: "ok" });
+      if (cierre.current) clearTimeout(cierre.current);
+      cierre.current = setTimeout(nextRound, theme.motion.reveal + 500);
+    },
+    [attempt, glow, demo, nextRound],
+  );
+
+  /** La iluminación se apaga sola cuando la cuenta deja de coincidir. */
+  const apagar = useCallback(() => {
+    if (cierre.current) {
+      clearTimeout(cierre.current);
+      cierre.current = null;
+    }
+    glow.value = withTiming(0, { duration: theme.motion.quick });
+  }, [glow]);
+
   // --- Dónde está cada cosa --------------------------------------------------
 
   const owners = useMemo<readonly Owner[]>(() => {
@@ -302,6 +334,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
 
   const lonely = useMemo<readonly boolean[]>(() => {
     const out = new Array<boolean>(totalObjs).fill(false);
+    if (problem.mode === "fill") {
+      // La que se pasó de la tarjeta late: es la que hay que devolver.
+      for (let i = 0; i < totalObjs; i++) out[i] = (slots[i] ?? FUERA) >= problem.target;
+      return out;
+    }
     if (problem.mode !== "pair") return out;
     const faltan = slots.some((v, i) => {
       const bowl = i < perBowl ? 0 : 1;
@@ -315,7 +352,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       if (s >= 0 && !bridges[s]) out[i] = true;
     }
     return out;
-  }, [slots, bridges, totalObjs, perBowl, enJuego, problem.mode]);
+  }, [slots, bridges, totalObjs, perBowl, enJuego, problem.mode, problem.target]);
+
+  /** Lo que ya está sobre la barra. En `visual` eso es lo que se ve como marca. */
+  const onBar = useMemo<readonly boolean[]>(
+    () => (problem.mode === "pair" ? slots.map((s) => s >= 0) : new Array<boolean>(totalObjs).fill(false)),
+    [slots, totalObjs, problem.mode],
+  );
 
   const bowlCounts = useMemo<readonly number[]>(() => {
     if (level.card === "none") return problem.bowls.map(() => FUERA);
@@ -402,11 +445,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
           demo.value = withTiming(0, { duration: theme.motion.quick });
           const ahora = filled + 1;
           if (ahora === problem.target) {
-            succeed("La tarjeta del cuenco quedó igual a la otra.");
+            igualar("La tarjeta del cuenco quedó igual a la otra.");
           } else if (ahora > problem.target) {
             // Una fruta de más apaga la iluminación y late: se puede devolver.
+            apagar();
             refuse("Se pasó de la tarjeta. Esa fruta se puede devolver a la canasta.");
           } else {
+            apagar();
             attempt(true);
             setMessage({ text: "Un punto más en la tarjeta.", tone: "dim" });
           }
@@ -425,8 +470,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
           });
           setSlots(next);
           if (restantes.length === problem.target) {
-            succeed("Ahora la tarjeta dice lo mismo que la otra.");
+            igualar("Ahora la tarjeta dice lo mismo que la otra.");
           } else {
+            apagar();
             attempt(true);
             setMessage({ text: "Un punto menos en la tarjeta.", tone: "dim" });
           }
@@ -447,6 +493,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       attempt,
       succeed,
       refuse,
+      igualar,
+      apagar,
       demo,
     ],
   );
@@ -495,47 +543,80 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
 
   // --- El gesto --------------------------------------------------------------
 
-  /** Qué se puede levantar ahora mismo, en coordenadas del lienzo. */
-  const asas = useMemo(() => {
-    const objetos = places.map((p, i) => ({ x: p.x, y: p.y, on: p.on && level.mode !== "lie" }));
-    const tarjetas =
-      level.mode === "carry" || level.mode === "label"
-        ? cardPlaces.map((p, i) => ({ x: p.x, y: p.y, on: p.on && i !== cardOn }))
-        : [];
-    return { objetos, tarjetas };
-  }, [places, cardPlaces, level.mode, cardOn]);
+  /**
+   * Un solo gesto para toda la escena, construido una vez.
+   *
+   * Lo que cambia por movimiento no viaja en el cierre del gesto sino en
+   * valores compartidos: dónde está cada asa, y en un ref las funciones que
+   * deciden. Es la trampa que cuesta una tarde: `runOnJS` se queda con la
+   * función que había cuando el gesto se armó, así que un gesto rearmado por
+   * cada cambio de estado dejaba al soltar una versión vieja de `slots` y cada
+   * fruta borraba a la anterior.
+   */
+  const asasObj = useSharedValue<readonly number[]>([]);
+  const asasCard = useSharedValue<readonly number[]>([]);
+  const bloqueado = useSharedValue(0);
+
+  useEffect(() => {
+    const objetos: number[] = [];
+    for (const p of places) objetos.push(p.x, p.y, p.on && level.mode !== "lie" ? 1 : 0);
+    asasObj.value = objetos;
+  }, [places, level.mode, asasObj]);
+
+  useEffect(() => {
+    const tarjetas: number[] = [];
+    if (level.mode === "carry" || level.mode === "label") {
+      cardPlaces.forEach((p, i) => tarjetas.push(p.x, p.y, p.on && i !== cardOn ? 1 : 0));
+    }
+    asasCard.value = tarjetas;
+  }, [cardPlaces, level.mode, cardOn, asasCard]);
+
+  useEffect(() => {
+    bloqueado.value = solved ? 1 : 0;
+  }, [solved, bloqueado]);
+
+  const ultimo = useRef({ dropObject, dropCard, onTap });
+  ultimo.current = { dropObject, dropCard, onTap };
+  const soltarObjeto = useCallback(
+    (i: number, x: number, y: number) => ultimo.current.dropObject(i, x, y),
+    [],
+  );
+  const soltarTarjeta = useCallback(
+    (i: number, x: number, y: number) => ultimo.current.dropCard(i, x, y),
+    [],
+  );
+  const tocar = useCallback((x: number, y: number) => ultimo.current.onTap(x, y), []);
 
   const radioObjeto = Math.max(34, geom.unit * 3.4);
   const radioTarjetaX = geom.cardW / 2 + 20;
   const radioTarjetaY = geom.cardH / 2 + 20;
 
   const gesture = useMemo(() => {
-    const objetos = asas.objetos;
-    const tarjetas = asas.tarjetas;
     const pan = Gesture.Pan()
-      .enabled(!solved)
       .onBegin((e) => {
         dragX.value = 0;
         dragY.value = 0;
         dragIdx.value = FUERA;
         dragCard.value = FUERA;
+        if (bloqueado.value === 1) return;
         // Primero las tarjetas: están sobre todo lo demás, así que si el dedo
         // cae sobre una es esa la que se levanta.
-        let mejor = FUERA;
-        for (let i = 0; i < tarjetas.length; i++) {
-          const c = tarjetas[i];
-          if (!c || !c.on) continue;
-          if (Math.abs(e.x - c.x) < radioTarjetaX && Math.abs(e.y - c.y) < radioTarjetaY) mejor = i;
+        const cards = asasCard.value;
+        for (let i = 0; i < cards.length / 3; i++) {
+          if (cards[i * 3 + 2] !== 1) continue;
+          const cxv = cards[i * 3] as number;
+          const cyv = cards[i * 3 + 1] as number;
+          if (Math.abs(e.x - cxv) < radioTarjetaX && Math.abs(e.y - cyv) < radioTarjetaY) {
+            dragCard.value = i;
+            return;
+          }
         }
-        if (mejor >= 0) {
-          dragCard.value = mejor;
-          return;
-        }
+        const objs = asasObj.value;
         let cerca = radioObjeto;
-        for (let i = 0; i < objetos.length; i++) {
-          const o = objetos[i];
-          if (!o || !o.on) continue;
-          const d = Math.hypot(e.x - o.x, e.y - o.y);
+        let mejor = FUERA;
+        for (let i = 0; i < objs.length / 3; i++) {
+          if (objs[i * 3 + 2] !== 1) continue;
+          const d = Math.hypot(e.x - (objs[i * 3] as number), e.y - (objs[i * 3 + 1] as number));
           if (d < cerca) {
             cerca = d;
             mejor = i;
@@ -549,37 +630,36 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
         dragX.value = e.translationX;
         dragY.value = e.translationY;
       })
-      .onEnd((e) => {
+      // `onFinalize` y no `onEnd`: un toque sin arrastre no activa el pan, y en
+      // `explain` no hay nada que arrastrar. Un solo camino de entrada para
+      // soltar y para tocar evita que dos gestos compitan por el mismo dedo.
+      .onFinalize((e) => {
         const card = dragCard.value;
         const obj = dragIdx.value;
-        if (card >= 0) runOnJS(dropCard)(card, e.x, e.y);
-        else if (obj >= 0) runOnJS(dropObject)(obj, e.x, e.y);
+        if (card >= 0) runOnJS(soltarTarjeta)(card, e.x, e.y);
+        else if (obj >= 0) runOnJS(soltarObjeto)(obj, e.x, e.y);
         else {
           dragX.value = 0;
           dragY.value = 0;
+          if (bloqueado.value !== 1) runOnJS(tocar)(e.x, e.y);
         }
       });
 
-    const tap = Gesture.Tap()
-      .enabled(!solved)
-      .onEnd((e) => {
-        runOnJS(onTap)(e.x, e.y);
-      });
-
-    return Gesture.Race(pan, tap);
+    return pan;
   }, [
-    asas,
-    solved,
     dragX,
     dragY,
     dragIdx,
     dragCard,
+    asasObj,
+    asasCard,
+    bloqueado,
     radioObjeto,
     radioTarjetaX,
     radioTarjetaY,
-    dropCard,
-    dropObject,
-    onTap,
+    soltarTarjeta,
+    soltarObjeto,
+    tocar,
   ]);
 
   /**
@@ -622,8 +702,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
               owners={owners}
               lonely={lonely}
               bridges={bridges}
+              onBar={onBar}
               cardPlaces={cardPlaces}
               bowlCounts={bowlCounts}
+              cardOn={cardOn}
               round={round}
               snapObj={snapObj}
               snapCard={snapCard}

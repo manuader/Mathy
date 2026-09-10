@@ -5,3 +5,6 @@ export * from "./one-step.ts";
 export { NODE } from "./one-step.ts";
 export * from "./cardinality.ts";
 export * from "./number-line.ts";
+export * from "./add-displacement.ts";
+export * from "./sub-undo-add.ts";
+export * from "./mul-scaling.ts";

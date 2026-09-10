@@ -142,8 +142,10 @@ export function pathLayout(
     tracks,
     touchR: Math.max(step * 0.55, 26),
     stoneR: Math.min(step * 0.36, 26),
-    cardW: Math.min(step * 0.86, 34),
-    cardH: 26,
+    // La tarjeta nunca se le monta a la de al lado: cuando la pista se aprieta,
+    // el marco y el numeral se achican con ella.
+    cardW: vertical ? 34 : Math.max(18, Math.min(step * 0.86, 34)),
+    cardH: vertical ? Math.max(15, Math.min(26, step - 5)) : 26,
     crank,
     tiles,
     tileW,
@@ -535,7 +537,11 @@ export function PathScene({
       { translateY: crankY + Math.sin(a) * crankR },
     ];
   }, [ghostFrom, ghostTo, crankX, crankY, crankR]);
-  const ghostO = useDerivedValue(() => hint.value * 0.5 * Math.sin(demo.value * Math.PI));
+  // En `explain` no hay nada que demostrar con la mano: se mira y se elige.
+  const sinMano = level.mode === "compare";
+  const ghostO = useDerivedValue(() =>
+    sinMano ? 0 : hint.value * 0.5 * Math.sin(demo.value * Math.PI),
+  );
 
   return (
     <Group opacity={appear}>
@@ -570,8 +576,10 @@ export function PathScene({
         opacity={level.mode === "compare" ? 0 : 1}
       >
         <Path path={crank.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-        <Path path={announced} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
         <Group transform={crankT}>
+          {/* Los dientes anunciados giran con la rueda: arrancan en la manija,
+              que es donde el caminante está parado ahora. */}
+          <Path path={announced} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
           <Path path={crank.teeth} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
           <Group opacity={crankGlow}>
             <Path path={crank.handle} color={theme.color.accent} style="stroke" strokeWidth={2.5} />

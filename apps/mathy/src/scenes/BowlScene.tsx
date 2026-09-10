@@ -148,15 +148,26 @@ export function homeOf(
       on: true,
     };
   }
-  // Desparramado: pseudo azar estable por índice, para que el mismo problema se
-  // vea siempre igual sin guardar posiciones.
+  // Desparramado: una grilla corrida al azar, estable por índice. Azar puro
+  // amontona dos cosas encima de otra y ahí la cuenta se pierde por el dibujo y
+  // no por el conteo, que es justo lo que este nodo no puede permitirse.
+  const n = Math.max(count, 1);
+  const cols = Math.max(1, Math.ceil(Math.sqrt(n * 1.7)));
+  const rows = Math.ceil(n / cols);
+  const stepX = Math.min((r * 2.1) / cols, g.unit * 2.8);
+  const stepY = Math.min((r * 1.3) / rows, g.unit * 2.6);
+  const col = i % cols;
+  const row = Math.floor(i / cols);
+  const enFila = Math.min(cols, n - row * cols);
   const a = Math.sin(i * 12.9898 + centerX * 0.017) * 43758.5453;
   const b = Math.sin(i * 78.233 + centerX * 0.031) * 12345.6789;
-  const fx = a - Math.floor(a);
-  const fy = b - Math.floor(b);
   return {
-    x: centerX + (fx - 0.5) * r * 1.6,
-    y: g.bowlY + r * 0.45 - fy * r * 0.8,
+    x: centerX + (col - (enFila - 1) / 2) * stepX + (a - Math.floor(a) - 0.5) * stepX * 0.3,
+    y:
+      g.bowlY +
+      r * 0.4 -
+      (row - (rows - 1) / 2) * stepY +
+      (b - Math.floor(b) - 0.5) * stepY * 0.3,
     on: true,
   };
 }
@@ -325,10 +336,14 @@ export interface BowlSceneProps {
   /** Los objetos que quedaron sin pareja laten: es la fruta salteada del diseño. */
   readonly lonely: readonly boolean[];
   readonly bridges: readonly boolean[];
+  /** Qué objetos ya están sobre la barra; en `visual` esos se dibujan como marcas. */
+  readonly onBar: readonly boolean[];
   /** Dónde está cada tarjeta elegible y si se ve. */
   readonly cardPlaces: readonly Place[];
   /** Lo que dice la tarjeta de cada cuenco; -1 si ese cuenco todavía no tiene. */
   readonly bowlCounts: readonly number[];
+  /** Cuál de las tarjetas elegibles quedó puesta sobre la colección, o -1. */
+  readonly cardOn: number;
   /** Sube de a uno por ronda: le dice a la escena que no interpole el salto. */
   readonly round: number;
   /**
@@ -379,13 +394,15 @@ export function BowlScene(props: BowlSceneProps) {
     // La mano va del primer objeto a su hueco, en línea recta. Es la única
     // instrucción del juego, y no dice una palabra.
     const from = places[0] ?? { x: g.cx, y: g.bowlY };
-    const to = slotAt(g, 0, 0);
+    // Emparejar: de la primera fruta a su hueco. Llenar: de la canasta al cuenco.
+    const to =
+      modo === "fill" ? { x: bowlCenterX(g, modo, 0), y: g.bowlY } : slotAt(g, 0, 0);
     const k = props.demo.value;
     return [
       { translateX: from.x + (to.x - from.x) * k },
       { translateY: from.y + (to.y - from.y) * k },
     ];
-  }, [places, g]);
+  }, [places, g, modo]);
 
   // La franja, la canasta y las tarjetas elegibles solo existen en los modos que
   // las usan. El modo no cambia mientras el nivel vive, así que gatearlas acá no
@@ -397,7 +414,11 @@ export function BowlScene(props: BowlSceneProps) {
 
   return (
     <Group>
-      <Path path={table} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      {/* En `explain` la mesa y el cuenco no están: lo que se compara son dos
+          animaciones del mismo cuenco, cada una en su recuadro. */}
+      {modo === "lie" ? null : (
+        <Path path={table} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      )}
 
       {hayFranja ? (
         <>
@@ -408,7 +429,7 @@ export function BowlScene(props: BowlSceneProps) {
         </>
       ) : null}
 
-      {bowlShapes.map((p, i) => (
+      {(modo === "lie" ? [] : bowlShapes).map((p, i) => (
         <Path
           key={`bowl${i}`}
           path={p}
@@ -438,6 +459,9 @@ export function BowlScene(props: BowlSceneProps) {
             owner={o}
             geom={g}
             place={places[i] ?? { x: g.cx, y: g.bowlY, on: false }}
+            // La fila se aplana en una barra con marcas: la cosa que llega a la
+            // barra deja de ser fruta y pasa a ser una marca del mismo ancho.
+            flat={style === "visual" && props.onBar[i] === true}
             lonely={props.lonely[i] === true}
             round={props.round}
             instant={props.snapObj === i}
@@ -506,7 +530,9 @@ export function BowlScene(props: BowlSceneProps) {
               dragX={props.dragX}
               dragY={props.dragY}
               tone={theme.color.accent}
-              contraeConGlow
+              // Solo la tarjeta que llegó a la colección contrae sus puntos: las
+              // otras siguen siendo tres puntos y cuatro, y se pueden comparar.
+              contraeConGlow={props.cardOn === i}
             />
           ))
         : null}
@@ -528,6 +554,7 @@ function ObjectView({
   owner,
   geom,
   place,
+  flat,
   lonely,
   round,
   instant,
@@ -540,6 +567,7 @@ function ObjectView({
   readonly owner: Owner;
   readonly geom: BowlGeom;
   readonly place: Place;
+  readonly flat: boolean;
   readonly lonely: boolean;
   readonly round: number;
   readonly instant: boolean;
@@ -549,8 +577,8 @@ function ObjectView({
   readonly pulse: SharedValue<number>;
 }) {
   const path = useMemo(
-    () => shapePath(owner.skin, geom.unit * owner.size),
-    [owner.skin, owner.size, geom.unit],
+    () => shapePath(flat ? "mark" : owner.skin, geom.unit * owner.size),
+    [flat, owner.skin, owner.size, geom.unit],
   );
   const ax = useSharedValue(place.x);
   const ay = useSharedValue(place.y);

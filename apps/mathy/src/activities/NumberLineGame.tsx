@@ -30,7 +30,6 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
   runOnJS,
-  useAnimatedReaction,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -41,7 +40,6 @@ import {
   TOTAL_PATH_LEVELS,
   crankStep,
   generatePath,
-  nearestStone,
   type PathLevel,
 } from "@mathy/mechanics";
 import type { Event } from "@mathy/progress";
@@ -114,6 +112,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
   const turned = useSharedValue(0);
   /** La piedra desde la que empezó este tirón de manivela. */
   const anchor = useSharedValue(problem.start);
+  /** La piedra que el caminante ya pisó. El giro se cuenta desde ahí. */
+  const at = useSharedValue(problem.start);
   /** La piedra que la manivela pide, ya en dientes absolutos desde la orilla. */
   const want = useSharedValue(problem.start);
 
@@ -126,7 +126,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
     useSlot(),
   ];
 
-  const posRef = useRef(problem.start);
   const shownAt = useRef(Date.now());
   const doneRef = useRef(false);
 
@@ -135,8 +134,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
   useEffect(() => {
     shownAt.current = Date.now();
     doneRef.current = false;
-    posRef.current = problem.start;
     pos.value = problem.start;
+    at.value = problem.start;
     want.value = problem.start;
     lift.value = 0;
     tapLift.value = 0;
@@ -149,10 +148,27 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
     }
     // El latido de la demostración no es un adorno: es la única instrucción.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(withTiming(1, { duration: 1400 }), -1, false);
+    // La mano va y vuelve; el reloj de `explain` camina y rebobina. Las dos
+    // vueltas se escriben con una secuencia porque un `withRepeat` sin reversa
+    // arranca la repetición donde terminó la anterior y se queda quieto.
+    demo.value = withRepeat(
+      withSequence(withTiming(1, { duration: 1300 }), withTiming(0, { duration: 1 })),
+      -1,
+      false,
+    );
     if (level.mode === "compare") {
       clock.value = 0;
-      clock.value = withRepeat(withTiming(1, { duration: 3600 }), -1, false);
+      clock.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 3400 }),
+          // Un respiro en la bandera y vuelta al principio de un salto: si el
+          // rebobinado se viera, parecería que el caminante desanda.
+          withTiming(1, { duration: 700 }),
+          withTiming(0, { duration: 1 }),
+        ),
+        -1,
+        false,
+      );
     }
     return () => {
       cancelAnimation(hint);
@@ -223,10 +239,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
 
   // --- Caminar ---------------------------------------------------------------
 
-  /** El caminante llegó a alguna piedra. Solo la bandera cierra la ronda. */
+  /**
+   * El caminante soltó el pie. Recibe los dientes crudos, incluidos los que la
+   * pista no tiene, y es `crankStep` —el modelo, no la escena— quien decide en
+   * qué piedra queda. Solo la bandera cierra la ronda.
+   */
   const landed = useCallback(
-    (stone: number) => {
-      posRef.current = stone;
+    (teeth: number) => {
+      const stone = crankStep(0, teeth, problem.length);
       quiet();
       if (problem.flag === null || solved) return;
       if (level.mode === "predict" && !predicted) return;
@@ -241,36 +261,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
         setMessage({ text: "Se pasó de la bandera. La pista sigue para atrás.", tone: "warn" });
       }
     },
-    [problem.flag, solved, level.mode, predicted, attempt, succeed, quiet, hint],
-  );
-
-  /** Un tirón de la manivela. Nunca llega medio diente: `crankStep` es entera. */
-  const goTo = useCallback(
-    (teeth: number) => {
-      if (solved) return;
-      const target = crankStep(0, teeth, problem.length);
-      if (teeth < 0 || teeth > problem.length - 1) {
-        // El tope de la orilla. Es una promesa, no un límite: se abre en los negativos.
-        jam.value = withSequence(
-          withTiming(1, { duration: 70 }),
-          withTiming(-1, { duration: 110 }),
-          withTiming(0, { duration: 90 }),
-        );
-      }
-      if (target === posRef.current) return;
-      posRef.current = target;
-      pos.value = withTiming(target, { duration: 160 });
-      quiet();
-    },
-    [solved, problem.length, jam, pos, quiet],
-  );
-
-  useAnimatedReaction(
-    () => want.value,
-    (cur, prev) => {
-      if (prev !== null && cur !== prev) runOnJS(goTo)(cur);
-    },
-    [goTo],
+    [problem.flag, problem.length, solved, level.mode, predicted, attempt, succeed, quiet, hint],
   );
 
   // --- Tocar -----------------------------------------------------------------
@@ -328,6 +319,30 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
 
   // --- Fichas ----------------------------------------------------------------
 
+  /** La ficha se clavó: la tarjeta aparece sobre la piedra y la ficha se apaga. */
+  const pinned = useCallback(
+    (index: number, stone: number) => {
+      const slot = slots[index];
+      if (slot) slot.alive.value = withTiming(0, { duration: 140 });
+      setMessage({ text: "Se clavó.", tone: "ok" });
+      setFilled((prev) => (prev.includes(stone) ? prev : [...prev, stone]));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  // La ronda de huecos termina cuando no queda ninguno. Se mira acá y no dentro
+  // del `setFilled` porque un actualizador de estado no puede tener efectos: en
+  // modo estricto se lo invoca dos veces y la cuenta se pierde.
+  useEffect(() => {
+    if (level.mode !== "fill" || problem.gaps.length === 0) return;
+    if (filled.length < problem.gaps.length) return;
+    // Sin temporizador: `succeed` ya tiene su propio cerrojo, y un `setTimeout`
+    // acá se cancelaría solo cada vez que el registro de eventos vuelve y
+    // cambia la identidad de los callbacks.
+    succeed("La pista quedó completa.");
+  }, [filled, level.mode, problem.gaps.length, succeed]);
+
   const dropTile = useCallback(
     (index: number, absX: number, absY: number) => {
       const tile = problem.tiles[index];
@@ -378,30 +393,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
         return;
       }
 
+      // La ficha vuela hasta la piedra, pero clavarla no espera a la animación:
+      // si el estado dependiera de que termine, una animación interrumpida
+      // dejaría la ronda a medias.
       slot.dx.value = withTiming(s.x + track.cardDx - home.x, { duration: 150 });
-      slot.dy.value = withTiming(s.y + track.cardDy - home.y, { duration: 150 }, (done) => {
-        if (done) runOnJS(pinned)(index, best);
-      });
+      slot.dy.value = withTiming(s.y + track.cardDy - home.y, { duration: 150 });
+      pinned(index, best);
     },
     // `pinned` se declara abajo y no cambia de identidad entre cuadros.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem, layout, filled, canvasBox, solved, attempt, quiet],
-  );
-
-  const pinned = useCallback(
-    (index: number, stone: number) => {
-      const slot = slots[index];
-      if (slot) slot.alive.value = 0;
-      setFilled((prev) => {
-        const next = prev.includes(stone) ? prev : [...prev, stone];
-        if (next.length >= problem.gaps.length) {
-          setTimeout(() => succeed("La pista quedó completa."), 220);
-        }
-        return next;
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem.gaps.length, succeed],
+    [problem, layout, filled, canvasBox, solved, attempt, quiet, pinned],
   );
 
   // --- Gestos ----------------------------------------------------------------
@@ -431,8 +432,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
             subject.value = MANIVELA;
             lastAngle.value = Math.atan2(e.y - crank.y, e.x - crank.x);
             turned.value = 0;
-            anchor.value = Math.round(pos.value);
-            want.value = anchor.value;
+            anchor.value = at.value;
+            want.value = at.value;
             return;
           }
           const wx = ox + tdx * pos.value;
@@ -451,8 +452,25 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
             turned.value += d;
             lastAngle.value = a;
             // Redondear acá es lo que hace imposible el medio diente: entre dos
-            // dientes no hay nada que el gesto pueda expresar.
-            want.value = anchor.value + Math.round(turned.value / TOOTH_ANGLE);
+            // dientes no hay nada que el gesto pueda expresar. Es la misma cuenta
+            // que `crankStep` del modelo, escrita de nuevo porque un worklet no
+            // puede llamar a un paquete; el modelo decide igual al soltar.
+            const raw = anchor.value + Math.round(turned.value / TOOTH_ANGLE);
+            if (raw === want.value) return;
+            want.value = raw;
+            const stone = Math.max(0, Math.min(length - 1, raw));
+            if (raw < 0 || raw > length - 1) {
+              // El tope de la orilla. Es una promesa, no un límite: se abre en
+              // los negativos, mucho más adelante.
+              jam.value = withSequence(
+                withTiming(1, { duration: 70 }),
+                withTiming(-1, { duration: 110 }),
+                withTiming(0, { duration: 90 }),
+              );
+            }
+            if (stone === at.value) return;
+            at.value = stone;
+            pos.value = withTiming(stone, { duration: 160 });
           } else if (subject.value === CAMINANTE) {
             const u = ((e.x - ox) * tdx + (e.y - oy) * tdy) / stepSq;
             pos.value = Math.max(-0.6, Math.min(length - 0.4, u));
@@ -461,14 +479,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
         .onEnd(() => {
           if (subject.value === CAMINANTE) {
             lift.value = withTiming(0, { duration: 180 });
-            const stone = nearestStone(pos.value, length);
+            // El agua devuelve: se cae en la piedra más cercana, nunca entre dos.
+            const stone = Math.max(0, Math.min(length - 1, Math.round(pos.value)));
+            at.value = stone;
             pos.value = withTiming(stone, { duration: 200 });
             want.value = stone;
             runOnJS(landed)(stone);
           } else if (subject.value === MANIVELA) {
-            const stone = Math.max(0, Math.min(length - 1, want.value));
-            want.value = stone;
-            runOnJS(landed)(stone);
+            runOnJS(landed)(want.value);
           }
           subject.value = NADA;
         }),

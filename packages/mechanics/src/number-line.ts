@@ -267,8 +267,12 @@ export function nearestStone(at: number, length: number): number {
 export function generatePath(level: PathLevel, seed: number): PathProblem {
   const rnd = makeRandom(seed);
   const p = level.params;
-  const length = rnd.int(p.length[0], p.length[1]);
+  const largo = rnd.int(p.length[0], p.length[1]);
   const orientation = rnd.pick(p.orientations);
+  // Una pista parada tiene menos lugar que una acostada, así que es más corta.
+  // Sigue estando dentro del rango que declara el nivel: lo que cambia es el
+  // dibujo, no la dificultad.
+  const length = orientation === "vertical" ? Math.min(largo, p.length[0] + 2) : largo;
   const stretch = pickStretch(p.stretch, rnd);
   const leadIn = p.offsetZero ? rnd.int(1, 2) : 0;
 
