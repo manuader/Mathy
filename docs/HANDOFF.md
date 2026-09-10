@@ -217,7 +217,10 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
     arranca una selección del navegador que se queda con el puntero.
 15. **El stripping de tipos de Node no soporta propiedades de parámetro**
     (`constructor(private readonly x: T)`). Hay que declarar el campo aparte.
-16. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
+16. **Varios agentes verificando a la vez se pisan el `localStorage`**, porque es por
+    origen. `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
+    otro almacén: sirve para sembrar progreso sin que otro te lo borre.
+17. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
     escribir al commit. Usá rutas explícitas.
 
 ## 8. Qué falta

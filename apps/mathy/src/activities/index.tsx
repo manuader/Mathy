@@ -14,6 +14,9 @@ import {
   tripLevelByNumber,
   mulLevelByNumber,
   undoLevelByNumber,
+  divLevelByNumber,
+  negLevelByNumber,
+  fracLevelByNumber,
   type LevelBase,
   type NodeSpec,
 } from "@mathy/mechanics";
@@ -24,6 +27,9 @@ import { CardinalityGame } from "./CardinalityGame.tsx";
 import { AddDisplacementGame } from "./AddDisplacementGame.tsx";
 import { MulScalingGame } from "./MulScalingGame.tsx";
 import { SubUndoAddGame } from "./SubUndoAddGame.tsx";
+import { DivUndoMulGame } from "./DivUndoMulGame.tsx";
+import { NegativesGame } from "./NegativesGame.tsx";
+import { FractionsGame } from "./FractionsGame.tsx";
 
 export interface ActivityProps {
   readonly node: NodeSpec;
@@ -72,6 +78,24 @@ const SubUndoAdd = ({ level, ...rest }: ActivityProps) => {
   return <SubUndoAddGame {...rest} level={full} />;
 };
 
+const DivUndoMul = ({ level, ...rest }: ActivityProps) => {
+  const full = divLevelByNumber(level.n);
+  if (!full) return null;
+  return <DivUndoMulGame {...rest} level={full} />;
+};
+
+const Negatives = ({ level, ...rest }: ActivityProps) => {
+  const full = negLevelByNumber(level.n);
+  if (!full) return null;
+  return <NegativesGame {...rest} level={full} />;
+};
+
+const Fractions = ({ level, ...rest }: ActivityProps) => {
+  const full = fracLevelByNumber(level.n);
+  if (!full) return null;
+  return <FractionsGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
@@ -79,6 +103,9 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "arith.add.displacement": AddDisplacement,
   "arith.mul.scaling": MulScaling,
   "arith.sub.undo_add": SubUndoAdd,
+  "arith.div.undo_mul": DivUndoMul,
+  "arith.int.negatives": Negatives,
+  "arith.frac.parts_and_ratio": Fractions,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>

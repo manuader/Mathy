@@ -25,11 +25,23 @@
  *
  * Nada de texto: los numerales y la cruz son contornos del atlas de glifos,
  * dibujados como cualquier otra forma.
+ *
+ * La escena tiene dos caras, y son la misma mecánica vista de los dos lados:
+ *
+ * - **El piso** (`rows`, `cols`, `frame`, `loose`, `cut`, `keys`): baldosas que
+ *   se juntan hasta armar un rectángulo. Es lo que usa `arith.mul.scaling`.
+ * - **La partición** (`partition`): un todo entero que se corta en partes
+ *   iguales y del que se encienden algunas. Es lo que usa
+ *   `arith.frac.parts_and_ratio`, y el invariante que dibuja es el mismo,
+ *   `area_preserved_under_rearrangement`: cortar no cambia el total.
+ *
+ * `partition` es opcional y nulo por omisión, así que un nodo que solo quiere
+ * el piso no escribe una línea de más y no ve nada nuevo en pantalla.
  */
 
 import { useMemo } from "react";
 import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
-import { useDerivedValue, type SharedValue } from "react-native-reanimated";
+import { useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
 import { theme } from "../ui/theme.ts";
@@ -52,6 +64,61 @@ export type TilesSkin = "loose_tiles" | "grid_rectangle" | "labeled_sides" | "pr
 export interface LooseRow {
   readonly id: string;
   readonly cells: number;
+}
+
+/**
+ * Cómo se señala la parte cuando el todo no se corta. `cut` es el corte de
+ * siempre; las otras tres son los todos arbitrarios del final del nodo 8.
+ */
+export type TilesMarking = "cut" | "fill" | "travel" | "figures";
+
+/** Cómo se escribe la ficha de fracción. Sin numerales hasta que el nodo lee. */
+export type TilesChip = "none" | "dots" | "numerals";
+
+/** Un todo partido en partes iguales, con algunas encendidas. */
+export interface TilesWhole {
+  readonly id: string;
+  /** En cuántas partes está cortado. 0: entero, sin una sola línea. */
+  readonly parts: number;
+  readonly shaded: number;
+  /**
+   * Las partes son iguales. Con `false` las líneas y el contorno quedan
+   * punteados: la barra no chasquea, y eso es todo lo que el juego dice.
+   */
+  readonly even: boolean;
+  /** Cuánto mide respecto del ancho disponible, de 0 a 1. */
+  readonly span: number;
+  /** Disco con radios en vez de barra: la pizza. */
+  readonly disc: boolean;
+  /** Reclama atención, porque es el que hay que tocar o el que está bien. */
+  readonly glow: boolean;
+}
+
+/**
+ * La cara `partition` de la mecánica. Nulo o ausente: la escena es el piso de
+ * siempre y nada de esto se dibuja.
+ *
+ * El primer todo de `wholes` es el vivo: sus partes y sus encendidas salen de
+ * los `SharedValue` `parts` y `lit`, así que cortar y encender no vuelven al
+ * hilo de JavaScript. Los demás son estáticos y se redibujan por problema.
+ */
+export interface TilesPartition {
+  readonly wholes: readonly TilesWhole[];
+  /** Cómo se señala la parte. Con algo distinto de `cut` no hay líneas. */
+  readonly marking: TilesMarking;
+  /** El libro de cuentas: una ficha por parte encendida, debajo del todo. */
+  readonly ledger: boolean;
+  readonly chip: TilesChip;
+  /** Lo que dice la ficha. Nulo: no hay ficha que decir. */
+  readonly chipValue: { readonly num: number; readonly den: number } | null;
+  /** La división que se contrae en la ficha. Nulo: no hay morph del `÷`. */
+  readonly division: { readonly a: number; readonly b: number } | null;
+  /** Los platos del reparto. 0: no hay reparto. */
+  readonly plates: number;
+  /** Las marcas de la recta del cero al uno. 0: no hay recta. */
+  readonly ticks: number;
+  /** En qué marca quedó clavada la ficha, o nulo si todavía no se clavó. */
+  readonly pinned: number | null;
 }
 
 /**
@@ -81,6 +148,19 @@ export interface TilesConfig {
   readonly keys: boolean;
   /** El piso no se dibuja hasta que alguien lo pide. */
   readonly onDemand: boolean;
+  /** La cara `partition`. Ausente o nula: la escena es solo el piso. */
+  readonly partition?: TilesPartition | null;
+  /**
+   * Qué lado tapa la pared: su llave se dibuja hueca, sin numeral. Es la
+   * segunda cara de la división —leer un lado sin desarmar el rectángulo— y con
+   * el numeral puesto la llave diría la respuesta. Ausente o nula: las dos llenas.
+   */
+  readonly hollow?: "rows" | "cols" | null;
+  /**
+   * Las baldosas que sobraron al partir. Quedan fuera del rectángulo, a la
+   * vista y sin nada que las nombre: ese hueco es `arith.div.remainder`.
+   */
+  readonly leftover?: number;
 }
 
 /** Una fila del montón mientras el dedo la lleva. */
@@ -103,6 +183,24 @@ export interface TilesLayout {
   readonly totalSpot: Spot;
   /** En qué columna se parte el piso cuando el corte está habilitado. */
   readonly cutAt: number;
+  /** Dónde cae cada todo de la partición. Vacío cuando no hay partición. */
+  readonly wholes: readonly Box[];
+  /** Dónde va la ficha de fracción, y de qué tamaño. */
+  readonly chip: { readonly x: number; readonly y: number; readonly size: number };
+  /** El renglón del libro de cuentas, debajo del primer todo. */
+  readonly ledgerY: number;
+  /** La recta del cero al uno: dos puntas y la altura. */
+  readonly line: { readonly x0: number; readonly x1: number; readonly y: number };
+  /** Dónde cae cada plato del reparto. */
+  readonly plates: readonly Box[];
+}
+
+/** Un rectángulo del lienzo. El disco se inscribe en el suyo. */
+export interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
 }
 
 /**
@@ -170,6 +268,104 @@ export function tilesLayout(
     drawer,
     totalSpot: { x: frame.x + frame.w + unit * 1.4, y: frame.y + frame.h / 2 },
     cutAt: config.cut > 1 ? Math.max(1, Math.floor(config.cols / 2)) : 0,
+    ...partitionLayout(config.partition ?? null, width, height),
+  };
+}
+
+/**
+ * Dónde caen los todos, la ficha, el libro, la recta y los platos.
+ *
+ * Un solo todo se lleva el centro; dos se apilan, porque el punto del nivel es
+ * que la misma ficha entra en los dos y comparar largos exige verlos alineados
+ * a la izquierda; tres o cuatro van en cuadrícula, que es la lámina de discos
+ * de `recognize`.
+ */
+function partitionLayout(
+  part: TilesPartition | null,
+  width: number,
+  height: number,
+): Pick<TilesLayout, "wholes" | "chip" | "ledgerY" | "line" | "plates"> {
+  const vacio = {
+    wholes: [] as Box[],
+    chip: { x: width / 2, y: height / 2, size: 24 },
+    ledgerY: height,
+    line: { x0: 0, x1: 0, y: height },
+    plates: [] as Box[],
+  };
+  if (!part || part.wholes.length === 0) return vacio;
+
+  const n = part.wholes.length;
+  const hayRecta = part.ticks > 0;
+  const hayPlatos = part.plates > 0;
+  // La ficha vive a la derecha y no encima: encima se la come el corte, y con
+  // dos todos apilados no queda aire arriba.
+  const chipW = Math.min(width * 0.2, 120);
+  const usable = width - chipW - 40;
+  const size = Math.min(chipW * 0.42, 34);
+
+  const wholes: Box[] = [];
+  if (n <= 2) {
+    const barH = Math.min(64, height * 0.16);
+    const top = hayRecta || hayPlatos ? height * 0.18 : height * (n === 1 ? 0.34 : 0.24);
+    const gap = barH + 26;
+    for (let i = 0; i < n; i++) {
+      const w = usable * 0.86 * (part.wholes[i]?.span ?? 1);
+      const disc = part.wholes[i]?.disc === true;
+      const lado = Math.min(barH * 2.4, usable * 0.5);
+      // El vaso es el único todo que se lee de abajo hacia arriba, así que es
+      // el único que se dibuja parado.
+      if (part.marking === "fill") {
+        const vw = Math.min(usable * 0.28, 130);
+        const vh = Math.min(height * 0.46, 260);
+        wholes.push({ x: 24 + (usable - vw) / 2, y: top, w: vw, h: vh });
+        continue;
+      }
+      wholes.push(
+        disc
+          ? { x: 24 + (usable - lado) / 2, y: top + i * gap, w: lado, h: lado }
+          : { x: 24, y: top + i * gap, w, h: barH },
+      );
+    }
+  } else {
+    // La lámina: dos por fila, y cada todo entra en su celda.
+    const cols = 2;
+    const filas = Math.ceil(n / cols);
+    const cw = usable / cols;
+    const ch = Math.min((height * 0.72) / filas, cw);
+    for (let i = 0; i < n; i++) {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const lado = Math.min(cw, ch) * 0.78;
+      wholes.push({
+        x: 24 + c * cw + (cw - lado) / 2,
+        y: height * 0.12 + r * ch + (ch - lado) / 2,
+        w: lado,
+        h: part.wholes[i]?.disc ? lado : Math.min(lado, 60),
+      });
+    }
+  }
+
+  const first = wholes[0] as Box;
+  const last = wholes[wholes.length - 1] as Box;
+  return {
+    wholes,
+    chip: { x: width - chipW / 2 - 12, y: first.y + first.h / 2, size },
+    ledgerY: last.y + last.h + 26,
+    line: {
+      x0: 24,
+      x1: 24 + usable * 0.86,
+      y: Math.min(height - 40, last.y + last.h + (part.ledger ? 78 : 64)),
+    },
+    plates: Array.from({ length: part.plates }, (_, i) => {
+      const w = Math.min(usable / Math.max(part.plates, 1) - 12, 76);
+      const total = part.plates * (w + 12) - 12;
+      return {
+        x: (width - chipW) / 2 - total / 2 + i * (w + 12),
+        y: Math.min(height - w - 24, last.y + last.h + 40),
+        w,
+        h: w,
+      };
+    }),
   };
 }
 
@@ -296,6 +492,223 @@ function buildKey(
   return { brace, digits };
 }
 
+// --- La partición ------------------------------------------------------------
+
+/**
+ * El contorno punteado de un todo mal cortado. No dice "mal": dice que ese
+ * borde no cerró, y el jugador ve la diferencia con el que sí.
+ */
+function dashedRect(b: Box, dash = 7): SkPath {
+  const p = Skia.Path.Make();
+  const seg = (x0: number, y0: number, x1: number, y1: number): void => {
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    const pasos = Math.max(1, Math.round(len / (dash * 2)));
+    for (let i = 0; i < pasos; i++) {
+      const a = i / pasos;
+      const c = (i + 0.5) / pasos;
+      p.moveTo(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a);
+      p.lineTo(x0 + (x1 - x0) * c, y0 + (y1 - y0) * c);
+    }
+  };
+  seg(b.x, b.y, b.x + b.w, b.y);
+  seg(b.x + b.w, b.y, b.x + b.w, b.y + b.h);
+  seg(b.x + b.w, b.y + b.h, b.x, b.y + b.h);
+  seg(b.x, b.y + b.h, b.x, b.y);
+  return p;
+}
+
+/** El disco entero: la pizza en su bandeja. */
+function discPath(b: Box): SkPath {
+  const p = Skia.Path.Make();
+  p.addCircle(b.x + b.w / 2, b.y + b.h / 2, Math.min(b.w, b.h) / 2);
+  return p;
+}
+
+/**
+ * Los radios del disco. Con partes desiguales el corte sale torcido a
+ * propósito: es la porción despareja de la mesa, dibujada.
+ */
+function discRadii(b: Box, parts: number, even: boolean): SkPath {
+  const p = Skia.Path.Make();
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const r = Math.min(b.w, b.h) / 2;
+  for (let i = 0; i < parts; i++) {
+    const a = discAngle(i, parts, even);
+    p.moveTo(cx, cy);
+    p.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+  }
+  return p;
+}
+
+/** Dónde queda el radio `i`. El corte desparejo corre uno de cada dos. */
+function discAngle(i: number, parts: number, even: boolean): number {
+  const base = (i / parts) * Math.PI * 2 - Math.PI / 2;
+  return even ? base : base + (i % 2 === 1 ? (Math.PI * 2) / (parts * 3) : 0);
+}
+
+/** Las porciones encendidas, como cuñas. */
+function discWedges(b: Box, parts: number, shaded: number, even: boolean): SkPath {
+  const p = Skia.Path.Make();
+  if (parts <= 0 || shaded <= 0) return p;
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const r = Math.min(b.w, b.h) / 2;
+  const box = Skia.XYWHRect(cx - r, cy - r, r * 2, r * 2);
+  for (let i = 0; i < Math.min(shaded, parts); i++) {
+    const a0 = discAngle(i, parts, even);
+    const a1 = discAngle(i + 1, parts, even);
+    p.moveTo(cx, cy);
+    p.addArc(box, (a0 * 180) / Math.PI, ((a1 - a0) * 180) / Math.PI);
+    p.close();
+  }
+  return p;
+}
+
+/** Un rectángulo redondeado. Es la barra, el vaso y cada plato. */
+function roundRect(b: Box, r = 6): SkPath {
+  const p = Skia.Path.Make();
+  p.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, b.h), r, r));
+  return p;
+}
+
+/**
+ * Un todo estático: el que no se está cortando. Devuelve las tres capas que la
+ * escena pinta —lo encendido, las líneas de corte y el contorno— ya resueltas
+ * según cómo se señala la parte.
+ */
+function staticWhole(
+  b: Box,
+  w: TilesWhole,
+  marking: TilesMarking,
+): { fill: SkPath; cuts: SkPath; outline: SkPath } {
+  if (w.disc) {
+    return {
+      fill: discWedges(b, w.parts, w.shaded, w.even),
+      cuts: discRadii(b, w.parts, w.even),
+      outline: discPath(b),
+    };
+  }
+  if (marking === "figures") {
+    // Una fila de figuras: las giradas son las que cuentan. Nadie cortó nada y
+    // sin embargo hay una parte del total.
+    const fill = Skia.Path.Make();
+    const rest = Skia.Path.Make();
+    const n = Math.max(1, w.parts);
+    const paso = b.w / n;
+    const lado = Math.min(paso * 0.62, b.h * 0.8);
+    for (let i = 0; i < n; i++) {
+      const cx = b.x + (i + 0.5) * paso;
+      const cy = b.y + b.h / 2;
+      const target = i < w.shaded ? fill : rest;
+      const giro = i < w.shaded ? Math.PI / 4 : 0;
+      const cuadrado = Skia.Path.Make();
+      cuadrado.addRect(Skia.XYWHRect(-lado / 2, -lado / 2, lado, lado));
+      cuadrado.transform([
+        Math.cos(giro),
+        -Math.sin(giro),
+        cx,
+        Math.sin(giro),
+        Math.cos(giro),
+        cy,
+        0,
+        0,
+        1,
+      ]);
+      target.addPath(cuadrado);
+    }
+    return { fill, cuts: rest, outline: Skia.Path.Make() };
+  }
+  if (marking === "fill") {
+    // El vaso: el todo es su altura y la parte se lee de abajo hacia arriba.
+    const alto = (b.h * Math.min(w.shaded, w.parts)) / Math.max(1, w.parts);
+    return {
+      fill: roundRect({ x: b.x, y: b.y + b.h - alto, w: b.w, h: alto }, 4),
+      cuts: Skia.Path.Make(),
+      outline: roundRect(b, 8),
+    };
+  }
+  const ancho = (b.w * Math.min(w.shaded, w.parts)) / Math.max(1, w.parts);
+  const cuts = Skia.Path.Make();
+  if (marking === "cut") {
+    for (let i = 1; i < w.parts; i++) {
+      const x = b.x + segmentAt(i, w.parts, w.even) * b.w;
+      cuts.moveTo(x, b.y);
+      cuts.lineTo(x, b.y + b.h);
+    }
+  }
+  return {
+    fill: roundRect({ x: b.x, y: b.y, w: ancho, h: b.h }, 4),
+    cuts,
+    outline: w.even ? roundRect(b) : dashedRect(b),
+  };
+}
+
+/**
+ * Dónde cae la línea `i` de `parts`. Con partes desiguales una de cada dos se
+ * corre: la mecánica deja cortar desparejo, pero hay que quererlo.
+ */
+function segmentAt(i: number, parts: number, even: boolean): number {
+  const base = i / Math.max(parts, 1);
+  return even ? base : Math.min(0.96, base + (i % 2 === 1 ? 0.7 / Math.max(parts, 1) : 0));
+}
+
+/** La recta del cero al uno con sus marcas, heredada del nodo 7. */
+function linePath(l: TilesLayout, ticks: number): SkPath {
+  const p = Skia.Path.Make();
+  p.moveTo(l.line.x0, l.line.y);
+  p.lineTo(l.line.x1, l.line.y);
+  const span = l.line.x1 - l.line.x0;
+  for (let i = 0; i <= ticks; i++) {
+    const x = l.line.x0 + (span * i) / Math.max(ticks, 1);
+    const alto = i === 0 || i === ticks ? 14 : 8;
+    p.moveTo(x, l.line.y - alto);
+    p.lineTo(x, l.line.y + alto);
+  }
+  return p;
+}
+
+/**
+ * La ficha de fracción. Es el corte girado un cuarto de vuelta: la barra
+ * horizontal con el número de arriba encima y el de abajo debajo. Hasta que el
+ * nodo lee, los dos números son montones de puntos del tamaño de lo que cuentan.
+ */
+function chipPath(
+  spot: { x: number; y: number; size: number },
+  value: { num: number; den: number },
+  mode: TilesChip,
+): { bar: SkPath; ink: SkPath } {
+  const bar = Skia.Path.Make();
+  const ink = Skia.Path.Make();
+  const s = spot.size;
+  const w = Math.max(s * 1.5, s * 0.5 * String(value.den).length + s);
+  bar.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2, spot.y - 1.5, w, 3), 2, 2));
+  if (mode === "numerals") {
+    addGlyphs(ink, String(value.num), spot.x, spot.y - s * 0.72, s);
+    addGlyphs(ink, String(value.den), spot.x, spot.y + s * 0.72, s);
+  } else if (mode === "dots") {
+    const dots = (count: number, cy: number): void => {
+      const r = Math.min(s * 0.13, 5);
+      const paso = r * 2.9;
+      const filas = count <= 4 ? 1 : 2;
+      const cols = filas === 1 ? count : Math.ceil(count / 2);
+      for (let i = 0; i < count; i++) {
+        const fila = filas === 1 ? 0 : Math.floor(i / cols);
+        const col = filas === 1 ? i : i % cols;
+        const enFila = filas === 1 ? count : Math.min(cols, count - fila * cols);
+        ink.addCircle(
+          spot.x + (col - (enFila - 1) / 2) * paso,
+          cy + (fila - (filas - 1) / 2) * paso,
+          r,
+        );
+      }
+    };
+    dots(value.num, spot.y - s * 0.72);
+    dots(value.den, spot.y + s * 0.72);
+  }
+  return { bar, ink };
+}
+
 // --- Componente --------------------------------------------------------------
 
 export interface TilesSceneProps {
@@ -321,6 +734,19 @@ export interface TilesSceneProps {
   readonly demo: SharedValue<number>;
   readonly rows: readonly RowSlot[];
   readonly appear: SharedValue<number>;
+  /**
+   * En cuántas partes está cortado el todo vivo de la partición. Continuo: las
+   * líneas ya puestas se corren solas para repartirse el espacio, que es lo que
+   * impide cortar desparejo por accidente.
+   */
+  readonly parts?: SharedValue<number>;
+  /** Cuántas partes están encendidas, también continuo. */
+  readonly lit?: SharedValue<number>;
+  /**
+   * El morph del `÷` a la barra de fracción, de 0 a 1. En 0 se ve la división;
+   * en 1, la ficha. Es `cs.arith.fraction_as_division` en un solo cruce.
+   */
+  readonly divide?: SharedValue<number>;
 }
 
 export function TilesScene({
@@ -337,7 +763,19 @@ export function TilesScene({
   demo,
   rows,
   appear,
+  parts: partsProp,
+  lit: litProp,
+  divide: divideProp,
 }: TilesSceneProps) {
+  // Los valores de la partición son opcionales para que un nodo que solo usa el
+  // piso no tenga que inventarlos. El respaldo se crea siempre, así que el
+  // orden de los hooks no depende de la configuración.
+  const partsFallback = useSharedValue(0);
+  const litFallback = useSharedValue(0);
+  const divideFallback = useSharedValue(1);
+  const parts = partsProp ?? partsFallback;
+  const lit = litProp ?? litFallback;
+  const divide = divideProp ?? divideFallback;
   const floor = useMemo(() => buildFloor(config, layout), [config, layout]);
   const frame = useMemo(() => buildFrame(layout), [layout]);
   const merged = config.skin !== "loose_tiles";
@@ -369,8 +807,43 @@ export function TilesScene({
       y + h + layout.unit * 1.2,
       size * 1.2,
     );
-    return { top, left, expr };
-  }, [layout, config.frameRows, config.frameCols]);
+    // La llave del lado que la pared tapa va hueca: el corchete se dibuja y el
+    // numeral no. Con el numeral puesto no habría nada que leer.
+    const hollow = config.hollow ?? null;
+    const vacio = Skia.Path.Make();
+    return {
+      top: hollow === "cols" ? { brace: top.brace, digits: vacio } : top,
+      left: hollow === "rows" ? { brace: left.brace, digits: vacio } : left,
+      expr,
+    };
+  }, [layout, config.frameRows, config.frameCols, config.hollow]);
+
+  /**
+   * Las baldosas que sobraron. Se dibujan al costado del rectángulo, sueltas y
+   * encendidas: ninguna desaparece al partir, y no hay manera de anotarlas.
+   */
+  const leftoverGeom = useMemo(() => {
+    const n = config.leftover ?? 0;
+    if (n <= 0) return null;
+    const u = layout.unit;
+    const x0 = layout.center.x + (config.cols * u) / 2 + u * 0.9;
+    const y0 = layout.center.y - (config.rows * u) / 2;
+    const porColumna = Math.max(1, config.rows);
+    const p = Skia.Path.Make();
+    const inset = u * 0.06;
+    for (let i = 0; i < n; i++) {
+      const c = Math.floor(i / porColumna);
+      const r = i % porColumna;
+      p.addRRect(
+        Skia.RRectXY(
+          Skia.XYWHRect(x0 + c * u + inset, y0 + r * u + inset, u - inset * 2, u - inset * 2),
+          3,
+          3,
+        ),
+      );
+    }
+    return p;
+  }, [config.leftover, config.cols, config.rows, layout]);
 
   const totalGeom = useMemo(() => {
     const chip = Skia.Path.Make();
@@ -395,6 +868,16 @@ export function TilesScene({
   const hand = useMemo(() => {
     const dot = Skia.Path.Make();
     dot.addCircle(0, 0, 13);
+    // En la partición la mano no lleva una fila al marco: apoya el dedo sobre
+    // el todo y arrastra hacia abajo, que es el gesto que define el corte.
+    const w0 = layout.wholes[0];
+    if (w0) {
+      return {
+        dot,
+        from: { x: w0.x + w0.w / 2, y: w0.y + w0.h / 2 },
+        to: { x: w0.x + w0.w / 2, y: w0.y + w0.h / 2 + 58 },
+      };
+    }
     return {
       dot,
       from: layout.drawer[0] ?? layout.center,
@@ -424,12 +907,60 @@ export function TilesScene({
     { translateY: -cy },
   ]);
 
+  // --- La partición ---------------------------------------------------------
+
+  const part = config.partition ?? null;
+  const partGeom = useMemo(() => {
+    if (!part) return null;
+    const vivo = part.wholes[0];
+    // El primer todo es el vivo solo cuando hay algo que cortar: un disco no se
+    // corta con el dedo y un vaso no tiene líneas.
+    const live = !!vivo && !vivo.disc && part.marking === "cut";
+    return {
+      live,
+      liveBox: layout.wholes[0] ?? null,
+      liveEven: vivo?.even !== false,
+      statics: part.wholes.map((w, i) =>
+        i === 0 && live ? null : staticWhole(layout.wholes[i] as Box, w, part.marking),
+      ),
+      line: part.ticks > 0 ? linePath(layout, part.ticks) : null,
+      plates: layout.plates.map((b) => roundRect(b, b.w / 2)),
+      chip: part.chipValue ? chipPath(layout.chip, part.chipValue, part.chip) : null,
+      division: (() => {
+        if (!part.division) return null;
+        const p = Skia.Path.Make();
+        addGlyphs(
+          p,
+          `${part.division.a}÷${part.division.b}`,
+          layout.chip.x,
+          layout.chip.y,
+          layout.chip.size,
+        );
+        return p;
+      })(),
+      pin: (() => {
+        if (part.pinned === null || part.ticks <= 0) return null;
+        const p = Skia.Path.Make();
+        const x = layout.line.x0 + ((layout.line.x1 - layout.line.x0) * part.pinned) / part.ticks;
+        p.moveTo(x, layout.line.y - 26);
+        p.lineTo(x, layout.line.y + 26);
+        p.addCircle(x, layout.line.y - 26, 5);
+        return p;
+      })(),
+    };
+  }, [part, layout]);
+
+  const partChipO = useDerivedValue(() => token.value * divide.value);
+  const partDivO = useDerivedValue(() => token.value * (1 - divide.value));
+
   const onDemand = config.onDemand;
   const floorO = useDerivedValue(() => (onDemand ? ghost.value : 1));
   const innerO = useDerivedValue(() => (merged ? 0.18 : 0.5) * (0.4 + 0.6 * Math.min(1, placed.value)));
   const framePulse = useDerivedValue(() => 0.4 + 0.6 * hint.value);
   // El contorno solo se afirma cuando el marco quedó cubierto entero.
   const outlineO = useDerivedValue(() => Math.max(0, Math.min(1, placed.value - 0.9)));
+  // Lo que sobró late. No dice nada porque todavía no hay nada que decir.
+  const leftoverO = useDerivedValue(() => 0.5 + 0.5 * hint.value);
   const gap = layout.unit * SPLIT;
 
   return (
@@ -466,6 +997,14 @@ export function TilesScene({
         <Path path={floor.outline} color={theme.color.accent} style="stroke" strokeWidth={2} opacity={outlineO} />
       </Group>
 
+      {/* Las baldosas que sobraron, fuera del rectángulo y sin nombre. */}
+      {leftoverGeom ? (
+        <Group opacity={leftoverO}>
+          <Path path={leftoverGeom} color="#4a3b2a" />
+          <Path path={leftoverGeom} color={theme.color.warn} style="stroke" strokeWidth={2} />
+        </Group>
+      ) : null}
+
       {/* Las llaves con numeral y la expresión con la cruz. El cruce es el morph. */}
       {config.keys ? (
         <>
@@ -491,13 +1030,265 @@ export function TilesScene({
       ) : null}
 
       {/* El montón. Siempre montado: las filas que sobran, invisibles. */}
-      {looseGeom.map((path, i) => (
-        <LooseRowView key={i} path={path} slot={rows[i] as RowSlot} />
-      ))}
+      {looseGeom.map((path, i) => {
+        // Un nodo que solo usa la partición no trae montón, y la ranura no
+        // existe: dibujar una fila sin su par de valores rompe la escena.
+        const slot = rows[i];
+        return slot ? <LooseRowView key={i} path={path} slot={slot} /> : null;
+      })}
+
+      {/* La partición: el todo que se corta, el libro, la ficha, los platos y
+          la recta. Nada de esto se monta cuando el nodo solo quiere el piso. */}
+      {part && partGeom ? (
+        <Group>
+          {partGeom.plates.map((p, i) => (
+            <Path
+              key={`plate${i}`}
+              path={p}
+              color={theme.color.inkFaint}
+              style="stroke"
+              strokeWidth={STROKE}
+            />
+          ))}
+
+          {partGeom.statics.map((geom, i) =>
+            geom ? (
+              <StaticWholeView
+                key={part.wholes[i]?.id ?? i}
+                geom={geom}
+                glow={part.wholes[i]?.glow === true}
+                even={part.wholes[i]?.even !== false}
+                hint={hint}
+              />
+            ) : null,
+          )}
+
+          {partGeom.live && partGeom.liveBox ? (
+            <LiveWholeView
+              box={partGeom.liveBox}
+              even={partGeom.liveEven}
+              parts={parts}
+              lit={lit}
+              hint={hint}
+            />
+          ) : null}
+
+          {/* El libro de cuentas: una ficha por parte encendida, todas del
+              tamaño de la parte. Con partes desparejas no se apilan. */}
+          {part.ledger && partGeom.liveBox
+            ? Array.from({ length: MAX_LEDGER }, (_, i) => (
+                <LedgerChip
+                  key={`led${i}`}
+                  index={i}
+                  box={partGeom.liveBox as Box}
+                  y={layout.ledgerY}
+                  even={partGeom.liveEven}
+                  parts={parts}
+                  lit={lit}
+                />
+              ))
+            : null}
+
+          {partGeom.line ? (
+            <Path
+              path={partGeom.line}
+              color={theme.color.inkDim}
+              style="stroke"
+              strokeWidth={STROKE}
+            />
+          ) : null}
+          {partGeom.pin ? (
+            <Path path={partGeom.pin} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+          ) : null}
+
+          {/* El `÷` del nodo 6 y la ficha son el mismo objeto: sus dos puntos se
+              estiran hasta ser los numerales y la barra del medio se queda. */}
+          {partGeom.division ? (
+            <Group opacity={partDivO}>
+              <Path path={partGeom.division} color={theme.color.ink} />
+            </Group>
+          ) : null}
+          {partGeom.chip ? (
+            <Group opacity={partGeom.division ? partChipO : token}>
+              <Path path={partGeom.chip.bar} color={theme.color.accent} />
+              <Path path={partGeom.chip.ink} color={theme.color.ink} />
+            </Group>
+          ) : null}
+        </Group>
+      ) : null}
 
       <Group transform={handT} opacity={handO}>
         <Path path={hand.dot} color={theme.color.ink} style="stroke" strokeWidth={2} />
       </Group>
+    </Group>
+  );
+}
+
+/** Cuántas fichas de libro se montan. Es el techo del corte que se lee. */
+const MAX_LEDGER = 12;
+/** Cuántas líneas de corte se montan. El árbol no cambia al cortar. */
+const MAX_CUTS = 11;
+
+/**
+ * El todo que el dedo está cortando. Las líneas están todas montadas y su
+ * posición se deriva de `parts`, así que cortar es mover un número y nunca
+ * montar un objeto: las líneas ya puestas se corren solas.
+ */
+function LiveWholeView({
+  box,
+  even,
+  parts,
+  lit,
+  hint,
+}: {
+  readonly box: Box;
+  readonly even: boolean;
+  readonly parts: SharedValue<number>;
+  readonly lit: SharedValue<number>;
+  readonly hint: SharedValue<number>;
+}) {
+  const full = useMemo(() => roundRect(box, 6), [box]);
+  const dashed = useMemo(() => dashedRect(box), [box]);
+  const litT = useDerivedValue(() => {
+    const p = Math.max(1, parts.value);
+    const k = Math.max(0, Math.min(1, lit.value / p));
+    return [{ translateX: box.x }, { scaleX: k }, { translateX: -box.x }];
+  }, [box]);
+  // El contorno se afirma cuando el corte quedó parejo: es el chasquido, dicho
+  // con luz para el que juega con el sonido apagado.
+  const snap = useDerivedValue(() => (even ? 0.35 + 0.65 * Math.min(1, parts.value / 2) : 0));
+  const pulse = useDerivedValue(() => 0.35 + 0.35 * hint.value);
+  return (
+    <Group>
+      <Path path={full} color={theme.color.surface} />
+      <Group transform={litT}>
+        <Path path={full} color={theme.color.accent} opacity={0.55} />
+      </Group>
+      {Array.from({ length: MAX_CUTS }, (_, i) => (
+        <CutLine key={i} index={i} box={box} even={even} parts={parts} />
+      ))}
+      <Group opacity={even ? snap : pulse}>
+        <Path
+          path={even ? full : dashed}
+          color={even ? theme.color.ok : theme.color.inkDim}
+          style="stroke"
+          strokeWidth={2}
+        />
+      </Group>
+    </Group>
+  );
+}
+
+/** Una línea de corte. Existe siempre; se ve cuando el corte llegó hasta ella. */
+function CutLine({
+  index,
+  box,
+  even,
+  parts,
+}: {
+  readonly index: number;
+  readonly box: Box;
+  readonly even: boolean;
+  readonly parts: SharedValue<number>;
+}) {
+  const path = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.moveTo(0, box.y + 2);
+    p.lineTo(0, box.y + box.h - 2);
+    return p;
+  }, [box]);
+  const transform = useDerivedValue(() => {
+    const n = Math.max(1, parts.value);
+    const base = (index + 1) / n;
+    const corrido = even ? base : Math.min(0.96, base + (index % 2 === 0 ? 0.7 / n : 0));
+    return [{ translateX: box.x + corrido * box.w }];
+  }, [box, even]);
+  const o = useDerivedValue(() => Math.max(0, Math.min(1, parts.value - index - 1)));
+  return (
+    <Group transform={transform} opacity={o}>
+      <Path
+        path={path}
+        color={even ? theme.color.bg : theme.color.inkFaint}
+        style="stroke"
+        strokeWidth={even ? 2 : 1}
+      />
+    </Group>
+  );
+}
+
+/**
+ * Una ficha del libro. Mide lo que mide la parte que anota, así que con partes
+ * desparejas las fichas salen de distinto tamaño y no se apilan: quedan
+ * torcidas al costado, y eso es todo lo que el juego dice del error.
+ */
+function LedgerChip({
+  index,
+  box,
+  y,
+  even,
+  parts,
+  lit,
+}: {
+  readonly index: number;
+  readonly box: Box;
+  readonly y: number;
+  readonly even: boolean;
+  readonly parts: SharedValue<number>;
+  readonly lit: SharedValue<number>;
+}) {
+  const path = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(-0.5, -7, 1, 14), 2, 2));
+    return p;
+  }, []);
+  const transform = useDerivedValue(() => {
+    const n = Math.max(1, parts.value);
+    const ancho = (box.w / n) * 0.8;
+    const torcido = even ? 0 : (index % 2 === 0 ? 0.22 : -0.16);
+    return [
+      { translateX: box.x + ancho * 0.62 + index * (ancho + 5) },
+      { translateY: y + (even ? 0 : index * 3) },
+      { rotate: torcido },
+      { scaleX: ancho },
+    ];
+  }, [box, y, even, index]);
+  const o = useDerivedValue(() => Math.max(0, Math.min(1, lit.value - index)));
+  return (
+    <Group transform={transform} opacity={o}>
+      <Path path={path} color={theme.color.accent} />
+    </Group>
+  );
+}
+
+/** Un todo que no se está cortando: la pizza, el vaso, el camino, las figuras. */
+function StaticWholeView({
+  geom,
+  glow,
+  even,
+  hint,
+}: {
+  readonly geom: { readonly fill: SkPath; readonly cuts: SkPath; readonly outline: SkPath };
+  readonly glow: boolean;
+  readonly even: boolean;
+  readonly hint: SharedValue<number>;
+}) {
+  const o = useDerivedValue(() => (glow ? 0.6 + 0.4 * hint.value : 1));
+  return (
+    <Group opacity={o}>
+      <Path path={geom.outline} color={theme.color.surface} />
+      <Path path={geom.fill} color={theme.color.accent} opacity={0.55} />
+      <Path
+        path={geom.cuts}
+        color={even ? theme.color.bg : theme.color.inkFaint}
+        style="stroke"
+        strokeWidth={even ? 2 : 1}
+      />
+      <Path
+        path={geom.outline}
+        color={even ? theme.color.inkDim : theme.color.inkFaint}
+        style="stroke"
+        strokeWidth={2}
+      />
     </Group>
   );
 }

@@ -78,6 +78,17 @@ export interface StretchConfig {
   readonly crank: { readonly ratio: number } | null;
   /** Las marcas de la regla que se pueden tocar. Vacío: la regla no se toca. */
   readonly marks: readonly number[];
+  /**
+   * La expresión escrita junto a la banda, ya compuesta por el nodo. Ausente o
+   * nula: no hay notación todavía. Se dibuja con los glifos del atlas, así que
+   * el `÷` de acá es el mismo objeto que el de una ecuación.
+   */
+  readonly expr?: string | null;
+  /**
+   * El diagrama vertical entre las dos primeras bandas: la flecha de ida hacia
+   * abajo y la de vuelta hacia arriba. Ausente: no hay flechas.
+   */
+  readonly arrows?: boolean;
 }
 
 /** Lo que la actividad anima en una banda. Una por fila. */
@@ -89,6 +100,13 @@ export interface BandValues {
    * medio quedan donde estaban. Es la animación que no escala.
    */
   readonly deform: SharedValue<number>;
+  /**
+   * El recorte, de 0 a 1: el cuerpo se acorta hasta medir el largo en reposo y
+   * las marcas del medio no se mueven. Las que quedan afuera del nuevo extremo
+   * se apagan, porque se cortaron. Es la otra manera de mentir sobre una banda:
+   * el largo queda bien y las separaciones no. Ausente: la banda no se recorta.
+   */
+  readonly cut?: SharedValue<number>;
 }
 
 export interface StretchLayout {
@@ -306,6 +324,53 @@ export function StretchScene({
     return p;
   }, [guess, layout]);
 
+  /**
+   * La expresión escrita al lado de la banda. Sale del mismo atlas que la
+   * ecuación del nodo 13, así que la barra con dos puntos que nace acá es la
+   * misma que después se escribe.
+   */
+  const exprGeom = useMemo(() => {
+    const p = Skia.Path.Make();
+    if (!config.expr) return p;
+    addGlyphs(
+      p,
+      config.expr,
+      (layout.ruler.from + layout.ruler.to) / 2,
+      layout.ruler.y + 62,
+      Math.min(layout.step * 1.1, 34),
+    );
+    return p;
+  }, [config.expr, layout]);
+
+  /**
+   * El diagrama vertical: la flecha de ida hacia abajo y la de vuelta hacia
+   * arriba, entre las dos primeras bandas. La de vuelta es la misma flecha
+   * reproducida al revés, que es exactamente lo que dice el nodo.
+   */
+  const arrowsGeom = useMemo(() => {
+    const ida = Skia.Path.Make();
+    const vuelta = Skia.Path.Make();
+    const a = layout.nails[0];
+    const b = layout.nails[1];
+    if (!config.arrows || !a || !b) return { ida, vuelta };
+    const x = a.x + layout.step * 0.9;
+    const y0 = a.y + 20;
+    const y1 = b.y - 20;
+    const head = 8;
+    ida.moveTo(x, y0);
+    ida.lineTo(x, y1);
+    ida.moveTo(x - head * 0.6, y1 - head);
+    ida.lineTo(x, y1);
+    ida.lineTo(x + head * 0.6, y1 - head);
+    const x2 = x + 30;
+    vuelta.moveTo(x2, y1);
+    vuelta.lineTo(x2, y0);
+    vuelta.moveTo(x2 - head * 0.6, y0 + head);
+    vuelta.lineTo(x2, y0);
+    vuelta.lineTo(x2 + head * 0.6, y0 + head);
+    return { ida, vuelta };
+  }, [config.arrows, layout]);
+
   const marksGeom = useMemo(() => {
     const p = Skia.Path.Make();
     for (const m of config.marks) {
@@ -367,6 +432,11 @@ export function StretchScene({
 
       {/* La bandera de lo que el jugador anticipó, antes de ejecutar. */}
       <Path path={guessGeom} color={theme.color.warn} style="stroke" strokeWidth={2} />
+
+      {/* El diagrama vertical y la expresión, cuando el nodo los pide. */}
+      <Path path={arrowsGeom.ida} color={theme.color.inkDim} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      <Path path={arrowsGeom.vuelta} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      <Path path={exprGeom} color={theme.color.ink} />
 
       {config.crank ? (
         <>
@@ -467,13 +537,22 @@ function Band({
     return p;
   }, [config.flip, config.length, step, x0, y]);
 
+  // La aguja del recorte se lee una vez, fuera del worklet: adentro no puede
+  // decidirse si existe, porque la decisión viajaría en la clausura del render.
+  const cut = values.cut;
+
   // El cuerpo se escala desde el clavo: es la misma cuenta que las marcas, así
-  // que la banda no se puede despegar de sus propias marcas.
-  const bodyT = useDerivedValue(() => [
-    { translateX: x0 },
-    { translateY: y },
-    { scaleX: Math.max(Math.abs(values.factor.value), 0.001) * Math.sign(values.factor.value || 1) },
-  ]);
+  // que la banda no se puede despegar de sus propias marcas. Recortarlo lo lleva
+  // al largo en reposo sin tocar ninguna marca, que es la mentira del nodo 6.
+  const bodyT = useDerivedValue(() => {
+    const c = cut ? cut.value : 0;
+    const f = values.factor.value * (1 - c) + c;
+    return [
+      { translateX: x0 },
+      { translateY: y },
+      { scaleX: Math.max(Math.abs(f), 0.001) * Math.sign(f || 1) },
+    ];
+  }, [cut, x0, y]);
   const gripT = useDerivedValue(() => [
     { translateX: x0 + rest * step * values.factor.value },
     { translateY: y },
@@ -545,13 +624,22 @@ function BandMark({
   readonly tick: SkPath;
   readonly drawing: SkPath | null;
 }) {
+  const cut = values.cut;
   const t = useDerivedValue(() => {
     const escalado = i * step * values.factor.value;
     const quieto = i === rest ? escalado : i * step;
     return [{ translateX: x0 + escalado + (quieto - escalado) * values.deform.value }, { translateY: y }];
   }, [i, step, rest, x0, y]);
+  // Recortar no mueve ninguna marca: se lleva las que quedaron más allá del
+  // nuevo extremo. Por eso el largo puede quedar bien y las marcas mal.
+  const o = useDerivedValue(() => {
+    if (!live) return 0;
+    const c = cut ? cut.value : 0;
+    if (c <= 0) return 1;
+    return i * values.factor.value > rest + 0.001 ? 1 - c : 1;
+  }, [live, cut, i, rest]);
   return (
-    <Group transform={t} opacity={live ? 1 : 0}>
+    <Group transform={t} opacity={o}>
       <Path path={tick} color={theme.color.ink} style="stroke" strokeWidth={2} />
       {drawing ? <Path path={drawing} color={theme.color.warn} style="stroke" strokeWidth={2} /> : null}
     </Group>

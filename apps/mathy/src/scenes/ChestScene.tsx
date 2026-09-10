@@ -34,8 +34,89 @@ import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
-import { TEETH_PER_TURN, type UndoLevel, type UndoProblem } from "@mathy/mechanics";
+import { TEETH_PER_TURN, type Layer } from "@mathy/mechanics";
 import { theme } from "../ui/theme.ts";
+
+// --- Lo que la escena necesita saber -----------------------------------------
+
+/**
+ * Los modos que la escena sabe dibujar. Los seis primeros son los del nodo 4 y
+ * `UndoMode` entra tal cual; `shrink` es lo que agrega el nodo 6: el cofre
+ * suelto, sin pista y sin manivela, con la cerradura con la forma del estirado
+ * y el llavero abajo.
+ */
+export type ChestMode = "turn" | "pick" | "judge" | "measure" | "write" | "unlock" | "shrink";
+
+/** La pista dibujada, aplanada, a pedido, o ya retirada. */
+export type ChestSkin = "stone" | "mark" | "onDemand" | "hidden";
+
+/**
+ * Cómo se dibuja una llave. `teeth` es la del nodo 4, que se mide contando; las
+ * otras tres son clases de acción y se distinguen por la forma, que es lo que
+ * pide un nodo donde el número no viene en la llave sino en el dial.
+ */
+export type ChestKeyKind = "teeth" | "shrink" | "cut" | "stretch";
+
+export interface ChestKey {
+  readonly teeth: number;
+  readonly kind?: ChestKeyKind;
+}
+
+export interface ChestTile {
+  readonly value: number;
+}
+
+export interface ChestRowData {
+  readonly minuend: number;
+  readonly subtrahend: number;
+  readonly result: number;
+  readonly hidden: "result" | "minuend";
+}
+
+export interface ChestLockData {
+  readonly kind: string;
+  readonly value: number;
+}
+
+export interface ChestAction {
+  readonly kind: string;
+  readonly value: number;
+}
+
+/**
+ * Lo que la escena lee del problema. Es una forma y no un tipo de un nodo:
+ * `UndoProblem` la cumple sin tocar nada, y cualquier otro nodo que reuse la
+ * mecánica arma un objeto con estos campos y no importa los del nodo 4.
+ */
+export interface ChestProblem {
+  readonly track: number;
+  readonly home: number;
+  readonly step: number;
+  readonly landing: number;
+  readonly keys: readonly ChestKey[];
+  readonly returns: readonly (readonly number[])[];
+  readonly liar: number;
+  readonly marks: readonly [number, number] | null;
+  readonly row: ChestRowData;
+  readonly tiles: readonly ChestTile[];
+  readonly lock: ChestLockData;
+  readonly actions: readonly ChestAction[];
+}
+
+/** Lo que la escena lee del nivel. `UndoLevel` la cumple sin tocar nada. */
+export interface ChestLevel {
+  readonly mode: ChestMode;
+  readonly layer: Layer;
+  readonly labeled: boolean;
+  readonly skin: ChestSkin;
+  readonly ruler: boolean;
+  readonly keyboard: boolean;
+  /**
+   * Los numerales sobre las llaves. Sin declararlo manda la capa, como en el
+   * nodo 4; un nodo que se queda sin numerales más allá de `concrete` lo dice.
+   */
+  readonly numerals?: boolean;
+}
 
 const STROKE = 1.5;
 /** Cuánto gira la manivela por piedra. */
@@ -69,7 +150,14 @@ export interface ChestLayout {
   /** El eje del lienzo: el renglón y el teclado se cuelgan de acá. */
   readonly center: number;
   readonly stoneR: number;
+  /**
+   * El blanco donde entra la llave. Es la manivela cuando hay pista, y la
+   * cerradura del cofre cuando el cofre está suelto: en los dos casos es el
+   * mismo gesto, soltar y girar, así que es el mismo punto.
+   */
   readonly crank: { readonly x: number; readonly y: number; readonly r: number };
+  /** El cofre suelto, para los nodos que no lo apoyan sobre una pista. */
+  readonly chest: { readonly x: number; readonly y: number; readonly w: number };
   readonly keys: readonly Spot[];
   readonly keyW: number;
   readonly keyH: number;
@@ -94,12 +182,18 @@ export interface ChestLayout {
  * gesto: si el hit test usara otra geometría, la llave entraría donde no se ve.
  */
 export function chestLayout(
-  problem: UndoProblem,
-  level: UndoLevel,
+  problem: ChestProblem,
+  level: ChestLevel,
   width: number,
   height: number,
 ): ChestLayout {
   const judge = level.mode === "judge";
+  /**
+   * El cofre suelto va arriba de todo, apoyado sobre lo que el nodo dibuje
+   * debajo, y su cerradura es también el blanco donde entra la llave. Con la
+   * pista, el blanco sigue siendo la manivela y nada de esto cambia.
+   */
+  const suelto = level.mode === "shrink";
   const units = Math.max(problem.track - 1, 1);
   const step = Math.min((width - 2 * PAD) / units, MAX_STEP);
   const drawn = step * units;
@@ -117,17 +211,32 @@ export function chestLayout(
     return { stones, y, step, from: { x: left, y }, to: { x: left + drawn, y } };
   });
 
+  // El cofre suelto: el ancho lo acota la pantalla y el alto sale de él, porque
+  // la cerradura tiene que quedar a un dedo de distancia del llavero.
+  const chestW = suelto ? Math.max(64, Math.min(96, width * 0.16)) : 0;
+  const chestH = chestW * 0.62;
+  const chest = { x: width / 2, y: Math.max(chestH + 12, height * 0.17), w: chestW };
+
   const crankR = Math.max(30, Math.min(46, height * 0.13));
-  const crank = { x: width / 2, y: height - crankR - 14, r: crankR };
+  const crank =
+    suelto
+      ? // La cerradura del cofre suelto, con el blanco de drop generoso: la mano
+        // de un chico de cinco no apunta fino y el diseño lo exige.
+        { x: chest.x, y: chest.y - chestH * 0.42 - 6, r: Math.max(42, chestW * 0.6) }
+      : { x: width / 2, y: height - crankR - 14, r: crankR };
 
   // En pantallas angostas el llavero no cabe al lado de la manivela, así que se
   // sube a su propia fila. El blanco de una llave nunca baja de lo que pide N.
-  const angosta = width < 600;
+  // Sin manivela abajo, el llavero se queda con el ancho entero.
+  const angosta = suelto || width < 600;
   const keyH = 44;
   const zona = angosta ? width - 2 * PAD : crank.x - crank.r - 20 - PAD;
   const gap = 10;
   const keyW = Math.max(34, Math.min(72, (zona - (KEY_SLOTS - 1) * gap) / KEY_SLOTS));
-  const keyY = angosta ? height - crankR * 2 - 44 : height - keyH / 2 - 22;
+  const keyY =
+    suelto ? height - keyH / 2 - 22
+    : angosta ? height - crankR * 2 - 44
+    : height - keyH / 2 - 22;
   const keyLeft = angosta ? (width - (KEY_SLOTS * keyW + (KEY_SLOTS - 1) * gap)) / 2 : PAD;
   const keys: Spot[] = [];
   const usadas = level.mode === "unlock" ? problem.actions.length : problem.keys.length;
@@ -176,6 +285,7 @@ export function chestLayout(
     center: width / 2,
     stoneR: Math.min(step * 0.3, 18),
     crank,
+    chest,
     keys,
     keyW,
     keyH,
@@ -242,7 +352,7 @@ interface RowMetrics {
  * sola, y la comparten el dibujo y el gesto: si el hit test usara otra, la
  * ficha entraría donde no se ve el hueco.
  */
-function rowMetrics(problem: UndoProblem, cx: number, cy: number): RowMetrics {
+function rowMetrics(problem: ChestProblem, cx: number, cy: number): RowMetrics {
   const texto = `${problem.row.minuend}−${problem.row.subtrahend}=${problem.row.result}`;
   const chars = [...texto];
   // Los espacios de TeX: `\medmuskip` alrededor del operador binario y
@@ -358,6 +468,45 @@ function buildKey(cx: number, cy: number, w: number, teeth: number, separados: b
   return p;
 }
 
+/**
+ * Una llave que no se mide en dientes sino en clase. El número no está en la
+ * llave: está en el dial, y se gira. Por eso las tres se distinguen por lo que
+ * le hacen a lo que hay del otro lado —juntar, cortar, separar— y por nada más.
+ */
+function buildClassKey(kind: ChestKeyKind, cx: number, cy: number, w: number): SkPath {
+  const p = Skia.Path.Make();
+  const r = Math.min(w * 0.17, 9);
+  const x0 = cx - w / 2 + r;
+  p.addCircle(x0, cy, r);
+  p.addCircle(x0, cy, r * 0.45);
+  const x1 = cx + w / 2 - 3;
+  p.moveTo(x0 + r, cy);
+  p.lineTo(x1, cy);
+
+  const s = Math.max(5, Math.min(w * 0.16, 8));
+  const bx = (x0 + r + x1) / 2 + s * 0.4;
+  const by = cy + s + 2;
+  if (kind === "cut") {
+    // La tijera: dos trazos cruzados. Corta el extremo y no toca el medio.
+    p.moveTo(bx - s, by - s);
+    p.lineTo(bx + s, by + s);
+    p.moveTo(bx - s, by + s);
+    p.lineTo(bx + s, by - s);
+    return p;
+  }
+  // Dos puntas: encaradas juntan, de espaldas separan. Es la misma flecha
+  // dibujada al revés, como el `÷` es la cruz acostada.
+  const punta = (x: number, d: number): void => {
+    p.moveTo(x - d * s * 0.7, by - s * 0.8);
+    p.lineTo(x + d * s * 0.7, by);
+    p.lineTo(x - d * s * 0.7, by + s * 0.8);
+  };
+  const dentro = kind === "shrink";
+  punta(bx - s * 1.5, dentro ? 1 : -1);
+  punta(bx + s * 1.5, dentro ? -1 : 1);
+  return p;
+}
+
 /** La rueda dentada del nodo 3. Los dientes son todos iguales: eso es el invariante. */
 function buildCrank(r: number): { body: SkPath; teeth: SkPath; handle: SkPath } {
   const body = Skia.Path.Make();
@@ -426,6 +575,19 @@ function buildAction(kind: string, value: number, cx: number, cy: number, s: num
     p.lineTo(cx + s * 0.34, cy - s * 0.15);
     return p;
   }
+  if (kind === "flat") {
+    // La banda aplastada contra el clavo: todas las marcas cayeron en el mismo
+    // punto y ya no se sabe cuál era cuál. Por eso no hay vuelta.
+    p.moveTo(cx - s * 0.7, cy);
+    p.lineTo(cx + s * 0.7, cy);
+    for (let i = 0; i < 4; i++) {
+      const x = cx - s * 0.7 + i * 2.5;
+      p.moveTo(x, cy - s * 0.45);
+      p.lineTo(x, cy + s * 0.45);
+    }
+    p.addCircle(cx - s * 0.7, cy, s * 0.16);
+    return p;
+  }
   if (kind === "color") {
     p.addCircle(cx, cy, s * 0.5);
     p.addArc(Skia.XYWHRect(cx - s * 0.5, cy - s * 0.5, s, s), 90, 180);
@@ -463,8 +625,8 @@ interface Geom {
 }
 
 function buildGeom(
-  problem: UndoProblem,
-  level: UndoLevel,
+  problem: ChestProblem,
+  level: ChestLevel,
   l: ChestLayout,
   at: number,
   placed: number | null,
@@ -502,10 +664,15 @@ function buildGeom(
     }
   }
 
-  const chest = buildChest(xs(problem.home), row0.y - 12, Math.min(row0.step * 0.9, 46), problem.step);
+  // El cofre suelto se apoya donde el nodo lo pidió y su cerradura tiene la
+  // forma de la ida, igual que sobre la pista: los dientes son los del estirado.
+  const chest =
+    level.mode === "shrink"
+      ? buildChest(l.chest.x, l.chest.y, l.chest.w, problem.step)
+      : buildChest(xs(problem.home), row0.y - 12, Math.min(row0.step * 0.9, 46), problem.step);
   // En `explain` las dos filas tienen que ser idénticas salvo por el recorrido:
   // si el cofre estuviera en una sola, la comparación diría otra cosa.
-  for (const r of l.rows.slice(1)) {
+  for (const r of level.mode === "shrink" ? [] : l.rows.slice(1)) {
     const otro = buildChest(xs(problem.home), r.y - 12, Math.min(r.step * 0.9, 46), problem.step);
     chest.body.addPath(otro.body);
     chest.lid.addPath(otro.lid);
@@ -611,11 +778,17 @@ export interface Slot {
   readonly dy: SharedValue<number>;
   /** 1 mientras la pieza está en la mano; 0 cuando ya se usó o no hace falta. */
   readonly alive: SharedValue<number>;
+  /**
+   * El giro de la pieza sobre sí misma, en radianes. Solo lo usan los nodos
+   * donde la llave se gira después de entrar; sin él la pieza no rota y el
+   * árbol de la escena queda igual que antes.
+   */
+  readonly spin?: SharedValue<number>;
 }
 
 export interface ChestSceneProps {
-  readonly problem: UndoProblem;
-  readonly level: UndoLevel;
+  readonly problem: ChestProblem;
+  readonly level: ChestLevel;
   readonly layout: ChestLayout;
   /** La posición del caminante, en piedras. */
   readonly pos: SharedValue<number>;
@@ -703,15 +876,23 @@ export function ChestScene({
       } else {
         const k = problem.keys[i];
         if (k) {
-          shape.addPath(buildKey(spot.x, spot.y - 4, layout.keyW - 12, k.teeth, level.labeled));
+          // La llave que no se mide en dientes se dibuja por su clase. Es el
+          // mismo llavero: cambia qué distingue a una llave de otra.
+          shape.addPath(
+            k.kind && k.kind !== "teeth"
+              ? buildClassKey(k.kind, spot.x, spot.y - 4, layout.keyW - 12)
+              : buildKey(spot.x, spot.y - 4, layout.keyW - 12, k.teeth, level.labeled),
+          );
           // El numeral llega con la capa `visual`: hasta entonces la llave se
-          // compara mirando o contando dientes, nunca leyendo.
-          if (level.layer !== "concrete") numeral(digits, k.teeth, spot.x, spot.y + 24, 15);
+          // compara mirando o contando dientes, nunca leyendo. Un nodo que
+          // estira ese silencio más allá de la capa lo declara.
+          const conNumeral = level.numerals ?? level.layer !== "concrete";
+          if (conNumeral) numeral(digits, k.teeth, spot.x, spot.y + 24, 15);
         }
       }
       return { box, shape, digits };
     });
-  }, [layout, problem.keys, problem.actions, level.labeled, level.layer, level.mode]);
+  }, [layout, problem.keys, problem.actions, level.labeled, level.layer, level.mode, level.numerals]);
 
   const tileGeom = useMemo(
     () =>
@@ -781,7 +962,7 @@ export function ChestScene({
       { translateY: manoDesde.y + (manoHasta.y - manoDesde.y) * e },
     ];
   }, [manoDesde, manoHasta]);
-  const conMano = level.mode === "turn";
+  const conMano = level.mode === "turn" || level.mode === "shrink";
   const ghostO = useDerivedValue(() =>
     conMano ? hint.value * 0.5 * Math.sin(demo.value * Math.PI) : 0,
   );
@@ -802,12 +983,31 @@ export function ChestScene({
   // El cofre solo aparece donde hay un viaje que deshacer. Desde los dos
   // caminantes no hay ida previa y por eso tampoco hay cofre.
   const conCofre = conManivela || level.mode === "judge";
+  /**
+   * El cofre suelto no puede ir adentro del grupo de la pista: ese grupo se
+   * apaga entero cuando la pista se retira, y un nodo sin pista se quedaría sin
+   * cofre. Es el mismo dibujo, colgado un escalón más arriba.
+   */
+  const cofreSuelto = level.mode === "shrink";
   const segundo = problem.marks
     ? (row0.stones[Math.min(problem.marks[1], problem.track - 1)] as Spot)
     : null;
 
+  const cofre = (
+    <>
+      <Path path={geom.chest.body} color={theme.color.surfaceHigh} />
+      <Path path={geom.chest.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      <Group origin={geom.chest.origin} transform={lidT}>
+        <Path path={geom.chest.lid} color={theme.color.surfaceHigh} />
+        <Path path={geom.chest.lid} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      </Group>
+      <Path path={geom.chest.lock} color={theme.color.warn} style="stroke" strokeWidth={2} />
+    </>
+  );
+
   return (
     <Group opacity={appear}>
+      {cofreSuelto ? cofre : null}
       <Group opacity={pistaO}>
           <Path path={geom.line} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
           <Path
@@ -842,17 +1042,7 @@ export function ChestScene({
           </Group>
 
           {/* El cofre sobre la piedra de partida. Se abre solo, sin cartel. */}
-          {conCofre ? (
-            <>
-              <Path path={geom.chest.body} color={theme.color.surfaceHigh} />
-              <Path path={geom.chest.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-              <Group origin={geom.chest.origin} transform={lidT}>
-                <Path path={geom.chest.lid} color={theme.color.surfaceHigh} />
-                <Path path={geom.chest.lid} color={theme.color.accent} style="stroke" strokeWidth={2} />
-              </Group>
-              <Path path={geom.chest.lock} color={theme.color.warn} style="stroke" strokeWidth={2} />
-            </>
-          ) : null}
+          {conCofre ? cofre : null}
 
           {/* Los caminantes. En `explain` cada fila tiene el suyo. */}
           {level.mode === "judge" ? (
@@ -930,13 +1120,28 @@ export function ChestScene({
 
       {/* El llavero. Siempre montado: las llaves que sobran, invisibles. */}
       {keyGeom.map((g, i) => (
-        <Piece key={`k${i}`} slot={keys[i] as Slot} box={g.box} art={g.shape} digits={g.digits} tinta={theme.color.warn} />
+        <Piece
+          key={`k${i}`}
+          slot={keys[i] as Slot}
+          box={g.box}
+          art={g.shape}
+          digits={g.digits}
+          tinta={theme.color.warn}
+          origin={layout.keys[i] as Spot}
+        />
       ))}
 
       {/* El cajón de fichas. */}
       {!level.keyboard
         ? tileGeom.map((g, i) => (
-            <Piece key={`t${i}`} slot={tiles[i] as Slot} box={g.box} digits={g.digits} tinta={theme.color.ink} />
+            <Piece
+              key={`t${i}`}
+              slot={tiles[i] as Slot}
+              box={g.box}
+              digits={g.digits}
+              tinta={theme.color.ink}
+              origin={layout.tiles[i] as Spot}
+            />
           ))
         : null}
 
@@ -954,19 +1159,28 @@ function Piece({
   art,
   digits,
   tinta,
+  origin,
 }: {
   readonly slot: Slot;
   readonly box: SkPath;
   readonly art?: SkPath;
   readonly digits: SkPath;
   readonly tinta: string;
+  /** El centro de la pieza en su ranura: alrededor de él gira, si gira. */
+  readonly origin: Spot;
 }) {
-  const transform = useDerivedValue(() => [
-    { translateX: slot.dx.value },
-    { translateY: slot.dy.value },
-  ]);
+  // La aguja del giro se lee una vez, fuera del worklet: adentro no puede
+  // decidirse si existe, porque la decisión viajaría en la clausura del render.
+  const spin = slot.spin;
+  const transform = useDerivedValue(
+    () =>
+      spin
+        ? [{ translateX: slot.dx.value }, { translateY: slot.dy.value }, { rotate: spin.value }]
+        : [{ translateX: slot.dx.value }, { translateY: slot.dy.value }],
+    [spin],
+  );
   return (
-    <Group transform={transform} opacity={slot.alive}>
+    <Group transform={transform} origin={origin} opacity={slot.alive}>
       <Path path={box} color={theme.color.surfaceHigh} />
       <Path path={box} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
       {art ? <Path path={art} color={tinta} style="stroke" strokeWidth={2} strokeCap="round" /> : null}

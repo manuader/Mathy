@@ -85,6 +85,42 @@ const es: Record<string, string> = {
   "level.bigNumbersZeroAndBack": "Números grandes, cero y vuelta completa",
   "level.locksThatArentSteps": "Cerraduras que no son pasos",
 
+  "node.arith.div.undo_mul.name": "La llave que encoge",
+  "node.arith.div.undo_mul.tagline": "Dividir deshace el estirado",
+
+  "level.bandComesBack": "La banda vuelve",
+  "level.theWholeKeyRing": "El llavero completo",
+  "level.arrows": "Flechas",
+  "level.floorWithWall": "El piso con la pared",
+  "level.tokensBesideTheBand": "Fichas al lado",
+  "level.ghostBand": "Banda fantasma",
+  "level.whatIsLeftOver": "Lo que sobra",
+  "level.undosNeverSeen": "Vueltas que nunca viste",
+
+  "node.arith.int.negatives.name": "El ascensor y el caminante",
+  "node.arith.int.negatives.tagline": "Negativo es la dirección contraria",
+
+  "level.crossZero": "Cruzar el cero",
+  "level.theElevator": "El ascensor",
+  "level.coinsAndVouchers": "Monedas y vales",
+  "level.arrowsAndStairs": "Flechas y escalera",
+  "level.chipsBeside": "Fichas al lado",
+  "level.noBuilding": "Sin edificio",
+  "level.theStreetMoves": "La calle se muda",
+  "level.directionsNeverSeen": "Direcciones que nunca viste",
+
+  "node.arith.frac.parts_and_ratio.name": "La pizza y la barra",
+  "node.arith.frac.parts_and_ratio.tagline": "Una fracción es partes del todo",
+
+  "level.cutEven": "Cortar parejo",
+  "level.lightSeveral": "Encender varias",
+  "level.theJar": "El frasco",
+  "level.barsAndOutlines": "Barras y contornos",
+  "level.chipsBesideTheBar": "Fichas al lado de la barra",
+  "level.theSharing": "El reparto",
+  "level.theLineAlone": "La recta sola",
+  "level.wholesNeverSeen": "Todos que nunca viste",
+
   "layer.concrete": "manipulación",
   "layer.visual": "representación",
   "layer.symbolic": "notación",
