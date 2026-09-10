@@ -201,17 +201,23 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
    React Native Web devuelve `{0, 0}`. El punto de suelta se calcula desde la ranura más
    la traslación del gesto, no restando la caja del lienzo.
 10. **`Gesture.Exclusive` con un `LongPress` deshabilitado bloquea a los gestos que vienen
-    detrás.** Usar `Gesture.Race`.
-11. **El guion de ASCII no está en el atlas de glifos.** Un número negativo formateado con
+    detrás.** Usar `Gesture.Race`. Y **un `Pan` habilitado siempre le gana la carrera a un
+    `Tap`**: si los dos escuchan la misma superficie, el toque no llega nunca. Cada gesto
+    tiene que escuchar solo donde su objeto está.
+11. **`e.x` y `e.y` de un gesto vienen medidos desde la vista que escucha, no desde el
+    lienzo.** Con un gesto que cubre el lienzo entero la diferencia es cero y no se nota;
+    con un asa chica el error es del tamaño de lo que haya arriba. Es primo de la trampa
+    de `onLayout`.
+12. **El guion de ASCII no está en el atlas de glifos.** Un número negativo formateado con
     `String(-5)` deja un hueco donde va el signo y, si el número abre la expresión, la
     ecuación no se dibuja. El signo se emite como U+2212.
-12. **`toText` de `math-core` es un serializador de depuración**, no notación para el
+13. **`toText` de `math-core` es un serializador de depuración**, no notación para el
     jugador: mostraba `-448 = x * 32` en pantalla.
-13. **`userSelect: "none"` es funcional, no cosmético.** Sin él, arrastrar sobre un texto
+14. **`userSelect: "none"` es funcional, no cosmético.** Sin él, arrastrar sobre un texto
     arranca una selección del navegador que se queda con el puntero.
-14. **El stripping de tipos de Node no soporta propiedades de parámetro**
+15. **El stripping de tipos de Node no soporta propiedades de parámetro**
     (`constructor(private readonly x: T)`). Hay que declarar el campo aparte.
-15. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
+16. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
     escribir al commit. Usá rutas explícitas.
 
 ## 8. Qué falta

@@ -95,6 +95,11 @@ nodo con una refactorización de otro. Se pagan al cerrar la ola que las junta.
   renglón. Unificar en una escena parametrizada: pista y manivela como base,
   el resto como capas opcionales. Quince nodos de la espina usan esta mecánica,
   así que la deuda se paga sola.
+- **`gears_sequence` va por su tercera copia**: `PathScene` (nodo 2), `TrackScene` (nodo 3)
+  y ahora `ElevatorScene` (nodo 7). Las tres dibujan una manivela y un soporte graduado.
+  Las tres se escribieron aparte por la misma razón —cada una está tipada contra el
+  problema de su nodo— y esa razón es justamente el diseño que hay que cambiar: la escena
+  tiene que tomar una configuración, no el `Problem` de un nodo. Quince nodos la usan.
 - **`chest_key` vive adentro de `BalanceScene`** (nodo 13) y también en
   `ChestScene` (nodo 4). Doce nodos la usan: hay que sacarla a su propia escena.
 - **`onLayout` devuelve `{x: 0, y: 0}`** para algunas vistas en React Native Web.
