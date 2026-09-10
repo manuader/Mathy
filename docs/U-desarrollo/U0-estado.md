@@ -1,6 +1,11 @@
 # U0 — Estado del desarrollo
 
-Este documento es el punto de entrada para quien retoma el trabajo. Dice qué está construido y verificado, qué está a medias, qué sigue, y las decisiones que ya se tomaron para que nadie las vuelva a discutir sin motivo. Se actualiza al cerrar cada hito.
+> **El punto de entrada ya no es este archivo, es [`docs/HANDOFF.md`](../HANDOFF.md).**
+> Ahí están el estado, las reglas, las decisiones cerradas y las trampas pagadas, y ahí se
+> escribe la entrada de cada sesión. Este documento quedó como el detalle del motor: qué
+> resuelve cada paquete y por qué está construido así.
+
+Este documento es el detalle del motor para quien retoma el trabajo. Dice qué está construido y verificado, qué está a medias, qué sigue, y las decisiones que ya se tomaron para que nadie las vuelva a discutir sin motivo. Se actualiza al cerrar cada hito.
 
 **Última actualización:** con los ocho niveles de `alg.eq.one_step` jugables en navegador, la chuleta, la calculadora y el progreso persistente.
 

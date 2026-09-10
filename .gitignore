@@ -48,3 +48,6 @@ apps/*/dist/
 apps/*/.expo/
 # El WASM de CanvasKit lo copia `npx setup-skia-web` en cada instalación
 apps/*/public/canvaskit.wasm
+
+# Handoffs efímeros: solo importa el más nuevo, y vive fuera del repo
+handoffs/

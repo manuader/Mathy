@@ -2,6 +2,11 @@
 
 Este directorio contiene el diseño completo de Mathy, un juego mobile para aprender matemática desde cero hasta nivel universitario avanzado. Es un documento vivo, modular y en parte legible por máquina: la prosa argumenta una vez, y todo lo que se referencia por id desde más de un lugar vive en YAML.
 
+> **Si sos un agente que llega a trabajar, no empieces por acá.** Leé
+> [`HANDOFF.md`](HANDOFF.md) y el archivo más nuevo de `handoffs/`: dos documentos, y con
+> eso sabés dónde está parado el proyecto y qué no hay que romper. Este README es el
+> índice del **diseño**, que es otra cosa: lo que hay que construir, no lo que ya está.
+
 ## Cómo leer
 
 Si tenés una hora: [A](A-vision.md), [B](B-filosofia-pedagogica.md), [H](H-progresion-abstraccion.md) y el concepto de calibración [13-alg.eq.one_step](D-curriculum/D1-espina/13-alg.eq.one_step.md) con su [minijuego](F-minijuegos/alg.eq.one_step.md). Si vas a escribir contenido: [C0](C-knowledge-graph/C0-esquema.md), [E0](E-mecanicas/E0-catalogo.md), [G0](G-analogias/G0-reglas.md), [L0](L-modelo-errores/L0-taxonomia.md), la [plantilla D1](D-curriculum/D1-espina/_plantilla.md) y [F0](F-minijuegos/F0-principios.md). Si vas a implementar: [T](T-plan-implementacion.md), [U](U-desarrollo/U0-estado.md), [O](O-arquitectura-tecnica.md), [I0](I-manim/I0-mapping.md), [K](K-evaluacion.md), [J](J-adaptativo.md), [P](P-internacionalizacion.md).
