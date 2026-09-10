@@ -617,7 +617,10 @@ function staticWhole(
       ]);
       target.addPath(cuadrado);
     }
-    return { fill, cuts: rest, outline: Skia.Path.Make() };
+    // Las que no están giradas van como contorno y no como línea de corte: la
+    // línea de corte se dibuja del color del fondo, y ahí las figuras que
+    // faltan tomar desaparecían y el todo se quedaba sin total.
+    return { fill, cuts: Skia.Path.Make(), outline: rest };
   }
   if (marking === "fill") {
     // El vaso: el todo es su altura y la parte se lee de abajo hacia arriba.

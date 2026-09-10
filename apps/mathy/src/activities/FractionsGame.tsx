@@ -82,6 +82,8 @@ import { theme } from "../ui/theme.ts";
 
 /** Cuánto hay que arrastrar hacia abajo para agregar una línea de corte. */
 const CUT_STEP = 26;
+/** Cuánto se puede mover el dedo y que el gesto siga siendo un toque. */
+const TAP_SLOP = 14;
 
 export interface FractionsGameProps {
   readonly level: FracLevel;
@@ -207,6 +209,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: FractionsGameProps) {
   const parts = useSharedValue(0);
   const lit = useSharedValue(0);
   const divide = useSharedValue(0);
+  /**
+   * Si el corte de esta pasada es a mano. La decisión no puede viajar en un
+   * cierre: un worklet captura el del render en que se armó el gesto, así que
+   * viaja en un valor compartido.
+   */
+  const uneven = useSharedValue(0);
   const token = useSharedValue(0);
   const hint = useSharedValue(0);
   const demo = useSharedValue(0);
@@ -272,6 +280,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: FractionsGameProps) {
     parts.value = ask === "cut" ? 0 : (w0?.parts ?? 0);
     lit.value = ask === "cut" ? 0 : (w0?.shaded ?? 0);
     divide.value = 0;
+    // El corte a mano no se hereda: cada todo llega entero y con las líneas
+    // acomodándose solas, o el nivel entero quedaría desparejo por un descuido.
+    uneven.value = 0;
     // La ficha objetivo tiene que estar desde el principio en las preguntas que
     // se contestan contra ella; donde la ficha es la respuesta, aparece al final.
     token.value = ask === "cut" || ask === "pick" || ask === "share" || ask === "pin" ? 1 : 0;
@@ -556,6 +567,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: FractionsGameProps) {
     /** Qué contesta el toque: 1 encender, 2 sacar, 3 elegir todo, 4 clavar, 5 pedir la barra. */
     modo: 0,
     cortando: 0,
+    /** El toque sostenido ya contestó por este gesto: soltar no enciende nada. */
+    sostenido: 0,
+    desdeX: 0,
     desdeY: 0,
     boxX: 0,
     boxY: 0,
@@ -581,6 +595,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: FractionsGameProps) {
       activo: solved ? 0 : 1,
       modo: MODOS[ask] ?? 5,
       cortando: 0,
+      sostenido: 0,
+      desdeX: 0,
       desdeY: 0,
       boxX: box.x,
       boxY: box.y,
@@ -599,75 +615,60 @@ function Activity({ level, onLevelDone, onExit, onEvent }: FractionsGameProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tl, ul, ask, solved, problem.ticks]);
 
-  /**
-   * Si el corte de esta pasada es a mano. La decisión no puede viajar en un
-   * cierre, por la misma razón: viaja en un valor compartido.
-   */
-  const uneven = useSharedValue(0);
-
   const pan = useMemo(
     () =>
       Gesture.Pan()
+        .minDistance(0)
         .onBegin((e) => {
           const g = geo.value;
-          // El blanco es la barra entera con aire alrededor: una mano de cinco
+          // El blanco es el todo entero con aire alrededor: una mano de cinco
           // años no apunta fino.
           const dentro =
             e.x > g.boxX - 30 &&
             e.x < g.boxX + g.boxW + 30 &&
             e.y > g.boxY - 40 &&
             e.y < g.boxY + g.boxH + 40;
-          // El recorrido se mide contra el punto donde el dedo se apoyó y no
-          // con `translationY`: en web el gesto empieza a contar recién cuando
-          // se activa, y el primer corte se comía casi un paso entero.
-          geo.value = { ...g, cortando: g.activo && g.modo === 1 && dentro ? 1 : 0, desdeY: e.y };
+          geo.value = {
+            ...g,
+            cortando: g.activo && g.modo === 1 && dentro ? 1 : 0,
+            sostenido: 0,
+            desdeX: e.x,
+            desdeY: e.y,
+          };
         })
         .onChange((e) => {
           const g = geo.value;
           if (!g.cortando) return;
+          // El recorrido se mide contra el punto donde el dedo se apoyó y no
+          // con `translationY`: en web el gesto empieza a contar recién cuando
+          // se activa, y el primer corte se comía casi un paso entero.
+          const recorrido = Math.abs(e.y - g.desdeY);
+          // Hasta que el dedo se mueve de verdad, el gesto todavía puede ser un
+          // toque: tocar una parte para encenderla no puede borrar el corte.
+          if (recorrido < TAP_SLOP) return;
           parts.value = Math.max(
             0,
-            Math.min(FRAC_MAX_PARTS, Math.round(Math.abs(e.y - g.desdeY) / CUT_STEP) + 1),
+            Math.min(FRAC_MAX_PARTS, Math.round(recorrido / CUT_STEP) + 1),
           );
         })
-        .onEnd(() => {
+        .onFinalize((e) => {
           const g = geo.value;
-          if (!g.cortando) return;
-          geo.value = { ...g, cortando: 0 };
-          const n = Math.max(2, Math.round(parts.value));
-          parts.value = n;
-          runOnJS(commitCut)(n, uneven.value === 0);
-        }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  /**
-   * Mantener el dedo suelta las líneas: cortar desparejo es posible, pero hay
-   * que quererlo, y la barra deja de chasquear.
-   */
-  const hold = useMemo(
-    () =>
-      Gesture.LongPress()
-        .minDuration(700)
-        .onStart((e) => {
-          const g = geo.value;
-          if (!g.activo || g.modo !== 1) return;
-          if (e.x < g.boxX - 30 || e.x > g.boxX + g.boxW + 30) return;
-          uneven.value = uneven.value === 0 ? 1 : 0;
-          runOnJS(commitCut)(Math.max(2, Math.round(parts.value)), uneven.value === 0);
-        }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const tap = useMemo(
-    () =>
-      Gesture.Tap()
-        .maxDistance(26)
-        .onEnd((e) => {
-          const g = geo.value;
+          geo.value = { ...g, cortando: 0, sostenido: 0 };
           if (!g.activo) return;
+          // Si el dedo se quedó quieto lo suficiente, el toque sostenido ya
+          // contestó: soltar no puede encender una parte encima.
+          if (g.sostenido) return;
+          const movido = Math.hypot(e.x - g.desdeX, e.y - g.desdeY);
+          // Un solo gesto contesta el toque y el arrastre. Encadenar un `Tap`
+          // aparte en carrera con este los hacía pelear: el arrastre se llevaba
+          // el gesto y el toque no llegaba nunca.
+          if (movido >= TAP_SLOP) {
+            if (!g.cortando) return;
+            const n = Math.max(2, Math.round(parts.value));
+            parts.value = n;
+            runOnJS(commitCut)(n, uneven.value === 0);
+            return;
+          }
           if (g.modo === 2) {
             if (
               e.x > g.jarX - 20 &&
@@ -705,15 +706,37 @@ function Activity({ level, onLevelDone, onExit, onEvent }: FractionsGameProps) {
     [],
   );
 
-  // Carrera y no exclusiva: el toque sostenido gana si el dedo no se mueve, el
-  // arrastre gana si se mueve y el toque gana si se levanta rápido. Encadenadas
-  // en exclusiva, un gesto que no aplica bloquea a los que vienen detrás.
-  const canvasGesture = useMemo(() => Gesture.Race(hold, pan, tap), [hold, pan, tap]);
+  /**
+   * Mantener el dedo suelta las líneas: cortar desparejo es posible, pero hay
+   * que quererlo, y la barra deja de chasquear.
+   */
+  const hold = useMemo(
+    () =>
+      Gesture.LongPress()
+        .minDuration(700)
+        // Un arrastre no puede convertirse en un toque sostenido a mitad de
+        // camino: el dedo tiene que quedarse quieto para soltar las líneas.
+        .maxDistance(10)
+        .onStart((e) => {
+          const g = geo.value;
+          if (!g.activo || g.modo !== 1) return;
+          // El dedo tiene que seguir apoyado sobre la barra: `cortando` vuelve a
+          // cero en cuanto se levanta, así que un temporizador que llega tarde
+          // no puede soltar las líneas de un corte que ya terminó.
+          if (!g.cortando) return;
+          if (e.x < g.boxX - 30 || e.x > g.boxX + g.boxW + 30) return;
+          geo.value = { ...g, sostenido: 1 };
+          uneven.value = uneven.value === 0 ? 1 : 0;
+          runOnJS(commitCut)(Math.max(2, Math.round(parts.value)), uneven.value === 0);
+        }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
-  // DEBUG-TEMPORAL
-  if (typeof window !== "undefined") {
-    (window as unknown as Record<string, unknown>).__frac = { problem, level, cut, tl, ul, sceneH, round, solved, geo };
-  }
+  // Solo dos gestos, y en carrera: el toque sostenido gana si el dedo se queda
+  // quieto, y el arrastre se queda con todo lo demás. El toque no es un gesto
+  // aparte sino un arrastre que no se movió, que es lo que impide que peleen.
+  const canvasGesture = useMemo(() => Gesture.Race(hold, pan), [hold, pan]);
 
   const hayTeclado =
     ask === "draw" || ask === "share" || ask === "compare" || ask === "odd" || ask === "which";
