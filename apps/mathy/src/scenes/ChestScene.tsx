@@ -46,7 +46,10 @@ import { theme } from "../ui/theme.ts";
  * y el llavero abajo. `nest` es lo que agrega el nodo 9: los cofres metidos uno
  * adentro del otro, el árbol al costado y la fila de fichas debajo. `key` es lo
  * que agrega el nodo 12: la silueta en la tapa y, desde la capa visual, el
- * diagrama vertical con las dos flechas que cierran el circuito.
+ * diagrama vertical con las dos flechas que cierran el circuito. `wrap` es lo
+ * que agrega el nodo 14: el mismo encastre del 9, con la incógnita adentro y el
+ * llavero abajo y al centro, porque ahí el cofre anidado ya no se arma sino que
+ * se abre de afuera hacia adentro.
  */
 export type ChestMode =
   | "turn"
@@ -57,7 +60,8 @@ export type ChestMode =
   | "unlock"
   | "shrink"
   | "nest"
-  | "key";
+  | "key"
+  | "wrap";
 
 /** La pista dibujada, aplanada, a pedido, o ya retirada. */
 export type ChestSkin = "stone" | "mark" | "onDemand" | "hidden";
@@ -377,6 +381,14 @@ export interface NestLayout {
 }
 
 /**
+ * Los dos modos que dibujan cofres uno adentro del otro. El nodo 9 arma el
+ * encastre y el 14 lo abre, y es el mismo dibujo: lo único que los separa es
+ * dónde va el llavero.
+ */
+const esEncastre = (level: ChestLevel): boolean =>
+  level.mode === "nest" || level.mode === "wrap";
+
+/**
  * Dónde cae cada cosa. Lo calcula la actividad y lo comparten el dibujo y el
  * gesto: si el hit test usara otra geometría, la llave entraría donde no se ve.
  */
@@ -429,7 +441,9 @@ export function chestLayout(
   // Sin manivela abajo, el llavero se queda con el ancho entero.
   // El llavero del nodo 12 vive abajo y al centro, como el del cofre suelto.
   // Cuando el nivel además reparte fichas, sube una fila para dejárselas.
-  const llavero = level.mode === "key";
+  // El llavero abajo y al centro. Lo pide el nodo 12 con su diagrama y también
+  // el 14, que cuelga llaves aunque su cofre sea un encastre.
+  const llavero = level.mode === "key" || level.mode === "wrap";
   const angosta = suelto || llavero || width < 600;
   const keyH = 44;
   const zona = angosta ? width - 2 * PAD : crank.x - crank.r - 20 - PAD;
@@ -503,8 +517,8 @@ export function chestLayout(
     padR: padR * padScale,
     composed: { x: width / 2, y: height - padR * 2 - 62 },
     lock: { x: width / 2, y: height * 0.34 },
-    ...(level.mode === "nest" ? { nest: nestLayout(problem, level, width, height) } : {}),
-    ...(llavero ? { diagram: diagramLayout(problem, width, height, keyY - keyH) } : {}),
+    ...(esEncastre(level) ? { nest: nestLayout(problem, level, width, height) } : {}),
+    ...(level.mode === "key" ? { diagram: diagramLayout(problem, width, height, keyY - keyH) } : {}),
   };
 }
 
@@ -1469,10 +1483,18 @@ export function ChestScene({
   const manoDesde = layout.keys[0] ?? { x: 0, y: 0 };
   // Con el diagrama, la mano va adonde entra la llave, que es la cerradura del
   // cofre o el medio de la flecha que sube según la piel. Es el mismo campo.
+  // Con el encastre, la mano va a la cerradura del cofre de más afuera, que es
+  // el único que tiene la tapa al alcance.
+  const cerraduraDeAfuera = layout.nest?.boxes[0];
   const manoHasta =
     level.mode === "key"
       ? (layout.diagram?.panels[0]?.up[0] ?? layout.diagram?.panels[0]?.hole ?? layout.crank)
-      : layout.crank;
+      : level.mode === "wrap" && cerraduraDeAfuera
+        ? {
+            x: cerraduraDeAfuera.x + cerraduraDeAfuera.w - 20,
+            y: cerraduraDeAfuera.y + cerraduraDeAfuera.h - 18,
+          }
+        : layout.crank;
   const ghost = useMemo(() => {
     const dot = Skia.Path.Make();
     dot.addCircle(0, 0, 13);
@@ -1491,7 +1513,7 @@ export function ChestScene({
     level.mode === "shrink" ||
     // Sin llavero no hay nada que llevar: la mano fantasma sobraría en el nivel
     // donde la respuesta se toca en vez de arrastrarse.
-    (level.mode === "key" && problem.keys.length > 0);
+    ((level.mode === "key" || level.mode === "wrap") && problem.keys.length > 0);
   const ghostO = useDerivedValue(() =>
     conMano ? hint.value * 0.5 * Math.sin(demo.value * Math.PI) : 0,
   );
@@ -1551,7 +1573,7 @@ export function ChestScene({
           picked={picked}
         />
       ) : null}
-      {level.mode === "nest" && layout.nest && nest ? (
+      {esEncastre(level) && layout.nest && nest ? (
         <NestedChests
           problem={problem}
           level={level}

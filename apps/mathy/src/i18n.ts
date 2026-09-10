@@ -175,6 +175,61 @@ const es: Record<string, string> = {
   "key.definition":
     "Deshacer una operación es aplicar otra que devuelve exactamente lo que había. Cada operación tiene su llave: sumar y restar el mismo número; multiplicar y dividir por el mismo número, distinto de cero. Una acción y su llave dejan todo como estaba.",
 
+  "node.alg.eq.multi_step.name": "Cofres anidados",
+  "node.alg.eq.multi_step.tagline": "Varias llaves, en orden",
+
+  "level.twoChestsTwoKeys": "Dos cofres, dos llaves",
+  "level.fourNestedLocks": "Cuatro cerraduras anidadas",
+  "level.boxesAndLadder": "Cajas y escalera",
+  "level.mixWithSymbols": "Mezcla con símbolos",
+  "level.ghostChests": "Cofres fantasma",
+  "level.buildTheKey": "Armar la llave",
+  "level.newEquations": "Ecuaciones nuevas",
+
+  "multi.hint.outerFirst": "Empezá por el cofre de afuera: es el único con la tapa al alcance.",
+  "multi.hint.next": "Ese cedió. Ahora el que estaba adentro.",
+  "multi.hint.bounce": "Esa llave sirve, pero todavía no: la tapa de afuera la cubre. La cerradura expuesta dice",
+  "multi.hint.jam": "Esa llave gira un cuarto de vuelta y se traba. La cerradura expuesta dice",
+  "multi.hint.tilt": "Sacaste de un plato y lo pusiste en el otro. La barra se hundió.",
+  "multi.hint.solved": "La x quedó sola y la balanza siguió nivelada.",
+  "multi.hint.alone": "La x quedó sola, y cada renglón dice qué se hizo para llegar.",
+  "multi.hint.assemble": "Armá la llave: primero la operación, después el número.",
+  "multi.hint.needNumber": "Falta el número de la llave.",
+  "multi.hint.needOp": "Falta la operación de la llave.",
+  "multi.hint.sameSize": "Los dos cofres son del mismo tamaño: podés empezar por cualquiera.",
+  "multi.hint.commute": "Ese salió igual. El otro sigue ahí.",
+  "multi.hint.strangeChest": "Este cofre es raro. Abrilo y mirá qué queda.",
+  "multi.hint.noKey": "Este cofre no tiene llave. Mirá qué quedó a los dos lados.",
+  "multi.hint.noSolution": "El cofre está vacío: ningún valor deja la igualdad en pie.",
+  "multi.hint.identity": "El cofre abre con cualquier valor: la igualdad ya era cierta.",
+  "multi.hint.wrongCase": "No es ese caso. Compará los dos lados otra vez.",
+  "multi.slot.empty": "Llave sin armar",
+  "multi.slot.filled": "Llave a medio armar:",
+  "multi.answer.noTreasure": "No hay tesoro",
+  "multi.answer.anyKey": "Abre con cualquiera",
+  "multi.chests.show": "ver cofres",
+  "multi.chests.hide": "ocultar cofres",
+  "multi.balance.show": "ver balanza",
+  "multi.balance.hide": "ocultar balanza",
+  "multi.pipe.show": "ver tubería",
+  "multi.pipe.hide": "ocultar tubería",
+  "multi.pipe.forward": "correr de ida",
+  "multi.pipe.backward": "correr al revés",
+  "multi.definition":
+    "Una ecuación de varios pasos es una igualdad donde la incógnita está envuelta en más de una operación. Resolverla es abrir las envolturas de afuera hacia adentro, aplicando cada inversa a los dos lados. Cada paso produce una ecuación nueva con las mismas soluciones que la anterior, y por eso se llaman equivalentes.",
+
+  "node.alg.expr.distributive_tiles.name": "Dos habitaciones",
+  "node.alg.expr.distributive_tiles.tagline": "El mismo piso contado de dos maneras",
+
+  // El nivel 4 se llama "Fichas al lado" y esa clave ya existe más arriba con
+  // ese texto exacto: `level.tokensBeside`. Una clave repetida con el mismo
+  // texto es una traducción que después hay que mantener dos veces.
+  "level.coverTheFloor": "Cubrir el piso",
+  "level.theRoomWithNoMeasure": "La habitación sin medida",
+  "level.barsAndBraces": "Barras y llaves",
+  "level.noFloor": "Sin piso",
+  "level.theSquareThatGrows": "El cuadrado que crece",
+
   "layer.concrete": "manipulación",
   "layer.visual": "representación",
   "layer.symbolic": "notación",

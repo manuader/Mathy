@@ -15,3 +15,5 @@ export * from "./precedence.ts";
 export * from "./unknown-box.ts";
 export * from "./balance-eq.ts";
 export * from "./operation-key.ts";
+export * from "./distributive.ts";
+export * from "./multi-step.ts";

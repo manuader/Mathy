@@ -20,6 +20,8 @@ import {
   precLevelByNumber,
   boxLevelByNumber,
   keyLevelByNumber,
+  multiLevelByNumber,
+  distLevelByNumber,
   balLevelByNumber,
   type LevelBase,
   type NodeSpec,
@@ -37,6 +39,8 @@ import { FractionsGame } from "./FractionsGame.tsx";
 import { PrecedenceGame } from "./PrecedenceGame.tsx";
 import { UnknownBoxGame } from "./UnknownBoxGame.tsx";
 import { OperationKeyGame } from "./OperationKeyGame.tsx";
+import { DistributiveGame } from "./DistributiveGame.tsx";
+import { MultiStepGame } from "./MultiStepGame.tsx";
 import { BalanceEqGame } from "./BalanceEqGame.tsx";
 
 export interface ActivityProps {
@@ -128,6 +132,18 @@ const OperationKey = ({ level, ...rest }: ActivityProps) => {
   return <OperationKeyGame {...rest} level={full} />;
 };
 
+const MultiStep = ({ level, ...rest }: ActivityProps) => {
+  const full = multiLevelByNumber(level.n);
+  if (!full) return null;
+  return <MultiStepGame {...rest} level={full} />;
+};
+
+const Distributive = ({ level, ...rest }: ActivityProps) => {
+  const full = distLevelByNumber(level.n);
+  if (!full) return null;
+  return <DistributiveGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
@@ -142,6 +158,8 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "prealg.var.unknown_as_box": UnknownBox,
   "prealg.inv.operation_as_key": OperationKey,
   "prealg.eq.balance": BalanceEq,
+  "alg.eq.multi_step": MultiStep,
+  "alg.expr.distributive_tiles": Distributive,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>
