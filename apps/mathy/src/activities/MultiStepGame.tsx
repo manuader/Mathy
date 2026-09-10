@@ -794,9 +794,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
 
   return (
     <View style={styles.root}>
-      <Pressable onPress={onExit} style={styles.back} hitSlop={theme.hitSlop}>
-        <Text style={styles.backLabel}>{t("game.back")}</Text>
-      </Pressable>
 
       <Header
         title={`${t(`node.${NODE_MULTI_STEP}.name`)} · nivel ${level.n} de ${TOTAL_MULTI_LEVELS}`}
@@ -1089,7 +1086,6 @@ function usePipeSlot(): PipeSlot {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: theme.color.bg,
     alignItems: "center",
     justifyContent: "center",
     gap: theme.space[1],

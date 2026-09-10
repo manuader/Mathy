@@ -6,17 +6,22 @@
  * actividad la manera de anotar lo que pasó.
  *
  * Tres pantallas y una jerarquía: los conceptos, los niveles de un concepto, y
- * la actividad. La actividad es la única que ocupa la pantalla entera.
+ * la actividad. La actividad es la única que ocupa la pantalla entera, y un
+ * nivel tiene tres momentos dentro de ella: la tarjeta de entrada, el juego y
+ * la tarjeta de cierre. Terminar un nivel ya no devuelve a la lista: la tarjeta
+ * de cierre dice qué se ganó y ofrece el siguiente con un solo botón.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
-import type { LevelBase, NodeSpec } from "@mathy/mechanics";
+import { isNodeOpen, nodeById, type LevelBase, type NodeSpec } from "@mathy/mechanics";
 import { LevelMap } from "./src/LevelMap";
 import { NodeMap } from "./src/NodeMap";
 import { activityFor } from "./src/activities/index.tsx";
+import { lessonFor, nodeAfter } from "./src/lessons/index.ts";
+import { LessonProvider, type LessonNav, type Phase } from "./src/lessons/LessonContext.tsx";
 import { ProgressProvider, useProgress } from "./src/progress";
 import { theme } from "./src/ui/theme.ts";
 
@@ -38,6 +43,12 @@ function Root() {
   const { progress, ready, record } = useProgress();
   const [node, setNode] = useState<NodeSpec | null>(null);
   const [level, setLevel] = useState<LevelBase | null>(null);
+  const [phase, setPhase] = useState<Phase>("play");
+  // Repetir un nivel lo vuelve a montar desde cero, guía incluida.
+  const [run, setRun] = useState(0);
+  const [fresh, setFresh] = useState<string | null>(null);
+  const clearFresh = useCallback(() => setFresh(null), []);
+  const startPlay = useCallback(() => setPhase("play"), []);
 
   // El mapa no debe parpadear de bloqueado a abierto mientras se lee el
   // registro, así que espera. Es un disco local: se ve un cuadro, no una espera.
@@ -49,22 +60,75 @@ function Root() {
     );
   }
 
+  /** Entrar a un nivel: por su tarjeta de entrada si tiene lección, directo al juego si no. */
+  const open = (n: NodeSpec, l: LevelBase): void => {
+    setNode(n);
+    setLevel(l);
+    setPhase(lessonFor(n.id, l.n) ? "intro" : "play");
+    setRun((r) => r + 1);
+  };
+
+  const toConcepts = (): void => {
+    setLevel(null);
+    setNode(null);
+  };
+
   if (!node) return <NodeMap levelsDone={progress.levelsDone} onPick={setNode} />;
 
   const done = progress.levelsDone[node.id] ?? 0;
   const Activity = level ? activityFor(node.id) : undefined;
 
   if (level && Activity) {
+    const nav: LessonNav = {
+      next: () => {
+        const following = node.levels.find((l) => l.n === level.n + 1);
+        if (following) {
+          open(node, following);
+          return;
+        }
+        // El registro se escribe en segundo plano: el nodo recién terminado
+        // puede no figurar todavía, así que acá se lo da por terminado.
+        const after = nodeAfter(node.id);
+        const first = after?.levels[0];
+        const levelsDone = { ...progress.levelsDone, [node.id]: node.levels.length };
+        if (after && first && isNodeOpen(after.id, levelsDone)) open(after, first);
+        else toConcepts();
+      },
+      replay: () => open(node, level),
+      levels: () => setLevel(null),
+      concepts: toConcepts,
+      play: (id, n) => {
+        const spec = nodeById(id);
+        const l = spec?.levels.find((x) => x.n === n);
+        if (spec && l) open(spec, l);
+      },
+    };
+    const id = `${node.id}:${level.n}:${run}`;
     return (
-      <Activity
-        key={`${node.id}:${level.n}`}
+      <LessonProvider
+        key={id}
         node={node}
         level={level}
-        levelsDone={done}
-        onEvent={record}
-        onLevelDone={() => setLevel(null)}
-        onExit={() => setLevel(null)}
-      />
+        phase={phase}
+        onStart={startPlay}
+        nav={nav}
+        fresh={fresh}
+        clearFresh={clearFresh}
+      >
+        <Activity
+          key={id}
+          node={node}
+          level={level}
+          levelsDone={done}
+          onEvent={record}
+          onLevelDone={() => {
+            const key = lessonFor(node.id, level.n)?.key.id;
+            if (key) setFresh(key);
+            setPhase("done");
+          }}
+          onExit={() => setLevel(null)}
+        />
+      </LessonProvider>
     );
   }
 
@@ -72,7 +136,7 @@ function Root() {
     <LevelMap
       node={node}
       unlocked={done + 1}
-      onPick={setLevel}
+      onPick={(l) => open(node, l)}
       onExit={() => setNode(null)}
     />
   );

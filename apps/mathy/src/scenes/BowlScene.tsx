@@ -20,10 +20,20 @@
  */
 
 import { useEffect, useMemo, useRef } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
+import {
+  BlurMask,
+  Group,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
+  type SkPath,
+} from "@shopify/react-native-skia";
 import {
   useDerivedValue,
   useSharedValue,
+  withSpring,
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
@@ -38,11 +48,52 @@ const STROKE = 1.5;
 /** Cuántos puntos entran en una tarjeta antes de que dejen de contarse de un vistazo. */
 const MAX_DOTS = 12;
 
-/** Las tres clases de objeto. El cuenco de enfrente arranca en la siguiente. */
-const KIND_COLORS = [theme.color.accent, theme.color.ink, theme.color.inkDim] as const;
+/**
+ * El color de un objeto dice una sola cosa, y cuál depende de dónde está:
+ *
+ * - en el cuenco, la **especie** (manzana, naranja, ciruela). Es lo que el
+ *   jugador tiene que distinguir cuando el nivel mezcla clases: qué se cuenta.
+ * - sobre la barra de `visual`, el **equipo**: a qué colección pertenece la marca.
+ *   Ahí la especie ya no importa, y la barra solo compara colecciones.
+ *
+ * El cuenco de enfrente arranca en la especie siguiente, así que en los niveles
+ * de una sola clase cada cuenco tiene su fruta y se distinguen sin mirar la fila.
+ */
+interface Look {
+  readonly light: string;
+  readonly base: string;
+  readonly dark: string;
+  readonly leaf?: string;
+}
+
+const SPECIES: readonly Look[] = [
+  { light: "#ffb8c0", base: "#ff5f73", dark: "#b8293f", leaf: "#52d485" },
+  { light: "#ffe3a6", base: "#ffab38", dark: "#cf7010", leaf: "#52d485" },
+  { light: "#dccfff", base: "#9b7dff", dark: "#5438c4", leaf: "#52d485" },
+];
+
+const SKIN_LOOK: Record<Exclude<Skin, "fruit" | "mark">, Look> = {
+  pebble: { light: "#d3dfec", base: "#8fa2b8", dark: "#526277" },
+  shell: { light: "#ffeadb", base: "#ffb996", dark: "#cf7b62" },
+};
+
+const TEAM: readonly Look[] = [
+  { light: "#b8e2ff", base: theme.color.accent, dark: "#1f7fcf" },
+  { light: "#ffd0da", base: theme.color.coral, dark: "#d2465f" },
+  { light: "#e2d6ff", base: theme.color.violet, dark: "#7456d6" },
+];
+
+const lookOf = (owner: Owner, flat: boolean): Look => {
+  if (flat || owner.skin === "mark") return TEAM[owner.bowl % TEAM.length] as Look;
+  if (owner.skin === "fruit") return SPECIES[(owner.bowl + owner.kind) % SPECIES.length] as Look;
+  return SKIN_LOOK[owner.skin];
+};
 
 export const colorOfKind = (bowl: number, kind: number): string =>
-  KIND_COLORS[(bowl + kind) % KIND_COLORS.length] as string;
+  (SPECIES[(bowl + kind) % SPECIES.length] as Look).base;
+
+/** La madera de los cuencos y la canasta: lo único de la mesa que tiene color propio. */
+const WOOD = { light: "#d9965a", base: "#a8652f", dark: "#5e3417", inner: "#3a2211" } as const;
 
 // --- Geometría ---------------------------------------------------------------
 
@@ -217,19 +268,80 @@ function shapePath(skin: Skin, r: number): SkPath {
   return p;
 }
 
-/** El cuenco: media circunferencia con su borde. En `visual` es una bandeja plana. */
-function bowlPath(g: BowlGeom, x: number, style: BowlStyle): SkPath {
-  const p = Skia.Path.Make();
-  if (style === "visual") {
-    p.addRRect(
-      Skia.RRectXY(Skia.XYWHRect(x - g.bowlR, g.bowlY + g.bowlR * 0.5, g.bowlR * 2, 7), 3.5, 3.5),
-    );
-    return p;
+/** Las partes con que se dibuja un objeto. Todas centradas en el origen. */
+interface Parts {
+  readonly body: SkPath;
+  readonly shine: SkPath;
+  readonly shadow: SkPath | null;
+  readonly leaf: SkPath | null;
+  readonly stem: SkPath | null;
+  /** El anillo ámbar de "mirá acá", para la cosa que quedó sin pareja. */
+  readonly ring: SkPath;
+}
+
+/**
+ * Un objeto con volumen: cuerpo con degradado, brillo arriba a la izquierda, y
+ * sombra en el piso. Sin cara, nunca: la cara es de Lumi (N §1).
+ */
+function partsOf(skin: Skin, r: number): Parts {
+  const ring = Skia.Path.Make();
+  ring.addCircle(0, 0, r * 1.55);
+  const shine = Skia.Path.Make();
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-r * 0.85, r * 0.78, r * 1.7, r * 0.42));
+  if (skin === "fruit") {
+    const leaf = Skia.Path.Make();
+    leaf.moveTo(r * 0.05, -r * 0.92);
+    leaf.quadTo(r * 0.55, -r * 1.55, r * 0.98, -r * 1.12);
+    leaf.quadTo(r * 0.5, -r * 0.78, r * 0.05, -r * 0.92);
+    leaf.close();
+    const stem = Skia.Path.Make();
+    stem.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.09, -r * 1.32, r * 0.18, r * 0.5), r * 0.09, r * 0.09));
+    shine.addOval(Skia.XYWHRect(-r * 0.62, -r * 0.62, r * 0.5, r * 0.34));
+    return { body: shapePath(skin, r), shine, shadow, leaf, stem, ring };
   }
-  p.addArc(Skia.XYWHRect(x - g.bowlR, g.bowlY - g.bowlR * 0.5, g.bowlR * 2, g.bowlR * 1.6), 0, 180);
-  p.moveTo(x - g.bowlR * 1.06, g.bowlY - g.bowlR * 0.2);
-  p.lineTo(x + g.bowlR * 1.06, g.bowlY - g.bowlR * 0.2);
-  return p;
+  if (skin === "mark") {
+    shine.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.18, -r * 1.15, r * 0.14, r * 1.1), r * 0.07, r * 0.07));
+    return { body: shapePath(skin, r), shine, shadow: null, leaf: null, stem: null, ring };
+  }
+  shine.addOval(Skia.XYWHRect(-r * 0.7, -r * 0.5, r * 0.6, r * 0.28));
+  return { body: shapePath(skin, r), shine, shadow, leaf: null, stem: null, ring };
+}
+
+/**
+ * El cuenco de madera: el cuerpo que se curva hacia abajo desde el borde, la boca
+ * oscura y el labio claro. En `visual` es una bandeja plana de vidrio: la
+ * analogía se retira y queda la colección.
+ */
+interface BowlParts {
+  readonly body: SkPath;
+  readonly mouth: SkPath;
+  readonly lip: SkPath;
+  readonly shadow: SkPath;
+}
+
+function bowlParts(g: BowlGeom, x: number, style: BowlStyle): BowlParts {
+  const R = g.bowlR;
+  const shadow = Skia.Path.Make();
+  if (style === "visual") {
+    const tray = Skia.Path.Make();
+    tray.addRRect(Skia.RRectXY(Skia.XYWHRect(x - R * 1.1, g.bowlY + R * 0.5, R * 2.2, 9), 4.5, 4.5));
+    shadow.addOval(Skia.XYWHRect(x - R * 1.1, g.bowlY + R * 0.5 + 8, R * 2.2, 8));
+    return { body: tray, mouth: Skia.Path.Make(), lip: Skia.Path.Make(), shadow };
+  }
+  // Las frutas se apilan desde `bowlY + 0.4R` hacia arriba: el borde va justo
+  // debajo, así se ven apoyadas sobre la boca del cuenco y no flotando delante.
+  const y0 = g.bowlY + R * 0.5;
+  const body = Skia.Path.Make();
+  body.moveTo(x - R * 1.1, y0);
+  body.cubicTo(x - R * 1.0, y0 + R * 1.15, x + R * 1.0, y0 + R * 1.15, x + R * 1.1, y0);
+  body.close();
+  const lip = Skia.Path.Make();
+  lip.addOval(Skia.XYWHRect(x - R * 1.14, y0 - R * 0.14, R * 2.28, R * 0.28));
+  const mouth = Skia.Path.Make();
+  mouth.addOval(Skia.XYWHRect(x - R * 1.0, y0 - R * 0.08, R * 2.0, R * 0.16));
+  shadow.addOval(Skia.XYWHRect(x - R * 0.9, y0 + R * 0.78, R * 1.8, R * 0.26));
+  return { body, mouth, lip, shadow };
 }
 
 /** Los huecos de las dos filas: un solo trazo, porque no se animan de a uno. */
@@ -258,16 +370,17 @@ function stripPath(g: BowlGeom, style: BowlStyle, t0: number, t1: number): SkPat
   return p;
 }
 
-/** Los puentes dibujados: una línea corta por hueco enfrentado. */
-function bridgePath(g: BowlGeom, bridges: readonly boolean[]): SkPath {
+/** La bandeja de vidrio que sostiene las dos filas. */
+function trayPath(g: BowlGeom): SkPath {
   const p = Skia.Path.Make();
-  for (let s = 0; s < bridges.length; s++) {
-    if (!bridges[s]) continue;
-    const a = slotAt(g, 0, s);
-    const b = slotAt(g, 1, s);
-    p.moveTo(a.x, a.y + g.unit * 1.5);
-    p.lineTo(b.x, b.y - g.unit * 1.5);
-  }
+  const pad = Math.max(g.unit * 2.3, 22);
+  p.addRRect(
+    Skia.RRectXY(
+      Skia.XYWHRect(g.stripX - 14, g.rowY[0] - pad, g.stripW + 28, g.rowY[1] - g.rowY[0] + pad * 2),
+      20,
+      20,
+    ),
+  );
   return p;
 }
 
@@ -283,11 +396,16 @@ function basketPath(g: BowlGeom): SkPath {
   return p;
 }
 
-function tablePath(g: BowlGeom): SkPath {
+/** El tejido de la canasta: tres hileras horizontales, un solo trazo. */
+function weavePath(g: BowlGeom): SkPath {
   const p = Skia.Path.Make();
-  const y = g.bowlY + g.bowlR * 1.1;
-  p.moveTo(g.cx - g.stripW / 2, y);
-  p.lineTo(g.cx + g.stripW / 2, y);
+  const w = g.basketW;
+  for (const t of [0.28, 0.56, 0.84]) {
+    const y = g.basketY - 24 + 48 * t;
+    const half = w / 2 - (w / 2 - w * 0.42) * t;
+    p.moveTo(g.cx - half + 4, y);
+    p.lineTo(g.cx + half - 4, y);
+  }
   return p;
 }
 
@@ -378,17 +496,17 @@ export function BowlScene(props: BowlSceneProps) {
   const t0 = problem.bowls[0]?.thickness ?? 1;
   const t1 = problem.bowls[1]?.thickness ?? 1;
 
-  const table = useMemo(() => tablePath(g), [g]);
+  const tray = useMemo(() => trayPath(g), [g]);
   const strip = useMemo(() => stripPath(g, style, t0, t1), [g, style, t0, t1]);
   const bowlShapes = useMemo(
-    () => problem.bowls.map((_, i) => bowlPath(g, bowlCenterX(g, modo, i), style)),
+    () => problem.bowls.map((_, i) => bowlParts(g, bowlCenterX(g, modo, i), style)),
     [g, modo, style, problem.bowls],
   );
   const basket = useMemo(() => basketPath(g), [g]);
-  const bridgeLines = useMemo(() => bridgePath(g, bridges), [g, bridges]);
+  const weave = useMemo(() => weavePath(g), [g]);
   const hand = useMemo(handPath, []);
 
-  const bridgeOn = useDerivedValue(() => 0.6 + 0.4 * props.glow.value);
+  const bridgeOn = useDerivedValue(() => 0.75 + 0.25 * props.glow.value);
   const demoO = useDerivedValue(() => props.demo.value * (1 - props.glow.value));
   const demoT = useDerivedValue(() => {
     // La mano va del primer objeto a su hueco, en línea recta. Es la única
@@ -416,31 +534,35 @@ export function BowlScene(props: BowlSceneProps) {
     <Group>
       {/* En `explain` la mesa y el cuenco no están: lo que se compara son dos
           animaciones del mismo cuenco, cada una en su recuadro. */}
-      {modo === "lie" ? null : (
-        <Path path={table} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      )}
-
       {hayFranja ? (
         <>
-          <Path path={strip} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+          <Path path={tray} color="rgba(255, 255, 255, 0.05)" />
+          <Path path={tray} color="rgba(255, 255, 255, 0.13)" style="stroke" strokeWidth={1} />
+          <Path path={strip} color={style === "visual" ? "rgba(255, 255, 255, 0.10)" : "rgba(0, 0, 0, 0.30)"} />
+          <Path path={strip} color="rgba(255, 255, 255, 0.10)" style="stroke" strokeWidth={1} />
           <Group opacity={bridgeOn}>
-            <Path path={bridgeLines} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+            {bridges.map((on, s) => (
+              <Bridge key={`puente${s}`} geom={g} slot={s} on={on} />
+            ))}
           </Group>
         </>
       ) : null}
 
-      {(modo === "lie" ? [] : bowlShapes).map((p, i) => (
-        <Path
-          key={`bowl${i}`}
-          path={p}
-          color={theme.color.inkFaint}
-          style={style === "visual" ? "fill" : "stroke"}
-          strokeWidth={2}
-        />
+      {(modo === "lie" ? [] : bowlShapes).map((b, i) => (
+        <BowlView key={`bowl${i}`} parts={b} visual={style === "visual"} geom={g} />
       ))}
 
       {hayCanasta ? (
-        <Path path={basket} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+        <>
+          <Path path={basket}>
+            <LinearGradient
+              start={vec(0, g.basketY - 24)}
+              end={vec(0, g.basketY + 24)}
+              colors={[WOOD.light, WOOD.base, WOOD.dark]}
+            />
+          </Path>
+          <Path path={weave} color="rgba(58, 34, 17, 0.55)" style="stroke" strokeWidth={2} />
+        </>
       ) : null}
 
       {modo === "lie" ? (
@@ -576,44 +698,205 @@ function ObjectView({
   readonly dragY: SharedValue<number>;
   readonly pulse: SharedValue<number>;
 }) {
-  const path = useMemo(
-    () => shapePath(flat ? "mark" : owner.skin, geom.unit * owner.size),
-    [flat, owner.skin, owner.size, geom.unit],
-  );
+  const r = geom.unit * owner.size;
+  const skin: Skin = flat ? "mark" : owner.skin;
+  const parts = useMemo(() => partsOf(skin, r), [skin, r]);
+  const look = lookOf(owner, flat);
   const ax = useSharedValue(place.x);
   const ay = useSharedValue(place.y);
   const ao = useSharedValue(place.on ? 1 : 0);
+  /** El rebote al caer: 1 en el instante en que llega, 0 cuando se asentó. */
+  const pop = useSharedValue(0);
   const rondaPrevia = useRef(round);
+  const ultimo = useRef(place);
 
   useEffect(() => {
+    const antes = ultimo.current;
+    ultimo.current = place;
     // Al cambiar de ronda el objeto no viaja: aparece donde va. Interpolar un
     // salto entre dos problemas distintos se vería como una cosa que se escapa.
-    const salto = rondaPrevia.current !== round || instant;
-    rondaPrevia.current = round;
-    const d = { duration: theme.motion.base };
-    ax.value = salto ? place.x : withTiming(place.x, d);
-    ay.value = salto ? place.y : withTiming(place.y, d);
-    ao.value = salto ? (place.on ? 1 : 0) : withTiming(place.on ? 1 : 0, d);
-  }, [place.x, place.y, place.on, round, instant, ax, ay, ao]);
+    if (rondaPrevia.current !== round) {
+      rondaPrevia.current = round;
+      ax.value = place.x;
+      ay.value = place.y;
+      ao.value = place.on ? 1 : 0;
+      return;
+    }
+    const cambio = antes.x !== place.x || antes.y !== place.y || antes.on !== place.on;
+    const soltado = instant && dragIdx.value === index;
+    if (!cambio && !soltado) return;
+    // Soltado: sale desde donde lo dejó el dedo, no desde su casa, y cae con un
+    // rebote. Así se siente que llegó a un lugar, y no que se teletransportó.
+    if (soltado) {
+      ax.value = ax.value + dragX.value;
+      ay.value = ay.value + dragY.value;
+      dragIdx.value = -1;
+    }
+    ax.value = withSpring(place.x, theme.spring.settle);
+    ay.value = withSpring(place.y, theme.spring.settle);
+    ao.value = withTiming(place.on ? 1 : 0, { duration: theme.motion.base });
+    if (cambio && place.on) {
+      pop.value = 1;
+      pop.value = withSpring(0, theme.spring.settle);
+    }
+  }, [place, round, instant, ax, ay, ao, pop, dragIdx, dragX, dragY, index]);
 
   const transform = useDerivedValue(() => {
     const llevado = dragIdx.value === index;
     return [
       { translateX: ax.value + (llevado ? dragX.value : 0) },
       { translateY: ay.value + (llevado ? dragY.value : 0) },
-      { scale: llevado ? 1.3 : 1 },
+      { scale: (llevado ? 1.3 : 1) * (1 + 0.22 * pop.value) },
     ];
   }, [index]);
 
-  // La cosa sin pareja late. No dice "mal": pide que la miren.
-  const opacity = useDerivedValue(
-    () => ao.value * (lonely ? 0.4 + 0.6 * pulse.value : 1),
-    [lonely],
-  );
+  // La cosa sin pareja no dice "mal": un anillo ámbar late alrededor y pide que
+  // la miren. Ámbar es el color de "mirá acá" en todo el juego.
+  const ringO = useDerivedValue(() => (lonely ? 0.35 + 0.65 * pulse.value : 0), [lonely]);
 
   return (
-    <Group transform={transform} opacity={opacity}>
-      <Path path={path} color={colorOfKind(owner.bowl, owner.kind)} />
+    <Group transform={transform} opacity={ao}>
+      {parts.shadow ? <Path path={parts.shadow} color="rgba(0, 0, 0, 0.30)" /> : null}
+      <Path path={parts.body}>
+        <RadialGradient c={vec(-r * 0.35, -r * 0.45)} r={r * 1.7} colors={[look.light, look.base, look.dark]} />
+      </Path>
+      {parts.stem ? <Path path={parts.stem} color="#6b4423" /> : null}
+      {parts.leaf && look.leaf ? <Path path={parts.leaf} color={look.leaf} /> : null}
+      <Path path={parts.shine} color="rgba(255, 255, 255, 0.5)" />
+      <Group opacity={ringO}>
+        <Path path={parts.ring} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+      </Group>
+    </Group>
+  );
+}
+
+/** El cuenco: madera en la mesa, bandeja de vidrio cuando la analogía se retira. */
+function BowlView({
+  parts,
+  visual,
+  geom: g,
+}: {
+  readonly parts: BowlParts;
+  readonly visual: boolean;
+  readonly geom: BowlGeom;
+}) {
+  if (visual) {
+    return (
+      <>
+        <Path path={parts.shadow} color="rgba(0, 0, 0, 0.3)">
+          <BlurMask blur={4} style="normal" />
+        </Path>
+        <Path path={parts.body} color="rgba(255, 255, 255, 0.18)" />
+        <Path path={parts.body} color="rgba(255, 255, 255, 0.32)" style="stroke" strokeWidth={1} />
+      </>
+    );
+  }
+  const R = g.bowlR;
+  return (
+    <>
+      <Path path={parts.shadow} color="rgba(0, 0, 0, 0.4)">
+        <BlurMask blur={7} style="normal" />
+      </Path>
+      <Path path={parts.body}>
+        <LinearGradient
+          start={vec(0, g.bowlY + R * 0.5)}
+          end={vec(0, g.bowlY + R * 1.4)}
+          colors={[WOOD.light, WOOD.base, WOOD.dark]}
+        />
+      </Path>
+      <Path path={parts.lip} color={WOOD.light} />
+      <Path path={parts.mouth} color={WOOD.inner} />
+    </>
+  );
+}
+
+const SPARKS = [0, 1, 2, 3, 4, 5].map((i) => (i * Math.PI) / 3 + Math.PI / 6);
+
+/**
+ * Un puente entre dos cosas enfrentadas. Crece de la mitad hacia los dos lados y
+ * suelta seis chispas una sola vez: es el momento en que dos cosas quedaron
+ * pareja, que es exactamente lo que el nivel enseña, así que es el momento que
+ * se celebra. Verde menta, porque menta es "coincide".
+ */
+function Bridge({ geom: g, slot, on }: { readonly geom: BowlGeom; readonly slot: number; readonly on: boolean }) {
+  const a = slotAt(g, 0, slot);
+  const b = slotAt(g, 1, slot);
+  const y0 = a.y + g.unit * 1.5;
+  const y1 = b.y - g.unit * 1.5;
+  const mid = (y0 + y1) / 2;
+  const line = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.moveTo(a.x, y0);
+    p.lineTo(b.x, y1);
+    return p;
+  }, [a.x, b.x, y0, y1]);
+
+  const k = useSharedValue(on ? 1 : 0);
+  const burst = useSharedValue(1);
+  useEffect(() => {
+    if (on) {
+      k.value = withSpring(1, theme.spring.settle);
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: 720 });
+    } else {
+      k.value = withTiming(0, { duration: theme.motion.quick });
+      burst.value = 1;
+    }
+  }, [on, k, burst]);
+
+  const grow = useDerivedValue(
+    () => [{ translateY: mid }, { scaleY: Math.max(k.value, 0.001) }, { translateY: -mid }],
+    [mid],
+  );
+  const halo = useDerivedValue(() => k.value * (0.3 + 0.7 * (1 - burst.value)));
+
+  return (
+    <Group>
+      <Group transform={grow} opacity={k}>
+        <Group opacity={halo}>
+          <Path path={line} color={theme.color.ok} style="stroke" strokeWidth={12} strokeCap="round">
+            <BlurMask blur={7} style="normal" />
+          </Path>
+        </Group>
+        <Path path={line} color={theme.color.ok} style="stroke" strokeWidth={4} strokeCap="round" />
+      </Group>
+      {SPARKS.map((angle, i) => (
+        <Spark key={i} x={a.x} y={mid} angle={angle} gold={i % 2 === 1} burst={burst} />
+      ))}
+    </Group>
+  );
+}
+
+function Spark({
+  x,
+  y,
+  angle,
+  gold,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly angle: number;
+  readonly gold: boolean;
+  readonly burst: SharedValue<number>;
+}) {
+  const dot = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 3);
+    return p;
+  }, []);
+  const t = useDerivedValue(() => {
+    const d = 8 + 34 * burst.value;
+    return [
+      { translateX: x + Math.cos(angle) * d },
+      { translateY: y + Math.sin(angle) * d },
+      { scale: 1 - 0.7 * burst.value },
+    ];
+  }, [x, y, angle]);
+  const o = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group transform={t} opacity={o}>
+      <Path path={dot} color={gold ? theme.color.gold : theme.color.ok} />
     </Group>
   );
 }
@@ -678,7 +961,10 @@ function CardView({
   }, [place.x, place.y, place.on, round, instant, ax, ay, ao]);
 
   const transform = useDerivedValue(() => {
-    const llevada = dragCard.value === index;
+    // Las tarjetas que no se eligen llevan índice -1, que es también el valor de
+    // "nada agarrado": sin el `index >= 0`, arrastrar una fruta las llevaba a
+    // todas detrás del dedo.
+    const llevada = index >= 0 && dragCard.value === index;
     return [
       { translateX: ax.value + (llevada ? dragX.value : 0) },
       { translateY: ay.value + (llevada ? dragY.value : 0) },
@@ -697,6 +983,9 @@ function CardView({
 
   return (
     <Group transform={transform} opacity={ao}>
+      {/* Vidrio oscuro debajo: la tarjeta se lee igual sobre la madera, sobre
+          la bandeja o sobre el paisaje. */}
+      <Path path={marco} color="rgba(9, 17, 29, 0.9)" />
       <Path path={marco} color={tone} style="stroke" strokeWidth={2} />
       {contraeConGlow ? (
         <Group opacity={lograda}>
@@ -841,7 +1130,7 @@ function LiePanel({
     return p;
   }, [count, cx, cy, panelW, panelH, u, sizes]);
 
-  const color = colorOfKind(0, kind);
+  const look = SPECIES[kind % SPECIES.length] as Look;
   const apiladoO = useDerivedValue(() => 1 - shuffle.value);
   const filaO = useDerivedValue(() => shuffle.value);
 
@@ -882,18 +1171,31 @@ function LiePanel({
   return (
     <Group>
       <Group transform={[{ translateX: cx }, { translateY: cy }]}>
+        <Path path={marco} color="rgba(9, 17, 29, 0.55)" />
         <Group opacity={marcoO}>
-          <Path path={marco} color={theme.color.line} style="stroke" strokeWidth={2} />
+          <Path path={marco} color="rgba(255, 255, 255, 0.35)" style="stroke" strokeWidth={2} />
         </Group>
         <Group opacity={aciertoO}>
-          <Path path={marco} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+          <Path path={marco} color={theme.color.ok} style="stroke" strokeWidth={3} />
         </Group>
       </Group>
       <Group opacity={apiladoO}>
-        <Path path={apilado} color={color} />
+        <Path path={apilado}>
+          <LinearGradient
+            start={vec(cx, cy - panelH * 0.05)}
+            end={vec(cx, cy + panelH * 0.3)}
+            colors={[look.light, look.base, look.dark]}
+          />
+        </Path>
       </Group>
       <Group opacity={filaO}>
-        <Path path={enFila} color={color} />
+        <Path path={enFila}>
+          <LinearGradient
+            start={vec(cx, cy + panelH * 0.1)}
+            end={vec(cx, cy + panelH * 0.3)}
+            colors={[look.light, look.base, look.dark]}
+          />
+        </Path>
       </Group>
       <Group transform={[{ translateX: cx }, { translateY: cy - panelH * 0.3 }]}>
         <Path path={cardFrame} color={theme.color.accent} style="stroke" strokeWidth={2} />

@@ -51,6 +51,8 @@ import {
 } from "../scenes/BowlScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 
@@ -81,6 +83,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera: abrir
   // una herramienta achica la actividad y nunca la tapa.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel del objetivo dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const opening = lesson?.lesson ? "" : (OPENING[level.mode] ?? "");
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
 
@@ -89,7 +99,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
     [level, round, seedBase],
   );
 
-  const sceneH = Math.max(320, Math.min(height * 0.66, 540));
+  const sceneH = Math.max(300, Math.min(height * (lesson?.lesson ? 0.56 : 0.66), 540));
   const geom = useMemo(
     () => bowlGeom(width, sceneH, level.params.count[1]),
     [width, sceneH, level.params.count],
@@ -107,7 +117,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
   const [snapObj, setSnapObj] = useState<number>(FUERA);
   const [snapCard, setSnapCard] = useState<number>(FUERA);
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: OPENING[level.mode],
+    text: opening,
     tone: "dim",
   }));
 
@@ -132,6 +142,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
   // La demostración es la única instrucción del juego. Se muestra al empezar el
   // nivel y no vuelve: el libro de cuentas de los nodos siguientes es este mismo.
   useEffect(() => {
+    // Con guía, la yema de la guía es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
+    if (guided) return;
     if (round !== 0) return;
     if (level.mode !== "pair" && level.mode !== "fill") return;
     demo.value = withRepeat(
@@ -139,23 +152,31 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       3,
       false,
     );
-  }, [round, level.mode, demo]);
+  }, [round, level.mode, demo, guided]);
 
   // En `carry` la colección se tapa: el problema que hace falta el numeral es
-  // justamente que el cuenco no está más sobre la mesa.
+  // justamente que el cuenco no está más sobre la mesa. No se tapa mientras la
+  // tarjeta de entrada o el primer paso de la guía piden mirarla.
+  const holdCover = !playing || step?.id === "look";
   useEffect(() => {
     if (level.mode !== "carry") return;
     setCovered(false);
+    if (holdCover) return;
     const id = setTimeout(() => setCovered(true), PEEK_MS);
     return () => clearTimeout(id);
-  }, [level.mode, problem]);
+  }, [level.mode, problem, holdCover]);
 
   // El reloj arranca cuando se muestra el problema: la latencia es del jugador,
-  // no del render.
+  // no del render ni de la tarjeta de entrada.
   const shownAt = useRef(Date.now());
   useEffect(() => {
     shownAt.current = Date.now();
-  }, [problem]);
+  }, [problem, playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa.
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
 
   // La capa vista es lo que agrega entradas a la chuleta, así que se registra al
   // entrar al nivel y no al terminarlo.
@@ -199,8 +220,28 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
     setChosen(FUERA);
     setSolved(false);
     glow.value = withTiming(0, { duration: theme.motion.quick });
-    setMessage({ text: OPENING[level.mode], tone: "dim" });
-  }, [round, level.rounds, level.n, level.mode, onEvent, onLevelDone, totalObjs, glow]);
+    setMessage({ text: opening, tone: "dim" });
+  }, [round, level.rounds, level.n, opening, onEvent, onLevelDone, totalObjs, glow]);
+
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
 
   const succeed = useCallback(
     (texto: string) => {
@@ -209,9 +250,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       glow.value = withTiming(1, { duration: theme.motion.morph });
       demo.value = withTiming(0, { duration: theme.motion.quick });
       setMessage({ text: texto, tone: "ok" });
-      setTimeout(nextRound, theme.motion.reveal + 400);
+      setTimeout(advance, theme.motion.reveal + 400);
     },
-    [attempt, glow, demo, nextRound],
+    [attempt, glow, demo, advance],
   );
 
   const refuse = useCallback(
@@ -236,13 +277,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
   const igualar = useCallback(
     (texto: string) => {
       attempt(true);
+      say("matched");
       glow.value = withTiming(1, { duration: theme.motion.morph });
       demo.value = withTiming(0, { duration: theme.motion.quick });
       setMessage({ text: texto, tone: "ok" });
       if (cierre.current) clearTimeout(cierre.current);
-      cierre.current = setTimeout(nextRound, theme.motion.reveal + 500);
+      cierre.current = setTimeout(advance, theme.motion.reveal + 500);
     },
-    [attempt, glow, demo, nextRound],
+    [attempt, glow, demo, advance, say],
   );
 
   /** La iluminación se apaga sola cuando la cuenta deja de coincidir. */
@@ -379,6 +421,126 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
     [problem, geom, cardOn],
   );
 
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: la fruta
+   * que conviene levantar, el hueco de enfrente, las tarjetas. Se recalcula con
+   * cada movimiento, así que la yema siempre apunta a un gesto que todavía
+   * falta hacer.
+   */
+  const focus = useMemo<Focus | null>(() => {
+    if (!step) return null;
+    const R = geom.bowlR;
+    // Sin llegar a la altura de la tarjeta del cuenco, que tiene su propio anillo.
+    const bowlRect = (cx: number): Rect => ({
+      x: cx - R * 1.4,
+      y: geom.bowlY - R * 1.05,
+      w: R * 2.8,
+      h: R * 2.15,
+    });
+    const cardRect = (x: number, y: number): Rect => ({
+      x: x - geom.cardW / 2 - 8,
+      y: y - geom.cardH / 2 - 8,
+      w: geom.cardW + 16,
+      h: geom.cardH + 16,
+    });
+    const pad = Math.max(geom.unit * 2, 22);
+    const strip: Rect = {
+      x: geom.stripX - 10,
+      y: geom.rowY[0] - pad,
+      w: geom.stripW + 20,
+      h: geom.rowY[1] - geom.rowY[0] + pad * 2,
+    };
+    const objRect = (i: number): Rect | null => {
+      const p = places[i];
+      if (!p) return null;
+      const r = Math.max(geom.unit * 1.9, 16);
+      return { x: p.x - r, y: p.y - r, w: r * 2, h: r * 2 };
+    };
+    /** La primera cosa en juego que todavía no se movió, del cuenco pedido si se puede. */
+    const suelta = (prefer: number): number => {
+      let alt = FUERA;
+      for (let i = 0; i < totalObjs; i++) {
+        const bowl = i < perBowl ? 0 : 1;
+        const vivo = i % perBowl < (enJuego[bowl] ?? 0);
+        if (!vivo || (slots[i] ?? FUERA) >= 0 || places[i]?.on !== true) continue;
+        if (bowl === prefer) return i;
+        if (alt === FUERA) alt = i;
+      }
+      return alt;
+    };
+    /** El primer hueco libre de la fila de un cuenco. */
+    const hueco = (row: number): number => {
+      const usados = new Set(slots.filter((v, k) => v >= 0 && (k < perBowl ? 0 : 1) === row));
+      let s = 0;
+      while (usados.has(s)) s += 1;
+      return s;
+    };
+    const con = (rings: readonly Rect[], i: number, to: Pt | null): Focus => {
+      const p = i >= 0 ? places[i] : undefined;
+      return p && to ? { rings, drag: { from: { x: p.x, y: p.y }, to } } : { rings };
+    };
+
+    const id = step.id;
+    if (problem.mode === "pair") {
+      if (id === "look") {
+        return { rings: [bowlRect(bowlCenterX(geom, "pair", 0)), bowlRect(bowlCenterX(geom, "pair", 1))] };
+      }
+      if (id === "pairAll") return { rings: [strip] };
+      if (id === "reveal") {
+        const solas = lonely.map((on, i) => (on ? objRect(i) : null)).filter((r): r is Rect => r !== null);
+        return { rings: solas.length > 0 ? solas : [strip] };
+      }
+      if (id === "bridge") {
+        // Enfrente de una que todavía espera pareja.
+        for (let s = 0; s < geom.slotCount; s++) {
+          const arriba = slots.some((v, k) => v === s && k < perBowl);
+          const abajo = slots.some((v, k) => v === s && k >= perBowl);
+          if (arriba === abajo) continue;
+          const row = arriba ? 1 : 0;
+          const i = suelta(row);
+          if (i >= 0 && (i < perBowl ? 0 : 1) === row) return con([strip], i, slotAt(geom, row, s));
+        }
+      }
+      const i = suelta(0);
+      const row = i < perBowl ? 0 : 1;
+      return con([strip], i, i >= 0 ? slotAt(geom, row, hueco(row)) : null);
+    }
+    if (problem.mode === "fill") {
+      const target = cardRect(geom.bowlX[0], geom.bowlCardY);
+      const mine = cardRect(geom.bowlX[1], geom.bowlCardY);
+      if (id === "look") return { rings: [target, bowlRect(geom.bowlX[1])] };
+      if (id === "drag") return con([mine], suelta(0), { x: geom.bowlX[1], y: geom.bowlY });
+      return { rings: [target, mine] };
+    }
+    if (problem.mode === "lie") {
+      // La misma medida con la que `BowlScene` dibuja los dos recuadros.
+      const pw = Math.min(geom.width * 0.4, 250);
+      const ph = Math.min(geom.height * 0.5, 230);
+      const panel = (i: number): Rect => {
+        const cx = geom.cx + (i === 0 ? -1 : 1) * pw * 0.57;
+        return { x: cx - pw / 2 - 6, y: geom.height * 0.5 - ph / 2 - 6, w: pw + 12, h: ph + 12 };
+      };
+      if (id === "reveal" && problem.lying >= 0) return { rings: [panel(problem.lying)] };
+      return { rings: [panel(0), panel(1)] };
+    }
+    // `carry` y `label`: una colección y las tarjetas entre las que se elige.
+    const bowl = bowlRect(geom.cx);
+    if (id === "look" || id === "reveal") return { rings: [bowl] };
+    const libres = cardPlaces.filter((_, i) => i !== cardOn).map((p) => p.x);
+    if (libres.length === 0) return { rings: [bowl] };
+    const lo = Math.min(...libres);
+    const hi = Math.max(...libres);
+    const fila: Rect = {
+      x: lo - geom.cardW / 2 - 10,
+      y: geom.choiceY - geom.cardH / 2 - 10,
+      w: hi - lo + geom.cardW + 20,
+      h: geom.cardH + 20,
+    };
+    return { rings: [fila, bowl] };
+  }, [step, geom, places, slots, problem, lonely, cardPlaces, cardOn, totalObjs, perBowl, enJuego]);
+
   // --- Lo que pasa cuando el jugador suelta ----------------------------------
 
   const enFranja = useCallback(
@@ -417,19 +579,20 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
         // Cada cosa que llega a su fila es un paso del conteo, y ese paso es
         // exactamente lo que el nivel ejercita.
         attempt(true);
+        say("placed");
+        if (next.some((v, k) => v === hueco && (k < perBowl) !== (bowl === 0))) say("bridge");
         const puestos = next.filter((v, k) => v >= 0 && k % perBowl < (enJuego[k < perBowl ? 0 : 1] ?? 0)).length;
         const total = (enJuego[0] ?? 0) + (enJuego[1] ?? 0);
         if (puestos >= total) {
           const sobran = Math.abs((enJuego[0] ?? 0) - (enJuego[1] ?? 0));
-          setTimeout(
-            () =>
-              succeed(
-                sobran === 0
-                  ? "Se emparejaron sin que sobre nada: los dos cuencos tienen lo mismo."
-                  : `Quedaron ${sobran} sin puente. Ese cuenco tiene más.`,
-              ),
-            420,
-          );
+          setTimeout(() => {
+            say("solved");
+            succeed(
+              sobran === 0
+                ? "Se emparejaron sin que sobre nada: los dos cuencos tienen lo mismo."
+                : `Quedaron ${sobran} sin puente. Ese cuenco tiene más.`,
+            );
+          }, 420);
         }
         return;
       }
@@ -444,6 +607,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
           setSlots(next);
           demo.value = withTiming(0, { duration: theme.motion.quick });
           const ahora = filled + 1;
+          say("added");
           if (ahora === problem.target) {
             igualar("La tarjeta del cuenco quedó igual a la otra.");
           } else if (ahora > problem.target) {
@@ -496,6 +660,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       igualar,
       apagar,
       demo,
+      say,
     ],
   );
 
@@ -509,13 +674,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       if (!card) return;
       if (card.correct) {
         setCardOn(i);
+        say("cardPlaced");
         succeed("Los puntos se contraen: ese número es el del cuenco entero.");
       } else {
         // La tarjeta equivocada no dice "mal": se desliza fuera de la colección.
         refuse("Esa tarjeta se resbala del cuenco: no tiene los puntos que hay.");
       }
     },
-    [solved, sobreCuenco, problem.cards, succeed, refuse],
+    [solved, sobreCuenco, problem.cards, succeed, refuse, say],
   );
 
   const onTap = useCallback(
@@ -525,6 +691,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
         const i = x < geom.cx ? 0 : 1;
         setChosen(i);
         if (i === problem.lying) {
+          say("chosen");
           succeed("Esa es la que miente: reordenar no cambia cuántas hay.");
         } else {
           refuse("En esa el cuenco se reordena y la tarjeta no se mueve: dice la verdad.");
@@ -538,7 +705,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
         setTimeout(() => setCovered(true), 1800);
       }
     },
-    [solved, problem, geom.cx, sobreCuenco, succeed, refuse],
+    [solved, problem, geom.cx, sobreCuenco, succeed, refuse, say],
   );
 
   // --- El gesto --------------------------------------------------------------
@@ -679,16 +846,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
 
   return (
     <View style={styles.root}>
-      <Pressable onPress={onExit} style={styles.back} hitSlop={theme.hitSlop}>
-        <Text style={styles.backLabel}>{t("game.back")}</Text>
-      </Pressable>
 
       <Header
         title={`${t(`node.${NODE_CARDINALITY}.name`)} · nivel ${level.n} de ${TOTAL_CARDINALITY_LEVELS}`}
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <GestureDetector gesture={gesture}>
         <View testID="cuencos" style={{ width, height: sceneH }}>
@@ -720,6 +887,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
               chosen={chosen}
             />
           </Canvas>
+          <Spotlight focus={focus} />
         </View>
       </GestureDetector>
 
@@ -740,7 +908,6 @@ const OPENING: Record<string, string> = {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: theme.color.bg,
     alignItems: "center",
     justifyContent: "center",
     gap: theme.space[2],

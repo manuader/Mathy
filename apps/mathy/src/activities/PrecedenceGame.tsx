@@ -1000,9 +1000,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
 
   return (
     <View style={styles.root}>
-      <Pressable onPress={onExit} style={styles.back} hitSlop={theme.hitSlop}>
-        <Text style={styles.backLabel}>{t("game.back")}</Text>
-      </Pressable>
 
       <Header
         title={`${t(`node.${NODE_PRECEDENCE_TREE}.name`)} · nivel ${level.n} de ${TOTAL_PREC_LEVELS}`}
@@ -1446,7 +1443,6 @@ function lureHint(lure: string | undefined): string {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: theme.color.bg,
     alignItems: "center",
     justifyContent: "center",
     gap: theme.space[2],

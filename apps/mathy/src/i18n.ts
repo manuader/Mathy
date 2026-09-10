@@ -51,6 +51,157 @@ const es: Record<string, string> = {
   "level.moreFruitMoreMix": "Más frutas, más mezcla",
   "level.pebblesShellsMarks": "Piedras, conchas, marcas",
 
+  "node.found.count.cardinality.learned":
+    "Contar es darle a una colección un número que no cambia aunque las cosas se muevan, y ese número se puede llevar a otro lado.",
+
+  "lesson.found.count.cardinality.1.why":
+    "Cómo saber qué grupo tiene más sin contar: poniendo cada cosa frente a otra. Lo que queda sin pareja dice quién tiene más.",
+  "lesson.found.count.cardinality.1.goal": "Emparejá todas las frutas y fijate qué cuenco tiene más.",
+  "lesson.found.count.cardinality.1.coach.look":
+    "Dos cuencos con frutas. ¿Cuál tiene más? Lo vas a descubrir sin contar ni una.",
+  "lesson.found.count.cardinality.1.coach.drag":
+    "Arrastrá una fruta de cualquier cuenco hasta la franja del medio. Se acomoda sola en su fila.",
+  "lesson.found.count.cardinality.1.coach.bridge":
+    "Ahora una fruta del otro cuenco. Va a quedar enfrente, y entre las dos aparece un puente.",
+  "lesson.found.count.cardinality.1.coach.pairAll":
+    "El puente dice que esas dos son pareja. Seguí hasta pasar todas las frutas a la franja.",
+  "lesson.found.count.cardinality.1.coach.reveal":
+    "La fruta que quedó sin puente es la que sobra: su cuenco tiene más. Comparaste sin contar.",
+
+  "lesson.found.count.cardinality.2.why":
+    "Cada fruta que entra suma exactamente uno. La tarjeta de puntos lleva la cuenta por vos.",
+  "lesson.found.count.cardinality.2.goal": "Llená el cuenco hasta que su tarjeta tenga los mismos puntos que la otra.",
+  "lesson.found.count.cardinality.2.coach.look":
+    "La tarjeta de la izquierda pide una cantidad de puntos. El cuenco de la derecha arranca vacío.",
+  "lesson.found.count.cardinality.2.coach.drag":
+    "Arrastrá una fruta de la canasta al cuenco. Mirá la tarjeta del cuenco: gana un punto.",
+  "lesson.found.count.cardinality.2.coach.fill":
+    "Seguí de a una hasta que las dos tarjetas tengan los mismos puntos.",
+  "lesson.found.count.cardinality.2.coach.reveal":
+    "Cuando coinciden, se iluminan. Si te pasás, arrastrá la fruta de vuelta a la canasta.",
+
+  "lesson.found.count.cardinality.3.why":
+    "Mover, apilar o desparramar las frutas no cambia cuántas hay. Vas a cazar a la tarjeta que diga lo contrario.",
+  "lesson.found.count.cardinality.3.goal": "Tocá la película en la que la tarjeta miente.",
+  "lesson.found.count.cardinality.3.coach.look":
+    "Las dos películas muestran el mismo cuenco. En las dos, las frutas se mueven de lugar.",
+  "lesson.found.count.cardinality.3.coach.choose":
+    "Mirá las tarjetas: en una, el número cambia mientras las frutas se mueven. Tocá esa, es la que miente.",
+  "lesson.found.count.cardinality.3.coach.reveal":
+    "Mover no cambia cuántas hay. Si el número cambió, alguien agregó o sacó una fruta.",
+
+  "lesson.found.count.cardinality.4.why":
+    "Los puntos de la tarjeta se juntan en un solo signo: el número. Sirve para acordarse de cuántas había aunque ya no se vean.",
+  "lesson.found.count.cardinality.4.goal": "Llevale al cuenco la tarjeta que dice cuántas frutas tenía.",
+  "lesson.found.count.cardinality.4.coach.look":
+    "Mirá bien cuántas frutas hay. Cuando sigas, el cuenco se va a tapar.",
+  "lesson.found.count.cardinality.4.coach.carry":
+    "Arrastrá hasta el cuenco la tarjeta que dice cuántas había. Si dudás, tocá el cuenco para espiar.",
+  "lesson.found.count.cardinality.4.coach.reveal": "El número guardó por vos algo que ya no se ve.",
+
+  "lesson.found.count.cardinality.5.why":
+    "Con muchas frutas mezcladas ya no se cuentan de un vistazo. Emparejar sigue funcionando si tocás cada una una sola vez.",
+  "lesson.found.count.cardinality.5.goal": "Emparejá todas las frutas y fijate qué cuenco tiene más.",
+  "lesson.found.count.cardinality.5.coach.recall":
+    "Es el juego del nivel 1, con más frutas y mezcladas. Tu llave: emparejar compara.",
+
+  "lesson.found.count.cardinality.6.why":
+    "El número es de la colección, no de su forma: tres piedras grandes y tres marcas chicas son tres.",
+  "lesson.found.count.cardinality.6.goal": "Poné sobre la colección la tarjeta que dice cuántas hay.",
+  "lesson.found.count.cardinality.6.coach.recall":
+    "Ya no son frutas: piedras, conchas o marcas, grandes y chicas. Se cuentan cosas, no tamaños.",
+
+  "key.count.pair_compares.title": "Emparejar compara",
+  "key.count.pair_compares.body":
+    "Poné cada cosa frente a otra. Si sobra alguna, ese lado tiene más; si no sobra ninguna, tienen lo mismo. No hace falta contar.",
+  "key.count.one_more.title": "Cada cosa suma uno",
+  "key.count.one_more.body":
+    "Cada cosa que entra suma exactamente un punto. Para llegar a un número se agrega de a una y se para justo ahí.",
+  "key.count.moving_keeps.title": "Mover no cambia cuántas hay",
+  "key.count.moving_keeps.body":
+    "Apilar, desparramar o reordenar deja el mismo número. Si el número cambió, algo se agregó o se sacó.",
+  "key.count.number_travels.title": "El número recuerda",
+  "key.count.number_travels.body":
+    "Un número guarda cuántas había aunque la colección ya no esté a la vista. Por eso los números se escriben.",
+  "key.count.one_by_one.title": "Una por una, ninguna dos veces",
+  "key.count.one_by_one.body":
+    "Con muchas cosas mezcladas, emparejar sigue funcionando si cada una se toca una sola vez.",
+  "key.count.shape_irrelevant.title": "El número no mira el tamaño",
+  "key.count.shape_irrelevant.body":
+    "Tres piedras grandes y tres marcas chicas son tres. El número es de la colección, no del lugar que ocupa.",
+
+  "ui.intro.eyebrow": "Nivel {n} de {total} · {layer}",
+  "ui.intro.learn": "Qué vas a aprender",
+  "ui.intro.goal": "Tu objetivo",
+  "ui.intro.uses": "Llaves que te sirven acá",
+  "ui.intro.openKey": "Ver en la chuleta ›",
+  "ui.intro.reward": "Al superar este nivel ganás una llave nueva para tu chuleta.",
+  "ui.intro.start": "Empezar",
+  "ui.intro.withGuide": "Jugar con la guía otra vez",
+  "ui.intro.guideNote": "La primera ronda la jugás con una guía al lado.",
+
+  "ui.coach.step": "Guía · paso {i} de {n}",
+  "ui.coach.remember": "Recordá",
+  "ui.coach.next": "Siguiente",
+  "ui.coach.done": "Entendido",
+  "ui.coach.skip": "Saltar guía",
+  "ui.coach.yourMove": "Te toca: hacelo en el tablero.",
+  "ui.goal.label": "Objetivo",
+  "ui.goal.round": "Ronda {i} de {n}",
+
+  "ui.done.eyebrow": "Nivel {n} de {total} · superado",
+  "ui.done.nodeEyebrow": "Concepto completo",
+  "ui.done.learned": "Lo que aprendiste",
+  "ui.done.newKey": "Llave nueva · guardada en tu chuleta",
+  "ui.done.keys": "{k} de {n} llaves de {node}",
+  "ui.done.upNext": "Lo que viene",
+  "ui.done.upNextNode": "El concepto que sigue",
+  "ui.done.levelN": "Nivel {n}",
+  "ui.done.next": "Siguiente nivel",
+  "ui.done.nextNode": "Siguiente concepto",
+  "ui.done.map": "Volver a los conceptos",
+  "ui.done.replay": "Repetir",
+  "ui.done.cheatsheet": "Ver en la chuleta",
+  "ui.done.levels": "Niveles",
+
+  "ui.key.locked": "Llave por descubrir",
+  "ui.key.play": "Volver a jugar el nivel {n} ›",
+  "ui.key.new": "Nueva",
+
+  "ui.tools.cheatsheet": "Chuleta",
+  "ui.tools.calculator": "Calculadora",
+  "ui.cs.title": "Chuleta",
+  "ui.cs.keys": "Tus llaves",
+  "ui.cs.facts": "Reglas y fórmulas",
+  "ui.cs.none": "Todavía vacía",
+  "ui.cs.count.one": "1 idea guardada",
+  "ui.cs.count.other": "{n} ideas guardadas",
+  "ui.cs.search": "Buscar por título",
+  "ui.cs.empty.title": "Tu chuleta está vacía, por ahora",
+  "ui.cs.empty.body":
+    "Cada nivel que superás te deja una llave: una idea corta que ya probaste con las manos. Las llaves vuelven a servir para resolver los niveles que siguen.",
+  "ui.cs.notFound.title": "Ningún título dice “{q}”",
+  "ui.cs.notFound.body": "La búsqueda mira los títulos, no los cuerpos. Probá con una palabra más corta.",
+
+  "ui.bar.levels": "Niveles",
+  "ui.map.concepts": "Conceptos",
+  "ui.levels.walked": "{k} de {n} niveles recorridos",
+  "area.found": "La huerta · contar",
+  "area.arith": "El río · operar",
+  "area.prealg": "El templo · la incógnita",
+  "area.alg": "El taller · ecuaciones y funciones",
+  "area.calc": "Las colinas · cambio y acumulación",
+  "area.linalg": "El valle · vectores",
+  "area.prob": "El mercado · azar",
+  "area.graph": "Las islas · caminos",
+  "area.geom": "El observatorio · formas y giros",
+  "area.disc": "La biblioteca · lógica",
+  "ui.header.level": "nivel {n} de {total}",
+  "ui.map.continue": "Seguí acá",
+  "ui.levels.play": "Jugar",
+  "ui.levels.keys": "{k} de {n} llaves",
+  "ui.levels.rounds": "{n} rondas",
+
   "node.arith.add.displacement.name": "El viaje de dos tramos",
   "node.arith.add.displacement.tagline": "Sumar es avanzar en la pista",
 
@@ -604,4 +755,9 @@ const es: Record<string, string> = {
 
 export function t(key: string): string {
   return es[key] ?? key;
+}
+
+/** Una clave con huecos `{nombre}`. Es lo mínimo hasta que entre ICU MessageFormat. */
+export function tf(key: string, vars: Readonly<Record<string, string | number>>): string {
+  return t(key).replace(/\{(\w+)\}/g, (hole, name: string) => (name in vars ? String(vars[name]) : hole));
 }
