@@ -127,7 +127,48 @@ nodo con una refactorización de otro. Se pagan al cerrar la ola que las junta.
 
 ## Estado
 
-| Ola | Estado |
+| Nodos | Estado |
 |---|---|
-| 1 | en curso |
-| 2–15 | pendiente |
+| 1–21 | construidos, jugables y verificados |
+| 22–44 | pendientes |
+| 45–47, 51–54 | diseñados en la espina, pendientes de construir |
+| 48–50 | números reservados; los nodos no están diseñados todavía |
+
+### Qué pide cada nodo pendiente
+
+Una mecánica sin escena la estrena el primer nodo que la tenga como principal, y la escribe
+configurable para todos los de esta tabla. Los que no tienen nada en la última columna se
+construyen solo con escenas que ya existen.
+
+| n | id | mecánicas | sin escena todavía |
+|---|---|---|---|
+| 22 | `alg.fn.quadratic_and_sqrt` | tiles, chest_key, grid_stretch | — |
+| 23 | `alg.fn.exponential_growth` | gears_sequence, slope_walker | — |
+| 24 | `alg.fn.logarithm` | chest_key, gears_sequence, machine_pipe | — |
+| 25 | `precalc.lim.approach` | slope_walker, gears_sequence | — |
+| 26 | `calc1.deriv.rate_as_slope_limit` | slope_walker, grid_stretch, construct | `construct` |
+| 27 | `calc1.deriv.rules_as_structure` | machine_pipe, tiles, gears_sequence | — |
+| 28 | `calc1.int.accumulation` | fill_accumulate, tiles | `fill_accumulate` |
+| 29 | `calc1.ftc.integral_undoes_derivative` | chest_key, fill_accumulate, slope_walker | `fill_accumulate` |
+| 30 | `linalg.vec.vector_as_displacement` | grid_stretch, gears_sequence | — |
+| 31 | `linalg.vec.span_and_combination` | grid_stretch, ledger, gears_sequence | — |
+| 32 | `linalg.map.linear_transformation_2d` | grid_stretch, machine_pipe | — |
+| 33 | `linalg.map.inverse_and_systems` | grid_stretch, chest_key, balance | — |
+| 34 | `prob.basic.probability_as_proportion` | urn_dice, tiles, sorter | `sorter` |
+| 35 | `prob.cond.conditional_and_independence` | urn_dice, sorter, tiles, network_routes | `sorter` |
+| 36 | `prob.rv.expectation_as_weighted_average` | ledger, balance, urn_dice | — |
+| 37 | `graph.basic.graph_and_paths` | network_routes | — |
+| 38 | `geom.area.rect_and_triangle` | tiles, construct | `construct` |
+| 39 | `geom.angle.turn_as_measure` | gears_sequence, construct, grid_stretch | `construct` |
+| 40 | `geom.sim.similarity_as_scale` | grid_stretch, construct, tiles | `construct` |
+| 41 | `geom.tri.pythagoras_as_tiles` | tiles, construct | `construct` |
+| 42 | `geom.cons.auxiliary_lines` | construct, tiles | `construct` |
+| 43 | `trig.circle.unit_circle_radians` | construct, gears_sequence, grid_stretch | `construct` |
+| 44 | `trig.fn.sine_as_height` | construct, machine_pipe, slope_walker | `construct` |
+| 45 | `found.cmp.bigger_smaller` | sorter, ledger | `sorter` |
+| 46 | `arith.add.combine_groups` | ledger | — |
+| 47 | `arith.mul.rows_and_columns` | tiles | — |
+| 51 | `geom.class.polygon_by_sides` | sorter, construct | `sorter`, `construct` |
+| 52 | `geom.trans.rotation_reflection` | construct, grid_stretch, gears_sequence | `construct` |
+| 53 | `disc.set.membership_rule` | sorter | `sorter` |
+| 54 | `disc.logic.and_or_not` | sorter | `sorter` |
