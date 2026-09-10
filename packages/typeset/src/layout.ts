@@ -118,10 +118,19 @@ function parenthesize(inner: Box, nodeId: NodeId, metrics: MetricsLookup): Box {
   return concat([open, inner, close], [0, 0, 0]);
 }
 
-/** Los números se muestran sin notación exponencial y sin ceros de cola. */
+/** El signo de menos tipográfico (U+2212), que es el que trae el atlas. */
+const MINUS = "\u2212";
+
+/**
+ * Los números se muestran sin notación exponencial y sin ceros de cola.
+ *
+ * El signo del negativo se emite como U+2212 y no como el guion de ASCII: son
+ * caracteres distintos, la fuente matemática solo trae el primero, y con el
+ * segundo el número aparecía con un hueco donde debía estar el signo.
+ */
 function formatNumber(value: number): string {
-  if (Number.isInteger(value)) return String(value);
-  return String(Number(value.toFixed(6)));
+  const plain = Number.isInteger(value) ? String(value) : String(Number(value.toFixed(6)));
+  return plain.startsWith("-") ? MINUS + plain.slice(1) : plain;
 }
 
 export function layoutEquation(eq: Equation, metrics: MetricsLookup): Box {

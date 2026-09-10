@@ -72,3 +72,12 @@ test("la caja conoce su alto, incluido el descendente", () => {
   assert.ok(box.bottom > 0, "la y baja de la línea de base");
   assert.ok(box.top < 0, "y algo sube por encima");
 });
+
+test("el negativo usa el menos de la fuente, no el guion de ASCII", () => {
+  resetIds();
+  const eq = equation(num(-5, "NEG"), op("*", [sym("x", "X"), num(2, "TWO")], "PROD"), "EQ");
+  const box = layoutEquation(eq, metrics);
+  const chars = box.glyphs.map((g) => g.char).join("");
+  assert.equal(chars, "−5=x×2");
+  assert.ok(!chars.includes("-"), "el guion de ASCII no está en el atlas y dejaría un hueco");
+});

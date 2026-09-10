@@ -1,0 +1,19 @@
+{
+  "roots": [
+    "alg.eq.one_step"
+  ],
+  "nodes": [
+    "alg.eq.one_step",
+    "arith.add.displacement",
+    "arith.div.undo_mul",
+    "arith.expr.precedence_tree",
+    "arith.int.negatives",
+    "arith.mul.scaling",
+    "arith.sub.undo_add",
+    "found.count.cardinality",
+    "found.count.number_line",
+    "prealg.eq.balance",
+    "prealg.inv.operation_as_key",
+    "prealg.var.unknown_as_box"
+  ]
+}

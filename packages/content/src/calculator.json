@@ -1,0 +1,192 @@
+{
+  "unlockRule": "any_ready",
+  "neverRevoked": true,
+  "rustWhen": "all_unlockers_decayed",
+  "tiers": [
+    {
+      "id": "t0",
+      "order": 0,
+      "pairs": [
+        {
+          "lock": "op_add",
+          "key": "op_sub"
+        },
+        {
+          "lock": "op_mul",
+          "key": "op_div"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "order": 3,
+      "pairs": []
+    }
+  ],
+  "ops": [
+    {
+      "id": "op_add",
+      "tier": "t0",
+      "unlockedBy": [
+        "arith.add.displacement",
+        "arith.place.base_ten_carry",
+        "arith.int.add_signed"
+      ],
+      "kind": "arithmetic",
+      "inputKind": "number",
+      "display": "a + b",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "+",
+      "hint": "Suma: avanza en la pista. Su llave es restar."
+    },
+    {
+      "id": "op_compare",
+      "tier": "t0",
+      "unlockedBy": [
+        "prealg.eq.balance",
+        "prealg.ineq.compare_expressions"
+      ],
+      "kind": "logical",
+      "inputKind": "expression",
+      "display": "=, <, >",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "= < >",
+      "hint": "Pone dos cantidades en la balanza y dice si pesan igual o cuál pesa más."
+    },
+    {
+      "id": "op_count",
+      "tier": "t0",
+      "unlockedBy": [
+        "found.count.cardinality",
+        "found.count.number_line"
+      ],
+      "kind": "arithmetic",
+      "inputKind": "number",
+      "display": "1, 2, 3, \\ldots",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "contar",
+      "hint": "Cuenta cuántas cosas hay y las pone en la pista de números."
+    },
+    {
+      "id": "op_div",
+      "tier": "t0",
+      "unlockedBy": [
+        "arith.div.undo_mul"
+      ],
+      "kind": "arithmetic",
+      "inputKind": "number",
+      "display": "a \\div b",
+      "localeDependent": true,
+      "sandbox": true,
+      "label": "÷",
+      "hint": "Divide: reparte en partes iguales. Es la llave de multiplicar."
+    },
+    {
+      "id": "op_inverse_op",
+      "tier": "t0",
+      "unlockedBy": [
+        "prealg.inv.operation_as_key"
+      ],
+      "kind": "structural",
+      "inputKind": "expression",
+      "display": "\\circlearrowleft",
+      "localeDependent": false,
+      "sandbox": false,
+      "label": "llave",
+      "hint": "Muestra la llave de la última operación: la que la deshace y devuelve lo que había antes."
+    },
+    {
+      "id": "op_mul",
+      "tier": "t0",
+      "unlockedBy": [
+        "arith.mul.scaling",
+        "arith.mul.rows_and_columns",
+        "arith.mul.partial_products",
+        "arith.int.mul_signed",
+        "prealg.int.sign_rules"
+      ],
+      "kind": "arithmetic",
+      "inputKind": "number",
+      "display": "a \\times b",
+      "localeDependent": true,
+      "sandbox": true,
+      "label": "×",
+      "hint": "Multiplica: estira una cantidad tantas veces como diga el número. Su llave es dividir."
+    },
+    {
+      "id": "op_neg",
+      "tier": "t0",
+      "unlockedBy": [
+        "arith.int.negatives"
+      ],
+      "kind": "arithmetic",
+      "inputKind": "number",
+      "display": "-a",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "−a",
+      "hint": "Da vuelta el número hacia el otro lado del cero. Aplicarlo dos veces devuelve el original."
+    },
+    {
+      "id": "op_paren",
+      "tier": "t0",
+      "unlockedBy": [
+        "arith.expr.precedence_tree"
+      ],
+      "kind": "structural",
+      "inputKind": "expression",
+      "display": "(\\,\\cdot\\,)",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "( )",
+      "hint": "Agrupa una parte de la cuenta para que se haga primero."
+    },
+    {
+      "id": "op_solve_linear",
+      "tier": "t3",
+      "unlockedBy": [
+        "alg.eq.one_step",
+        "alg.eq.multi_step"
+      ],
+      "kind": "algebraic",
+      "inputKind": "expression",
+      "display": "x = \\ldots",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "resolver",
+      "hint": "Aplica llaves a los dos lados de la balanza hasta dejar la caja sola."
+    },
+    {
+      "id": "op_sub",
+      "tier": "t0",
+      "unlockedBy": [
+        "arith.sub.undo_add",
+        "arith.place.base_ten_carry"
+      ],
+      "kind": "arithmetic",
+      "inputKind": "number",
+      "display": "a - b",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "−",
+      "hint": "Resta: vuelve atrás en la pista. Es la llave de sumar."
+    },
+    {
+      "id": "op_variable",
+      "tier": "t3",
+      "unlockedBy": [
+        "prealg.var.unknown_as_box"
+      ],
+      "kind": "structural",
+      "inputKind": "expression",
+      "display": "x",
+      "localeDependent": false,
+      "sandbox": true,
+      "label": "x",
+      "hint": "Pone una caja con un valor desconocido dentro de la cuenta."
+    }
+  ]
+}

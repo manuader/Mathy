@@ -22,6 +22,9 @@ import {
 } from "@mathy/math-core";
 import { makeRandom, type Random } from "./random.ts";
 
+/** El nodo del grafo que este minijuego enseña. */
+export const NODE = "alg.eq.one_step";
+
 export type Layer = "concrete" | "visual" | "symbolic" | "formal" | "abstract";
 export type Evidence = "recognize" | "explain" | "manipulate" | "apply" | "generalize" | "transfer";
 
@@ -162,11 +165,19 @@ export function generateOneStep(level: Level, seed: number): Problem {
   const lockOp = rnd.pick(p.ops);
   const [lo, hi] = p.range;
 
-  // Para dividir, el valor de la cerradura tiene que dar una solución entera.
-  const lockValue = lockOp === "/" ? rnd.int(2, Math.min(9, hi)) : rnd.int(lo, hi);
-  let solution = rnd.int(lo, hi);
+  let lockValue = lockOp === "/" ? rnd.int(2, Math.min(9, hi)) : rnd.int(lo, hi);
+  // Con la cerradura de dividir, la solución es un múltiplo del divisor: el
+  // otro plato tiene que poder contarse en pesas enteras.
+  let solution =
+    lockOp === "/" ? rnd.int(Math.max(1, lo), Math.min(9, hi)) * lockValue : rnd.int(lo, hi);
+  // Mientras los negativos no estén habilitados, restar no puede dejar al otro
+  // plato vacío ni en deuda: las pesas negativas rompen la balanza física.
+  if (lockOp === "-" && !p.negatives) {
+    const bajo = Math.max(1, lo);
+    lockValue = rnd.int(bajo, Math.max(bajo, hi - 1));
+    solution = lockValue + rnd.int(bajo, Math.max(bajo, hi - lockValue));
+  }
   if (p.negatives && rnd.bool()) solution = -solution;
-  if (lockOp === "/") solution = solution * 1; // la incógnita se divide: x/a = b
 
   const x = sym(UNKNOWN, freshId("x"));
   const lockNum = num(lockValue, freshId("lock"));

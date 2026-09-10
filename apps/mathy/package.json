@@ -4,10 +4,15 @@
   "main": "index",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.15",
+    "@mathy/content": "*",
     "@mathy/glyphs": "*",
     "@mathy/math-core": "*",
+    "@mathy/mechanics": "*",
+    "@mathy/progress": "*",
     "@mathy/typeset": "*",
     "@mathy/viz-core": "*",
+    "@mathy/viz-skia": "*",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@shopify/react-native-skia": "2.6.2",
     "expo": "~57.0.21",
     "expo-status-bar": "~57.0.1",
@@ -17,9 +22,7 @@
     "react-native-gesture-handler": "~2.32.0",
     "react-native-reanimated": "4.5.1",
     "react-native-web": "^0.21.2",
-    "react-native-worklets": "0.10.1",
-    "@mathy/viz-skia": "*",
-    "@mathy/mechanics": "*"
+    "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

@@ -1,0 +1,402 @@
+{
+  "topics": [
+    {
+      "id": "topic.equations.linear",
+      "order": 1,
+      "parent": "topic.equations",
+      "name": "Ecuaciones lineales"
+    },
+    {
+      "id": "topic.numbers",
+      "order": 1,
+      "parent": null,
+      "name": "Números"
+    },
+    {
+      "id": "topic.numbers.operations",
+      "order": 1,
+      "parent": "topic.numbers",
+      "name": "Las cuatro operaciones"
+    },
+    {
+      "id": "topic.equations",
+      "order": 2,
+      "parent": null,
+      "name": "Ecuaciones"
+    },
+    {
+      "id": "topic.numbers.integers",
+      "order": 6,
+      "parent": "topic.numbers",
+      "name": "Números enteros"
+    },
+    {
+      "id": "topic.numbers.order_of_operations",
+      "order": 9,
+      "parent": "topic.numbers",
+      "name": "Orden de las operaciones"
+    }
+  ],
+  "entries": [
+    {
+      "id": "cs.alg.check_by_substituting",
+      "topic": "topic.equations.linear",
+      "kind": "strategy",
+      "addedBy": [
+        "alg.eq.one_step"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "text",
+      "asset": "",
+      "latex": "",
+      "related": [],
+      "playAgain": "alg.eq.one_step",
+      "literacyMin": "icons",
+      "localeDependent": false,
+      "title": "Verificar sustituyendo la solución",
+      "body": "Después de resolver una ecuación, conviene reemplazar el valor encontrado en la ecuación original para confirmar que los dos lados quedan iguales."
+    },
+    {
+      "id": "cs.alg.one_key_both_sides",
+      "topic": "topic.equations.linear",
+      "kind": "rule",
+      "addedBy": [
+        "alg.eq.one_step"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "text",
+      "asset": "",
+      "latex": "",
+      "related": [],
+      "playAgain": "alg.eq.one_step",
+      "literacyMin": "icons",
+      "localeDependent": false,
+      "title": "Una sola llave para los dos lados",
+      "body": "En una ecuación de un paso, aplicar la operación inversa a los dos lados por igual despeja la incógnita."
+    },
+    {
+      "id": "cs.arith.add_as_step_forward",
+      "topic": "topic.numbers.operations",
+      "kind": "definition",
+      "addedBy": [
+        "arith.add.displacement"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.add_as_step_forward",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.add.displacement",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Sumar es avanzar en la recta",
+      "body": "Sumar a + b es pararse en a y dar b pasos hacia adelante en la recta numérica."
+    },
+    {
+      "id": "cs.arith.add_order_irrelevant",
+      "topic": "topic.numbers.operations",
+      "kind": "rule",
+      "addedBy": [
+        "arith.add.displacement"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.add_order_irrelevant",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.add.displacement",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "El orden de la suma no importa",
+      "body": "Sumar a más b da lo mismo que sumar b más a. Es la propiedad conmutativa."
+    },
+    {
+      "id": "cs.arith.div_by_zero_no_key",
+      "topic": "topic.numbers.operations",
+      "kind": "rule",
+      "addedBy": [
+        "arith.div.undo_mul"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.div_by_zero_no_key",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.div.undo_mul",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Dividir por cero no tiene llave",
+      "body": "No existe ningún número que multiplicado por cero dé un resultado distinto de cero, así que la división por cero queda sin respuesta."
+    },
+    {
+      "id": "cs.arith.div_undoes_mul",
+      "topic": "topic.numbers.operations",
+      "kind": "definition",
+      "addedBy": [
+        "arith.div.undo_mul"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.div_undoes_mul",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.div.undo_mul",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Dividir deshace la multiplicación",
+      "body": "Dividir es la llave que devuelve el factor que faltaba: si a × b = c, entonces c ÷ b = a."
+    },
+    {
+      "id": "cs.arith.expression_is_a_tree",
+      "topic": "topic.numbers.order_of_operations",
+      "kind": "definition",
+      "addedBy": [
+        "arith.expr.precedence_tree"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.expression_is_a_tree",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.expr.precedence_tree",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Una expresión es un árbol de cofres",
+      "body": "Una cuenta con paréntesis anidados es como cofres uno dentro de otro: se abre siempre el más interior primero."
+    },
+    {
+      "id": "cs.arith.inner_chest_first",
+      "topic": "topic.numbers.order_of_operations",
+      "kind": "rule",
+      "addedBy": [
+        "arith.expr.precedence_tree"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.inner_chest_first",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.expr.precedence_tree",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "El cofre más interno se abre primero",
+      "body": "En una expresión con paréntesis anidados, siempre se resuelve primero lo que está más adentro."
+    },
+    {
+      "id": "cs.arith.mul_as_scaling",
+      "topic": "topic.numbers.operations",
+      "kind": "definition",
+      "addedBy": [
+        "arith.mul.scaling"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.mul_as_scaling",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.mul.scaling",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Multiplicar es escalar",
+      "body": "Multiplicar por b estira o achica una cantidad b veces; es una transformación, no solo una cuenta repetida."
+    },
+    {
+      "id": "cs.arith.mul_by_one_and_zero",
+      "topic": "topic.numbers.operations",
+      "kind": "rule",
+      "addedBy": [
+        "arith.mul.scaling"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.mul_by_one_and_zero",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.mul.scaling",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Multiplicar por uno o por cero",
+      "body": "Multiplicar por uno deja el número igual; multiplicar por cero siempre da cero."
+    },
+    {
+      "id": "cs.arith.negative_as_opposite_direction",
+      "topic": "topic.numbers.integers",
+      "kind": "definition",
+      "addedBy": [
+        "arith.int.negatives"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.negative_as_opposite_direction",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.int.negatives",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "El negativo es la dirección opuesta",
+      "body": "Un número negativo representa la misma distancia que su positivo pero para el otro lado del cero."
+    },
+    {
+      "id": "cs.arith.sub_as_distance_between",
+      "topic": "topic.numbers.operations",
+      "kind": "definition",
+      "addedBy": [
+        "arith.sub.undo_add"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.sub_as_distance_between",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.sub.undo_add",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Restar es la distancia entre dos puntos",
+      "body": "a menos b es cuánto hay que caminar desde b hasta a en la recta numérica."
+    },
+    {
+      "id": "cs.arith.sub_past_zero",
+      "topic": "topic.numbers.integers",
+      "kind": "definition",
+      "addedBy": [
+        "arith.int.negatives"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.sub_past_zero",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.int.negatives",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Restar puede cruzar el cero",
+      "body": "Si se resta más de lo que hay, el resultado sigue caminando y cruza al lado negativo del cero."
+    },
+    {
+      "id": "cs.arith.sub_undoes_add",
+      "topic": "topic.numbers.operations",
+      "kind": "definition",
+      "addedBy": [
+        "arith.sub.undo_add"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.arith.sub_undoes_add",
+      "latex": "",
+      "related": [],
+      "playAgain": "arith.sub.undo_add",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Restar deshace la suma",
+      "body": "Restar b es la llave que deshace haber sumado b: vuelve el paso atrás."
+    },
+    {
+      "id": "cs.prealg.coefficient_counts_boxes",
+      "topic": "topic.equations.linear",
+      "kind": "definition",
+      "addedBy": [
+        "prealg.var.unknown_as_box"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.prealg.coefficient_counts_boxes",
+      "latex": "",
+      "related": [],
+      "playAgain": "prealg.var.unknown_as_box",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "El coeficiente cuenta cajas iguales",
+      "body": "En 3x, el número 3 dice cuántas cajas x hay juntas; no es una multiplicación pendiente, es un conteo."
+    },
+    {
+      "id": "cs.prealg.equals_means_level_pans",
+      "topic": "topic.equations.linear",
+      "kind": "definition",
+      "addedBy": [
+        "prealg.eq.balance"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.prealg.equals_means_level_pans",
+      "latex": "",
+      "related": [],
+      "playAgain": "prealg.eq.balance",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "El igual es la balanza nivelada",
+      "body": "El signo igual dice que los dos platos de la balanza pesan lo mismo, no que 'acá viene el resultado'."
+    },
+    {
+      "id": "cs.prealg.every_operation_has_a_key",
+      "topic": "topic.equations.linear",
+      "kind": "definition",
+      "addedBy": [
+        "prealg.inv.operation_as_key"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.prealg.every_operation_has_a_key",
+      "latex": "",
+      "related": [],
+      "playAgain": "prealg.inv.operation_as_key",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "Toda operación tiene una llave",
+      "body": "Cada transformación tiene una inversa que la deshace: sumar y restar son un par de llaves, multiplicar y dividir son otro."
+    },
+    {
+      "id": "cs.prealg.inverse_pairs_table",
+      "topic": "topic.equations.linear",
+      "kind": "definition",
+      "addedBy": [
+        "prealg.inv.operation_as_key"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.prealg.inverse_pairs_table",
+      "latex": "",
+      "related": [],
+      "playAgain": "prealg.inv.operation_as_key",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "La tabla de llaves inversas",
+      "body": "Cada operación tiene su par: sumar con restar, multiplicar con dividir, elevar al cuadrado con la raíz cuadrada."
+    },
+    {
+      "id": "cs.prealg.letter_names_the_box",
+      "topic": "topic.equations.linear",
+      "kind": "definition",
+      "addedBy": [
+        "prealg.var.unknown_as_box"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.prealg.letter_names_the_box",
+      "latex": "",
+      "related": [],
+      "playAgain": "prealg.var.unknown_as_box",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "La letra le pone nombre a la caja",
+      "body": "Una letra como x es el nombre de una cantidad desconocida, la misma caja cerrada de antes, ahora con etiqueta."
+    },
+    {
+      "id": "cs.prealg.same_action_both_sides",
+      "topic": "topic.equations.linear",
+      "kind": "rule",
+      "addedBy": [
+        "prealg.eq.balance"
+      ],
+      "addedAtLayer": "symbolic",
+      "displayForm": "image",
+      "asset": "img.prealg.same_action_both_sides",
+      "latex": "",
+      "related": [],
+      "playAgain": "prealg.eq.balance",
+      "literacyMin": "none",
+      "localeDependent": false,
+      "title": "La misma acción en los dos platos",
+      "body": "Sumar, restar, multiplicar o dividir por el mismo número en ambos platos de la balanza no rompe el equilibrio."
+    }
+  ]
+}
