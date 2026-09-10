@@ -257,7 +257,12 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
     arranca una selección del navegador que se queda con el puntero.
 19. **El stripping de tipos de Node no soporta propiedades de parámetro**
     (`constructor(private readonly x: T)`). Hay que declarar el campo aparte.
-20. **Varios agentes verificando a la vez se pisan el `localStorage`**, porque es por
+20. **Dos agentes verificando a la vez es el techo.** El panel del navegador es uno solo
+    y no se puede abrir otra pestaña cuando el cupo está lleno: con tres o más, cada uno
+    le renavega la pestaña al otro en mitad de una secuencia. Un agente reportó **seis
+    renavegaciones** y no pudo volver a jugar los nodos que comparten escena con el suyo,
+    que es justamente la comprobación que evita romperlos. **La contención no se paga en
+    tiempo, se paga en verificación.** Además se pisan el `localStorage`, que es por
     origen. `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
     otro almacén: sirve para sembrar progreso sin que otro te lo borre.
 21. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
