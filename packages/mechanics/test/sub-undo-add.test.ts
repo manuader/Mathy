@@ -148,9 +148,7 @@ test("sin permiso no hay llave sin dientes ni vuelta entera", () => {
     for (const seed of seeds(60)) {
       const p = generateUndo(level, seed);
       if (!level.params.allowZero) assert.ok(p.step > 0, `nivel ${level.n} semilla ${seed}`);
-      if (!level.params.allowFullReturn && level.mode !== "judge") {
-        assert.ok(p.home > 0, `nivel ${level.n} semilla ${seed}: el cofre quedó en la orilla`);
-      }
+      assert.ok(p.home > 0, `nivel ${level.n} semilla ${seed}: el cofre quedó en la orilla`);
     }
   }
 });
@@ -298,7 +296,10 @@ test("el regreso honesto pisa el cofre y el que miente se pasa", () => {
     const miente = p.returns[p.liar] as readonly number[];
     assert.equal(honesto[0], p.landing);
     assert.equal(honesto[honesto.length - 1], p.home, `semilla ${seed}: el honesto no pisó el cofre`);
-    assert.equal(miente[miente.length - 1], Math.max(0, p.home - 1), `semilla ${seed}`);
+    assert.equal(miente[miente.length - 1], p.home - 1, `semilla ${seed}`);
+    // Con el cofre en la orilla las dos animaciones terminarían en el mismo
+    // lugar y el ítem no diría nada: por eso el cofre nunca está en el `0`.
+    assert.notDeepEqual([...honesto], [...miente], `semilla ${seed}`);
     for (const pos of [...honesto, ...miente]) assert.ok(pos >= 0, "alguien se cayó de la pista");
   }
 });

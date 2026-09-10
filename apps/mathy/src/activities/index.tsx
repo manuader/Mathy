@@ -11,6 +11,9 @@ import {
   cardinalityLevelByNumber,
   levelByNumber,
   pathLevelByNumber,
+  tripLevelByNumber,
+  mulLevelByNumber,
+  undoLevelByNumber,
   type LevelBase,
   type NodeSpec,
 } from "@mathy/mechanics";
@@ -18,6 +21,9 @@ import type { Event } from "@mathy/progress";
 import { OneStepGame } from "../OneStepGame.tsx";
 import { NumberLineGame } from "./NumberLineGame.tsx";
 import { CardinalityGame } from "./CardinalityGame.tsx";
+import { AddDisplacementGame } from "./AddDisplacementGame.tsx";
+import { MulScalingGame } from "./MulScalingGame.tsx";
+import { SubUndoAddGame } from "./SubUndoAddGame.tsx";
 
 export interface ActivityProps {
   readonly node: NodeSpec;
@@ -48,10 +54,31 @@ const Cardinality = ({ level, ...rest }: ActivityProps) => {
   return <CardinalityGame {...rest} level={full} />;
 };
 
+const AddDisplacement = ({ level, ...rest }: ActivityProps) => {
+  const full = tripLevelByNumber(level.n);
+  if (!full) return null;
+  return <AddDisplacementGame {...rest} level={full} />;
+};
+
+const MulScaling = ({ level, ...rest }: ActivityProps) => {
+  const full = mulLevelByNumber(level.n);
+  if (!full) return null;
+  return <MulScalingGame {...rest} level={full} />;
+};
+
+const SubUndoAdd = ({ level, ...rest }: ActivityProps) => {
+  const full = undoLevelByNumber(level.n);
+  if (!full) return null;
+  return <SubUndoAddGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
   "found.count.number_line": NumberLine,
+  "arith.add.displacement": AddDisplacement,
+  "arith.mul.scaling": MulScaling,
+  "arith.sub.undo_add": SubUndoAdd,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>

@@ -51,6 +51,40 @@ const es: Record<string, string> = {
   "level.moreFruitMoreMix": "Más frutas, más mezcla",
   "level.pebblesShellsMarks": "Piedras, conchas, marcas",
 
+  "node.arith.add.displacement.name": "El viaje de dos tramos",
+  "node.arith.add.displacement.tagline": "Sumar es avanzar en la pista",
+
+  "level.oneJump": "Un tirón",
+  "level.guessBeforeTurning": "Adivinar antes de girar",
+  "level.twoLegsAndTheLedger": "Dos tramos y el libro",
+  "level.theArrow": "La flecha",
+  "level.theRow": "El renglón",
+  "level.bigNumbersAndZero": "Números grandes y el cero",
+  "level.theMissingLeg": "El tramo que falta",
+
+  "node.arith.mul.scaling.name": "La banda y el piso",
+  "node.arith.mul.scaling.tagline": "Multiplicar es estirar",
+
+  "level.threeCellsPerTurn": "Tres casillas por vuelta",
+  "level.rowsThatMerge": "Filas que se funden",
+  "level.turnTheFloor": "Dar vuelta el piso",
+  "level.theBand": "La banda",
+  "level.keysAndCross": "Llaves y cruz",
+  "level.ghostFloor": "Piso fantasma",
+  "level.oneZeroAndFractions": "Uno, cero y fracciones",
+  "level.bandsWithoutNumbers": "Bandas sin números",
+
+  "node.arith.sub.undo_add.name": "La llave de vuelta",
+  "node.arith.sub.undo_add.tagline": "Restar es deshacer un avance",
+
+  "level.backInOneTug": "Volver de un tirón",
+  "level.chooseWithoutTrying": "Elegir sin probar",
+  "level.theReturnThatOvershoots": "La vuelta que se pasa",
+  "level.twoWalkers": "Dos caminantes",
+  "level.minusRow": "El renglón del menos",
+  "level.bigNumbersZeroAndBack": "Números grandes, cero y vuelta completa",
+  "level.locksThatArentSteps": "Cerraduras que no son pasos",
+
   "layer.concrete": "manipulación",
   "layer.visual": "representación",
   "layer.symbolic": "notación",

@@ -336,7 +336,7 @@ export function generateMulScaling(level: MulLevel, seed: number, round = 0): Mu
   if (ask === "cover") return floorProblem(p, rnd, ask, false);
   if (ask === "rotate") return floorProblem(p, rnd, ask, true);
   if (ask === "total") return floorProblem(p, rnd, ask, false);
-  return bandProblem(p, rnd, ask);
+  return bandProblem(p, rnd, ask, round);
 }
 
 /** La manivela con el par de engranajes: cada vuelta mueve la ficha `rows` casillas. */
@@ -429,8 +429,8 @@ function makeTotals(rows: number, cols: number, rnd: Random): MulOption[] {
 }
 
 /** La banda: el factor, su largo en reposo y la marca donde tiene que caer. */
-function bandProblem(p: MulParams, rnd: Random, ask: MulAsk): MulProblem {
-  const factor = pickFactor(p, ask, rnd);
+function bandProblem(p: MulParams, rnd: Random, ask: MulAsk, round: number): MulProblem {
+  const factor = pickFactor(p, ask, rnd, round);
   const rest = pickRest(p, ask, factor, rnd);
   const target = Math.round(rest * factorValue(factor));
   const flipped = ask === "flip";
@@ -462,14 +462,17 @@ function bandProblem(p: MulParams, rnd: Random, ask: MulAsk): MulProblem {
  * fracciones simples solo aparecen cuando el nivel los declara, que es la
  * cuarta dificultad del nodo: aceptar factores que no agrandan.
  */
-function pickFactor(p: MulParams, ask: MulAsk, rnd: Random): MulFactor {
+function pickFactor(p: MulParams, ask: MulAsk, rnd: Random, round: number): MulFactor {
   // El estirado arbitrario del último nivel no lleva numerales, así que un
   // factor grande no se puede contar: dos o tres alcanzan y se ven.
   if (ask === "match" || ask === "flip") return { num: rnd.int(2, 3), den: 1 };
   if (ask === "predict" && p.special.length > 0) {
-    // Acá el contenido son el 1, el 0 y las fracciones; los enteros quedan como
-    // control, para que el jugador no pueda contestar siempre lo mismo.
-    return rnd.pick([...p.special, { num: 2, den: 1 }, { num: 3, den: 1 }]);
+    // Acá los factores no se sortean: el nivel entero es el 1, el 0 y las
+    // fracciones, y sorteados cuatro rondas pueden no mostrar ninguno. La ronda
+    // los recorre en orden y el entero queda de control, para que el jugador no
+    // pueda contestar siempre lo mismo.
+    const pool = [...p.special, { num: rnd.int(2, 3), den: 1 }];
+    return pool[round % pool.length] as MulFactor;
   }
   const pool: MulFactor[] = [];
   for (let n = p.a[0]; n <= p.a[1]; n++) pool.push({ num: n, den: 1 });

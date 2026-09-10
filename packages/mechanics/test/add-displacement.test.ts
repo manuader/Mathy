@@ -188,13 +188,30 @@ test("el nivel que anticipa no trae cajón: se contesta tocando una piedra", () 
   for (const s of seeds(30)) assert.deepEqual(generateTrip(nivel(2), s).tiles, []);
 });
 
-test("el cajón nunca repite un numeral ni pasa de sus ranuras", () => {
+test("el cajón trae una ficha por tramo y ningún señuelo repetido", () => {
   for (const l of TRIP_LEVELS) {
     for (const s of seeds(60)) {
       const t = generateTrip(l, s);
-      assert.equal(new Set(t.tiles.map((c) => c.value)).size, t.tiles.length, `nivel ${l.n}`);
       assert.ok(t.tiles.length <= CHIP_SLOTS, `nivel ${l.n}: ${t.tiles.length} fichas`);
       for (const c of t.tiles) assert.ok(c.value >= 0, "no hay fichas negativas hasta el nodo 7");
+      // Dos tramos de dos son dos fichas de dos, porque el tope se pone una vez
+      // por tirón; los señuelos, en cambio, no pueden repetir ningún numeral.
+      const señuelos = t.tiles.filter((c) => !c.correct).map((c) => c.value);
+      assert.equal(new Set(señuelos).size, señuelos.length, `nivel ${l.n}: señuelo repetido`);
+      for (const v of señuelos) {
+        assert.ok(!t.tiles.some((c) => c.correct && c.value === v), "un señuelo no puede servir");
+      }
+      if (l.mode === "walk" || l.mode === "chain") {
+        const total = legsTotal(t.steps);
+        const esperadas = [...t.steps];
+        if (l.pickTotal && !esperadas.includes(total)) esperadas.push(total);
+        const buenas = t.tiles.filter((c) => c.correct).map((c) => c.value);
+        assert.deepEqual(
+          [...buenas].sort((a, b) => a - b),
+          esperadas.sort((a, b) => a - b),
+          `nivel ${l.n} semilla ${s}`,
+        );
+      }
     }
   }
 });

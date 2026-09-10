@@ -224,6 +224,56 @@ function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: n
 const numeral = (target: SkPath, value: number, cx: number, cy: number, size: number): void =>
   addGlyphs(target, String(value), cx, cy, size);
 
+/** El tamaño del renglón. Es el único número grande de la escena. */
+const ROW_SIZE = 40;
+
+interface RowMetrics {
+  readonly chars: readonly { readonly c: string; readonly cx: number }[];
+  /** Desde qué carácter y cuántos quedan tapados por la casilla vacía. */
+  readonly from: number;
+  readonly count: number;
+  readonly slot: Spot;
+  readonly slotW: number;
+  readonly slotH: number;
+}
+
+/**
+ * Dónde cae cada glifo del renglón y dónde queda el hueco. La cuenta es una
+ * sola, y la comparten el dibujo y el gesto: si el hit test usara otra, la
+ * ficha entraría donde no se ve el hueco.
+ */
+function rowMetrics(problem: UndoProblem, cx: number, cy: number): RowMetrics {
+  const texto = `${problem.row.minuend}−${problem.row.subtrahend}=${problem.row.result}`;
+  const chars = [...texto];
+  // Los espacios de TeX: `\medmuskip` alrededor del operador binario y
+  // `\thickmuskip` alrededor de la relación, como en la composición del nodo 13.
+  const aire = (c: string): number => (c === "−" ? 0.222 : c === "=" ? 0.278 : 0);
+  const ancho = (c: string): number => (getGlyph(c)?.advance ?? 0.5) + 2 * aire(c);
+  let advance = 0;
+  for (const c of chars) advance += ancho(c);
+  let cursor = cx - (advance * ROW_SIZE) / 2;
+  const puestos: { c: string; cx: number }[] = [];
+  for (const c of chars) {
+    const w = ancho(c) * ROW_SIZE;
+    puestos.push({ c, cx: cursor + w / 2 });
+    cursor += w;
+  }
+  const tapado = problem.row.hidden === "minuend" ? problem.row.minuend : problem.row.result;
+  const count = String(tapado).length;
+  const from = problem.row.hidden === "minuend" ? 0 : chars.length - count;
+  const primero = puestos[from] as { cx: number };
+  const ultimo = puestos[from + count - 1] as { cx: number };
+  const w = ancho(chars[from] as string) * ROW_SIZE;
+  return {
+    chars: puestos,
+    from,
+    count,
+    slot: { x: (primero.cx + ultimo.cx) / 2, y: cy },
+    slotW: ultimo.cx - primero.cx + w + 6,
+    slotH: ROW_SIZE * 1.2,
+  };
+}
+
 // --- Piezas ------------------------------------------------------------------
 
 /** Una flecha con cola y punta, del nodo 3. Acá la punta también mira a la izquierda. */
@@ -424,6 +474,11 @@ function buildGeom(
   const mark = level.skin !== "stone";
   const marcados = problem.marks ?? [problem.home, problem.landing];
 
+  // Un índice cualquiera cae siempre sobre una piedra dibujada: desde el nivel
+  // 6 los numerales se pasan de la pista visible, y eso no puede romper el trazo.
+  const xs = (i: number): number =>
+    (row0.stones[Math.max(0, Math.min(problem.track - 1, i))] as Spot).x;
+
   const line = Skia.Path.Make();
   const stones = Skia.Path.Make();
   const numerals = Skia.Path.Make();
@@ -447,17 +502,19 @@ function buildGeom(
     }
   }
 
-  const chest = buildChest(
-    (row0.stones[problem.home] as Spot).x,
-    row0.y - 12,
-    Math.min(row0.step * 0.9, 46),
-    problem.step,
-  );
+  const chest = buildChest(xs(problem.home), row0.y - 12, Math.min(row0.step * 0.9, 46), problem.step);
+  // En `explain` las dos filas tienen que ser idénticas salvo por el recorrido:
+  // si el cofre estuviera en una sola, la comparación diría otra cosa.
+  for (const r of l.rows.slice(1)) {
+    const otro = buildChest(xs(problem.home), r.y - 12, Math.min(r.step * 0.9, 46), problem.step);
+    chest.body.addPath(otro.body);
+    chest.lid.addPath(otro.lid);
+    chest.lock.addPath(otro.lock);
+  }
 
   // Las dos flechas enfrentadas: la de ida arriba con la punta a la derecha, la
   // de vuelta abajo con la punta a la izquierda. Se redibujan cuando el
   // caminante se detiene, que es cuando el tramo de vuelta cambia de largo.
-  const xs = (i: number): number => (row0.stones[Math.max(0, Math.min(problem.track - 1, i))] as Spot).x;
   const out = Skia.Path.Make();
   const back = Skia.Path.Make();
   const leftover = Skia.Path.Make();
@@ -477,7 +534,9 @@ function buildGeom(
   const [ma, mb] = marcados as [number, number];
   const largo = xs(mb) - xs(ma);
   ruler.addRRect(Skia.RRectXY(Skia.XYWHRect(0, -9, Math.max(largo, 1), 18), 4, 4));
-  numeral(rulerCount, Math.abs(mb - ma), (xs(ma) + xs(mb)) / 2, row0.y + 52, 22);
+  // La regla no dice el número: lo dice la ficha que el jugador trae. Si lo
+  // dijera ella, medir sería mirar.
+  if (placed !== null) numeral(rulerCount, placed, (xs(ma) + xs(mb)) / 2, row0.y + 52, 24);
 
   // El renglón. La casilla tapada se dibuja como hueco: pide la ficha sin decirlo.
   const rowPath = Skia.Path.Make();
@@ -727,15 +786,29 @@ export function ChestScene({
     conMano ? hint.value * 0.5 * Math.sin(demo.value * Math.PI) : 0,
   );
 
-  const conPista = level.skin !== "hidden";
-  const pistaO = useDerivedValue(() => (level.skin === "onDemand" ? line.value : 1));
+  // La pista se retira en el último nivel, y desde el 6 los numerales se pasan
+  // de lo que hay dibujado: que la recta no alcance es lo que ese nivel enseña.
+  const cabe = problem.landing < problem.track;
+  // La pista se apaga, no se desmonta: el árbol tiene que quedar igual de una
+  // ronda a la otra, que es lo que pide el modo retained.
+  const oculta = level.skin === "hidden" || !cabe;
+  const aDemanda = level.skin === "onDemand";
+  const pistaO = useDerivedValue(
+    () => (oculta ? 0 : aDemanda ? line.value : 1),
+    [oculta, aDemanda],
+  );
   const conManivela = level.mode === "turn" || level.mode === "pick";
   const conRenglon = level.mode === "write";
+  // El cofre solo aparece donde hay un viaje que deshacer. Desde los dos
+  // caminantes no hay ida previa y por eso tampoco hay cofre.
+  const conCofre = conManivela || level.mode === "judge";
+  const segundo = problem.marks
+    ? (row0.stones[Math.min(problem.marks[1], problem.track - 1)] as Spot)
+    : null;
 
   return (
     <Group opacity={appear}>
-      {conPista ? (
-        <Group opacity={pistaO}>
+      <Group opacity={pistaO}>
           <Path path={geom.line} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
           <Path
             path={geom.stones}
@@ -744,44 +817,71 @@ export function ChestScene({
             strokeWidth={2}
           />
           <Path path={geom.numerals} color={theme.color.inkDim} />
-        </Group>
-      ) : null}
 
-      {/* La regla plegable: el tramo resaltado entre las dos marcas. */}
-      {level.ruler ? (
-        <>
-          <Group transform={rulerT}>
-            <Path path={geom.ruler} color={theme.color.accent} opacity={0.32} />
-          </Group>
-          <Group opacity={rulerCountO}>
-            <Path path={geom.rulerCount} color={theme.color.accent} />
-          </Group>
-        </>
-      ) : null}
+          {/* La regla plegable: el tramo resaltado entre las dos marcas. */}
+          {level.ruler ? (
+            <>
+              <Group transform={rulerT}>
+                <Path path={geom.ruler} color={theme.color.accent} opacity={0.32} />
+              </Group>
+              <Group opacity={rulerCountO}>
+                <Path path={geom.rulerCount} color={theme.color.accent} />
+              </Group>
+            </>
+          ) : null}
 
-      {/* Las dos flechas enfrentadas. Cuando coinciden se apagan juntas. */}
-      <Group opacity={outArrow}>
-        <Path path={geom.out} color={theme.color.inkDim} style="stroke" strokeWidth={2.5} strokeCap="round" />
-      </Group>
-      <Group opacity={leftover}>
-        <Path path={geom.leftover} color={theme.color.warn} style="stroke" strokeWidth={4} strokeCap="round" />
-      </Group>
-      <Group opacity={backArrow}>
-        <Path path={geom.back} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
-      </Group>
-
-      {/* El cofre sobre la piedra de partida. Se abre solo, sin cartel. */}
-      {level.mode !== "unlock" && level.skin !== "hidden" ? (
-        <Group opacity={pistaO}>
-          <Path path={geom.chest.body} color={theme.color.surfaceHigh} />
-          <Path path={geom.chest.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Group origin={geom.chest.origin} transform={lidT}>
-            <Path path={geom.chest.lid} color={theme.color.surfaceHigh} />
-            <Path path={geom.chest.lid} color={theme.color.accent} style="stroke" strokeWidth={2} />
+          {/* Las dos flechas enfrentadas. Cuando coinciden se apagan juntas. */}
+          <Group opacity={outArrow}>
+            <Path path={geom.out} color={theme.color.inkDim} style="stroke" strokeWidth={2.5} strokeCap="round" />
           </Group>
-          <Path path={geom.chest.lock} color={theme.color.warn} style="stroke" strokeWidth={2} />
-        </Group>
-      ) : null}
+          <Group opacity={leftover}>
+            <Path path={geom.leftover} color={theme.color.warn} style="stroke" strokeWidth={4} strokeCap="round" />
+          </Group>
+          <Group opacity={backArrow}>
+            <Path path={geom.back} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
+          </Group>
+
+          {/* El cofre sobre la piedra de partida. Se abre solo, sin cartel. */}
+          {conCofre ? (
+            <>
+              <Path path={geom.chest.body} color={theme.color.surfaceHigh} />
+              <Path path={geom.chest.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+              <Group origin={geom.chest.origin} transform={lidT}>
+                <Path path={geom.chest.lid} color={theme.color.surfaceHigh} />
+                <Path path={geom.chest.lid} color={theme.color.accent} style="stroke" strokeWidth={2} />
+              </Group>
+              <Path path={geom.chest.lock} color={theme.color.warn} style="stroke" strokeWidth={2} />
+            </>
+          ) : null}
+
+          {/* Los caminantes. En `explain` cada fila tiene el suyo. */}
+          {level.mode === "judge" ? (
+            layout.rows.map((r, i) => (
+              <JudgeWalker
+                key={i}
+                walk={(problem.returns[i] ?? []) as readonly number[]}
+                row={r}
+                clock={clock}
+                walker={walker}
+                elegida={picked === i}
+                miente={i === problem.liar}
+              />
+            ))
+          ) : (
+            <Group transform={walkerT}>
+              <Path path={walker.body} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
+              <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
+            </Group>
+          )}
+
+          {/* El segundo caminante: el que convierte la vuelta en una distancia. */}
+          {level.ruler && segundo ? (
+            <Group transform={[{ translateX: segundo.x }, { translateY: oy }]}>
+              <Path path={walker.body} color={theme.color.ok} style="stroke" strokeWidth={2.5} strokeCap="round" />
+              <Path path={walker.head} color={theme.color.ok} style="stroke" strokeWidth={2} />
+            </Group>
+          ) : null}
+      </Group>
 
       {/* La cerradura que no es un tramo. */}
       {level.mode === "unlock" ? (
@@ -794,39 +894,6 @@ export function ChestScene({
           </Group>
           <Path path={geom.lockFace} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
         </>
-      ) : null}
-
-      {/* Los caminantes. En `explain` cada fila tiene el suyo. */}
-      {level.mode === "judge" ? (
-        layout.rows.map((r, i) => (
-          <JudgeWalker
-            key={i}
-            walk={(problem.returns[i] ?? []) as readonly number[]}
-            row={r}
-            clock={clock}
-            walker={walker}
-            elegida={picked === i}
-            miente={i === problem.liar}
-          />
-        ))
-      ) : (
-        <Group transform={walkerT}>
-          <Path path={walker.body} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
-          <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
-        </Group>
-      )}
-
-      {/* El segundo caminante: el que convierte la vuelta en una distancia. */}
-      {level.ruler && problem.marks ? (
-        <Group
-          transform={[
-            { translateX: (row0.stones[problem.marks[1]] as Spot).x },
-            { translateY: oy },
-          ]}
-        >
-          <Path path={walker.body} color={theme.color.ok} style="stroke" strokeWidth={2.5} strokeCap="round" />
-          <Path path={walker.head} color={theme.color.ok} style="stroke" strokeWidth={2} />
-        </Group>
       ) : null}
 
       {/* La manivela. Con la llave puesta el sentido de giro se invierte. */}
@@ -844,13 +911,11 @@ export function ChestScene({
 
       {/* El renglón, con su casilla vacía. */}
       {conRenglon ? (
-        <Group transform={[{ translateX: 0 }, { translateY: layout.rowY }]}>
-          <Group transform={[{ translateX: layoutCenter(layout) }]}>
-            <Path path={geom.row} color={theme.color.ink} />
-            <Path path={geom.slot} color={theme.color.line} style="stroke" strokeWidth={2} />
-            <Path path={geom.placed} color={theme.color.ok} />
-          </Group>
-        </Group>
+        <>
+          <Path path={geom.row} color={theme.color.ink} />
+          <Path path={geom.slot} color={theme.color.line} style="stroke" strokeWidth={2} />
+          <Path path={geom.placed} color={theme.color.ok} />
+        </>
       ) : null}
 
       {/* El teclado de dígitos y la ficha que el jugador arma con él. */}
@@ -880,12 +945,6 @@ export function ChestScene({
       </Group>
     </Group>
   );
-}
-
-/** Dónde queda el centro del renglón, que es el centro del lienzo. */
-function layoutCenter(l: ChestLayout): number {
-  const r = l.rows[0];
-  return r ? (r.from.x + r.to.x) / 2 : 0;
 }
 
 /** Una pieza que el dedo puede llevar: su dibujo sigue a los mismos valores que el gesto. */

@@ -187,7 +187,7 @@ export const UNDO_LEVELS: readonly UndoLevel[] = [
   },
   {
     n: 5,
-    titleKey: "level.theRow",
+    titleKey: "level.minusRow",
     layer: "symbolic",
     evidence: ["manipulate", "apply"],
     rounds: 5,
@@ -372,9 +372,10 @@ export function generateUndo(level: UndoLevel, seed: number): UndoProblem {
   } else if (p.allowFullReturn && special === 1) {
     home = 0;
   } else if (level.mode === "judge") {
-    // El cofre cerca de la orilla: así la vuelta que se pasa traba la manivela,
-    // que es lo que este nivel muestra por primera vez.
-    home = rnd.int(0, Math.max(0, Math.min(3, reach - step)));
+    // El cofre cerca de la orilla, pero nunca en ella: con el cofre en el `0` la
+    // vuelta de un paso de más se topa con el borde, termina donde termina la
+    // exacta, y las dos animaciones dejarían de distinguirse.
+    home = rnd.int(1, Math.max(1, Math.min(3, reach - step)));
   } else {
     home = rnd.int(1, Math.max(1, reach - step));
   }

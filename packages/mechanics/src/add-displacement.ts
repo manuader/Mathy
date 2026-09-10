@@ -412,12 +412,15 @@ function makeChips(
 
   const lures = new Map<number, ChipLure>();
   const correctas = new Set<number>();
+  /** Las fichas que sirven, con repeticiones: hay una por tramo. */
+  const buenas: number[] = [];
   const add = (value: number, lure: ChipLure): void => {
     if (value < 0 || value > MAX_TRACK || correctas.has(value)) return;
     if (!lures.has(value)) lures.set(value, lure);
   };
 
   if (level.mode === "row") {
+    buenas.push(answer);
     correctas.add(answer);
     if (hidden >= 0) {
       // El error del nodo: contestar con la llegada, como si el doble trazo
@@ -427,10 +430,13 @@ function makeChips(
     // "El resultado es una de las dos fichas", que es lo que rompen tres tramos.
     for (const s of steps) add(s, "answer_is_an_addend");
   } else {
-    // Los tramos que el viaje necesita, y en el nivel de la flecha también el
-    // tramo único: hacer el viaje de un tirón es una manera legítima de hacerlo.
-    for (const s of steps) correctas.add(s);
-    if (level.pickTotal) correctas.add(answer);
+    // Una ficha por tramo, aunque dos tramos midan lo mismo: el tope se pone
+    // una vez por tirón, así que dos tramos de dos son dos fichas de dos.
+    for (const s of steps) buenas.push(s);
+    // En el nivel de la flecha también el tramo único: hacer el viaje de un
+    // tirón es una manera legítima de hacerlo.
+    if (level.pickTotal && !buenas.includes(answer)) buenas.push(answer);
+    for (const s of buenas) correctas.add(s);
   }
 
   add(answer + 1, "off_by_one");
@@ -440,11 +446,7 @@ function makeChips(
     add(s - 1, "off_by_one");
   }
 
-  const chips: Chip[] = [...correctas].map((value, i) => ({
-    id: `c${i}`,
-    value,
-    correct: true,
-  }));
+  const chips: Chip[] = buenas.map((value, i) => ({ id: `c${i}`, value, correct: true }));
   for (const [value, lure] of lures) {
     if (chips.length >= CHIP_SLOTS) break;
     chips.push({ id: `c${chips.length}`, value, correct: false, lure });

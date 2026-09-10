@@ -68,6 +68,12 @@ export interface StretchConfig {
   readonly drawings: readonly number[];
   /** Cuántas bandas hay. Dos comparan: se mira una contra la otra. */
   readonly bands: number;
+  /**
+   * Cuál de las bandas lleva la manija del extremo libre. -1 para ninguna. La
+   * banda que es molde no la lleva: una manija dibujada invita a tirar de algo
+   * que no se mueve.
+   */
+  readonly gripBand: number;
   /** El par de engranajes que empuja la ficha. Ajeno a la mecánica, opcional. */
   readonly crank: { readonly ratio: number } | null;
   /** Las marcas de la regla que se pueden tocar. Vacío: la regla no se toca. */
@@ -385,13 +391,13 @@ export function StretchScene({
       {layout.nails.map((spot, i) => (
         <Band
           key={i}
-          index={i}
           config={config}
           layout={layout}
           spot={spot}
           values={bands[i] as BandValues}
           nail={nail}
           picked={picked === i}
+          grip={config.gripBand === i}
           hint={hint}
         />
       ))}
@@ -410,22 +416,22 @@ export function StretchScene({
  * clavo es cero, y cero por cualquier cosa sigue siendo cero.
  */
 function Band({
-  index,
   config,
   layout,
   spot,
   values,
   nail,
   picked,
+  grip: hasGrip,
   hint,
 }: {
-  readonly index: number;
   readonly config: StretchConfig;
   readonly layout: StretchLayout;
   readonly spot: Spot;
   readonly values: BandValues;
   readonly nail: SkPath;
   readonly picked: boolean;
+  readonly grip: boolean;
   readonly hint: SharedValue<number>;
 }) {
   const step = layout.step;
@@ -472,7 +478,7 @@ function Band({
     { translateX: x0 + rest * step * values.factor.value },
     { translateY: y },
   ]);
-  const gripO = useDerivedValue(() => 0.55 + 0.45 * hint.value);
+  const gripO = useDerivedValue(() => (hasGrip ? 0.55 + 0.45 * hint.value : 0));
   const bandO = useDerivedValue(() => (picked ? 1 : 0));
 
   return (
@@ -507,22 +513,7 @@ function Band({
 
       {/* La banda elegida en `explain`: la que se toca queda marcada. */}
       <Group opacity={bandO}>
-        <Path
-          path={(() => {
-            const p = Skia.Path.Make();
-            p.addRRect(
-              Skia.RRectXY(
-                Skia.XYWHRect(x0 - 22, y - 26, layout.step * config.length + 44, 52),
-                12,
-                12,
-              ),
-            );
-            return p;
-          })()}
-          color={index === 0 ? theme.color.accent : theme.color.accent}
-          style="stroke"
-          strokeWidth={2}
-        />
+        <Path path={halo} color={theme.color.accent} style="stroke" strokeWidth={2} />
       </Group>
     </>
   );

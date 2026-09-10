@@ -476,6 +476,8 @@ export interface TrackSceneProps {
   readonly lift: SharedValue<number>;
   /** La manivela contra el tope de la orilla: vibra y no pasa. */
   readonly jam: SharedValue<number>;
+  /** Lo que la manivela gira sin que el caminante se mueva: el tope sin dientes. */
+  readonly spin: SharedValue<number>;
   /** El latido de la demostración; se apaga cuando el jugador ya jugó. */
   readonly hint: SharedValue<number>;
   /** El reloj de las dos animaciones de `explain`, de 0 a 1. */
@@ -506,6 +508,7 @@ export function TrackScene({
   pos,
   lift,
   jam,
+  spin,
   hint,
   clock,
   demo,
@@ -536,7 +539,11 @@ export function TrackScene({
     const trail = Skia.Path.Make();
     const arrows = Skia.Path.Make();
     for (const leg of legs) {
-      trail.addPath(buildTrail(layout.rail, Math.min(leg.from, leg.to), Math.max(leg.from, leg.to)));
+      // La estela es de la capa que se camina: en el renglón la recta vuelve
+      // como fantasma y lo único que dice son las flechas.
+      if (!level.row) {
+        trail.addPath(buildTrail(layout.rail, Math.min(leg.from, leg.to), Math.max(leg.from, leg.to)));
+      }
       if (level.arrow) arrows.addPath(buildArrow(layout.rail, leg.from, leg.to, 24));
     }
     const whole = Skia.Path.Make();
@@ -546,14 +553,14 @@ export function TrackScene({
       whole.addPath(buildArrow(layout.rail, first.from, last.to, 54));
     }
     return { trail, arrows, whole };
-  }, [legs, layout.rail, level.arrow]);
+  }, [legs, layout.rail, level.arrow, level.row]);
 
   /** La flecha suelta: la última hecha, que se arrastra y conserva el largo. */
   const loose = useMemo(() => {
     const last = legs[legs.length - 1];
-    if (!level.arrow || !last) return Skia.Path.Make();
+    if (!level.arrow || level.row || !last) return Skia.Path.Make();
     return buildArrow(layout.rail, last.from, last.to, 24);
-  }, [legs, layout.rail, level.arrow]);
+  }, [legs, layout.rail, level.arrow, level.row]);
 
   const ledger = useMemo(() => {
     const box = Skia.Path.Make();
@@ -628,7 +635,11 @@ export function TrackScene({
     });
   }, [layout, trip.tiles, trip.numerals]);
 
-  const crankT = useDerivedValue(() => [{ rotate: pos.value * TOOTH_ANGLE + jam.value * 0.06 }]);
+  // El giro de la manivela es la posición del caminante: un solo hecho. Lo
+  // único que se le suma es el tope sin dientes, que gira sin llevar a nadie.
+  const crankT = useDerivedValue(() => [
+    { rotate: (pos.value + spin.value) * TOOTH_ANGLE + jam.value * 0.06 },
+  ]);
   const crankGlow = useDerivedValue(() => 0.3 + 0.7 * hint.value);
   const looseT = useDerivedValue(() => [{ translateX: arrowDx.value }]);
 
@@ -738,10 +749,13 @@ export function TrackScene({
         </Group>
       </Group>
 
-      {/* El cajón de fichas. Siempre montadas: las que sobran, invisibles. */}
-      {chipGeom.map((g, i) => (
-        <ChipItem key={i} geom={g} view={chips[i] as ChipView} />
-      ))}
+      {/* El cajón de fichas. Siempre montadas: las que sobran, invisibles. En
+          `explain` no hay nada que elegir del cajón, así que se apaga entero. */}
+      <Group opacity={enExplain ? 0 : 1}>
+        {chipGeom.map((g, i) => (
+          <ChipItem key={i} geom={g} view={chips[i] as ChipView} />
+        ))}
+      </Group>
 
       <Group transform={ghostT} opacity={ghostO}>
         <Path path={ghost.dot} color={theme.color.ink} style="stroke" strokeWidth={2} />

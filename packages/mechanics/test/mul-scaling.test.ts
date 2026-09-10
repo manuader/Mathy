@@ -225,6 +225,19 @@ test("el nivel 7 llega al 1, al 0 y a las fracciones, y la fracción parte la ba
   assert.ok(vistos.has("1/2"), "nunca apareció la mitad");
 });
 
+test("las cuatro rondas del nivel 7 muestran el 1, el 0 y las dos fracciones", () => {
+  // Sorteados, cuatro rondas pueden no traer ninguno, y el nivel es eso.
+  const nivel = mulLevelByNumber(7) as MulLevel;
+  for (const seed of seeds(12)) {
+    const vistos = Array.from({ length: nivel.rounds }, (_, r) =>
+      generateMulScaling(nivel, seed + r, r),
+    ).map((p) => `${p.factor.num}/${p.factor.den}`);
+    for (const f of ["1/1", "0/1", "1/2", "1/3"]) {
+      assert.ok(vistos.includes(f), `con la semilla ${seed} nunca apareció ${f}`);
+    }
+  }
+});
+
 test("el factor 0 aplasta la banda contra el clavo", () => {
   const nivel = mulLevelByNumber(7) as MulLevel;
   for (const p of rounds(nivel, 40)) {

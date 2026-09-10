@@ -38,7 +38,7 @@ const STROKE = 1.5;
 /** Baldosa máxima: más grande, un piso de cinco por cinco no entra. */
 const MAX_UNIT = 38;
 /** Cuánto se separan las dos tiras cuando el piso se parte, en baldosas. */
-const SPLIT = 0.7;
+const SPLIT = 0.35;
 
 export interface Spot {
   readonly x: number;
@@ -355,10 +355,20 @@ export function TilesScene({
   const keyGeom = useMemo(() => {
     const { x, y, w, h } = layout.frame;
     const size = Math.min(layout.unit * 0.7, 22);
-    const top = buildKey({ x, y }, { x: x + w, y }, -10, config.frameCols, size);
-    const left = buildKey({ x, y: y + h }, { x, y }, -10, config.frameRows, size);
+    // La normal de cada lado apunta hacia afuera del rectángulo: una llave
+    // dibujada por dentro taparía justo las baldosas que está midiendo.
+    const top = buildKey({ x, y }, { x: x + w, y }, 10, config.frameCols, size);
+    const left = buildKey({ x, y: y + h }, { x, y }, 10, config.frameRows, size);
+    // La expresión va debajo del piso y no encima: arriba se la comen las
+    // llaves, y con un piso alto se saldría del lienzo.
     const expr = Skia.Path.Make();
-    addGlyphs(expr, `${config.frameRows}×${config.frameCols}`, x + w / 2, y - layout.unit * 1.5, size * 1.2);
+    addGlyphs(
+      expr,
+      `${config.frameRows}×${config.frameCols}`,
+      x + w / 2,
+      y + h + layout.unit * 1.2,
+      size * 1.2,
+    );
     return { top, left, expr };
   }, [layout, config.frameRows, config.frameCols]);
 
