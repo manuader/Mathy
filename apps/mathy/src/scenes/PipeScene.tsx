@@ -32,6 +32,9 @@
  * - `skin`: las cuatro etapas de desvanecimiento del catálogo. El 9 muere en
  *   `pipes` y nunca llega a notación; el 14 vive entre `pipes` y
  *   `arrow_diagram`; 17, 20, 21 y 24 recorren las cuatro.
+ * - `kind` de la máquina: qué le hace a lo que entra. Las dos de la fábrica del
+ *   20 —la que pinta y la que tapa— son `paint` y `lid`, y no llevan número: en
+ *   `real` e `intuition` no hay nada escrito y la cara es todo lo que hay.
  * - `cargo`: qué viaja por el caño. Bolita (9, 20, 21), ficha (17, 24), vector
  *   (32), ángulo (44), pulso (27), y en el 24 el token **cambia de forma al
  *   atravesar la máquina**, que es por qué la forma vive en cada `PipeItem` y no
@@ -55,7 +58,19 @@
  *   dice, la luz es el mensaje.
  * - `formula`: el renglón de notación debajo del caño, ya compuesto por el nodo
  *   (`f(x) = 3x + 1`). Es el quinto paso de la transición simbólica del 17, la
- *   tabla contraída en una línea, y lo van a querer el 18, el 20 y el 21.
+ *   tabla contraída en una línea, y lo van a querer el 18, el 20 y el 21. Con
+ *   dos carriles cae debajo de los dos, que es donde el 20 escribe
+ *   `f∘g ≠ g∘f`: la desigualdad tiene que quedar entre las dos salidas que la
+ *   prueban.
+ * - `lasso`, en el carril: el trazo que rodea a las máquinas y las mete en una
+ *   caja sola, con su etiqueta encima. Es la cadena vuelta un objeto con nombre
+ *   (20) y la caja doble de la que después sale la inversa (21).
+ * - `inputLabel`, en el carril: con qué se alimenta el caño, escrito debajo de
+ *   la boca. Lo pide cualquier nodo que haga anticipar la salida antes de
+ *   soltar (20).
+ * - `midLabel`, en el carril: el valor intermedio escrito sobre el tramo que va
+ *   de una máquina a la siguiente. Se enciende cuando la bola sale de la
+ *   primera, que es cuando ese número empieza a existir (20).
  * - `reorderable`: las máquinas se arrastran para cambiar el orden (9, 20, 27).
  * - `box`: la caja cerrada dentro del caño, la incógnita que todavía no tiene
  *   nombre (14, 17).
@@ -125,6 +140,7 @@ export type PipeMachineKind =
   | "exp"
   | "turn"
   | "paint"
+  | "lid"
   | "identity"
   | "opaque";
 
@@ -182,6 +198,28 @@ export interface PipeLane {
    * omite en todos los nodos menos el 17.
    */
   readonly branch?: PipeItem | null;
+  /**
+   * El lazo: el trazo que rodea a las máquinas de este carril y las mete en una
+   * caja sola, con su etiqueta encima. Es el cuarto paso de la transición
+   * simbólica del 20 —la cadena vuelta un objeto con nombre— y no dibuja nada
+   * cuando viene vacío. El rótulo lo compone el nodo: `f∘g` depende del
+   * `MathLocale` y de qué máquina quedó pegada a la entrada.
+   */
+  readonly lasso?: string;
+  /**
+   * Lo que se escribe debajo de la boca: con qué se alimenta el caño. Sin esto,
+   * el tamaño de la bola es lo único que dice cuánto entró, y eso alcanza
+   * mientras no haya que anticipar la salida y deja de alcanzar en cuanto hay
+   * que anticiparla (20, nivel 5). Vacío: la boca no dice nada, que es lo que
+   * quieren los niveles sin numerales.
+   */
+  readonly inputLabel?: string;
+  /**
+   * Lo que se escribe sobre el caño entre la primera máquina y la siguiente: el
+   * valor intermedio. Aparece cuando la bola ya salió de la primera, que es el
+   * único momento en que ese número existe. Vacío: el tramo no dice nada.
+   */
+  readonly midLabel?: string;
 }
 
 /**
@@ -391,22 +429,52 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
 function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: number): void {
   const chars = [...text];
   let advance = 0;
-  for (const c of chars) advance += getGlyph(c)?.advance ?? 0.5;
+  let alto = false;
+  for (const c of chars) {
+    if (c === "^") {
+      alto = true;
+      continue;
+    }
+    if (alto && CIERRA_EXPONENTE.includes(c)) alto = false;
+    advance += (getGlyph(c)?.advance ?? 0.5) * (alto ? EXP_SIZE : 1);
+  }
   let x = cx - (advance * size) / 2;
   // Los dígitos van de -0.666 em a la línea de base, así que centrarlos es
   // bajar el trazo un tercio de em.
   const baseline = cy + size * 0.333;
+  alto = false;
   for (const c of chars) {
+    if (c === "^") {
+      alto = true;
+      continue;
+    }
+    if (alto && CIERRA_EXPONENTE.includes(c)) alto = false;
     const glyph = getGlyph(c);
     const src = pathFor(c);
+    const s = size * (alto ? EXP_SIZE : 1);
     if (glyph && src) {
       const copy = src.copy();
-      copy.transform([size, 0, x, 0, size, baseline, 0, 0, 1]);
+      copy.transform([s, 0, x, 0, s, alto ? baseline - size * EXP_RISE : baseline, 0, 0, 1]);
       target.addPath(copy);
     }
-    x += (glyph?.advance ?? 0.5) * size;
+    x += (glyph?.advance ?? 0.5) * s;
   }
 }
+
+/**
+ * El exponente. Lo estrena el nodo 21 para la marca de la inversa: `f^−1` se
+ * dibuja `f⁻¹`, con el `−` y el `1` que el atlas ya tiene, levantados y más
+ * chicos. **La marca es un exponente de verdad** y el nodo lo dice en voz alta,
+ * así que dibujarla con dos glifos del atlas en vez de hornear un carácter
+ * nuevo no es un atajo: es lo que la notación es.
+ *
+ * El `^` no está en el atlas ni en ningún rótulo de los otros nodos, así que la
+ * regla no cambia nada de lo que ya se dibujaba.
+ */
+const EXP_SIZE = 0.62;
+const EXP_RISE = 0.42;
+/** El exponente termina donde empieza el argumento o la igualdad. */
+const CIERRA_EXPONENTE = "()= ";
 
 /** El signo de cada máquina, cuando el nodo ya escribe números. */
 const OP_CHAR: Readonly<Record<string, string>> = {
@@ -458,6 +526,19 @@ function machineFace(kind: PipeMachineKind, value: number, cx: number, cy: numbe
     p.lineTo(cx + s * 0.62, cy - s * 0.06);
     p.moveTo(cx + s * 0.42, cy - s * 0.36);
     p.lineTo(cx + s * 0.16, cy - s * 0.26);
+    return p;
+  }
+  if (kind === "lid") {
+    // La tapadora: una caja abierta y la tapa bajando encima. No es un símbolo,
+    // como ninguna de las otras caras: la mecánica se juega sin leer.
+    p.moveTo(cx - s * 0.5, cy - s * 0.05);
+    p.lineTo(cx - s * 0.5, cy + s * 0.5);
+    p.lineTo(cx + s * 0.5, cy + s * 0.5);
+    p.lineTo(cx + s * 0.5, cy - s * 0.05);
+    p.moveTo(cx - s * 0.65, cy - s * 0.3);
+    p.lineTo(cx + s * 0.65, cy - s * 0.3);
+    p.moveTo(cx, cy - s * 0.3);
+    p.lineTo(cx, cy - s * 0.62);
     return p;
   }
   if (kind === "paint") {
@@ -558,6 +639,14 @@ interface LaneGeom {
   readonly branch: SkPath;
   readonly lamp: SkPath;
   readonly branchDigits: SkPath;
+  /** La caja del lazo y su etiqueta. Vacíos cuando el carril no está lazado. */
+  readonly lasso: SkPath;
+  readonly lassoLabel: SkPath;
+  /** El valor intermedio escrito sobre el caño, y dónde empieza a verse. */
+  readonly mid: SkPath;
+  /** Con qué se alimenta el caño, escrito debajo de la boca. */
+  readonly mouthDigits: SkPath;
+  readonly midFrom: number;
 }
 
 function buildLane(
@@ -658,6 +747,46 @@ function buildLane(
     }
   }
 
+  // El lazo: una caja sola alrededor de las máquinas que este carril usa. Lo que
+  // encierra no es el dibujo sino la cadena, así que se mide sobre las cajas
+  // puestas y no sobre el ancho del caño.
+  const lasso = Skia.Path.Make();
+  const lassoLabel = Skia.Path.Make();
+  const rotulo = lane.lasso ?? "";
+  if (rotulo !== "" && lane.machines.length > 0) {
+    const usadas = l.machines.slice(0, lane.machines.length);
+    const x0 = Math.min(...usadas.map((b) => b.x)) - 14;
+    const x1 = Math.max(...usadas.map((b) => b.x + b.w)) + 14;
+    const y0 = l.y - layout.machineH * 0.62 - 10;
+    const y1 = l.y + layout.machineH * 0.62 + 10;
+    lasso.addRRect(Skia.RRectXY(Skia.XYWHRect(x0, y0, x1 - x0, y1 - y0), 14, 14));
+    // Bien despegada del borde: adentro de la caja puede haber ya un valor
+    // intermedio escrito, y el nombre de la cadena no puede pisarlo.
+    addGlyphs(lassoLabel, rotulo, (x0 + x1) / 2, y0 - 20, 22);
+  }
+
+  // El valor intermedio, escrito sobre el tramo que va de la primera máquina a
+  // la siguiente. `midFrom` es el punto del recorrido en que ese número empieza
+  // a existir: antes de que la bola salga de la primera, no hay nada que decir.
+  const mid = Skia.Path.Make();
+  const tramos = Math.max(l.path.length - 1, 1);
+  const texto = lane.midLabel ?? "";
+  if (texto !== "" && l.path.length >= 3) {
+    const a = l.path[1] as Spot;
+    const b = l.path[2] as Spot;
+    addGlyphs(mid, texto, (a.x + b.x) / 2, l.y - layout.machineH * 0.5 - 10, 18);
+  }
+
+  // Con qué se alimenta el caño, escrito debajo de la boca. Va en su propio
+  // trazo y no en `digits`: con las máquinas arrastrables, `digits` no se dibuja
+  // —cada carcasa se lleva su rótulo— y la entrada se perdería justo en las
+  // rondas que la necesitan, que son las de cambiar el orden.
+  const mouthDigits = Skia.Path.Make();
+  const entrada = lane.inputLabel ?? "";
+  if (entrada !== "") {
+    addGlyphs(mouthDigits, entrada, l.mouth.x, l.y + layout.tokenR + 20, 16);
+  }
+
   return {
     pipe,
     mouths,
@@ -672,6 +801,11 @@ function buildLane(
     branch,
     lamp,
     branchDigits,
+    lasso,
+    lassoLabel,
+    mid,
+    mouthDigits,
+    midFrom: 1 / tramos,
   };
 }
 
@@ -901,6 +1035,18 @@ export function PipeScene({
                 picked={picked}
                 opaca={config.skin === "machines"}
               />
+              {/* El lazo va encima de las carcasas: lo que encierra tiene que
+                  verse adentro, no tapado. */}
+              <Path
+                path={g.lasso}
+                color={theme.color.accent}
+                style="stroke"
+                strokeWidth={2}
+                strokeCap="round"
+              />
+              <Path path={g.lassoLabel} color={theme.color.accent} />
+              <Path path={g.mouthDigits} color={theme.color.inkDim} />
+              <Mid path={g.mid} flow={flow} from={g.midFrom} corre={lane === -1 || lane === i} />
             </Group>
           );
         })}
@@ -1136,6 +1282,29 @@ function TrayPiece({
       <Path path={digits} color={theme.color.ink} />
     </Group>
   );
+}
+
+/**
+ * El valor intermedio escrito sobre el caño. Aparece cuando la bola sale de la
+ * primera máquina y no antes: hasta ese momento ese número no existe, y
+ * escribirlo desde el principio contaría el final.
+ */
+function Mid({
+  path,
+  flow,
+  from,
+  corre,
+}: {
+  readonly path: SkPath;
+  readonly flow: SharedValue<number>;
+  readonly from: number;
+  readonly corre: boolean;
+}) {
+  const opacity = useDerivedValue(
+    () => (corre ? Math.max(0, Math.min(1, (flow.value - from) * 5)) : 0),
+    [corre, from],
+  );
+  return <Path path={path} color={theme.color.inkDim} opacity={opacity} />;
 }
 
 /**

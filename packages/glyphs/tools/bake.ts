@@ -74,6 +74,16 @@ const CHARSET: readonly CharSpec[] = [
   // pendiente se escribe `Δy / Δx` antes de contraerse en una sola letra.
   { char: "/", tex: "/", code: "2F" },
   { char: "\u0394", tex: "\\Delta", code: "394" },
+  // La cadena del nodo 20. `f∘g` es el símbolo que ese nodo inventa, y sin el
+  // anillo la etiqueta de la caja lazada quedaría con un hueco justo en el medio;
+  // `≠` es la advertencia que el jugador comprueba con los dos carriles, y la `h`
+  // es la tercera máquina, que no se puede llamar como ninguna de las otras dos.
+  { char: "\u2218", tex: "\\circ", code: "2218" },
+  { char: "\u2260", tex: "\\neq", code: "2260" },
+  // La `h` itálica de MathJax es U+210E, la constante de Planck, y no la letra
+  // matemática U+1D455: la fuente reusa ese glifo y el horneador exige el
+  // codepoint que emite, no el que uno esperaría.
+  { char: "h", tex: "h", code: "210E" },
 ];
 
 /** MathJax trabaja en unidades donde 1000 es un em. El atlas queda en em. */

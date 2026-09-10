@@ -21,3 +21,5 @@ export * from "./systems.ts";
 export * from "./graph-picture.ts";
 export * from "./machine.ts";
 export * from "./slope.ts";
+export * from "./inverse.ts";
+export * from "./composition.ts";

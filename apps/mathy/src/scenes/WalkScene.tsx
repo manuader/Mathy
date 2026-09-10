@@ -77,8 +77,9 @@
  *   central del 21.
  * - `asymptote`: la pared a la que el rastro se acerca y nunca toca. La pide el
  *   25, y el 23 la usa acostada.
- * - `verticalLine`: la recta vertical que se baja con el dedo. Es el test del
- *   nivel formal del 18 y vuelve en el 21 como test de la recta horizontal.
+ * - `verticalLine` y `sweepAxis`: la recta que se baja con el dedo. Es el test
+ *   del nivel formal del 18, de pie, y vuelve acostada en el 21: la recta
+ *   vertical sobre el rastro reflejado es la horizontal sobre el original.
  * - `skin`: las cinco etapas de desvanecimiento del catálogo, de la colina a
  *   `dy/dx`. El 18 muere en `hill_walk` y `staircase`; el 19 llega a
  *   `slope_ratio` y el 26 a `derivative_notation`.
@@ -215,6 +216,17 @@ export interface WalkConfig {
   readonly curve: GpCurve | null;
   /** La recta vertical se puede bajar con el dedo. */
   readonly verticalLine: boolean;
+  /**
+   * Sobre qué eje corre esa recta. Ausente vale `vertical`, que es la del test
+   * del nodo 18 y lo que hacen todos los nodos que ya la usaban.
+   *
+   * En `horizontal` la misma recta se acuesta y se baja con el dedo sobre el
+   * rastro: es el test del nodo 21, y es la misma recta por una razón y no por
+   * ahorro. La recta vertical sobre el rastro reflejado **es** la horizontal
+   * sobre el original, así que dibujar dos objetos distintos diría que son dos
+   * pruebas distintas cuando son la misma mirada del otro lado de la diagonal.
+   */
+  readonly sweepAxis?: "vertical" | "horizontal";
   readonly step: WalkStep | null;
   /**
    * El color del escalón. **Codifica la cuesta**: el mismo en toda la rampa y
@@ -944,14 +956,30 @@ export function WalkScene({
   }, []);
   const inkO = useDerivedValue(() => (config.ink ? 1 : 0), [config.ink]);
 
-  /** La recta vertical que se baja con el dedo: el test del nivel formal. */
-  const sweepT = useDerivedValue(() => [{ translateX: sheet.cx + sweep.value * sheet.ux }]);
+  /**
+   * La recta que se baja con el dedo: el test del nivel formal. Vertical corre
+   * el eje de las posiciones y horizontal el de las alturas, y `sweep` significa
+   * lo mismo en los dos casos: dónde está la recta, en unidades de su eje.
+   */
+  const acostada = config.sweepAxis === "horizontal";
+  const sweepT = useDerivedValue(
+    () =>
+      acostada
+        ? [{ translateY: sheet.cy - sweep.value * sheet.uy }]
+        : [{ translateX: sheet.cx + sweep.value * sheet.ux }],
+    [acostada, sheet],
+  );
   const sweepGeom = useMemo(() => {
     const p = Skia.Path.Make();
+    if (acostada) {
+      p.moveTo(walkPx(sheet, config.window.x0), 0);
+      p.lineTo(walkPx(sheet, config.window.x1), 0);
+      return p;
+    }
     p.moveTo(0, walkPy(sheet, config.window.y0));
     p.lineTo(0, walkPy(sheet, config.window.y1));
     return p;
-  }, [sheet, config.window.y0, config.window.y1]);
+  }, [acostada, sheet, config.window.x0, config.window.x1, config.window.y0, config.window.y1]);
   const sweepO = useDerivedValue(() => (config.verticalLine ? 1 : 0), [config.verticalLine]);
 
   // La mano fantasma toma al caminante y lo lleva unos pasos: toda la

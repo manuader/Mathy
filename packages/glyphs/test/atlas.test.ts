@@ -5,7 +5,7 @@ import { atlas, getGlyph } from "../src/index.ts";
 /** El juego de caracteres del primer hito. */
 const CHARSET = [
   ..."0123456789",
-  ..."xyabnfgm",
+  ..."xyabnfgmh",
   "+",
   "−",
   "×",
@@ -18,6 +18,11 @@ const CHARSET = [
   // en una sola letra, y `y = mx + b` necesita la `m`.
   "/",
   "Δ",
+  // Los dos del nodo 20: `f∘g` es el símbolo que ese nodo inventa y `≠` la
+  // advertencia que el jugador comprueba con los dos carriles. La `h` va arriba,
+  // con las otras letras: es la tercera máquina de las cadenas de tres.
+  "∘",
+  "≠",
 ];
 
 const DIGITS = [..."0123456789"];

@@ -25,7 +25,9 @@ import {
   sysLevelByNumber,
   gpLevelByNumber,
   slLevelByNumber,
+  invLevelByNumber,
   fnLevelByNumber,
+  compLevelByNumber,
   balLevelByNumber,
   type LevelBase,
   type NodeSpec,
@@ -49,7 +51,9 @@ import { SystemsGame } from "./SystemsGame.tsx";
 import { BalanceEqGame } from "./BalanceEqGame.tsx";
 import { GraphPictureGame } from "./GraphPictureGame.tsx";
 import { SlopeGame } from "./SlopeGame.tsx";
+import { InverseGame } from "./InverseGame.tsx";
 import { MachineGame } from "./MachineGame.tsx";
+import { CompositionGame } from "./CompositionGame.tsx";
 
 export interface ActivityProps {
   readonly node: NodeSpec;
@@ -176,6 +180,18 @@ const Machine = ({ level, ...rest }: ActivityProps) => {
   return <MachineGame {...rest} level={full} />;
 };
 
+const Inverse = ({ level, ...rest }: ActivityProps) => {
+  const full = invLevelByNumber(level.n);
+  if (!full) return null;
+  return <InverseGame {...rest} level={full} />;
+};
+
+const Composition = ({ level, ...rest }: ActivityProps) => {
+  const full = compLevelByNumber(level.n);
+  if (!full) return null;
+  return <CompositionGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
@@ -196,6 +212,8 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "alg.fn.function_as_machine": Machine,
   "alg.fn.graph_as_picture": GraphPicture,
   "alg.fn.linear_slope": Slope,
+  "alg.fn.composition": Composition,
+  "alg.fn.inverse_function": Inverse,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>
