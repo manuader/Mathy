@@ -1,9 +1,8 @@
 # HANDOFF — Mathy, estado actual
 
 > El diseño está cerrado: 348 nodos de grafo, **51 en la espina**, validador en cero errores.
-> La construcción tiene **16 nodos jugables y verificados** de los 51: los dieciséis
-> primeros de la espina, de contar cuántas frutas hay hasta resolver un sistema de dos
-> ecuaciones. La app corre en
+> La construcción tiene **21 nodos jugables y verificados** de los 51: los veintiún primeros
+> de la espina, de contar cuántas frutas hay hasta la función inversa. La app corre en
 > navegador; en iOS y Android todavía **no se probó**.
 > Antes de tocar nada, mirá `git status`: si hay cambios sin commitear, hay agentes en vuelo.
 
@@ -96,6 +95,16 @@ la calculadora que crecen con lo recorrido, y el progreso pasó a persistir como
 de eventos. Después se construyó el andamiaje del curriculum —mapa de conceptos, registro
 de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y porqués en
 [SESSION-2026-09-09-espina-jugable.md](SESSION-2026-09-09-espina-jugable.md).
+
+### Sesión 2026-09-10 — la rama de funciones, y dos trampas mías que estaban mal
+Veintiún nodos jugables: entran la función como máquina, la gráfica, la pendiente, la
+composición y la inversa. Nacen `WalkScene` (`slope_walker`, nueve nodos la esperaban) y
+`NetworkScene` (`network_routes`, doce la declaraban y ninguno la había construido).
+
+Dos entradas de §7 que yo había escrito estaban mal y se corrigieron midiendo: la
+identidad del `Gesture` entre renders **no** rompe nada —lo que rompe es desmontar el
+detector— y el arrastre sobre el lienzo **a veces sí** se activa. La primera iba a costar
+una refactorización de diecinueve archivos.
 
 ### Sesión 2026-09-10 — `gears_sequence` deja de estar dibujada tres veces
 `TrackScene` pasa a ser la escena de la mecánica y no la del nodo 3; `PathScene` y
@@ -289,13 +298,15 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
     arranca una selección del navegador que se queda con el puntero.
 19. **El stripping de tipos de Node no soporta propiedades de parámetro**
     (`constructor(private readonly x: T)`). Hay que declarar el campo aparte.
-20. **Dos agentes verificando a la vez es el techo.** El panel del navegador es uno solo
+20. **Dos agentes verificando a la vez es el techo, y el truco de los orígenes no
+    alcanza.** `127.0.0.1` **el navegador lo normaliza a `[::1]`**, así que esos dos son
+    el mismo `localStorage` y solo hay dos almacenes distintos, no tres: `localhost` y
+    la forma numérica. El panel del navegador es uno solo
     y no se puede abrir otra pestaña cuando el cupo está lleno: con tres o más, cada uno
     le renavega la pestaña al otro en mitad de una secuencia. Un agente reportó **seis
     renavegaciones** y no pudo volver a jugar los nodos que comparten escena con el suyo,
     que es justamente la comprobación que evita romperlos. **La contención no se paga en
-    tiempo, se paga en verificación.** Además se pisan el `localStorage`, que es por
-    origen. `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
+    tiempo, se paga en verificación.** `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
     otro almacén: sirve para sembrar progreso sin que otro te lo borre.
 21. **No corras `git add -A` con agentes en vuelo, ni le agregues los archivos
     compartidos a un commit sin mirar qué le metieron.** Arrastra archivos a medio

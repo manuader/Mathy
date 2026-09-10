@@ -395,6 +395,10 @@ test("la ronda de conmutar mezcla pares que sí y pares que no", () => {
   assert.ok(si.length > 0, "nunca aparece un par que conmuta");
   assert.ok(no.length > 0, "nunca aparece un par que no conmuta");
   for (const p of rondas) {
+    // Dos máquinas iguales conmutan por ser la misma y no por lo que el nodo
+    // enseña, y dibujadas dejarían los dos carriles idénticos.
+    const [a, b] = p.chain as [CompMachine, CompMachine];
+    assert.ok(a.op !== b.op || a.value !== b.value, "los dos carriles son la misma cadena");
     assert.equal(p.commutes, compCommutes(p.solution));
     assert.equal(p.commutes, p.target === p.otherOutput);
     assert.deepEqual([...p.other], [...compReverse(p.chain)]);

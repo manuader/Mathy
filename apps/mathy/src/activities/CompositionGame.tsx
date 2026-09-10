@@ -329,9 +329,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       !level.named
         ? ""
         : ask === "commutes" && solved && !problem.commutes
-          ? tight(compUnequalPieces(problem.chain))
+          ? composeText(compUnequalPieces(problem.chain))
           : ask === "nest" && solved
-            ? tight(compEvaluatedPieces(problem.chain, problem.input, problem.target))
+            ? composeText(compEvaluatedPieces(problem.chain, problem.input, problem.target))
             : "";
 
     return {

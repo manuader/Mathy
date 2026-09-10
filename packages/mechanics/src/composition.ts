@@ -640,14 +640,21 @@ function pairThatMatters(p: CompParams, rnd: Random): CompMachine[] {
 function pairThatCommutes(p: CompParams, rnd: Random): CompMachine[] {
   const [, hi] = p.operandRange;
   const tope = Math.max(2, Math.min(9, hi));
-  if (rnd.bool() && escala(p.ops).includes("mul")) {
-    return named([raw("m0", "mul", rnd.int(2, 4)), raw("m1", "mul", rnd.int(2, 4))]);
+  // Las dos tienen que ser **distintas**. Dos máquinas iguales conmutan por una
+  // razón que no es la del nodo —son la misma— y los dos carriles quedarían
+  // dibujados idénticos: la pregunta se contestaría sin mirar las salidas.
+  const conEscala = rnd.bool() && escala(p.ops).includes("mul");
+  for (let intento = 0; intento < 40; intento++) {
+    const par = conEscala
+      ? named([raw("m0", "mul", rnd.int(2, 5)), raw("m1", "mul", rnd.int(2, 5))])
+      : named([
+          raw("m0", rnd.pick(corre(p.ops)), rnd.int(1, tope)),
+          raw("m1", rnd.pick(corre(p.ops)), rnd.int(1, tope)),
+        ]);
+    const [a, b] = par as [CompMachine, CompMachine];
+    if (a.op !== b.op || a.value !== b.value) return par;
   }
-  const dos = corre(p.ops);
-  return named([
-    raw("m0", rnd.pick(dos), rnd.int(1, tope)),
-    raw("m1", rnd.pick(dos), rnd.int(1, tope)),
-  ]);
+  return named([raw("m0", "add", 2), raw("m1", "sub", 1)]);
 }
 
 /**
