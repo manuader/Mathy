@@ -44,7 +44,9 @@ import { theme } from "../ui/theme.ts";
  * `UndoMode` entra tal cual; `shrink` es lo que agrega el nodo 6: el cofre
  * suelto, sin pista y sin manivela, con la cerradura con la forma del estirado
  * y el llavero abajo. `nest` es lo que agrega el nodo 9: los cofres metidos uno
- * adentro del otro, el árbol al costado y la fila de fichas debajo.
+ * adentro del otro, el árbol al costado y la fila de fichas debajo. `key` es lo
+ * que agrega el nodo 12: la silueta en la tapa y, desde la capa visual, el
+ * diagrama vertical con las dos flechas que cierran el circuito.
  */
 export type ChestMode =
   | "turn"
@@ -54,7 +56,8 @@ export type ChestMode =
   | "write"
   | "unlock"
   | "shrink"
-  | "nest";
+  | "nest"
+  | "key";
 
 /** La pista dibujada, aplanada, a pedido, o ya retirada. */
 export type ChestSkin = "stone" | "mark" | "onDemand" | "hidden";
@@ -79,10 +82,19 @@ export type ChestKeyKind =
 export interface ChestKey {
   readonly teeth: number;
   readonly kind?: ChestKeyKind;
+  /**
+   * El número de la llave, dibujado en puntitos debajo del paletón. Lo agregó
+   * el nodo 12, donde dos llaves pueden tener la misma forma y distinto número
+   * y todavía no hay ningún numeral en pantalla: sin los puntitos serían la
+   * misma llave dibujada dos veces.
+   */
+  readonly dots?: boolean;
 }
 
 export interface ChestTile {
   readonly value: number;
+  /** La ficha dice su número en puntitos, por la misma razón que la llave. */
+  readonly dots?: boolean;
 }
 
 export interface ChestRowData {
@@ -130,6 +142,64 @@ export interface ChestRing {
 }
 
 /**
+ * Una acción y su vuelta: un tramo del diagrama vertical. Lo agregó el nodo 12.
+ *
+ * La cerradura y la llave viajan separadas —la operación por un lado y el
+ * número por el otro— porque esa separación *es* lo que el nodo enseña: la
+ * inversa es propiedad de la operación y no de los números. Un tipo que las
+ * juntara en una etiqueta haría imposible dibujar la llave que entra con el
+ * número equivocado.
+ */
+export interface ChestArrow {
+  readonly id: string;
+  /** La forma de la cerradura: la operación que se aplicó. */
+  readonly lock: ChestKeyKind;
+  /** El número de la acción: los puntitos de la cerradura. */
+  readonly count: number;
+  /** La llave que se probó sobre esta flecha, o null si todavía no se probó. */
+  readonly key: { readonly kind: ChestKeyKind; readonly count: number } | null;
+  /** La vuelta se cerró: la llave era la inversa y giró entera. */
+  readonly closed: boolean;
+}
+
+/**
+ * Una columna del diagrama. `explain` compara dos; el resto de los niveles
+ * dibuja una sola.
+ */
+export interface ChestPanel {
+  readonly arrows: readonly ChestArrow[];
+  /** Los extremos, de arriba abajo: `arrows.length + 1` valores. */
+  readonly values: readonly number[];
+  /** Lo que salió del cofre encajó en la silueta de la tapa. */
+  readonly fits: boolean;
+  /**
+   * La silueta hueca de la llave que sí entra, revelada sin nombrarla. Es el
+   * patrón `key_mismatch` del catálogo dibujado sobre el cofre.
+   */
+  readonly reveal: ChestKeyKind | null;
+}
+
+/**
+ * Lo que el nodo 12 le pide dibujar a la escena. Llega como un objeto opcional
+ * y no como props sueltas para que los nodos 4, 6 y 9 sigan llamando a la
+ * escena exactamente igual que antes.
+ */
+export interface ChestDiagram {
+  readonly panels: readonly ChestPanel[];
+  /** El cofre, el diagrama de flechas, o el diagrama con el cofre fantasma. */
+  readonly skin: "chest" | "arrows" | "ghost";
+  /** Fichas con operador y número sobre las flechas y en las llaves. */
+  readonly labeled: boolean;
+  /** Numerales en los extremos. En la capa concreta el objeto no es un número. */
+  readonly numerals: boolean;
+  /** Las dos ranuras de la llave que se arma, o null. */
+  readonly slots: {
+    readonly kind: ChestKeyKind | null;
+    readonly count: number | null;
+  } | null;
+}
+
+/**
  * Un glifo de la fila, ya ubicado por el nodo con `@mathy/typeset`. La escena no
  * compone: si compusiera, el hit test del nodo y el dibujo medirían distinto y
  * el paréntesis se tocaría donde no se ve.
@@ -172,6 +242,8 @@ export interface ChestProblem {
   readonly glyphs?: readonly ChestGlyph[];
   /** El cofre fantasma que se dibuja alrededor de un tramo de la fila. */
   readonly ghostBox?: ChestBox | null;
+  /** El diagrama del nodo 12. Ausente: la escena dibuja lo de siempre. */
+  readonly diagram?: ChestDiagram | null;
 }
 
 /** Lo que la escena lee del nivel. `UndoLevel` la cumple sin tocar nada. */
@@ -250,6 +322,40 @@ export interface ChestLayout {
   readonly lock: Spot;
   /** El encastre del nodo 9. Ausente fuera del modo `nest`. */
   readonly nest?: NestLayout;
+  /** El diagrama del nodo 12. Ausente fuera del modo `key`. */
+  readonly diagram?: DiagramLayout;
+}
+
+/**
+ * Dónde cae cada pieza del diagrama vertical. Lo comparten el dibujo y el hit
+ * test: si la llave entrara donde no se ve la cerradura, el nodo estaría
+ * enseñando otra cosa.
+ */
+export interface DiagramLayout {
+  readonly panels: readonly DiagramPanel[];
+  /** El cuerpo de la llave que se arma, y sus dos ranuras. */
+  readonly blank: ChestBox;
+  readonly opSlot: Spot;
+  readonly countSlot: Spot;
+  readonly slotW: number;
+  readonly slotH: number;
+}
+
+export interface DiagramPanel {
+  readonly cx: number;
+  /** El cofre. Se dibuja entero, o chiquito al costado cuando es fantasma. */
+  readonly chest: ChestBox;
+  /** El hueco de la silueta, en el borde de la tapa. */
+  readonly hole: Spot;
+  /** Los extremos del diagrama, de arriba abajo. */
+  readonly nodes: readonly Spot[];
+  /** El medio de cada flecha que baja: ahí va la ficha de la cerradura. */
+  readonly down: readonly Spot[];
+  /** El medio de cada flecha que sube: ahí entra la llave. */
+  readonly up: readonly Spot[];
+  /** Por dónde viaja el objeto que vuelve: de donde estaba a la silueta. */
+  readonly gemFrom: Spot;
+  readonly gemTo: Spot;
 }
 
 /** Dónde cae cada pieza del encastre. Lo comparten el dibujo y el hit test. */
@@ -321,13 +427,17 @@ export function chestLayout(
   // En pantallas angostas el llavero no cabe al lado de la manivela, así que se
   // sube a su propia fila. El blanco de una llave nunca baja de lo que pide N.
   // Sin manivela abajo, el llavero se queda con el ancho entero.
-  const angosta = suelto || width < 600;
+  // El llavero del nodo 12 vive abajo y al centro, como el del cofre suelto.
+  // Cuando el nivel además reparte fichas, sube una fila para dejárselas.
+  const llavero = level.mode === "key";
+  const angosta = suelto || llavero || width < 600;
   const keyH = 44;
   const zona = angosta ? width - 2 * PAD : crank.x - crank.r - 20 - PAD;
   const gap = 10;
   const keyW = Math.max(34, Math.min(72, (zona - (KEY_SLOTS - 1) * gap) / KEY_SLOTS));
   const keyY =
-    suelto ? height - keyH / 2 - 22
+    llavero ? height - keyH / 2 - (problem.tiles.length > 0 ? 88 : 22)
+    : suelto ? height - keyH / 2 - 22
     : angosta ? height - crankR * 2 - 44
     : height - keyH / 2 - 22;
   const keyLeft = angosta ? (width - (KEY_SLOTS * keyW + (KEY_SLOTS - 1) * gap)) / 2 : PAD;
@@ -394,6 +504,113 @@ export function chestLayout(
     composed: { x: width / 2, y: height - padR * 2 - 62 },
     lock: { x: width / 2, y: height * 0.34 },
     ...(level.mode === "nest" ? { nest: nestLayout(problem, level, width, height) } : {}),
+    ...(llavero ? { diagram: diagramLayout(problem, width, height, keyY - keyH) } : {}),
+  };
+}
+
+/**
+ * El diagrama vertical del nodo 12.
+ *
+ * Una columna por panel: el cofre arriba, los extremos abajo en fila vertical y
+ * las dos flechas a los costados de esa fila. La flecha que baja lleva la
+ * cerradura y la que sube, la llave, y ese reflejo es el dibujo del invariante:
+ * el mismo tramo recorrido en los dos sentidos.
+ *
+ * El blanco donde entra la llave es `up`, y cuando el cofre todavía no se
+ * afinó en flechas ese punto **es la cerradura del cofre**. Un solo campo para
+ * las dos pieles, porque para el jugador es el mismo gesto.
+ */
+function diagramLayout(
+  problem: ChestProblem,
+  width: number,
+  height: number,
+  bottom: number,
+): DiagramLayout {
+  const d = problem.diagram;
+  const paneles = d?.panels ?? [];
+  const n = Math.max(paneles.length, 1);
+  const esCofre = d?.skin === "chest";
+  const colW = width / n;
+
+  const top = 18;
+  const chestW = esCofre
+    ? Math.max(90, Math.min(colW * 0.55, 148))
+    : Math.max(44, Math.min(colW * 0.26, 76));
+  const chestH = chestW * 0.66;
+
+  const panels: DiagramPanel[] = [];
+  for (let i = 0; i < n; i++) {
+    const cx = colW * (i + 0.5);
+    // Con el cofre entero manda el cofre y el diagrama no está, así que se
+    // centra en lo que queda libre; con el cofre fantasma manda el diagrama y el
+    // cofre se corre a la derecha.
+    const chest = esCofre
+      ? { x: cx - chestW / 2, y: top + (bottom - top - chestH) * 0.34, w: chestW, h: chestH }
+      : { x: cx + colW * 0.24, y: top + 8, w: chestW, h: chestH };
+    const hole = { x: chest.x + chest.w / 2, y: chest.y + 13 };
+
+    const valores = Math.max((paneles[i]?.values.length ?? 2), 2);
+    const dTop = esCofre ? chest.y + chest.h + 46 : top + 34;
+    const dBottom = Math.max(dTop + 60, bottom - 22);
+    // La flecha no se estira hasta llenar el lienzo: un tramo de trescientos
+    // pixeles no dice más que uno de ciento cincuenta, y el circuito de ida y
+    // vuelta se lee peor cuanto más lejos quedan sus dos extremos.
+    const alto = Math.min(dBottom - dTop, 150 * (valores - 1));
+    const y0 = dTop + (dBottom - dTop - alto) / 2;
+    const paso = alto / (valores - 1);
+    const nodes: Spot[] = [];
+    for (let j = 0; j < valores; j++) nodes.push({ x: cx, y: y0 + j * paso });
+
+    const brazo = Math.min(52, colW * 0.2);
+    const down: Spot[] = [];
+    const up: Spot[] = [];
+    // La cerradura del cofre: el mismo punto donde el jugador suelta la llave
+    // mientras el cofre siga dibujado entero.
+    const cerradura = { x: chest.x + chest.w / 2, y: chest.y + chest.h * 0.42 };
+    for (let j = 0; j + 1 < valores; j++) {
+      const my = ((nodes[j] as Spot).y + (nodes[j + 1] as Spot).y) / 2;
+      down.push({ x: cx - brazo, y: my });
+      up.push(esCofre ? cerradura : { x: cx + brazo, y: my });
+    }
+
+    panels.push({
+      cx,
+      chest,
+      hole,
+      nodes,
+      down,
+      up,
+      // El objeto sale de donde estaba y sube a encajar en la silueta. Con el
+      // cofre entero eso es de adentro del cofre a la tapa; con el diagrama, del
+      // extremo de abajo al de arriba.
+      gemFrom: esCofre
+        ? // Adentro del cofre y por debajo de la cerradura: si el objeto se
+          // dibujara sobre la cerradura, la forma que hay que leer quedaría
+          // tapada justamente por lo que hay que devolver.
+          { x: chest.x + chest.w / 2, y: chest.y + chest.h * 0.84 }
+        : // Sobre la flecha que sube, no sobre el extremo: en el extremo ya está
+          // el numeral, y el objeto que vuelve taparía justo el número que
+          // tiene que coincidir con el de partida.
+          { x: (up[up.length - 1] ?? { x: cx }).x, y: (nodes[valores - 1] as Spot).y },
+      gemTo: esCofre
+        ? hole
+        : { x: (up[0] ?? { x: cx }).x, y: (nodes[0] as Spot).y },
+    });
+  }
+
+  // La llave que se arma: el cuerpo con las dos ranuras, justo encima del
+  // llavero. Las ranuras son grandes porque cualquier ficha entra en las dos.
+  const slotW = 54;
+  const slotH = 44;
+  const blankW = slotW * 2 + 46;
+  const blank = { x: width / 2 - blankW / 2, y: bottom - slotH - 12, w: blankW, h: slotH + 8 };
+  return {
+    panels,
+    blank,
+    opSlot: { x: blank.x + 30 + slotW / 2, y: blank.y + blank.h / 2 },
+    countSlot: { x: blank.x + 30 + slotW + 6 + slotW / 2, y: blank.y + blank.h / 2 },
+    slotW,
+    slotH,
   };
 }
 
@@ -669,13 +886,10 @@ function buildClassKey(kind: ChestKeyKind, cx: number, cy: number, w: number): S
   p.moveTo(x0 + r, cy);
   p.lineTo(x1, cy);
 
-  // El paletón con el signo de la operación. Sale del atlas, así que el `×` de
-  // una llave y el `×` de una expresión son el mismo objeto.
-  const signo = OP_SIGN[kind];
-  if (signo !== undefined) {
-    addGlyphs(p, signo, (x0 + r + x1) / 2 + 2, cy + Math.min(w * 0.2, 11), Math.min(w * 0.42, 20));
-    return p;
-  }
+  // El paletón de una llave aritmética lo dibuja el llamador con el signo
+  // relleno, no acá: un `÷` trazado como contorno a veinte pixeles se funde con
+  // un `+`, porque el trazo se come el hueco entre los dos puntos y la barra.
+  if (OP_SIGN[kind] !== undefined) return p;
 
   const s = Math.max(5, Math.min(w * 0.16, 8));
   const bx = (x0 + r + x1) / 2 + s * 0.4;
@@ -699,6 +913,69 @@ function buildClassKey(kind: ChestKeyKind, cx: number, cy: number, w: number): S
   punta(bx - s * 1.5, dentro ? 1 : -1);
   punta(bx + s * 1.5, dentro ? -1 : 1);
   return p;
+}
+
+/** Una flecha vertical. La misma pieza sirve para bajar y para subir. */
+function vArrow(target: SkPath, x: number, y0: number, y1: number, head: number): void {
+  target.moveTo(x, y0);
+  target.lineTo(x, y1);
+  if (y0 === y1) return;
+  const dir = y1 > y0 ? -1 : 1;
+  target.moveTo(x, y1);
+  target.lineTo(x - head * 0.6, y1 + dir * head);
+  target.moveTo(x, y1);
+  target.lineTo(x + head * 0.6, y1 + dir * head);
+}
+
+/**
+ * El objeto que entró al cofre. Un rombo y nada más: no puede ser un numeral,
+ * porque en la capa concreta el objeto todavía no es un número.
+ */
+function buildGem(r: number): SkPath {
+  const p = Skia.Path.Make();
+  p.moveTo(0, -r);
+  p.lineTo(r * 0.78, 0);
+  p.lineTo(0, r);
+  p.lineTo(-r * 0.78, 0);
+  p.close();
+  return p;
+}
+
+/**
+ * Un número dicho en puntitos. Más de nueve no se cuentan de un vistazo, y los
+ * niveles que llegan tan arriba ya escriben el número.
+ */
+function addDots(target: SkPath, count: number, cx: number, cy: number, paso: number): void {
+  const puntos = Math.min(Math.max(count, 0), 9);
+  let x = cx - ((puntos - 1) * paso) / 2;
+  for (let i = 0; i < puntos; i++) {
+    target.addCircle(x, cy, Math.max(1.6, paso * 0.24));
+    x += paso;
+  }
+}
+
+/**
+ * La cara de una cerradura del nodo 12: la operación como forma y el número
+ * como puntitos, que es como se lee sin saber leer. Con etiqueta el número se
+ * escribe, y ahí la ficha ya nació.
+ */
+function lockFace(
+  target: SkPath,
+  kind: ChestKeyKind,
+  count: number,
+  cx: number,
+  cy: number,
+  s: number,
+  labeled: boolean,
+): void {
+  const signo = OP_SIGN[kind];
+  if (signo !== undefined) addGlyphs(target, signo, cx, cy - s * 0.1, s);
+  if (labeled) {
+    numeral(target, count, cx + s * 0.62, cy - s * 0.1, s * 0.86);
+    return;
+  }
+  // Los puntitos que se agregan o se quitan.
+  addDots(target, count, cx, cy + s * 0.62, Math.min(s * 0.26, 7));
 }
 
 /** La rueda dentada del nodo 3. Los dientes son todos iguales: eso es el invariante. */
@@ -1101,11 +1378,27 @@ export function ChestScene({
               ? buildClassKey(k.kind, spot.x, spot.y - 4, layout.keyW - 12)
               : buildKey(spot.x, spot.y - 4, layout.keyW - 12, k.teeth, level.labeled),
           );
+          // El signo de la operación, relleno y en el paletón. Sale del mismo
+          // atlas que la expresión del nodo 13, así que el `×` de una llave y el
+          // `×` de una cuenta son el mismo objeto.
+          const signo = k.kind ? OP_SIGN[k.kind] : undefined;
+          if (signo !== undefined) {
+            addGlyphs(
+              digits,
+              signo,
+              spot.x + Math.min(layout.keyW * 0.16, 12),
+              spot.y + Math.min(layout.keyW * 0.14, 8),
+              Math.min(layout.keyW * 0.34, 20),
+            );
+          }
           // El numeral llega con la capa `visual`: hasta entonces la llave se
           // compara mirando o contando dientes, nunca leyendo. Un nodo que
           // estira ese silencio más allá de la capa lo declara.
           const conNumeral = level.numerals ?? level.layer !== "concrete";
           if (conNumeral) numeral(digits, k.teeth, spot.x, spot.y + 24, 15);
+          // Y el número en puntitos, para el nodo donde dos llaves comparten la
+          // forma y lo único que las separa es cuánto deshacen.
+          else if (k.dots === true) addDots(digits, k.teeth, spot.x, spot.y + 22, 7);
         }
       }
       return { box, shape, digits };
@@ -1129,8 +1422,11 @@ export function ChestScene({
           ),
         );
         const digits = Skia.Path.Make();
-        const v = problem.tiles[i]?.value;
-        if (v !== undefined) numeral(digits, v, spot.x, spot.y, 24);
+        const tile = problem.tiles[i];
+        if (tile !== undefined) {
+          if (tile.dots === true) addDots(digits, tile.value, spot.x, spot.y, 8);
+          else numeral(digits, tile.value, spot.x, spot.y, 24);
+        }
         return { box, digits };
       }),
     [layout, problem.tiles],
@@ -1166,7 +1462,12 @@ export function ChestScene({
    * el jugador no lee.
    */
   const manoDesde = layout.keys[0] ?? { x: 0, y: 0 };
-  const manoHasta = layout.crank;
+  // Con el diagrama, la mano va adonde entra la llave, que es la cerradura del
+  // cofre o el medio de la flecha que sube según la piel. Es el mismo campo.
+  const manoHasta =
+    level.mode === "key"
+      ? (layout.diagram?.panels[0]?.up[0] ?? layout.diagram?.panels[0]?.hole ?? layout.crank)
+      : layout.crank;
   const ghost = useMemo(() => {
     const dot = Skia.Path.Make();
     dot.addCircle(0, 0, 13);
@@ -1180,7 +1481,12 @@ export function ChestScene({
       { translateY: manoDesde.y + (manoHasta.y - manoDesde.y) * e },
     ];
   }, [manoDesde, manoHasta]);
-  const conMano = level.mode === "turn" || level.mode === "shrink";
+  const conMano =
+    level.mode === "turn" ||
+    level.mode === "shrink" ||
+    // Sin llavero no hay nada que llevar: la mano fantasma sobraría en el nivel
+    // donde la respuesta se toca en vez de arrastrarse.
+    (level.mode === "key" && problem.keys.length > 0);
   const ghostO = useDerivedValue(() =>
     conMano ? hint.value * 0.5 * Math.sin(demo.value * Math.PI) : 0,
   );
@@ -1226,6 +1532,20 @@ export function ChestScene({
   return (
     <Group opacity={appear}>
       {cofreSuelto ? cofre : null}
+      {level.mode === "key" && layout.diagram ? (
+        <KeyDiagram
+          problem={problem}
+          layout={layout.diagram}
+          open={open}
+          outArrow={outArrow}
+          backArrow={backArrow}
+          leftover={leftover}
+          jam={jam}
+          hint={hint}
+          clock={clock}
+          picked={picked}
+        />
+      ) : null}
       {level.mode === "nest" && layout.nest && nest ? (
         <NestedChests
           problem={problem}
@@ -1766,6 +2086,312 @@ function TreeNode({
       <Group opacity={senalado}>
         <Path path={disco} color={theme.color.warn} style="stroke" strokeWidth={3} />
       </Group>
+    </Group>
+  );
+}
+
+// --- El diagrama del nodo 12 -------------------------------------------------
+
+/**
+ * El cofre con la silueta en la tapa y el diagrama vertical que lo reemplaza.
+ *
+ * Todo el dibujo sale de dos hechos por flecha —qué cerradura tiene y qué llave
+ * se le probó— y de uno por panel: si lo que salió encajó en la silueta. Nada
+ * más hace falta, porque las tres cosas que el nodo separa son exactamente esas
+ * tres: la llave no entra, la llave entra y devuelve otra cosa, la llave entra y
+ * devuelve lo que había.
+ *
+ * La silueta hueca es la pieza que hace posible jugar sin leer: dice si el
+ * objeto volvió sin pedir que nadie compare dos números.
+ */
+function KeyDiagram({
+  problem,
+  layout,
+  open,
+  outArrow,
+  backArrow,
+  leftover,
+  jam,
+  hint,
+  clock,
+  picked,
+}: {
+  readonly problem: ChestProblem;
+  readonly layout: DiagramLayout;
+  readonly open: SharedValue<number>;
+  readonly outArrow: SharedValue<number>;
+  readonly backArrow: SharedValue<number>;
+  readonly leftover: SharedValue<number>;
+  readonly jam: SharedValue<number>;
+  readonly hint: SharedValue<number>;
+  readonly clock: SharedValue<number>;
+  readonly picked: number;
+}) {
+  const diagram = problem.diagram;
+  const panels = diagram?.panels ?? [];
+  const skin = diagram?.skin ?? "chest";
+  const labeled = diagram?.labeled ?? false;
+  const numerals = diagram?.numerals ?? false;
+  const conCofre = skin !== "arrows";
+  const conFlechas = skin !== "chest";
+  /** Dos paneles es `explain`: los dos regresos corren solos, en bucle. */
+  const comparando = panels.length > 1;
+
+  const geom = useMemo(() => {
+    const body = Skia.Path.Make();
+    const lid = Skia.Path.Make();
+    const lock = Skia.Path.Make();
+    const hollow = Skia.Path.Make();
+    const down = Skia.Path.Make();
+    const downChip = Skia.Path.Make();
+    const up = Skia.Path.Make();
+    const upChip = Skia.Path.Make();
+    const stuck = Skia.Path.Make();
+    const ends = Skia.Path.Make();
+    const reveal = Skia.Path.Make();
+    const gem = buildGem(9);
+
+    panels.forEach((panel, i) => {
+      const l = layout.panels[i];
+      if (!l) return;
+
+      if (conCofre) {
+        body.addRRect(Skia.RRectXY(Skia.XYWHRect(l.chest.x, l.chest.y, l.chest.w, l.chest.h), 10, 10));
+        lid.addRRect(Skia.RRectXY(Skia.XYWHRect(l.chest.x, l.chest.y, l.chest.w, 14), 6, 6));
+        // La silueta: el hueco con la forma de lo que entró, en el borde de la
+        // tapa. Es la verificación del nodo, y no dice ningún número.
+        const silueta = buildGem(10);
+        silueta.transform([1, 0, l.hole.x, 0, 1, l.hole.y, 0, 0, 1]);
+        hollow.addPath(silueta);
+        const primera = panel.arrows[0];
+        if (primera) {
+          lockFace(
+            lock,
+            primera.lock,
+            primera.count,
+            l.chest.x + l.chest.w / 2,
+            l.chest.y + l.chest.h * 0.42,
+            Math.min(l.chest.w * 0.3, 24),
+            labeled,
+          );
+        }
+      }
+
+      if (conFlechas) {
+        panel.arrows.forEach((a, j) => {
+          const desde = l.nodes[j];
+          const hasta = l.nodes[j + 1];
+          const medioBaja = l.down[j];
+          const medioSube = l.up[j];
+          if (!desde || !hasta || !medioBaja || !medioSube) return;
+          vArrow(down, medioBaja.x, desde.y + 14, hasta.y - 14, 8);
+          lockFace(downChip, a.lock, a.count, medioBaja.x - 22, medioBaja.y, 17, labeled);
+          if (!a.key) return;
+          if (a.closed) {
+            // La vuelta cerrada: la misma flecha reproducida hacia atrás.
+            vArrow(up, medioSube.x, hasta.y - 14, desde.y + 14, 8);
+            lockFace(upChip, a.key.kind, a.key.count, medioSube.x + 22, medioSube.y, 17, labeled);
+          } else {
+            // La llave que gira un cuarto de vuelta y se traba: la flecha
+            // arranca y no llega.
+            vArrow(stuck, medioSube.x, hasta.y - 14, medioSube.y + 10, 8);
+            lockFace(stuck, a.key.kind, a.key.count, medioSube.x + 22, medioSube.y, 17, labeled);
+          }
+        });
+
+        // Los extremos. Con numerales son números; sin ellos, el objeto.
+        panel.values.forEach((v, j) => {
+          const spot = l.nodes[j];
+          if (!spot) return;
+          if (numerals) {
+            numeral(ends, v, spot.x, spot.y, 26);
+          } else {
+            const copia = gem.copy();
+            copia.transform([1, 0, spot.x, 0, 1, spot.y, 0, 0, 1]);
+            ends.addPath(copia);
+          }
+        });
+      }
+
+      // La silueta hueca de la llave que sí entra, revelada sin nombrarla.
+      if (panel.reveal) {
+        lockFace(
+          reveal,
+          panel.reveal,
+          panel.arrows[0]?.count ?? 0,
+          l.chest.x + l.chest.w / 2,
+          l.chest.y + l.chest.h + 22,
+          18,
+          labeled,
+        );
+      }
+    });
+
+    return { body, lid, lock, hollow, down, downChip, up, upChip, stuck, ends, reveal };
+  }, [panels, layout.panels, conCofre, conFlechas, labeled, numerals]);
+
+  /** La llave que se arma, con sus dos ranuras. */
+  const slots = useMemo(() => {
+    const caja = Skia.Path.Make();
+    const huecos = Skia.Path.Make();
+    const puesto = Skia.Path.Make();
+    const s = diagram?.slots;
+    if (!s) return { caja, huecos, puesto };
+    const b = layout.blank;
+    caja.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, b.h), 10, 10));
+    // El anillo de la llave, para que el cuerpo se lea como una llave y no como
+    // una barra con dos casillas.
+    caja.addCircle(b.x + 15, b.y + b.h / 2, 9);
+    for (const spot of [layout.opSlot, layout.countSlot]) {
+      huecos.addRRect(
+        Skia.RRectXY(
+          Skia.XYWHRect(
+            spot.x - layout.slotW / 2,
+            spot.y - layout.slotH / 2,
+            layout.slotW,
+            layout.slotH,
+          ),
+          8,
+          8,
+        ),
+      );
+    }
+    if (s.kind) {
+      const signo = OP_SIGN[s.kind];
+      if (signo !== undefined) addGlyphs(puesto, signo, layout.opSlot.x, layout.opSlot.y, 26);
+    }
+    if (s.count !== null) numeral(puesto, s.count, layout.countSlot.x, layout.countSlot.y, 26);
+    return { caja, huecos, puesto };
+  }, [diagram?.slots, layout]);
+
+  // La tapa se levanta con el mismo valor que abre el cofre en los otros nodos.
+  const lidT = useDerivedValue(() => [{ rotate: -1.5 * open.value + jam.value * 0.06 }]);
+  const primerCofre = layout.panels[0]?.chest;
+  const origen = useMemo(
+    () => ({ x: primerCofre?.x ?? 0, y: primerCofre?.y ?? 0 }),
+    [primerCofre?.x, primerCofre?.y],
+  );
+  // La silueta late mientras el objeto no volvió, y se ilumina cuando encajó.
+  const huecoO = useDerivedValue(
+    () => 0.3 + 0.4 * hint.value * (1 - Math.min(1, open.value)) + 0.6 * Math.min(1, open.value),
+  );
+  const revelO = useDerivedValue(() => 0.35 + 0.45 * hint.value);
+
+  return (
+    <>
+      {conCofre ? (
+        <>
+          <Path path={geom.body} color={theme.color.surfaceHigh} opacity={skin === "ghost" ? 0.45 : 1} />
+          <Path
+            path={geom.body}
+            color={skin === "ghost" ? theme.color.inkFaint : theme.color.line}
+            style="stroke"
+            strokeWidth={STROKE}
+          />
+          <Group origin={origen} transform={lidT}>
+            <Path path={geom.lid} color={theme.color.surfaceHigh} />
+            <Path
+              path={geom.lid}
+              color={skin === "ghost" ? theme.color.inkFaint : theme.color.accent}
+              style="stroke"
+              strokeWidth={2}
+            />
+          </Group>
+          <Path path={geom.lock} color={theme.color.warn} />
+          <Group opacity={huecoO}>
+            <Path path={geom.hollow} color={theme.color.accent} style="stroke" strokeWidth={2} />
+          </Group>
+        </>
+      ) : null}
+
+      {/* Las dos flechas. La de ida siempre está; la de vuelta, cuando se probó. */}
+      <Group opacity={outArrow}>
+        <Path path={geom.down} color={theme.color.inkDim} style="stroke" strokeWidth={2.5} strokeCap="round" />
+        <Path path={geom.downChip} color={theme.color.warn} />
+      </Group>
+      <Group opacity={backArrow}>
+        <Path path={geom.up} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
+        <Path path={geom.upChip} color={theme.color.accent} />
+      </Group>
+      <Group opacity={leftover}>
+        <Path path={geom.stuck} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      </Group>
+      <Path path={geom.ends} color={theme.color.ink} />
+      <Group opacity={revelO}>
+        <Path path={geom.reveal} color={theme.color.accent} style="stroke" strokeWidth={1.5} />
+      </Group>
+
+      {/* El objeto que vuelve, uno por panel. */}
+      {panels.map((panel, i) => (
+        <KeyGem
+          key={`g${i}`}
+          from={layout.panels[i]?.gemFrom}
+          to={layout.panels[i]?.gemTo}
+          closed={panel.arrows.some((a) => a.closed)}
+          fits={panel.fits}
+          t={comparando ? clock : open}
+          marcado={comparando && picked === i}
+        />
+      ))}
+
+      {/* La llave que se arma. */}
+      {diagram?.slots ? (
+        <>
+          <Path path={slots.caja} color={theme.color.surfaceHigh} />
+          <Path path={slots.caja} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+          <Path path={slots.huecos} color={theme.color.inkFaint} style="stroke" strokeWidth={2} />
+          <Path path={slots.puesto} color={theme.color.warn} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * El objeto que sale del cofre y busca su silueta.
+ *
+ * Los tres desenlaces del nodo están en un solo recorrido: con la llave que no
+ * entra el objeto se asoma y vuelve, con la que entra y no devuelve llega hasta
+ * arriba y queda flotando al lado del hueco, y con la que devuelve encaja. Nada
+ * de eso dice "mal": el objeto se resiste y se ve por qué.
+ */
+function KeyGem({
+  from,
+  to,
+  closed,
+  fits,
+  t,
+  marcado,
+}: {
+  readonly from: Spot | undefined;
+  readonly to: Spot | undefined;
+  readonly closed: boolean;
+  readonly fits: boolean;
+  readonly t: SharedValue<number>;
+  readonly marcado: boolean;
+}) {
+  const gem = useMemo(() => buildGem(9), []);
+  const ax = from?.x ?? 0;
+  const ay = from?.y ?? 0;
+  const bx = to?.x ?? 0;
+  const by = to?.y ?? 0;
+  const desvio = fits ? 0 : 26;
+  const transform = useDerivedValue(() => {
+    const raw = Math.max(0, Math.min(1, t.value));
+    // La llave que no entra: el objeto se asoma y vuelve solo.
+    const u = closed ? raw * raw * (3 - 2 * raw) : Math.sin(raw * Math.PI) * 0.18;
+    return [
+      { translateX: ax + (bx + desvio - ax) * u },
+      { translateY: ay + (by - ay) * u },
+    ];
+  }, [ax, ay, bx, by, closed, desvio]);
+  if (!from || !to) return null;
+  return (
+    <Group transform={transform}>
+      <Path path={gem} color={fits ? theme.color.ok : theme.color.warn} />
+      {marcado ? (
+        <Path path={gem} color={theme.color.accent} style="stroke" strokeWidth={3} />
+      ) : null}
     </Group>
   );
 }

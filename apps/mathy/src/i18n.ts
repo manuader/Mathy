@@ -146,6 +146,35 @@ const es: Record<string, string> = {
   "level.lettersBeside": "Letras al lado",
   "level.marksNeverSeen": "Marcas que nunca viste",
 
+  "node.prealg.eq.balance.name": "Los dos platos",
+  "node.prealg.eq.balance.tagline": "El igual es una balanza",
+
+  "level.straighten": "Que quede derecha",
+  "level.keepItStraight": "Que siga derecha",
+  "level.boxInAPan": "La caja en un plato",
+  "level.barsAndStates": "Barras y estados",
+  "level.theBarBecomesEqual": "La barra se vuelve igual",
+  "level.bothSidesComposed": "Los dos lados compuestos",
+  "level.actionsNeverSeen": "Acciones que nunca viste",
+  "bal.definition.sameWorth": "Una igualdad dice que los dos lados valen lo mismo.",
+  "bal.definition.sameAction":
+    "Si dos lados iguales reciben la misma acción, siguen iguales.",
+  "bal.definition.notAnOrder": "El igual no ordena calcular: afirma.",
+
+  "node.prealg.inv.operation_as_key.name": "El llavero",
+  "node.prealg.inv.operation_as_key.tagline": "Toda operación tiene llave",
+
+  // Los otros tres títulos de este nodo ya están en el diccionario y dicen
+  // exactamente lo mismo: `level.fourLocks`, `level.arrows` y
+  // `level.locksNeverSeen`. Una clave repetida con el mismo texto es una
+  // traducción que después hay que mantener dos veces.
+  "level.theKeyThatEnters": "La llave que entra",
+  "level.theCompleteKey": "La llave completa",
+  "level.chipsOnTheArrows": "Fichas sobre las flechas",
+  "level.chainsAndNegatives": "Cadenas y negativos",
+  "key.definition":
+    "Deshacer una operación es aplicar otra que devuelve exactamente lo que había. Cada operación tiene su llave: sumar y restar el mismo número; multiplicar y dividir por el mismo número, distinto de cero. Una acción y su llave dejan todo como estaba.",
+
   "layer.concrete": "manipulación",
   "layer.visual": "representación",
   "layer.symbolic": "notación",

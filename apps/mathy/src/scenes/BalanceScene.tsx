@@ -18,7 +18,7 @@
  *    opacidad se deriva de los `SharedValue` de progreso que trae el gesto.
  */
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 import type { BinOp } from "@mathy/math-core";
@@ -85,6 +85,24 @@ export function panZones(width: number, height: number): PanZones {
     y: l.beamY + l.hang - 26,
     radius: Math.max(l.panW * 0.62, 68),
   };
+}
+
+/**
+ * Cuánto ocupa el cajón dentro de un plato que no lleva pesas sueltas.
+ *
+ * Lo necesita un nodo que dibuje sus propios objetos encima del plato: sin esto
+ * tendría que copiar los números de `buildPan` y quedarían dos fuentes para la
+ * misma medida. `yBase` es el piso del plato, con el eje del grupo del plato
+ * como origen.
+ */
+export function boxFootprint(
+  l: BalanceLayout,
+  style: BalanceStyle,
+): { readonly w: number; readonly h: number; readonly yBase: number } {
+  const flat = style === "visual";
+  const region = flat ? l.panW * 0.72 : l.panW;
+  const w = flat ? region : Math.min(34, region - 2);
+  return { w, h: flat ? 16 : w, yBase: l.hang - 4 };
 }
 
 // --- Contenido de cada plato -------------------------------------------------
@@ -376,6 +394,15 @@ export interface BalanceSceneProps {
    * entre las columnas, porque mide y no afirma.
    */
   readonly brooch?: boolean;
+  /**
+   * Lo que el nodo dibuja adentro de cada plato. Cuelga del grupo del plato, así
+   * que se inclina con la barra sin que el llamador tenga que repetir la
+   * trigonometría. Es la salida para un nodo cuyos objetos no son ni cajas ni
+   * pesas contables —figuras que se giran o se pintan— y para el que necesita
+   * que cada pesa sea un blanco propio en vez de un montón en un solo trazo.
+   */
+  readonly overlayLeft?: ReactNode;
+  readonly overlayRight?: ReactNode;
 }
 
 export function BalanceScene({
@@ -391,6 +418,8 @@ export function BalanceScene({
   tilt: tiltIn,
   openness: opennessIn,
   brooch = true,
+  overlayLeft,
+  overlayRight,
 }: BalanceSceneProps) {
   const l = useMemo(() => balanceLayout(width, height), [width, height]);
   const c = useMemo(
@@ -453,9 +482,11 @@ export function BalanceScene({
       </Group>
       <Group transform={leftT}>
         <Pan geom={leftPan} t={left} openness={openness} brooch={brooch} />
+        {overlayLeft}
       </Group>
       <Group transform={rightT}>
         <Pan geom={rightPan} t={right} openness={openness} brooch={brooch} />
+        {overlayRight}
       </Group>
     </Group>
   );

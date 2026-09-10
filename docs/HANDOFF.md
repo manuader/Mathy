@@ -194,7 +194,15 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
 2. **`main` en `apps/mathy/package.json` es `"index"`, sin extensión**, para que Metro
    haga resolución por plataforma y tome `index.web.tsx`. Con `"index.ts"` el navegador
    nunca corre `LoadSkiaWeb` y el primer lienzo se dibuja contra un Skia que no existe.
-3. **La implementación web de gesture-handler escucha eventos de puntero.**
+3. **Con el panel del navegador oculto, las animaciones de Reanimated no avanzan.** El
+   panel queda en `document.visibilityState === "hidden"`, el navegador estrangula
+   `requestAnimationFrame` y todo lo que dependa de él se congela. **El síntoma es
+   cruel**: el mensaje de la actividad cambia, el estado de React se actualiza, y el
+   objeto en pantalla se queda exactamente como estaba, así que parece un bug propio.
+   Se descarta parcheando `window.requestAnimationFrame` sobre `setTimeout`; aun así hay
+   que esperar dos o tres segundos por movimiento. **Descartá esto antes que nada** si
+   una animación no corre y el estado sí cambia.
+4. **La implementación web de gesture-handler escucha eventos de puntero.**
    **Con un límite medido, confirmado por dos agentes por separado**: la receta activa el
    `Pan` de las **asas** (elementos propios con `touch-action: none`) y los **toques**
    sobre el lienzo, pero **no activa un `Pan` que cubre el lienzo entero**. Un arrastre
@@ -206,53 +214,53 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
    todos con el mismo `pointerId`. Además, `setPointerCapture` con un `pointerId`
    sintético tira `NotFoundError` y **aborta el gesto**: hay que parchear
    `Element.prototype.setPointerCapture` con un try/catch antes de probar.
-4. **El arrastre del navegador automatizado mueve los gestos que leen posición absoluta y
+5. **El arrastre del navegador automatizado mueve los gestos que leen posición absoluta y
    no los que acumulan deltas.** La balanza responde a `left_click_drag` y el arrastre
    simbólico no, porque el evento que activa el gesto no llega a `onChange`. Por eso los
    gestos leen `translationX/Y` y no suman `changeX/Y`.
-5. **La primera captura después de navegar sale en blanco**: compite con el presente de
+6. **La primera captura después de navegar sale en blanco**: compite con el presente de
    WebGL. Sacar siempre dos.
-6. **Un `<Path>` de Skia sin `color` explícito se pinta de negro** sobre un fondo casi
+7. **Un `<Path>` de Skia sin `color` explícito se pinta de negro** sobre un fondo casi
    negro: invisible, y compila.
-7. **Un worklet captura el callback del render en que se armó el gesto.** Rearmar el
+8. **Un worklet captura el callback del render en que se armó el gesto.** Rearmar el
    gesto en cada cambio de estado no alcanza. La decisión tiene que viajar en un
    `SharedValue` o en una referencia.
-8. **Gesture-handler en web pierde el gesto si el objeto del `Gesture` cambia de identidad
+9. **Gesture-handler en web pierde el gesto si el objeto del `Gesture` cambia de identidad
    entre renders.** Hay que memoizarlo.
-9. **`onLayout` mide contra el padre, no contra la página**, y en algunos anidados de
+10. **`onLayout` mide contra el padre, no contra la página**, y en algunos anidados de
    React Native Web devuelve `{0, 0}`. El punto de suelta se calcula desde la ranura más
    la traslación del gesto, no restando la caja del lienzo.
-10. **`Gesture.Exclusive` con un `LongPress` deshabilitado bloquea a los gestos que vienen
+11. **`Gesture.Exclusive` con un `LongPress` deshabilitado bloquea a los gestos que vienen
     detrás.** Usar `Gesture.Race`. Y **un `Pan` habilitado siempre le gana la carrera a un
     `Tap`**: si los dos escuchan la misma superficie, el toque no llega nunca. Cada gesto
     tiene que escuchar solo donde su objeto está.
-11. **Un `Pan` sobre el lienzo con `.minDistance(0)` cancela el gesto de un asa.** Se
+12. **Un `Pan` sobre el lienzo con `.minDistance(0)` cancela el gesto de un asa.** Se
     activa en el mismo instante del apoyo y se lleva el arrastre: la pieza se mueve y al
     soltarla no pasa nada. Sacar el `minDistance(0)` y cerrar con `onFinalize` más un
     umbral de toque.
-12. **Un asa deshabilitada se come los toques del lienzo.** Tiene que quedar montada —si
+13. **Un asa deshabilitada se come los toques del lienzo.** Tiene que quedar montada —si
     se desmonta, el detector de la ronda siguiente se queda sin enganchar— pero necesita
     `pointerEvents: "none"`, o lo que está debajo deja de contestar.
-13. **Con objetos concéntricos, la tolerancia generosa de drop le roba al de afuera su
+14. **Con objetos concéntricos, la tolerancia generosa de drop le roba al de afuera su
     anillo.** Buscar contención estricta primero y aplicar la holgura solo cuando el
     punto no cayó en ninguno.
-14. **`e.x` y `e.y` de un gesto vienen medidos desde la vista que escucha, no desde el
+15. **`e.x` y `e.y` de un gesto vienen medidos desde la vista que escucha, no desde el
     lienzo.** Con un gesto que cubre el lienzo entero la diferencia es cero y no se nota;
     con un asa chica el error es del tamaño de lo que haya arriba. Es primo de la trampa
     de `onLayout`.
-15. **El guion de ASCII no está en el atlas de glifos.** Un número negativo formateado con
+16. **El guion de ASCII no está en el atlas de glifos.** Un número negativo formateado con
     `String(-5)` deja un hueco donde va el signo y, si el número abre la expresión, la
     ecuación no se dibuja. El signo se emite como U+2212.
-16. **`toText` de `math-core` es un serializador de depuración**, no notación para el
+17. **`toText` de `math-core` es un serializador de depuración**, no notación para el
     jugador: mostraba `-448 = x * 32` en pantalla.
-17. **`userSelect: "none"` es funcional, no cosmético.** Sin él, arrastrar sobre un texto
+18. **`userSelect: "none"` es funcional, no cosmético.** Sin él, arrastrar sobre un texto
     arranca una selección del navegador que se queda con el puntero.
-18. **El stripping de tipos de Node no soporta propiedades de parámetro**
+19. **El stripping de tipos de Node no soporta propiedades de parámetro**
     (`constructor(private readonly x: T)`). Hay que declarar el campo aparte.
-19. **Varios agentes verificando a la vez se pisan el `localStorage`**, porque es por
+20. **Varios agentes verificando a la vez se pisan el `localStorage`**, porque es por
     origen. `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
     otro almacén: sirve para sembrar progreso sin que otro te lo borre.
-20. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
+21. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
     escribir al commit. Usá rutas explícitas.
 
 ## 8. Qué falta

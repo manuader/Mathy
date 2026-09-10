@@ -19,6 +19,8 @@ import {
   fracLevelByNumber,
   precLevelByNumber,
   boxLevelByNumber,
+  keyLevelByNumber,
+  balLevelByNumber,
   type LevelBase,
   type NodeSpec,
 } from "@mathy/mechanics";
@@ -34,6 +36,8 @@ import { NegativesGame } from "./NegativesGame.tsx";
 import { FractionsGame } from "./FractionsGame.tsx";
 import { PrecedenceGame } from "./PrecedenceGame.tsx";
 import { UnknownBoxGame } from "./UnknownBoxGame.tsx";
+import { OperationKeyGame } from "./OperationKeyGame.tsx";
+import { BalanceEqGame } from "./BalanceEqGame.tsx";
 
 export interface ActivityProps {
   readonly node: NodeSpec;
@@ -112,6 +116,18 @@ const UnknownBox = ({ level, ...rest }: ActivityProps) => {
   return <UnknownBoxGame {...rest} level={full} />;
 };
 
+const BalanceEq = ({ level, ...rest }: ActivityProps) => {
+  const full = balLevelByNumber(level.n);
+  if (!full) return null;
+  return <BalanceEqGame {...rest} level={full} />;
+};
+
+const OperationKey = ({ level, ...rest }: ActivityProps) => {
+  const full = keyLevelByNumber(level.n);
+  if (!full) return null;
+  return <OperationKeyGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
@@ -124,6 +140,8 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "arith.frac.parts_and_ratio": Fractions,
   "arith.expr.precedence_tree": Precedence,
   "prealg.var.unknown_as_box": UnknownBox,
+  "prealg.inv.operation_as_key": OperationKey,
+  "prealg.eq.balance": BalanceEq,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>
