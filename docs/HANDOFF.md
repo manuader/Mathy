@@ -200,9 +200,13 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
    `requestAnimationFrame` y todo lo que dependa de él se congela. **El síntoma es
    cruel**: el mensaje de la actividad cambia, el estado de React se actualiza, y el
    objeto en pantalla se queda exactamente como estaba, así que parece un bug propio.
-   Se descarta parcheando `window.requestAnimationFrame` sobre `setTimeout`; aun así hay
-   que esperar dos o tres segundos por movimiento. **Descartá esto antes que nada** si
-   una animación no corre y el estado sí cambia.
+   Y no es solo `requestAnimationFrame`: **`setTimeout` también se estrangula, a cerca de
+   uno por segundo**, así que un arrastre sintético de veinte pasos tarda veinte segundos
+   y parece que el estado de React no avanza. Parchear `rAF` sobre `setTimeout` no
+   alcanza por eso mismo. **La receta que destraba es parcharlo sobre un
+   `MessageChannel`**, y usar ese mismo canal para las esperas entre `pointermove`.
+   **Descartá esto antes que nada** si una animación no corre, o si el estado parece no
+   avanzar, y el mensaje sí cambia.
 4. **La implementación web de gesture-handler escucha eventos de puntero.**
    **Con un límite que depende del gesto, y que hay que medir en cada caso.** Los
    **toques** sobre el lienzo andan siempre. El `Pan` de un **asa** anda siempre. Un
@@ -241,8 +245,20 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
 8. **Un worklet captura el callback del render en que se armó el gesto.** Rearmar el
    gesto en cada cambio de estado no alcanza. La decisión tiene que viajar en un
    `SharedValue` o en una referencia.
-9. **Gesture-handler en web pierde el gesto si el objeto del `Gesture` cambia de identidad
-   entre renders.** Hay que memoizarlo.
+9. **Que el objeto del `Gesture` cambie de identidad entre renders NO rompe nada.** Esta
+   entrada decía lo contrario y estaba mal: se midió y es falsa. `GestureDetector` corre
+   `updateAttachedGestures()` en cada render y, mientras no cambien la cantidad de gestos
+   ni el `handlerName`, **adopta el objeto nuevo sobre el handler viejo**: los
+   `gestureId` se rehacen cientos de veces mientras el `handlerTag` sigue siendo el
+   original. Medido sobre gesture-handler 2.32, jugando con arrastres reales el caso
+   exacto en que un asa se apaga a mitad de ronda y vuelve en la siguiente: respondió
+   siempre. El argumento a priori dice lo mismo: casi todos los gestos de lienzo del
+   juego cambian de identidad en cada ronda, así que si esto fuera cierto el juego
+   estaría roto desde el nodo 2.
+   **Lo que sí rompe es desmontar el `GestureDetector`**, y eso es la trampa 13. Un
+   `if (w <= 0) return null` después de los hooks desmonta el asa, y si esa asa vuelve en
+   la ronda siguiente el detector queda sin enganchar. Cuando un asa se quede muda,
+   buscá por ahí y no por el `useMemo`.
 10. **`onLayout` mide contra el padre, no contra la página**, y en algunos anidados de
    React Native Web devuelve `{0, 0}`. El punto de suelta se calcula desde la ranura más
    la traslación del gesto, no restando la caja del lienzo.
