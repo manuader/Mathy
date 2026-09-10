@@ -76,6 +76,7 @@ import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+import { chipFace } from "../ui/Kit.tsx";
 
 /** Cuánto gira la llave por unidad de dial. Ocho muescas por vuelta se sienten. */
 const NOTCH = (2 * Math.PI) / 8;
@@ -983,9 +984,7 @@ const styles = StyleSheet.create({
     height: 64,
     paddingHorizontal: theme.space[2],
     borderRadius: theme.radius.token,
-    backgroundColor: theme.color.surfaceHigh,
-    borderWidth: 1,
-    borderColor: theme.color.line,
+    ...chipFace,
     alignItems: "center",
     justifyContent: "center",
   },

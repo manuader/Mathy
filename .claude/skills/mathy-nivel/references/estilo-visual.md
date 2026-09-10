@@ -84,7 +84,10 @@ Todo lo que se monta para el jugo se monta desde el principio con opacidad cero
   nivel, marca por nivel) y `Hint` (aviso que entra con un salto; menta u ámbar).
 - `ui/Coach.tsx`: `CoachBanner` con Lumi y `Spotlight`.
 - `ui/Kit.tsx`: `PrimaryButton` (dorado con canto que se hunde), `GhostButton`,
-  `Overlay`.
+  `Overlay`, y dos caras para esparcir en el estilo de una actividad: `chipFace`
+  (la ficha que se agarra o se elige, con canto abajo; se usa en todas las
+  bandejas de fichas y en los botones de respuesta) y `toggleFace` (el interruptor
+  de una herramienta, de vidrio). Una actividad no inventa su propia ficha.
 - `ui/Lumi.tsx`: Lumi por pose, con su imagen si existe y un dibujo de reemplazo si no.
 
 Si una pieza de estas no alcanza para un nodo, se extiende con una prop aditiva y

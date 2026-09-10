@@ -78,6 +78,8 @@ import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+import { chipFace, toggleFace } from "../ui/Kit.tsx";
+import { ChipBodies } from "../ui/ChipBodies.tsx";
 
 /** Alto de la banda donde vive la máquina del nodo 17. */
 const MACHINE_H = 128;
@@ -821,7 +823,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: GraphPictureGameProps
           </Group>
 
           {/* El mostrador de pares, la gota del borde y lo que se pregunta. */}
-          <Path path={pairGeom.cuerpo} color={theme.color.line} style="stroke" strokeWidth={1.5} />
+          <ChipBodies path={pairGeom.cuerpo} />
           <Path path={pairGeom.texto} color={theme.color.ink} />
           <Path path={inkGeom} color={theme.color.accent} />
           <Path path={askedGeom} color={theme.color.ink} />
@@ -1202,9 +1204,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[1],
     borderRadius: theme.radius.token,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    backgroundColor: theme.color.surfaceHigh,
+    ...chipFace,
   },
   choiceLabel: { color: theme.color.ink, fontSize: 14 },
   tools: { flexDirection: "row", gap: theme.space[2] },
@@ -1212,8 +1212,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space[2],
     paddingVertical: theme.space[0],
     borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.color.line,
+    ...toggleFace,
   },
   toggleLabel: { color: theme.color.inkDim, fontSize: 12 },
   definition: {

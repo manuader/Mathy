@@ -79,6 +79,7 @@ import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+import { chipFace } from "../ui/Kit.tsx";
 
 /** Cuánto hay que arrastrar hacia abajo para agregar una línea de corte. */
 const CUT_STEP = 26;
@@ -962,9 +963,7 @@ const styles = StyleSheet.create({
     height: 78,
     paddingHorizontal: theme.space[2],
     borderRadius: theme.radius.token,
-    backgroundColor: theme.color.surfaceHigh,
-    borderWidth: 1,
-    borderColor: theme.color.line,
+    ...chipFace,
     alignItems: "center",
     justifyContent: "center",
   },

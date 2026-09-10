@@ -88,6 +88,7 @@ import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+import { chipFace, toggleFace } from "../ui/Kit.tsx";
 
 /** El renglón vivo, el que se transforma. Los ya hechos van más chicos. */
 const FONT_SIZE = 38;
@@ -1098,9 +1099,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[1],
     borderRadius: theme.radius.token,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    backgroundColor: theme.color.surfaceHigh,
+    ...chipFace,
   },
   choiceLabel: { color: theme.color.ink, fontSize: 14 },
   tools: { flexDirection: "row", gap: theme.space[2] },
@@ -1108,8 +1107,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space[2],
     paddingVertical: theme.space[0],
     borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.color.line,
+    ...toggleFace,
   },
   toggleLabel: { color: theme.color.inkDim, fontSize: 12 },
   definition: {

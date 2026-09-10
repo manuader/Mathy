@@ -86,6 +86,7 @@ import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+import { chipFace } from "../ui/Kit.tsx";
 
 /** El signo menos del atlas. El guion de ASCII no está y deja un hueco. */
 const MENOS = "−";
@@ -1221,9 +1222,7 @@ const styles = StyleSheet.create({
     height: 56,
     paddingHorizontal: theme.space[2],
     borderRadius: theme.radius.token,
-    backgroundColor: theme.color.surfaceHigh,
-    borderWidth: 1,
-    borderColor: theme.color.line,
+    ...chipFace,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1236,8 +1235,7 @@ const styles = StyleSheet.create({
     height: 34,
     paddingHorizontal: theme.space[1],
     borderRadius: theme.radius.token,
-    backgroundColor: theme.color.surfaceHigh,
-    borderWidth: 1,
+    ...chipFace,
     borderColor: theme.color.accent,
     alignItems: "center",
     justifyContent: "center",

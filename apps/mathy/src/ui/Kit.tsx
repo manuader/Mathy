@@ -9,7 +9,7 @@
  * apretarlo se hunde: un botón de juego tiene que sentirse como un botón.
  */
 import { useEffect, type ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -58,6 +58,43 @@ export function GhostButton({
     </Pressable>
   );
 }
+
+/**
+ * La cara de una ficha que se agarra o se elige: un número, una operación, una
+ * respuesta. Es un objeto y no un botón de interfaz, así que tiene canto abajo
+ * (profundidad por luminancia, como el botón principal) y el borde de arriba más
+ * claro, como si la luz le diera desde arriba. La ficha es neutra: el color con
+ * trabajo es el de lo que lleva adentro. Se esparce dentro del estilo de cada
+ * actividad, que pone sus medidas.
+ */
+export const chipTone = {
+  top: "#2c4a72",
+  face: "#22395a",
+  low: "#1c3050",
+  edge: "#0a1422",
+  rim: "rgba(255, 255, 255, 0.12)",
+  rimTop: "rgba(255, 255, 255, 0.24)",
+} as const;
+
+export const chipFace: ViewStyle = {
+  backgroundColor: chipTone.face,
+  borderWidth: 1,
+  borderColor: chipTone.rim,
+  borderTopColor: chipTone.rimTop,
+  borderBottomWidth: 4,
+  borderBottomColor: chipTone.edge,
+  shadowColor: "#000",
+  shadowOpacity: 0.35,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 4 },
+};
+
+/** Un interruptor de herramienta (mostrar números, la cuadrícula): vidrio, como el botón fantasma. */
+export const toggleFace: ViewStyle = {
+  borderWidth: 1,
+  borderColor: theme.color.glassLine,
+  backgroundColor: "rgba(255, 255, 255, 0.05)",
+};
 
 export function Eyebrow({
   children,

@@ -91,6 +91,7 @@ import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+import { chipFace } from "../ui/Kit.tsx";
 
 /** Cuánto se puede mover el dedo y que el gesto siga siendo un toque. */
 const TAP_SLOP = 14;
@@ -1214,9 +1215,7 @@ const styles = StyleSheet.create({
     height: 58,
     paddingHorizontal: theme.space[3],
     borderRadius: theme.radius.token,
-    backgroundColor: theme.color.surfaceHigh,
-    borderWidth: 1,
-    borderColor: theme.color.line,
+    ...chipFace,
     alignItems: "center",
     justifyContent: "center",
   },
