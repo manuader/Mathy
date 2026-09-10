@@ -203,12 +203,18 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
    que esperar dos o tres segundos por movimiento. **Descartá esto antes que nada** si
    una animación no corre y el estado sí cambia.
 4. **La implementación web de gesture-handler escucha eventos de puntero.**
-   **Con un límite medido, confirmado por dos agentes por separado**: la receta activa el
-   `Pan` de las **asas** (elementos propios con `touch-action: none`) y los **toques**
-   sobre el lienzo, pero **no activa un `Pan` que cubre el lienzo entero**. Un arrastre
-   sobre el lienzo no se puede probar desde el arnés. Si tu gesto no responde, descartá
-   el arnés antes de sospechar de tu código: probá el mismo camino con un toque, o
-   verificá con un oráculo determinista en vez de jugando. Un arrastre
+   **Con un límite que depende del gesto, y que hay que medir en cada caso.** Los
+   **toques** sobre el lienzo andan siempre. El `Pan` de un **asa** anda siempre. Un
+   `Pan` que cubre el **lienzo entero** a veces sí y a veces no: un agente lo activó
+   sobre las escenas de baldosas usando `pointerId: 1`, `pointerType: "mouse"`,
+   `button: 0` y `pressure` (con `pointerId: 7` no se activaba ninguno), y yo repetí esa
+   misma receta contra la manivela del nodo 2, apuntando a su eje medido en pantalla, y
+   **no se activó**. O sea que depende de cómo esté configurada la activación del gesto,
+   no de la receta.
+
+   **La conducta correcta**: probá con `pointerId: 1` y `pressure`; si no responde, no
+   supongas que tu código está mal. Verificá ese camino con un toque —si el toque hace lo
+   mismo que la suelta, cubre la misma línea de código— o con un oráculo determinista. Un arrastre
    sintético hecho con eventos de mouse no la despierta. La receta que funciona es
    despachar `pointerdown`, doce o más `pointermove` con ~20 ms entre medio y `pointerup`,
    todos con el mismo `pointerId`. Además, `setPointerCapture` con un `pointerId`
