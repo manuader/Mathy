@@ -44,21 +44,23 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import {
+  CHIP_SLOTS,
   NODE_ADD_DISPLACEMENT,
   TOTAL_TRIP_LEVELS,
   generateTrip,
   jumpWith,
   legsTotal,
+  type Trip,
   type TripLevel,
 } from "@mathy/mechanics";
 import type { Event } from "@mathy/progress";
 import {
-  CHIP_VIEWS,
   TOOTH_ANGLE,
   TrackScene,
   trackLayout,
-  type ChipView,
+  type DragView,
   type Leg,
+  type TrackConfig,
 } from "../scenes/TrackScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
@@ -115,7 +117,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
   );
 
   const sceneH = Math.max(340, Math.min(height * 0.68, 560));
-  const layout = useMemo(() => trackLayout(trip, level, width, sceneH), [trip, level, width, sceneH]);
+  const config = useMemo(() => tripConfig(trip, level), [trip, level]);
+  const layout = useMemo(() => trackLayout(config, width, sceneH), [config, width, sceneH]);
 
   const pos = useSharedValue(trip.start);
   const lift = useSharedValue(0);
@@ -142,7 +145,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
   const spin = useSharedValue(0);
 
   // Seis fichas montadas siempre: el árbol no puede cambiar entre rondas.
-  const chips: ChipView[] = [useChip(), useChip(), useChip(), useChip(), useChip(), useChip()];
+  const chips: DragView[] = [useChip(), useChip(), useChip(), useChip(), useChip(), useChip()];
 
   const shownAt = useRef(Date.now());
   const doneRef = useRef(false);
@@ -177,8 +180,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
     spin.value = 0;
     setLoadedFrom(-1);
     setSpent([]);
-    for (let i = 0; i < CHIP_VIEWS; i++) {
-      const chip = chips[i] as ChipView;
+    for (let i = 0; i < CHIP_SLOTS; i++) {
+      const chip = chips[i] as DragView;
       chip.dx.value = 0;
       chip.dy.value = 0;
       chip.alive.value = i < trip.tiles.length ? 1 : 0;
@@ -602,7 +605,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
   const rail = layout.rail;
   const stoneXs = useMemo(() => rail.stones.map((s) => s.x), [rail]);
   const railY = rail.y;
-  const rowsY = useMemo(() => layout.rows.map((r) => r.y), [layout.rows]);
+  const rowsY = layout.rows;
   const touchR = layout.touchR;
   const jugable = phase === "journey" && !level.row;
 
@@ -754,6 +757,20 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
     [level.arrow, ultimo],
   );
 
+  /**
+   * La mano fantasma. Lleva la primera ficha del cajón hasta la manivela, que es
+   * el gesto que hace las tres cosas a la vez. En el renglón la lleva hasta el
+   * hueco. No dice nada porque no puede: el jugador no lee.
+   */
+  const ghost = useMemo(
+    () => ({
+      kind: "move" as const,
+      from: layout.chips[0] ?? { x: 0, y: 0 },
+      to: level.row ? (layout.slot ?? layout.crank) : layout.crank,
+    }),
+    [layout, level.row],
+  );
+
   const ledgerPress = useMemo(
     () =>
       Gesture.LongPress()
@@ -781,8 +798,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
       <View style={{ width, height: sceneH }}>
         <Canvas style={{ width, height: sceneH }}>
           <TrackScene
-            trip={trip}
-            level={level}
+            config={config}
             layout={layout}
             pos={pos}
             lift={lift}
@@ -794,11 +810,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
             appear={appear}
             ghostRail={ghostRail}
             arrowDx={arrowDx}
-            loaded={loaded}
+            // Tres valores y no dos: `-1` es la manivela desnuda y `0` la ficha
+            // del cero, que es un tope de verdad y no la falta de uno.
+            stop={Math.max(0, loaded)}
             legs={shownLegs}
-            phase={phase}
             picked={picked}
             answered={answered}
+            explaining={phase === "explain"}
+            ghost={ghost}
             chips={chips}
           />
         </Canvas>
@@ -857,13 +876,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: AddDisplacementGamePr
         ) : null}
 
         {/* Siempre las mismas asas: las que esta ronda no usa quedan sordas. */}
-        {Array.from({ length: CHIP_VIEWS }, (_, i) => {
+        {Array.from({ length: CHIP_SLOTS }, (_, i) => {
           const chip = trip.tiles[i];
           return (
             <ChipHandle
               key={i}
               index={i}
-              view={chips[i] as ChipView}
+              view={chips[i] as DragView}
               spot={layout.chips[i] ?? { x: 0, y: 0 }}
               w={layout.chipW}
               h={layout.chipH}
@@ -898,7 +917,7 @@ function ChipHandle({
   onTap,
 }: {
   readonly index: number;
-  readonly view: ChipView;
+  readonly view: DragView;
   readonly spot: { x: number; y: number };
   readonly w: number;
   readonly h: number;
@@ -941,7 +960,58 @@ function ChipHandle({
   );
 }
 
-function useChip(): ChipView {
+/**
+ * Lo que este nodo le pide a la mecánica. La base con el tope regulable y el
+ * cajón, más el libro, las flechas y el renglón según la capa. Las medidas son
+ * las que la escena trae por omisión: este nodo es el que las fijó.
+ */
+function tripConfig(trip: Trip, level: TripLevel): TrackConfig {
+  return {
+    slots: trip.length,
+    skin: level.skin === "stone" ? "stone" : "mark",
+    railRows: [level.row ? 0.2 : 0.32],
+    numerals: trip.numerals ? "cards" : "none",
+    flag: { at: trip.flag },
+    drawer: {
+      chips: trip.tiles,
+      views: CHIP_SLOTS,
+      w: 46,
+      h: 46,
+      gap: 10,
+      center: "afterCrank",
+      centerFrac: 0.55,
+      spread: "views",
+      at: "bottom",
+      margin: 14,
+      numerals: trip.numerals,
+      signed: false,
+    },
+    ledger: level.ledger,
+    arrows: level.arrow,
+    // La estela es de la capa que se camina: en el renglón la recta vuelve como
+    // fantasma y lo único que dice son las flechas.
+    trail: !level.row,
+    line: level.row
+      ? {
+          start: trip.start,
+          steps: trip.steps,
+          hidden: trip.hidden,
+          arrival: trip.arrival,
+        }
+      : null,
+    explain: level.explain
+      ? {
+          kind: "arrival",
+          rows: [0.2, 0.46],
+          from: trip.start,
+          to: trip.arrival,
+          liar: trip.liar,
+        }
+      : null,
+  };
+}
+
+function useChip(): DragView {
   return {
     dx: useSharedValue(0),
     dy: useSharedValue(0),

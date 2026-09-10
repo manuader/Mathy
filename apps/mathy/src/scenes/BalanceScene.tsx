@@ -22,13 +22,28 @@ import { useMemo } from "react";
 import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 import type { BinOp } from "@mathy/math-core";
-import type { Problem } from "@mathy/mechanics";
 import { theme } from "../ui/theme.ts";
 
 export type BalanceStyle = "concrete" | "visual";
 
+/**
+ * Lo que la escena lee del problema. Es una forma y no el tipo de un nodo:
+ * `Problem` del nodo 13 la cumple sin tocar nada, y cualquier otro nodo que
+ * reuse la balanza arma un objeto con estos dos campos.
+ */
+export interface BalanceProblem {
+  /** Lo que hay adentro de la caja. Es lo que se ve al abrirla, y nada más. */
+  readonly solution: number;
+  /**
+   * La operación que acompaña a la incógnita: la cerradura. Un nodo donde la
+   * balanza mide en vez de afirmar no tiene ninguna, y entonces tampoco hay
+   * broche que dibujar.
+   */
+  readonly lock?: { readonly op: BinOp; readonly value: number };
+}
+
 /** Cuánto se inclina la barra cuando la acción tocó un solo plato. */
-const MAX_TILT = 0.16;
+export const MAX_TILT = 0.16;
 /** Cuánto suben las pesas que la llave se lleva. */
 const LIFT = 52;
 const STROKE = 1.5;
@@ -75,12 +90,17 @@ export function panZones(width: number, height: number): PanZones {
 // --- Contenido de cada plato -------------------------------------------------
 
 /** Lo que hay en un plato: cajas (la incógnita, quizá partida) y pesas sueltas. */
-interface PanContent {
+export interface PanContent {
   readonly boxes: number;
   readonly units: number;
 }
 
-interface Contents {
+/**
+ * Los dos platos antes y después de la acción. El nodo 13 los deriva de su
+ * ecuación; un nodo donde la balanza mide y no afirma no tiene ninguna acción
+ * que aplicar y los pasa armados, con el antes igual al después.
+ */
+export interface BalanceContents {
   readonly leftBefore: PanContent;
   readonly rightBefore: PanContent;
   readonly leftAfter: PanContent;
@@ -89,8 +109,10 @@ interface Contents {
   readonly deltaSign: number;
 }
 
-function contentsOf(problem: Problem, unknownLeft: boolean): Contents {
-  const { op, value: a } = problem.lock;
+function contentsOf(problem: BalanceProblem, unknownLeft: boolean): BalanceContents {
+  // Sin cerradura no hay nada que aplicar: los platos los arma el nodo y esta
+  // derivación no corre. El valor neutro está para que el tipo cierre.
+  const { op, value: a } = problem.lock ?? { op: "+" as BinOp, value: 0 };
   const s = problem.solution;
   const rhs = op === "+" ? s + a : op === "-" ? s - a : op === "*" ? s * a : s / a;
 
@@ -324,7 +346,7 @@ function buildPan(
 // --- Componente --------------------------------------------------------------
 
 export interface BalanceSceneProps {
-  readonly problem: Problem;
+  readonly problem: BalanceProblem;
   /** La caja está en el plato izquierdo salvo en los niveles con incógnita a la derecha. */
   readonly unknownLeft: boolean;
   readonly style: BalanceStyle;
@@ -335,6 +357,25 @@ export interface BalanceSceneProps {
   readonly right: SharedValue<number>;
   /** Opacidad de toda la balanza: en el nivel 5 se pide con un toque. */
   readonly appear: SharedValue<number>;
+  /**
+   * Los platos armados a mano. Sin esto la escena los deriva de la ecuación,
+   * que es lo que hace el nodo 13; un nodo donde la balanza es un instrumento
+   * de medición y no una afirmación no tiene ecuación de dónde derivarlos.
+   */
+  readonly contents?: BalanceContents;
+  /**
+   * La inclinación en radianes, cuando no sale de la acción de la llave. Es lo
+   * que necesita una balanza que responde a lo que hay en los platos y no a un
+   * paso que se aplica: la barra tiene que moverse mientras el jugador carga.
+   */
+  readonly tilt?: SharedValue<number>;
+  /** La apertura de la caja, cuando no sale de haber pasado por los dos platos. */
+  readonly openness?: SharedValue<number>;
+  /**
+   * El broche con la operación. Una balanza que mide no lleva ningún signo
+   * entre las columnas, porque mide y no afirma.
+   */
+  readonly brooch?: boolean;
 }
 
 export function BalanceScene({
@@ -346,16 +387,23 @@ export function BalanceScene({
   left,
   right,
   appear,
+  contents,
+  tilt: tiltIn,
+  openness: opennessIn,
+  brooch = true,
 }: BalanceSceneProps) {
   const l = useMemo(() => balanceLayout(width, height), [width, height]);
-  const c = useMemo(() => contentsOf(problem, unknownLeft), [problem, unknownLeft]);
+  const c = useMemo(
+    () => contents ?? contentsOf(problem, unknownLeft),
+    [contents, problem, unknownLeft],
+  );
 
   const leftPan = useMemo(
-    () => buildPan(c.leftBefore, c.leftAfter, problem.solution, problem.lock.op, style, l),
+    () => buildPan(c.leftBefore, c.leftAfter, problem.solution, problem.lock?.op ?? "+", style, l),
     [c, problem, style, l],
   );
   const rightPan = useMemo(
-    () => buildPan(c.rightBefore, c.rightAfter, problem.solution, problem.lock.op, style, l),
+    () => buildPan(c.rightBefore, c.rightAfter, problem.solution, problem.lock?.op ?? "+", style, l),
     [c, problem, style, l],
   );
 
@@ -378,8 +426,10 @@ export function BalanceScene({
   }, [l]);
 
   const sign = c.deltaSign;
-  const tilt = useDerivedValue(() => -(left.value - right.value) * sign * MAX_TILT, [sign]);
-  const openness = useDerivedValue(() => Math.min(left.value, right.value));
+  const tiltPropio = useDerivedValue(() => -(left.value - right.value) * sign * MAX_TILT, [sign]);
+  const opennessPropia = useDerivedValue(() => Math.min(left.value, right.value));
+  const tilt = tiltIn ?? tiltPropio;
+  const openness = opennessIn ?? opennessPropia;
 
   const beamT = useDerivedValue(() => [{ rotate: tilt.value }]);
   const levelO = useDerivedValue(() => 1 - Math.min(1, Math.abs(tilt.value) / MAX_TILT));
@@ -402,10 +452,10 @@ export function BalanceScene({
         <Path path={beam} color={theme.color.warn} style="stroke" strokeWidth={2} opacity={tiltedO} />
       </Group>
       <Group transform={leftT}>
-        <Pan geom={leftPan} t={left} openness={openness} />
+        <Pan geom={leftPan} t={left} openness={openness} brooch={brooch} />
       </Group>
       <Group transform={rightT}>
-        <Pan geom={rightPan} t={right} openness={openness} />
+        <Pan geom={rightPan} t={right} openness={openness} brooch={brooch} />
       </Group>
     </Group>
   );
@@ -420,10 +470,12 @@ function Pan({
   geom,
   t,
   openness,
+  brooch,
 }: {
   readonly geom: PanGeom;
   readonly t: SharedValue<number>;
   readonly openness: SharedValue<number>;
+  readonly brooch: boolean;
 }) {
   const leaveT = useDerivedValue(() => [{ translateY: -LIFT * t.value }]);
   const leaveO = useDerivedValue(() => 1 - t.value);
@@ -432,6 +484,9 @@ function Pan({
   // La caja partida muestra en fantasma lo que le falta: sin eso, un quinto de
   // caja parece una caja chica en vez de un pedazo.
   const boxEnterO = useDerivedValue(() => 0.28 + 0.72 * t.value);
+  // El broche se apaga sin desmontarse: una balanza que mide no lleva ningún
+  // signo, y el árbol de la escena tiene que ser el mismo con broche y sin él.
+  const broochO = useDerivedValue(() => (brooch ? 1 - t.value : 0), [brooch]);
   const lidT = useDerivedValue(() => [{ rotate: -1.9 * openness.value }]);
   const boxO = useDerivedValue(() => 1 - openness.value * 0.35);
 
@@ -475,7 +530,7 @@ function Pan({
       </Group>
       <Path path={geom.reveal} color={theme.color.ok} opacity={openness} />
 
-      <Group opacity={leaveO}>
+      <Group opacity={broochO}>
         <Path path={geom.brooch} color={theme.color.accent} style="stroke" strokeWidth={2} />
       </Group>
     </>

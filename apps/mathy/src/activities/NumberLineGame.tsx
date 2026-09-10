@@ -41,13 +41,24 @@ import {
   crankStep,
   generatePath,
   type PathLevel,
+  type PathProblem,
 } from "@mathy/mechanics";
 import type { Event } from "@mathy/progress";
-import { PathScene, TILE_SLOTS, TOOTH_ANGLE, pathLayout, type TileSlot } from "../scenes/PathScene.tsx";
+import {
+  TOOTH_ANGLE,
+  TrackScene,
+  trackLayout,
+  type DragView,
+  type TrackConfig,
+  type TrackGhost,
+} from "../scenes/TrackScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
+
+/** Fichas montadas siempre, para que el árbol no cambie entre rondas. */
+const TILE_SLOTS = 5;
 
 /** Qué agarró el dedo. Vive en un `SharedValue` porque lo decide el hilo de UI. */
 const NADA = 0;
@@ -93,10 +104,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
   );
 
   const sceneH = Math.max(320, Math.min(height * 0.66, 540));
-  const layout = useMemo(
-    () => pathLayout(problem, level, width, sceneH),
-    [problem, level, width, sceneH],
-  );
+  const config = useMemo(() => pathConfig(problem, level), [problem, level]);
+  const layout = useMemo(() => trackLayout(config, width, sceneH), [config, width, sceneH]);
   const [canvasBox, setCanvasBox] = useState({ x: 0, y: 0 });
 
   const pos = useSharedValue(problem.start);
@@ -118,7 +127,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
   const want = useSharedValue(problem.start);
 
   // Cinco fichas montadas siempre: el árbol no puede cambiar entre rondas.
-  const slots: TileSlot[] = [
+  const slots: DragView[] = [
     useSlot(),
     useSlot(),
     useSlot(),
@@ -141,7 +150,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
     tapLift.value = 0;
     appear.value = withTiming(1, { duration: theme.motion.base });
     for (let i = 0; i < TILE_SLOTS; i++) {
-      const slot = slots[i] as TileSlot;
+      const slot = slots[i] as DragView;
       slot.dx.value = 0;
       slot.dy.value = 0;
       slot.alive.value = i < problem.tiles.length ? 1 : 0;
@@ -347,8 +356,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
     (index: number, absX: number, absY: number) => {
       const tile = problem.tiles[index];
       const slot = slots[index];
-      const track = layout.tracks[0];
-      if (!tile || !slot || !track || solved) return;
+      const track = layout.rail;
+      if (!tile || !slot || solved) return;
       const x = absX - canvasBox.x;
       const y = absY - canvasBox.y;
 
@@ -359,7 +368,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
         if (filled.includes(gap)) continue;
         const s = track.stones[gap];
         if (!s) continue;
-        const d = Math.hypot(x - (s.x + track.cardDx), y - (s.y + track.cardDy));
+        const d = Math.hypot(x - (s.x + layout.cardDx), y - (s.y + layout.cardDy));
         if (d < bestD) {
           bestD = d;
           best = gap;
@@ -372,15 +381,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
       }
 
       quiet();
-      const home = layout.tiles[index];
+      const home = layout.chips[index];
       const s = track.stones[best];
       if (!home || !s) return;
       const ok = tile.value === best;
       attempt(ok);
       if (!ok) {
         // La ficha equivocada no entra: se desliza hasta el borde y vuelve.
-        const px = (s.x + track.cardDx - home.x) * 0.82;
-        const py = (s.y + track.cardDy - home.y) * 0.82;
+        const px = (s.x + layout.cardDx - home.x) * 0.82;
+        const py = (s.y + layout.cardDy - home.y) * 0.82;
         slot.dx.value = withSequence(
           withTiming(px, { duration: 110 }),
           withTiming(0, { duration: 320 }),
@@ -396,8 +405,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
       // La ficha vuela hasta la piedra, pero clavarla no espera a la animación:
       // si el estado dependiera de que termine, una animación interrumpida
       // dejaría la ronda a medias.
-      slot.dx.value = withTiming(s.x + track.cardDx - home.x, { duration: 150 });
-      slot.dy.value = withTiming(s.y + track.cardDy - home.y, { duration: 150 });
+      slot.dx.value = withTiming(s.x + layout.cardDx - home.x, { duration: 150 });
+      slot.dy.value = withTiming(s.y + layout.cardDy - home.y, { duration: 150 });
       pinned(index, best);
     },
     // `pinned` se declara abajo y no cambia de identidad entre cuadros.
@@ -407,11 +416,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
 
   // --- Gestos ----------------------------------------------------------------
 
-  const track = layout.tracks[0];
-  const ox = track?.origin.x ?? 0;
-  const oy = track?.origin.y ?? 0;
-  const tdx = track?.dx ?? 1;
-  const tdy = track?.dy ?? 0;
+  const track = layout.rail;
+  const ox = track.origin.x;
+  const oy = track.origin.y;
+  const tdx = track.dx;
+  const tdy = track.dy;
   const stepSq = Math.max(1, tdx * tdx + tdy * tdy);
   const crank = layout.crank;
   const length = problem.length;
@@ -419,9 +428,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
   const compare = level.mode === "compare";
   // Las coordenadas del hit test viajan al worklet como números sueltos, así
   // que se congelan por layout y no por cuadro.
-  const rowsY = useMemo(() => layout.tracks.map((tr) => tr.origin.y), [layout]);
-  const stoneXs = useMemo(() => (track?.stones ?? []).map((s) => s.x), [track]);
-  const stoneYs = useMemo(() => (track?.stones ?? []).map((s) => s.y), [track]);
+  const rowsY = layout.rows;
+  const stoneXs = useMemo(() => track.stones.map((s) => s.x), [track]);
+  const stoneYs = useMemo(() => track.stones.map((s) => s.y), [track]);
 
   const pan = useMemo(
     () =>
@@ -530,6 +539,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
 
   const canvasGesture = useMemo(() => Gesture.Race(pan, tap), [pan, tap]);
 
+  /**
+   * La mano fantasma. Es la única instrucción del nodo: en los niveles que se
+   * caminan toma la manivela y la gira dos dientes; en los que se completan
+   * lleva la primera ficha hasta el primer hueco. En `explain` no hay nada que
+   * demostrar con la mano: se mira y se elige.
+   */
+  const ghost = useMemo<TrackGhost | null>(() => {
+    if (compare) return null;
+    const hole = problem.gaps.find((g) => !filled.includes(g));
+    const stone = hole === undefined ? undefined : track.stones[hole];
+    if (level.mode === "fill" && stone) {
+      return {
+        kind: "move",
+        from: layout.chips[0] ?? { x: 0, y: 0 },
+        to: { x: stone.x + layout.cardDx, y: stone.y + layout.cardDy },
+      };
+    }
+    return { kind: "turn", teeth: 2 };
+  }, [compare, level.mode, problem.gaps, filled, track, layout]);
+
   return (
     <View style={styles.root}>
       <Pressable onPress={onExit} style={styles.back} hitSlop={theme.hitSlop}>
@@ -551,9 +580,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
         }}
       >
         <Canvas style={{ width, height: sceneH }}>
-          <PathScene
-            problem={problem}
-            level={level}
+          <TrackScene
+            config={config}
             layout={layout}
             pos={pos}
             lift={lift}
@@ -561,12 +589,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
             hint={hint}
             clock={clock}
             demo={demo}
+            tapLift={tapLift}
+            appear={appear}
+            stop={level.mode === "predict" ? problem.teeth : 0}
             filled={filled}
             tapped={tapped}
-            tapLift={tapLift}
             picked={picked}
-            tiles={slots}
-            appear={appear}
+            explaining={compare}
+            ghost={ghost}
+            chips={slots}
           />
         </Canvas>
 
@@ -582,10 +613,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NumberLineGameProps) 
             <TileHandle
               key={i}
               index={i}
-              slot={slots[i] as TileSlot}
-              spot={layout.tiles[i] ?? { x: 0, y: 0 }}
-              w={layout.tileW}
-              h={layout.tileH}
+              slot={slots[i] as DragView}
+              spot={layout.chips[i] ?? { x: 0, y: 0 }}
+              w={layout.chipW}
+              h={layout.chipH}
               enabled={!!tile && !solved && !filled.includes(tile.value)}
               onDrop={dropTile}
             />
@@ -609,7 +640,7 @@ function TileHandle({
   onDrop,
 }: {
   readonly index: number;
-  readonly slot: TileSlot;
+  readonly slot: DragView;
   readonly spot: { x: number; y: number };
   readonly w: number;
   readonly h: number;
@@ -644,11 +675,73 @@ function TileHandle({
   );
 }
 
-function useSlot(): TileSlot {
+function useSlot(): DragView {
   return {
     dx: useSharedValue(0),
     dy: useSharedValue(0),
     alive: useSharedValue(0),
+  };
+}
+
+/**
+ * Lo que este nodo le pide a la mecánica. Cinco fichas de 48, la pista que se
+ * puede parar, la tarjeta con el numeral sobre cada piedra y ningún tope salvo
+ * en el nivel que anticipa. Las medidas van aparte de las decisiones: son las
+ * del nodo 2, que dibuja la pista más suelta que los demás porque tiene pocas
+ * piedras y mucho lugar.
+ */
+function pathConfig(problem: PathProblem, level: PathLevel): TrackConfig {
+  const compare = level.mode === "compare";
+  const vertical = problem.orientation === "vertical";
+  return {
+    slots: problem.length,
+    leadIn: problem.leadIn,
+    skin: level.skin,
+    orientation: problem.orientation,
+    // Las dos animaciones que se comparan tienen que medir lo mismo: si una
+    // estuviera estirada, la comparación hablaría del dibujo y no del paso.
+    stretch: compare ? 1 : problem.stretch,
+    railRows: compare ? [0.26, 0.6] : vertical ? [0.24] : [0.36],
+    numerals: level.cards ? "cards" : "none",
+    numeralFrom: level.zeroCard ? 0 : 1,
+    gaps: problem.gaps,
+    flag: problem.flag === null ? null : { at: problem.flag },
+    // En la capa visual la mitad de las instancias se juega sin caminante.
+    walker: problem.showWalker || compare,
+    crankAt: vertical ? "right" : "bottomLeft",
+    drawer: {
+      chips: problem.tiles,
+      views: TILE_SLOTS,
+      w: 48,
+      h: 48,
+      gap: 12,
+      center: vertical ? "canvas" : "midRight",
+      centerFrac: 0.62,
+      spread: "chips",
+      at: "bottom",
+      margin: 16,
+      numerals: true,
+      signed: false,
+    },
+    explain: compare ? { kind: "walks", walks: problem.walks, liar: problem.liar } : null,
+    metrics: {
+      pad: 52,
+      maxStep: 132,
+      stone: { frac: 0.36, max: 26, flat: 0 },
+      stoneOutline: true,
+      markHalf: 9,
+      // El tope de este nodo anuncia, no sujeta: el diente llega un poco menos
+      // lejos y con un trazo más fino.
+      stopReach: 0.9,
+      stopWidth: 2.5,
+      ghostR: 13,
+      flag: { base: 6, top: 44, span: 22, drop: 8 },
+      card: { frac: 0.86, min: 18, max: 34, h: 26 },
+      cardDy: 30,
+      crank: { min: 34, max: 52, frac: 0.14, margin: 14 },
+      touch: { frac: 0.55, min: 26 },
+      numeralEvery: null,
+    },
   };
 }
 

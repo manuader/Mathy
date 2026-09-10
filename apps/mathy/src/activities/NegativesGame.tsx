@@ -47,6 +47,8 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   MIS_DOUBLE_FLIP,
+  NEG_CHIP_SLOTS,
+  NEG_TOKEN_SLOTS,
   NODE_NEGATIVES,
   TOTAL_NEG_LEVELS,
   generateNegatives,
@@ -54,18 +56,19 @@ import {
   negNet,
   negWalk,
   type NegLevel,
+  type NegProblem,
 } from "@mathy/mechanics";
 import type { Event } from "@mathy/progress";
 import {
-  CHIP_VIEWS,
-  ElevatorScene,
-  TOKEN_VIEWS,
   TOOTH_ANGLE,
+  TrackScene,
   boardSlot,
-  elevatorLayout,
   signed,
+  trackLayout,
   type DragView,
-} from "../scenes/ElevatorScene.tsx";
+  type TrackConfig,
+  type TrackGhost,
+} from "../scenes/TrackScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
@@ -120,10 +123,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
   );
 
   const sceneH = Math.max(360, Math.min(height * 0.68, 560));
-  const layout = useMemo(
-    () => elevatorLayout(problem, level, width, sceneH),
-    [problem, level, width, sceneH],
-  );
+  const config = useMemo(() => negConfig(problem, level), [problem, level]);
+  const layout = useMemo(() => trackLayout(config, width, sceneH), [config, width, sceneH]);
 
   const pos = useSharedValue(0);
   const facing = useSharedValue(1);
@@ -133,7 +134,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
   const clock = useSharedValue(0);
   const demo = useSharedValue(0);
   const appear = useSharedValue(0);
-  const ghost = useSharedValue(0);
+  /** El edificio que el nivel 6 pide con un toque. */
+  const reveal = useSharedValue(0);
   const street = useSharedValue(0);
   const subject = useSharedValue(NADA);
   const lastAngle = useSharedValue(0);
@@ -178,7 +180,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
     flip.value = 1;
     street.value = problem.zeroAt;
     zeroSV.value = problem.zeroAt;
-    ghost.value = 0;
+    reveal.value = 0;
     appear.value = withTiming(1, { duration: theme.motion.base });
     setStreetAt(problem.zeroAt);
     setPhase(openingPhase(level));
@@ -190,7 +192,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
     setCancelled(problem.tokens.map(() => false));
     setMessage({ text: openingHint(level, problem.netTarget), tone: "dim" });
 
-    for (let i = 0; i < CHIP_VIEWS; i++) {
+    for (let i = 0; i < NEG_CHIP_SLOTS; i++) {
       const view = chips[i] as DragView;
       view.dx.value = 0;
       view.dy.value = 0;
@@ -198,7 +200,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
       // cuando el cero queda donde va, que es lo que el nivel pregunta.
       view.alive.value = i < problem.chips.length && level.mode !== "moveZero" ? 1 : 0;
     }
-    for (let i = 0; i < TOKEN_VIEWS; i++) {
+    for (let i = 0; i < NEG_TOKEN_SLOTS; i++) {
       const view = tokens[i] as DragView;
       view.dx.value = 0;
       view.dy.value = 0;
@@ -423,13 +425,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
   /** El edificio que el nivel pide con un toque, y que se apaga solo. */
   const askBuilding = useCallback(() => {
     if (level.building !== "onDemand") return;
-    ghost.value = withSequence(
+    reveal.value = withSequence(
       withTiming(1, { duration: 240 }),
       withTiming(1, { duration: 2000 }),
       withTiming(0, { duration: 400 }),
     );
     setMessage({ text: "El edificio vuelve un momento, con las dos paradas marcadas.", tone: "dim" });
-  }, [level.building, ghost]);
+  }, [level.building, reveal]);
 
   // --- Fichas ----------------------------------------------------------------
 
@@ -615,7 +617,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
       zeroSV.value = piso;
       setStreetAt(piso);
       setPhase("play");
-      for (let i = 0; i < CHIP_VIEWS; i++) {
+      for (let i = 0; i < NEG_CHIP_SLOTS; i++) {
         const view = chips[i] as DragView;
         view.alive.value = i < problem.chips.length ? withTiming(1, { duration: 320 }) : 0;
       }
@@ -633,13 +635,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
   const crank = layout.crank;
   const slots = problem.slots;
   const zeroAt = problem.zeroAt;
-  const stoneXs = useMemo(() => layout.stones.map((s) => s.x), [layout.stones]);
-  const railY = layout.railY;
+  const stoneXs = useMemo(() => layout.rail.stones.map((s) => s.x), [layout.rail]);
+  const railY = layout.rail.y;
   const drawXs = useMemo(() => layout.drawings.map((s) => s.x), [layout.drawings]);
   const drawY = layout.drawings[0]?.y ?? 0;
   const drawR = layout.drawingR;
   const rowsY = layout.rows;
   const conManivela = level.mode === "cross" || level.mode === "turn";
+  /** Los niveles que se juegan sobre la pista: son los que tienen manivela dibujada. */
+  const conPista = conManivela || level.mode === "floor";
 
   // La manivela solo escucha donde hay manivela. Un `Pan` habilitado siempre
   // gana la carrera contra el `Tap` y se come todos los toques: el nivel que
@@ -743,6 +747,35 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
    */
   const shaft = layout.shaft;
   const shaftTop = shaft.bottom - slots * shaft.floorH;
+  /**
+   * La mano fantasma. Hace el gesto que el nivel pide y vuelve al principio: en
+   * los que se caminan gira la manija hacia atrás; en los demás lleva de un
+   * lugar al otro lo que hay que llevar. No dice nada porque no puede, y en los
+   * cuatro primeros niveles el jugador no lee.
+   */
+  const ghost = useMemo<TrackGhost>(() => {
+    const chip0 = layout.chips[0] ?? { x: 0, y: 0 };
+    if (conPista) return { kind: "turn", teeth: -3 };
+    if (level.mode === "ledger") {
+      return {
+        kind: "move",
+        from: layout.tokens[0] ?? chip0,
+        to: { x: layout.board.x + layout.board.w / 4, y: layout.board.y + 40 },
+      };
+    }
+    if (level.mode === "arbitrary") {
+      return {
+        kind: "move",
+        from: { x: layout.width / 2, y: layout.height * 0.3 },
+        to: layout.drawings[problem.row.origin] ?? { x: 0, y: 0 },
+      };
+    }
+    if (level.mode === "distance") {
+      return { kind: "move", from: layout.stops[0] ?? { x: 0, y: 0 }, to: chip0 };
+    }
+    return { kind: "move", from: chip0, to: layout.box };
+  }, [conPista, layout, level.mode, problem.row.origin]);
+
   const streetPan = useMemo(
     () =>
       Gesture.Pan()
@@ -775,9 +808,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
 
       <View style={{ width, height: sceneH }}>
         <Canvas style={{ width, height: sceneH }}>
-          <ElevatorScene
-            problem={problem}
-            level={level}
+          <TrackScene
+            config={config}
             layout={layout}
             pos={pos}
             facing={facing}
@@ -785,18 +817,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
             clock={clock}
             demo={demo}
             appear={appear}
-            ghost={ghost}
+            reveal={reveal}
             pinned={phase === "move"}
             street={street}
             zero={streetAt}
-            loaded={level.mode === "floor" ? problem.step : 0}
+            stop={level.mode === "floor" ? problem.step : 0}
             net={net}
-            placed={placed}
             cancelled={cancelled}
             answered={answered}
             picked={picked}
             tapped={tapped}
-            phase={phase}
+            explaining={phase === "explain"}
+            ghost={ghost}
             chips={chips}
             tokens={tokens}
           />
@@ -813,9 +845,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
         {level.flip ? (
           <WalkerHandle
             pos={pos}
-            x0={layout.stones[0]?.x ?? 0}
-            step={layout.railStep}
-            y={layout.railY}
+            x0={layout.rail.origin.x}
+            step={layout.rail.step}
+            y={layout.rail.y}
             enabled={phase === "play"}
             onTap={turnWalker}
           />
@@ -853,7 +885,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
         ) : null}
 
         {/* Siempre las mismas asas: las que esta ronda no usa quedan sordas. */}
-        {Array.from({ length: CHIP_VIEWS }, (_, i) => (
+        {Array.from({ length: NEG_CHIP_SLOTS }, (_, i) => (
           <DragHandle
             key={`chip${i}`}
             index={i}
@@ -867,17 +899,21 @@ function Activity({ level, onLevelDone, onExit, onEvent }: NegativesGameProps) {
             onTap={tapChip}
           />
         ))}
-        {Array.from({ length: TOKEN_VIEWS }, (_, i) => (
-          <TokenHandle
-            key={`tok${i}`}
-            index={i}
-            view={tokens[i] as DragView}
-            spot={layout.tokens[i] ?? { x: 0, y: 0 }}
-            r={layout.tokenR}
-            enabled={i < problem.tokens.length && phase === "play"}
-            onDrop={dropToken}
-          />
-        ))}
+        {/* Las asas de las monedas viven con el tablero: sin tablero no hay
+            bandeja donde estén, y un asa sorda en una esquina taparía el lienzo. */}
+        {level.board
+          ? Array.from({ length: NEG_TOKEN_SLOTS }, (_, i) => (
+              <TokenHandle
+                key={`tok${i}`}
+                index={i}
+                view={tokens[i] as DragView}
+                spot={layout.tokens[i] ?? { x: 0, y: 0 }}
+                r={layout.tokenR}
+                enabled={i < problem.tokens.length && phase === "play"}
+                onDrop={dropToken}
+              />
+            ))
+          : null}
       </View>
 
       <Hint text={message.text} tone={message.tone} />
@@ -1055,6 +1091,101 @@ function useDrag(): DragView {
     dx: useSharedValue(0),
     dy: useSharedValue(0),
     alive: useSharedValue(0),
+  };
+}
+
+/**
+ * Lo que este nodo le pide a la mecánica. Lo propio suyo es `zeroAt`: las
+ * casillas a la izquierda del cero no son una capa aparte sino el mismo soporte
+ * corrido, y el nombre de una casilla pasa a ser su índice menos la calle. Lo
+ * demás son capas: el edificio en corte con su ascensor y su calle, el tablero
+ * de monedas, las paradas escritas, la caja y la fila de dibujos.
+ *
+ * `zeroAt` es el cero de partida y no el de ahora: cuando el jugador muda la
+ * calle, el cero nuevo entra por la prop `zero` y renombra todo sin mover nada.
+ */
+function negConfig(problem: NegProblem, level: NegLevel): TrackConfig {
+  const conPista = level.mode === "cross" || level.mode === "floor" || level.mode === "turn";
+  const marca =
+    level.mode === "compare" || level.mode === "distance" || level.mode === "moveZero";
+  // Las dos fichas de piso caen arriba, sobre el edificio; las del cajón que
+  // contesta una distancia viven abajo, como en todos los demás nodos.
+  const arriba = level.mode === "compare" || level.mode === "moveZero";
+  return {
+    slots: problem.slots,
+    zeroAt: problem.zeroAt,
+    skin: level.skin === "stone" ? "stone" : "mark",
+    railRows: [level.mode === "turn" ? 0.46 : 0.4],
+    // Donde no hay pista el soporte igual existe: es la escala con la que se
+    // dibujan el edificio y las dos rectas de la vuelta doble.
+    showRail: conPista,
+    numerals: level.numerals ? "plain" : "none",
+    zeroDot: true,
+    // La bandera dice adónde hay que llegar. En el nivel que anticipa no se
+    // dibuja: sería la respuesta puesta encima de la pregunta.
+    flag:
+      conPista && level.mode !== "floor"
+        ? { at: problem.target, side: -1, halo: false, pulse: true }
+        : null,
+    walker: conPista,
+    facing: true,
+    crank: conPista,
+    drawer: {
+      chips: problem.chips,
+      views: NEG_CHIP_SLOTS,
+      w: 62,
+      h: 48,
+      gap: 12,
+      center: "canvas",
+      centerFrac: 0.5,
+      spread: "chips",
+      at: arriba ? "top" : "bottom",
+      margin: arriba ? 0.12 : 18,
+      numerals: level.numerals,
+      signed: true,
+    },
+    building:
+      level.building === "none"
+        ? null
+        : {
+            show: level.building,
+            reserve: level.building === "shown" ? 150 : 0,
+            beside: conPista,
+            centerFrac: level.mode === "ledger" ? 0.18 : 0.5,
+            car: conPista,
+            moveTo: problem.moveTo,
+            marks: marca ? problem.floors : [],
+            numerals: level.numerals,
+          },
+    board: level.board
+      ? { tokens: problem.tokens, views: NEG_TOKEN_SLOTS, target: problem.netTarget }
+      : null,
+    stops: level.mode === "distance" ? problem.floors : [],
+    box: arriba,
+    drawings:
+      level.mode === "arbitrary"
+        ? {
+            count: problem.row.length,
+            origin: problem.row.origin,
+            dir: problem.row.dir,
+            steps: problem.row.steps,
+          }
+        : null,
+    explain: level.explain ? { kind: "doubleTurn", rows: [0.3, 0.62], liar: problem.liar } : null,
+    metrics: {
+      pad: 40,
+      maxStep: 88,
+      // La casilla de este nodo es chata y ancha: tiene que leerse como un lugar
+      // de la recta y no como una piedra suelta.
+      stone: { frac: 0.3, max: Number.POSITIVE_INFINITY, flat: 7 },
+      band: { half: 4, over: 12 },
+      markOver: 12,
+      markHalf: 9,
+      flag: { base: 8, top: 42, span: 18, drop: 7 },
+      crank: { min: 30, max: 44, frac: 0.12, margin: 10 },
+      touch: { frac: 0.5, min: 26 },
+      numeralEvery: null,
+    },
   };
 }
 

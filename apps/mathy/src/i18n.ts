@@ -121,6 +121,31 @@ const es: Record<string, string> = {
   "level.theLineAlone": "La recta sola",
   "level.wholesNeverSeen": "Todos que nunca viste",
 
+  "node.arith.expr.precedence_tree.name": "Cofres dentro de cofres",
+  "node.arith.expr.precedence_tree.tagline": "Los paréntesis son cofres anidados",
+
+  "level.oneChestInsideAnother": "Un cofre adentro de otro",
+  "level.buildTheNesting": "Armar el anidamiento",
+  "level.chestsAndTree": "Cofres y árbol",
+  "level.thePipe": "La tubería",
+  "level.chipsAndWalls": "Fichas y paredes",
+  "level.invisibleChests": "Cofres invisibles",
+  "level.undoIt": "Deshacer",
+  "level.nestingsNeverSeen": "Encastres que nunca viste",
+  "prec.definition":
+    "Una expresión es un encastre de operaciones, y su forma se dibuja como un árbol. Para calcular el valor se empieza por el cofre de más adentro y se sube. Los paréntesis no operan: solo dicen qué está adentro de qué.",
+
+  "node.prealg.var.unknown_as_box.name": "Cajas en el libro de cuentas",
+  "node.prealg.var.unknown_as_box.tagline": "La incógnita es una caja cerrada",
+
+  "level.eachInItsRow": "Cada cosa en su fila",
+  "level.theBoxIsARowToo": "La caja también es una fila",
+  "level.howMuchWithoutOpening": "Cuánto pesa sin abrirla",
+  "level.twoMarks": "Dos marcas",
+  "level.barsAndCounts": "Barras y conteos",
+  "level.lettersBeside": "Letras al lado",
+  "level.marksNeverSeen": "Marcas que nunca viste",
+
   "layer.concrete": "manipulación",
   "layer.visual": "representación",
   "layer.symbolic": "notación",

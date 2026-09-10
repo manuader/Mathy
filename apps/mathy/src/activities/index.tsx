@@ -17,6 +17,8 @@ import {
   divLevelByNumber,
   negLevelByNumber,
   fracLevelByNumber,
+  precLevelByNumber,
+  boxLevelByNumber,
   type LevelBase,
   type NodeSpec,
 } from "@mathy/mechanics";
@@ -30,6 +32,8 @@ import { SubUndoAddGame } from "./SubUndoAddGame.tsx";
 import { DivUndoMulGame } from "./DivUndoMulGame.tsx";
 import { NegativesGame } from "./NegativesGame.tsx";
 import { FractionsGame } from "./FractionsGame.tsx";
+import { PrecedenceGame } from "./PrecedenceGame.tsx";
+import { UnknownBoxGame } from "./UnknownBoxGame.tsx";
 
 export interface ActivityProps {
   readonly node: NodeSpec;
@@ -96,6 +100,18 @@ const Fractions = ({ level, ...rest }: ActivityProps) => {
   return <FractionsGame {...rest} level={full} />;
 };
 
+const Precedence = ({ level, ...rest }: ActivityProps) => {
+  const full = precLevelByNumber(level.n);
+  if (!full) return null;
+  return <PrecedenceGame {...rest} level={full} />;
+};
+
+const UnknownBox = ({ level, ...rest }: ActivityProps) => {
+  const full = boxLevelByNumber(level.n);
+  if (!full) return null;
+  return <UnknownBoxGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
@@ -106,6 +122,8 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "arith.div.undo_mul": DivUndoMul,
   "arith.int.negatives": Negatives,
   "arith.frac.parts_and_ratio": Fractions,
+  "arith.expr.precedence_tree": Precedence,
+  "prealg.var.unknown_as_box": UnknownBox,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>

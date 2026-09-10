@@ -43,19 +43,38 @@ import { theme } from "../ui/theme.ts";
  * Los modos que la escena sabe dibujar. Los seis primeros son los del nodo 4 y
  * `UndoMode` entra tal cual; `shrink` es lo que agrega el nodo 6: el cofre
  * suelto, sin pista y sin manivela, con la cerradura con la forma del estirado
- * y el llavero abajo.
+ * y el llavero abajo. `nest` es lo que agrega el nodo 9: los cofres metidos uno
+ * adentro del otro, el árbol al costado y la fila de fichas debajo.
  */
-export type ChestMode = "turn" | "pick" | "judge" | "measure" | "write" | "unlock" | "shrink";
+export type ChestMode =
+  | "turn"
+  | "pick"
+  | "judge"
+  | "measure"
+  | "write"
+  | "unlock"
+  | "shrink"
+  | "nest";
 
 /** La pista dibujada, aplanada, a pedido, o ya retirada. */
 export type ChestSkin = "stone" | "mark" | "onDemand" | "hidden";
 
 /**
  * Cómo se dibuja una llave. `teeth` es la del nodo 4, que se mide contando; las
- * otras tres son clases de acción y se distinguen por la forma, que es lo que
- * pide un nodo donde el número no viene en la llave sino en el dial.
+ * tres siguientes son clases de acción y se distinguen por la forma, que es lo
+ * que pide un nodo donde el número no viene en la llave sino en el dial. Las
+ * cuatro últimas son las del nodo 9: la llave lleva en el paletón el signo de
+ * la operación que deshace la cerradura, sacado del atlas de glifos.
  */
-export type ChestKeyKind = "teeth" | "shrink" | "cut" | "stretch";
+export type ChestKeyKind =
+  | "teeth"
+  | "shrink"
+  | "cut"
+  | "stretch"
+  | "add"
+  | "sub"
+  | "mul"
+  | "div";
 
 export interface ChestKey {
   readonly teeth: number;
@@ -84,6 +103,52 @@ export interface ChestAction {
 }
 
 /**
+ * Un cofre de un encastre: un rectángulo redondeado adentro del anterior. Lo
+ * agregó el nodo 9 y es lo único que la escena necesita saber de un árbol de
+ * expresión, porque el `id` es el del término y con él la fila, los cofres y el
+ * árbol dibujado hablan del mismo objeto sin que nadie los sincronice.
+ */
+export interface ChestRing {
+  readonly id: string;
+  /** La forma de la cerradura: `add`, `sub`, `mul` o `div`. */
+  readonly lock: ChestKeyKind;
+  /** 0 es el cofre de más afuera. */
+  readonly depth: number;
+  /** En qué paso del recorrido se abre este cofre. Es lo que decide el orden. */
+  readonly step: number;
+  /**
+   * El cofre ya está puesto en el encastre. En falso se dibuja como contorno
+   * tenue: es el anidamiento que hay que reproducir, todavía vacío.
+   */
+  readonly placed: boolean;
+  /**
+   * El cofre se dibuja. En falso no hay rectángulo ninguno y la fila es lo
+   * único que queda: son los cofres invisibles, que es el nivel donde la
+   * jerarquía deja de ser un dibujo y pasa a ser un acuerdo.
+   */
+  readonly drawn: boolean;
+}
+
+/**
+ * Un glifo de la fila, ya ubicado por el nodo con `@mathy/typeset`. La escena no
+ * compone: si compusiera, el hit test del nodo y el dibujo medirían distinto y
+ * el paréntesis se tocaría donde no se ve.
+ */
+export interface ChestGlyph {
+  readonly char: string;
+  readonly x: number;
+  readonly y: number;
+  readonly size: number;
+}
+
+export interface ChestBox {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+/**
  * Lo que la escena lee del problema. Es una forma y no un tipo de un nodo:
  * `UndoProblem` la cumple sin tocar nada, y cualquier otro nodo que reuse la
  * mecánica arma un objeto con estos campos y no importa los del nodo 4.
@@ -101,6 +166,12 @@ export interface ChestProblem {
   readonly tiles: readonly ChestTile[];
   readonly lock: ChestLockData;
   readonly actions: readonly ChestAction[];
+  /** Los cofres del encastre, del más de afuera al más de adentro. Solo `nest`. */
+  readonly rings?: readonly ChestRing[];
+  /** La fila de fichas, ya compuesta. Vacía: el nodo todavía no escribe. */
+  readonly glyphs?: readonly ChestGlyph[];
+  /** El cofre fantasma que se dibuja alrededor de un tramo de la fila. */
+  readonly ghostBox?: ChestBox | null;
 }
 
 /** Lo que la escena lee del nivel. `UndoLevel` la cumple sin tocar nada. */
@@ -116,6 +187,8 @@ export interface ChestLevel {
    * nodo 4; un nodo que se queda sin numerales más allá de `concrete` lo dice.
    */
   readonly numerals?: boolean;
+  /** El árbol al costado, con un nodo por cofre. Solo `nest`. */
+  readonly tree?: boolean;
 }
 
 const STROKE = 1.5;
@@ -175,6 +248,26 @@ export interface ChestLayout {
   readonly composed: Spot;
   /** El cofre de las cerraduras que no son pasos. */
   readonly lock: Spot;
+  /** El encastre del nodo 9. Ausente fuera del modo `nest`. */
+  readonly nest?: NestLayout;
+}
+
+/** Dónde cae cada pieza del encastre. Lo comparten el dibujo y el hit test. */
+export interface NestLayout {
+  /** Un rectángulo por cofre, del más de afuera al más de adentro. */
+  readonly boxes: readonly ChestBox[];
+  /** El hueco de la tapa de cada cofre: lo que el de afuera está esperando. */
+  readonly holes: readonly Spot[];
+  /** El nodo del árbol de cada cofre, y la hoja que le cuelga. */
+  readonly tree: readonly Spot[];
+  readonly leaves: readonly Spot[];
+  /** El radio del blanco de toque de un nodo del árbol: generoso a propósito. */
+  readonly nodeR: number;
+  /** El centro de la fila de fichas y cuánto ancho tiene. */
+  readonly row: Spot;
+  readonly rowW: number;
+  /** Los cofres sueltos, para el nivel que arma el anidamiento. */
+  readonly loose: readonly ChestBox[];
 }
 
 /**
@@ -300,6 +393,88 @@ export function chestLayout(
     padR: padR * padScale,
     composed: { x: width / 2, y: height - padR * 2 - 62 },
     lock: { x: width / 2, y: height * 0.34 },
+    ...(level.mode === "nest" ? { nest: nestLayout(problem, level, width, height) } : {}),
+  };
+}
+
+/**
+ * El encastre: rectángulos redondeados uno adentro del otro, el árbol al
+ * costado y la fila debajo.
+ *
+ * Los cofres se dibujan concéntricos y no apilados porque lo que el nodo enseña
+ * es *estar adentro de*: dos cajas al lado se leen como dos pasos, y el orden de
+ * dos pasos ya lo enseñó el nodo 3. El hueco de la tapa va arriba y al centro,
+ * que es adonde sube el tesoro del de adentro.
+ */
+function nestLayout(
+  problem: ChestProblem,
+  level: ChestLevel,
+  width: number,
+  height: number,
+): NestLayout {
+  const rings = problem.rings ?? [];
+  const n = Math.max(rings.length, 1);
+  // Con árbol al costado el encastre se corre a la izquierda; sin él, al centro.
+  const conArbol = level.tree === true;
+  const zonaW = conArbol ? width * 0.6 : width;
+  const cx = conArbol ? width * 0.32 : width / 2;
+
+  const outerW = Math.max(150, Math.min(zonaW - 2 * PAD, 300));
+  const outerH = Math.max(120, Math.min(height * 0.44, 240));
+  const cy = height * 0.32;
+  // El paso tiene que dejar lugar a la tapa de cada cofre: un cofre que no
+  // muestra su tapa no tiene dónde recibir el tesoro del de adentro.
+  const pasoX = outerW / (n * 2 + 1);
+  const pasoY = outerH / (n * 2 + 1);
+
+  const boxes: ChestBox[] = [];
+  const holes: Spot[] = [];
+  for (let i = 0; i < n; i++) {
+    const w = outerW - 2 * i * pasoX;
+    const h = outerH - 2 * i * pasoY;
+    const box = { x: cx - w / 2, y: cy - h / 2 + i * pasoY * 0.35, w, h };
+    boxes.push(box);
+    holes.push({ x: box.x + box.w / 2, y: box.y + 12 });
+  }
+
+  // El árbol: la raíz arriba, y cada cofre un escalón más abajo con su hoja
+  // colgando del otro lado. Es el mismo encastre visto como líneas.
+  const treeX = width * 0.78;
+  const treeTop = height * 0.16;
+  const treePaso = Math.min(46, (height * 0.34) / Math.max(n, 1));
+  const rama = Math.min(38, width * 0.07);
+  const tree: Spot[] = [];
+  const leaves: Spot[] = [];
+  for (let i = 0; i < n; i++) {
+    const y = treeTop + i * treePaso;
+    tree.push({ x: treeX - i * rama * 0.4, y });
+    leaves.push({ x: treeX - i * rama * 0.4 + rama, y: y + treePaso * 0.72 });
+  }
+
+  const looseW = Math.max(54, Math.min(88, (width - 2 * PAD) / (n + 1)));
+  const loose: ChestBox[] = [];
+  for (let i = 0; i < n; i++) {
+    // El cofre suelto se dibuja del tamaño que le toca en el encastre: con tres
+    // cofres el orden queda dibujado en el tamaño, y eso es la mitad del nivel.
+    const w = looseW * (1 - i * 0.18);
+    const h = w * 0.66;
+    loose.push({
+      x: PAD + i * (looseW + 14) + (looseW - w) / 2,
+      y: height - h - 26,
+      w,
+      h,
+    });
+  }
+
+  return {
+    boxes,
+    holes,
+    tree,
+    leaves,
+    nodeR: 22,
+    row: { x: conArbol ? cx : width / 2, y: height * 0.62 },
+    rowW: zonaW - 2 * PAD,
+    loose,
   };
 }
 
@@ -333,6 +508,17 @@ function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: n
 
 const numeral = (target: SkPath, value: number, cx: number, cy: number, size: number): void =>
   addGlyphs(target, String(value), cx, cy, size);
+
+/**
+ * El signo de cada cerradura aritmética. El menos es U+2212 y no el guion de
+ * ASCII, que no está en el atlas y dejaría un hueco donde va el signo.
+ */
+const OP_SIGN: Partial<Record<ChestKeyKind, string>> = {
+  add: "+",
+  sub: "−",
+  mul: "×",
+  div: "÷",
+};
 
 /** El tamaño del renglón. Es el único número grande de la escena. */
 const ROW_SIZE = 40;
@@ -482,6 +668,14 @@ function buildClassKey(kind: ChestKeyKind, cx: number, cy: number, w: number): S
   const x1 = cx + w / 2 - 3;
   p.moveTo(x0 + r, cy);
   p.lineTo(x1, cy);
+
+  // El paletón con el signo de la operación. Sale del atlas, así que el `×` de
+  // una llave y el `×` de una expresión son el mismo objeto.
+  const signo = OP_SIGN[kind];
+  if (signo !== undefined) {
+    addGlyphs(p, signo, (x0 + r + x1) / 2 + 2, cy + Math.min(w * 0.2, 11), Math.min(w * 0.42, 20));
+    return p;
+  }
 
   const s = Math.max(5, Math.min(w * 0.16, 8));
   const bx = (x0 + r + x1) / 2 + s * 0.4;
@@ -786,6 +980,27 @@ export interface Slot {
   readonly spin?: SharedValue<number>;
 }
 
+/**
+ * Lo que la actividad anima en un encastre. Llega como un objeto opcional y no
+ * como seis props sueltas para que los nodos 4 y 6, que no anidan nada, sigan
+ * llamando a la escena exactamente igual que antes.
+ */
+export interface ChestNestValues {
+  /**
+   * Cuántos cofres se abrieron, como número continuo: un cofre se abre cuando
+   * `opened` pasa su `step`, y el tesoro viaja con la parte fraccionaria.
+   */
+  readonly opened: SharedValue<number>;
+  /** La llave girando en el vacío: vibra y vuelve sola. */
+  readonly vain: SharedValue<number>;
+  /** El recorrido del árbol iluminándose, en nodos. */
+  readonly tree: SharedValue<number>;
+  /** El cofre fantasma que se dibuja y se borra alrededor de un tramo, de 0 a 1. */
+  readonly ghost: SharedValue<number>;
+  /** Qué cofre está señalado, o -1. Viaja como número porque lo lee un worklet. */
+  readonly marked: SharedValue<number>;
+}
+
 export interface ChestSceneProps {
   readonly problem: ChestProblem;
   readonly level: ChestLevel;
@@ -824,6 +1039,8 @@ export interface ChestSceneProps {
   readonly placed: number | null;
   readonly keys: readonly Slot[];
   readonly tiles: readonly Slot[];
+  /** El encastre del nodo 9. Ausente: la escena dibuja lo de siempre. */
+  readonly nest?: ChestNestValues;
 }
 
 export function ChestScene({
@@ -849,6 +1066,7 @@ export function ChestScene({
   placed,
   keys,
   tiles,
+  nest,
 }: ChestSceneProps) {
   const geom = useMemo(
     () => buildGeom(problem, level, layout, at, placed, composed),
@@ -1008,6 +1226,15 @@ export function ChestScene({
   return (
     <Group opacity={appear}>
       {cofreSuelto ? cofre : null}
+      {level.mode === "nest" && layout.nest && nest ? (
+        <NestedChests
+          problem={problem}
+          level={level}
+          nest={layout.nest}
+          values={nest}
+          hint={hint}
+        />
+      ) : null}
       <Group opacity={pistaO}>
           <Path path={geom.line} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
           <Path
@@ -1243,5 +1470,298 @@ function JudgeWalker({
         <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
       </Group>
     </>
+  );
+}
+
+// --- El encastre del nodo 9 --------------------------------------------------
+
+/**
+ * Los cofres metidos uno adentro del otro, el árbol al costado y la fila debajo.
+ *
+ * El objeto entero se deriva de un solo valor, `opened`: un cofre se abre cuando
+ * `opened` pasa su `step`, el tesoro viaja con la parte fraccionaria y el árbol
+ * se ilumina con el mismo número. Un solo hecho y no tres, que es la misma
+ * decisión que en la manivela del nodo 3, donde el giro *es* la posición del
+ * caminante.
+ *
+ * El tesoro recorre los cofres en el orden en que se abren, y por eso el mismo
+ * dibujo sirve para las dos direcciones: calculando arranca en el de más
+ * adentro y sube por los huecos de las tapas, y deshaciendo arranca en el de más
+ * afuera y baja. La simetría no está programada dos veces, está en `step`.
+ */
+function NestedChests({
+  problem,
+  level,
+  nest,
+  values,
+  hint,
+}: {
+  readonly problem: ChestProblem;
+  readonly level: ChestLevel;
+  readonly nest: NestLayout;
+  readonly values: ChestNestValues;
+  readonly hint: SharedValue<number>;
+}) {
+  const rings = problem.rings ?? [];
+  /** Los cofres en el orden en que se abren: es por donde pasa el tesoro. */
+  const orden = useMemo(() => [...rings].sort((a, b) => a.step - b.step), [rings]);
+
+  /**
+   * Por dónde pasa el tesoro. Arranca en el centro del primer cofre que se abre
+   * y va parando en el hueco de la tapa de cada uno de los siguientes; el
+   * último tramo lo deja afuera, a la vista.
+   */
+  const paradas = useMemo(() => {
+    const out: Spot[] = [];
+    orden.forEach((r, i) => {
+      const box = nest.boxes[r.depth];
+      const hole = nest.holes[r.depth];
+      if (!box || !hole) return;
+      out.push(i === 0 ? { x: box.x + box.w / 2, y: box.y + box.h * 0.62 } : hole);
+    });
+    const ultimo = orden[orden.length - 1];
+    const caja = ultimo ? nest.boxes[ultimo.depth] : undefined;
+    if (caja) out.push({ x: caja.x + caja.w / 2, y: caja.y - 26 });
+    return out;
+  }, [orden, nest]);
+
+  const arbol = useMemo(() => {
+    const p = Skia.Path.Make();
+    if (level.tree !== true) return p;
+    for (let i = 0; i < rings.length; i++) {
+      const a = nest.tree[i];
+      const hoja = nest.leaves[i];
+      const b = nest.tree[i + 1];
+      if (!a) continue;
+      if (hoja) {
+        p.moveTo(a.x, a.y);
+        p.lineTo(hoja.x, hoja.y);
+        p.addCircle(hoja.x, hoja.y, 4);
+      }
+      if (b) {
+        p.moveTo(a.x, a.y);
+        p.lineTo(b.x, b.y);
+      }
+    }
+    return p;
+  }, [rings.length, nest, level.tree]);
+
+  const fila = useMemo(() => {
+    const p = Skia.Path.Make();
+    for (const g of problem.glyphs ?? []) addGlyphs(p, g.char, g.x, g.y, g.size);
+    return p;
+  }, [problem.glyphs]);
+
+  /**
+   * Los cofres que todavía están sueltos, abajo. Se dibujan del tamaño que les
+   * toca en el encastre: con tres cofres el orden queda dibujado en el tamaño y
+   * no hay nada que leer.
+   */
+  const sueltos = useMemo(() => {
+    const caja = Skia.Path.Make();
+    const tapa = Skia.Path.Make();
+    const cerradura = Skia.Path.Make();
+    for (const r of rings) {
+      if (r.placed) continue;
+      const b = nest.loose[r.depth];
+      if (!b) continue;
+      caja.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, b.h), 8, 8));
+      tapa.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, 10), 5, 5));
+      const signo = OP_SIGN[r.lock];
+      if (signo !== undefined) {
+        addGlyphs(cerradura, signo, b.x + b.w / 2, b.y + b.h * 0.62, Math.min(b.h * 0.5, 22));
+      }
+    }
+    return { caja, tapa, cerradura };
+  }, [rings, nest.loose]);
+
+  /** El cofre fantasma: se dibuja alrededor de un tramo de la fila y se borra. */
+  const fantasma = useMemo(() => {
+    const p = Skia.Path.Make();
+    const b = problem.ghostBox;
+    if (b) p.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, b.h), 10, 10));
+    return p;
+  }, [problem.ghostBox]);
+
+  const tesoro = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 9);
+    return p;
+  }, []);
+
+  const { opened, vain, tree, ghost, marked } = values;
+
+  const tesoroT = useDerivedValue(() => {
+    if (paradas.length === 0) return [{ translateX: 0 }, { translateY: 0 }];
+    const t = Math.max(0, Math.min(paradas.length - 1.0001, opened.value));
+    const i = Math.floor(t);
+    const f = t - i;
+    const a = paradas[i] ?? paradas[0];
+    const b = paradas[i + 1] ?? a;
+    if (!a || !b) return [{ translateX: 0 }, { translateY: 0 }];
+    const e = f * f * (3 - 2 * f);
+    return [
+      { translateX: a.x + (b.x - a.x) * e + vain.value * 4 },
+      { translateY: a.y + (b.y - a.y) * e },
+    ];
+  }, [paradas]);
+
+  // El hueco vacío late mientras nadie le puso nada, y deja de latir cuando el
+  // tesoro llegó. No hace falta explicarlo: se ve.
+  const huecoO = useDerivedValue(() => 0.35 + 0.55 * hint.value * (1 - Math.min(1, opened.value)));
+
+  return (
+    <>
+      {/* Los cofres. Cada uno con su tapa, que se levanta cuando le toca. */}
+      {rings.map((r, i) => (
+        <NestRing
+          key={r.id}
+          ring={r}
+          box={nest.boxes[r.depth]}
+          hole={nest.holes[r.depth]}
+          opened={opened}
+          vain={vain}
+          hueco={huecoO}
+          index={i}
+        />
+      ))}
+      <Group transform={tesoroT}>
+        <Path path={tesoro} color={theme.color.ok} />
+      </Group>
+
+      {/* El árbol al costado: el mismo encastre visto como líneas. */}
+      <Path path={arbol} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
+      {level.tree === true
+        ? rings.map((r, i) => (
+            <TreeNode
+              key={`t${r.id}`}
+              spot={nest.tree[i] as Spot}
+              step={r.step}
+              index={i}
+              tree={tree}
+              marked={marked}
+            />
+          ))
+        : null}
+
+      {/* Los cofres que todavía no entraron al encastre. */}
+      <Path path={sueltos.caja} color={theme.color.surfaceHigh} />
+      <Path path={sueltos.caja} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      <Path path={sueltos.tapa} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      <Path path={sueltos.cerradura} color={theme.color.warn} />
+
+      {/* La fila de fichas, con el cofre fantasma que aparece y se borra. */}
+      <Path path={fila} color={theme.color.ink} />
+      <Group opacity={ghost}>
+        <Path path={fantasma} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      </Group>
+    </>
+  );
+}
+
+/**
+ * Un cofre del encastre: el cuerpo, la tapa que se levanta cuando `opened` pasa
+ * su paso, la cerradura en el borde y el hueco que espera el tesoro del de
+ * adentro. Cada cofre es su propio grupo porque el nivel que arma el
+ * anidamiento necesita mostrar los que todavía no están puestos como contorno
+ * tenue, y eso es una decisión por cofre y no por escena.
+ */
+function NestRing({
+  ring,
+  box,
+  hole,
+  opened,
+  vain,
+  hueco,
+  index,
+}: {
+  readonly ring: ChestRing;
+  readonly box: ChestBox | undefined;
+  readonly hole: Spot | undefined;
+  readonly opened: SharedValue<number>;
+  readonly vain: SharedValue<number>;
+  readonly hueco: SharedValue<number>;
+  readonly index: number;
+}) {
+  const geom = useMemo(() => {
+    const body = Skia.Path.Make();
+    const lid = Skia.Path.Make();
+    const lock = Skia.Path.Make();
+    const hollow = Skia.Path.Make();
+    if (!box) return { body, lid, lock, hollow };
+    body.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, box.h), 12, 12));
+    lid.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, 14), 6, 6));
+    const signo = OP_SIGN[ring.lock];
+    if (signo !== undefined) addGlyphs(lock, signo, box.x + box.w - 20, box.y + box.h - 18, 26);
+    if (hole) hollow.addCircle(hole.x, hole.y, 9);
+    return { body, lid, lock, hollow };
+  }, [box, hole, ring.lock]);
+
+  const paso = ring.step;
+  // La tapa se levanta con su propio tramo de `opened`, y vibra con `vain`
+  // cuando la llave giró en el vacío sobre ella.
+  const transform = useDerivedValue(() => {
+    const abierta = Math.max(0, Math.min(1, opened.value - paso));
+    return [{ rotate: -1.5 * abierta + vain.value * 0.05 }];
+  }, [paso]);
+
+  if (!box || !ring.drawn) return null;
+  const tinta = ring.placed ? theme.color.inkDim : theme.color.inkFaint;
+  return (
+    <Group opacity={ring.placed ? 1 : 0.4}>
+      <Path path={geom.body} color={theme.color.surface} opacity={index === 0 ? 0.5 : 0.35} />
+      <Path path={geom.body} color={tinta} style="stroke" strokeWidth={STROKE} />
+      <Path path={geom.lock} color={ring.placed ? theme.color.warn : theme.color.inkFaint} />
+      <Group origin={{ x: box.x, y: box.y }} transform={transform}>
+        <Path path={geom.lid} color={theme.color.surfaceHigh} />
+        <Path
+          path={geom.lid}
+          color={index === 0 ? theme.color.accent : theme.color.inkDim}
+          style="stroke"
+          strokeWidth={2}
+        />
+      </Group>
+      <Group opacity={hueco}>
+        <Path path={geom.hollow} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      </Group>
+    </Group>
+  );
+}
+
+/**
+ * Un nodo del árbol. Se ilumina cuando su cofre se abre, y se marca aparte
+ * cuando el jugador lo señaló: el nodo elegido fuera de la secuencia es
+ * exactamente lo que el diseño pide mostrar cuando el orden se invierte.
+ */
+function TreeNode({
+  spot,
+  step,
+  index,
+  tree,
+  marked,
+}: {
+  readonly spot: Spot | undefined;
+  readonly step: number;
+  readonly index: number;
+  readonly tree: SharedValue<number>;
+  readonly marked: SharedValue<number>;
+}) {
+  const disco = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 9);
+    return p;
+  }, []);
+  const encendido = useDerivedValue(() => (tree.value > step ? 1 : 0.25), [step]);
+  const senalado = useDerivedValue(() => (Math.round(marked.value) === index ? 1 : 0), [index]);
+  if (!spot) return null;
+  return (
+    <Group transform={[{ translateX: spot.x }, { translateY: spot.y }]}>
+      <Group opacity={encendido}>
+        <Path path={disco} color={theme.color.accent} />
+      </Group>
+      <Group opacity={senalado}>
+        <Path path={disco} color={theme.color.warn} style="stroke" strokeWidth={3} />
+      </Group>
+    </Group>
   );
 }
