@@ -1,9 +1,10 @@
 # HANDOFF — Mathy, estado actual
 
 > El diseño está cerrado: 348 nodos de grafo, **51 en la espina**, validador en cero errores.
-> La construcción tiene **7 nodos registrados y 5 jugables** de los 51. La app corre en
+> La construcción tiene **9 nodos jugables y verificados** de los 51: la aritmética entera,
+> de contar hasta fracciones, más el nodo de ecuaciones. La app corre en
 > navegador; en iOS y Android todavía **no se probó**.
-> Al momento de escribir esto hay **seis agentes en vuelo**; leé `handoffs/` antes de tocar nada.
+> Antes de tocar nada, mirá `git status`: si hay cambios sin commitear, hay agentes en vuelo.
 
 ## 0. Cómo se usa este documento
 
@@ -94,6 +95,13 @@ la calculadora que crecen con lo recorrido, y el progreso pasó a persistir como
 de eventos. Después se construyó el andamiaje del curriculum —mapa de conceptos, registro
 de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y porqués en
 [SESSION-2026-09-09-espina-jugable.md](SESSION-2026-09-09-espina-jugable.md).
+
+### Sesión 2026-09-09 (cont.) — la aritmética queda cerrada
+Nueve nodos jugables y verificados: contar, la recta, sumar, restar, multiplicar, dividir,
+los negativos, las fracciones y las ecuaciones de un paso. El nodo 6 es el primero que
+**no estrena escena**: reusa las tres de los nodos 4 y 5 con props aditivas y su agente
+volvió a jugar esos dos nodos para probar que no los rompió. Ese es el patrón que tienen
+que seguir los que faltan.
 
 ### Sesión 2026-09-09 (cont.) — la espina pasa de 44 a 51 conceptos
 Siete nodos del grafo subieron a la espina con tratamiento completo: comparar cantidades,
