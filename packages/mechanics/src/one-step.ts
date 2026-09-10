@@ -26,7 +26,20 @@ import { registerNode, type LevelBase } from "./node.ts";
 /** El nodo del grafo que este minijuego enseña. */
 export const NODE = "alg.eq.one_step";
 
-export type Layer = "concrete" | "visual" | "symbolic" | "formal" | "abstract";
+/**
+ * Las capas de la escala de [H](../../../docs/H-progresion-abstraccion.md). Las
+ * dos primeras entraron con el nodo 18, que es el primero cuyo diseño empieza
+ * antes de `concrete`: en `real` el jugador solo mira y en `intuition` predice.
+ * Ningún nodo anterior las usa y ninguno tiene por qué empezar ahí.
+ */
+export type Layer =
+  | "real"
+  | "intuition"
+  | "concrete"
+  | "visual"
+  | "symbolic"
+  | "formal"
+  | "abstract";
 export type Evidence = "recognize" | "explain" | "manipulate" | "apply" | "generalize" | "transfer";
 
 /** Una llave del llavero. Solo una abre. */
