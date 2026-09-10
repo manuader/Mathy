@@ -197,7 +197,15 @@ de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y
 
 ## 6. Cómo verificar
 
-Desde la raíz, en este orden:
+Requisitos: **Node 26** (probado con 26.8.1: los tests corren con el stripping de tipos de
+Node, que las versiones viejas no tienen) y **npm 11** (11.19.0). Ningún campo `engines`
+lo hace cumplir.
+
+Desde la raíz, en este orden. En un clon nuevo, primero:
+
+```bash
+npm install
+```
 
 ```bash
 npm test --workspaces --if-present
@@ -399,11 +407,19 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
   definiciones de la capa formal se leen en vez de narrarse.
 
 **Decisión de diseño, no de un agente:**
-- Cerrar las discrepancias entre la prosa y el catálogo de errores de los nodos 14, 16 y
-  17 (detalle en el handoff efímero).
+- Cerrar las discrepancias entre la prosa de los minijuegos y el catálogo de errores.
+  Mientras sigan, los agentes no emiten esos ids, que es lo correcto:
+  - nodo 14 (`alg.eq.multi_step`): la prosa nombra `wrong_inverse_choice` e
+    `inverse_applied_one_side`;
+  - nodo 16 (`alg.sys.two_by_two`): `variable_as_label`, `inverse_applied_one_side` y
+    `sign_flip_on_move`;
+  - nodo 17 (`alg.fn.function_as_machine`): `variable_as_label` y `unwrap_order_inverted`,
+    y dice que su lista está vacía cuando el catálogo le apunta
+    `machine_gives_two_outputs`.
 
-**Bloqueado en una persona:**
-- La **licencia** del repositorio, que es público y no tiene ninguna.
+  El precedente es el nodo 21 (`97bbbba`, corregido en `e2a0387`): un nodo entra en la
+  entrada de un error solo si declara la mecánica sobre la que ese error se explica, y el
+  validador avisa si no.
 
 ## 9. Mapa de documentos
 

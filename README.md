@@ -12,29 +12,33 @@ Principios que atraviesan todo el diseño:
 
 ## Estado
 
-Diseño cerrado, construcción en marcha. El diseño completo vive en [`docs/`](docs/README.md); el estado del código y qué sigue, en [`docs/U-desarrollo/U0-estado.md`](docs/U-desarrollo/U0-estado.md).
+Diseño cerrado, construcción en marcha. El diseño completo vive en [`docs/`](docs/README.md).
 
-El núcleo del motor de animación está construido y probado: representa una ecuación como un árbol donde cada término tiene identidad estable, y anima el paso de un estado al siguiente moviendo esos términos en vez de redibujar la fórmula. Falta la capa que dibuja.
+**Si vas a trabajar en el repositorio, empezá por [`docs/HANDOFF.md`](docs/HANDOFF.md)**: dice dónde está parado el proyecto, qué decisiones no se reabren, qué trampas ya se pagaron y qué sigue. Si trabajás en la misma máquina que la sesión anterior, leé también el archivo más nuevo de `handoffs/`, que no está versionado.
 
-## Estructura prevista del repositorio
+## Estructura del repositorio
 
 ```
-docs/        documento de diseño (visión, pedagogía, knowledge graph, curriculum, mecánicas,
-             minijuegos, analogías, Manim, adaptativo, evaluación, errores, calculadora, UX,
-             arquitectura, i18n, edad universal, cheatsheet, desafíos)
-tools/       validate.py, el validador del documento
-packages/    math-core   árbol de expresión con identidad de término   [listo]
-             typeset     composición de fórmulas                       [listo]
-             viz-core    suavizados de Manim y planificador de morph   [listo]
-             glyphs      atlas de contornos horneado en build time     [en curso]
-             viz-skia    adaptador de dibujo                           [futuro]
-apps/mathy   app Expo única para iOS, Android y navegador              [futuro]
-content/     grafo, actividades y locales compilados a la app          [futuro]
+docs/          documento de diseño (visión, pedagogía, knowledge graph, curriculum, mecánicas,
+               minijuegos, analogías, Manim, adaptativo, evaluación, errores, calculadora, UX,
+               arquitectura, i18n, edad universal, cheatsheet, desafíos) y el de desarrollo
+tools/         validate.py, el validador del documento
+packages/      math-core   árbol de expresión con identidad de término
+               typeset     composición de fórmulas
+               viz-core    suavizados de Manim y planificador de morph
+               glyphs      atlas de contornos horneado en build time
+               viz-skia    adaptador de dibujo, lo único que sabe que existe Skia
+               mechanics   registro de nodos, niveles y generadores de problemas
+               progress    registro de eventos y pliegue a estado
+               content     chuleta y calculadora compiladas desde docs/
+apps/mathy     app Expo única para iOS, Android y navegador
 ```
+
+Qué está hecho y qué falta no se anota acá, porque se vence: está en [`docs/HANDOFF.md`](docs/HANDOFF.md).
 
 ## Cómo leer el diseño
 
-Empezar por [`docs/README.md`](docs/README.md), que indexa las secciones A–S y explica las convenciones (qué es prosa, qué es YAML, cómo se referencian los ids).
+Empezar por [`docs/README.md`](docs/README.md), que indexa las secciones A–U y explica las convenciones (qué es prosa, qué es YAML, cómo se referencian los ids).
 
 Antes de dar por bueno un cambio, correr el validador desde la raíz. Tiene que cerrar con cero errores:
 
