@@ -7,9 +7,17 @@
  */
 
 import type { ComponentType } from "react";
-import { levelByNumber, type LevelBase, type NodeSpec } from "@mathy/mechanics";
+import {
+  cardinalityLevelByNumber,
+  levelByNumber,
+  pathLevelByNumber,
+  type LevelBase,
+  type NodeSpec,
+} from "@mathy/mechanics";
 import type { Event } from "@mathy/progress";
 import { OneStepGame } from "../OneStepGame.tsx";
+import { NumberLineGame } from "./NumberLineGame.tsx";
+import { CardinalityGame } from "./CardinalityGame.tsx";
 
 export interface ActivityProps {
   readonly node: NodeSpec;
@@ -28,8 +36,22 @@ const OneStep = ({ level, ...rest }: ActivityProps) => {
   return <OneStepGame {...rest} level={full} />;
 };
 
+const NumberLine = ({ level, ...rest }: ActivityProps) => {
+  const full = pathLevelByNumber(level.n);
+  if (!full) return null;
+  return <NumberLineGame {...rest} level={full} />;
+};
+
+const Cardinality = ({ level, ...rest }: ActivityProps) => {
+  const full = cardinalityLevelByNumber(level.n);
+  if (!full) return null;
+  return <CardinalityGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
+  "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
+  "found.count.number_line": NumberLine,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>

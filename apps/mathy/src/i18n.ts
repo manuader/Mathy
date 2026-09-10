@@ -31,6 +31,26 @@ const es: Record<string, string> = {
   "level.boxOnTheRight": "La caja a la derecha",
   "level.locksNeverSeen": "Cerraduras que nunca viste",
 
+  "node.found.count.number_line.name": "El camino de piedras",
+  "node.found.count.number_line.tagline": "Los números viven en fila",
+
+  "level.oneToothOneStone": "Un diente, una piedra",
+  "level.stonesHaveNames": "Las piedras tienen nombre",
+  "level.stoneWithNoSteps": "La piedra donde no diste ningún paso",
+  "level.gaps": "Huecos",
+  "level.tracksThatResize": "Pistas que cambian de tamaño",
+  "level.marksOnly": "Solo marcas",
+
+  "node.found.count.cardinality.name": "Los cuencos de fruta",
+  "node.found.count.cardinality.tagline": "Contar dice cuántas hay",
+
+  "level.onePairPerFruit": "Un par por fruta",
+  "level.tickAndCard": "El tic y la tarjeta",
+  "level.movingChangesNothing": "Mover no cambia",
+  "level.cardTravels": "La tarjeta viaja",
+  "level.moreFruitMoreMix": "Más frutas, más mezcla",
+  "level.pebblesShellsMarks": "Piedras, conchas, marcas",
+
   "layer.concrete": "manipulación",
   "layer.visual": "representación",
   "layer.symbolic": "notación",
