@@ -1,8 +1,9 @@
 # HANDOFF — Mathy, estado actual
 
 > El diseño está cerrado: 348 nodos de grafo, **51 en la espina**, validador en cero errores.
-> La construcción tiene **9 nodos jugables y verificados** de los 51: la aritmética entera,
-> de contar hasta fracciones, más el nodo de ecuaciones. La app corre en
+> La construcción tiene **16 nodos jugables y verificados** de los 51: los dieciséis
+> primeros de la espina, de contar cuántas frutas hay hasta resolver un sistema de dos
+> ecuaciones. La app corre en
 > navegador; en iOS y Android todavía **no se probó**.
 > Antes de tocar nada, mirá `git status`: si hay cambios sin commitear, hay agentes en vuelo.
 
@@ -271,8 +272,15 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
     tiempo, se paga en verificación.** Además se pisan el `localStorage`, que es por
     origen. `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
     otro almacén: sirve para sembrar progreso sin que otro te lo borre.
-21. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
-    escribir al commit. Usá rutas explícitas.
+21. **No corras `git add -A` con agentes en vuelo, ni le agregues los archivos
+    compartidos a un commit sin mirar qué le metieron.** Arrastra archivos a medio
+    escribir, y una vez **rompió `main`**: el commit se llevó el `export *` de un nodo
+    cuyo módulo todavía estaba sin trackear, así que la rama quedó apuntando a un archivo
+    inexistente. Los tests locales no lo ven, porque el archivo está en el disco. Se
+    detecta clonando el repo en otro lado y mirando si está.
+
+    La regla práctica: si tenés que commitear un archivo compartido, mirá su diff antes y
+    llevate también los archivos nuevos que esa línea referencia. Usá rutas explícitas.
 
 ## 8. Qué falta
 
