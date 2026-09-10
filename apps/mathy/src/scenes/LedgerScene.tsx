@@ -92,6 +92,25 @@ export interface LedgerTreeNode {
 /** Las etapas de desvanecimiento del libro: el objeto, la barra y la ficha. */
 export type LedgerSkin = "objects" | "bars" | "chips";
 
+/**
+ * Un tramo de una fila: cuántos objetos de una clase entraron, con su signo y
+ * con la ficha que el jugador les puso debajo.
+ *
+ * Es lo que necesita un renglón que cuenta **más de una clase a la vez**, que
+ * el libro del nodo 10 no tenía: ahí cada fila tenía un dueño y su conteo. Un
+ * renglón del cartel de frutas es una suma de tramos con un total al otro lado
+ * de la línea, así que los tramos entran por acá y la fila con dueño único
+ * sigue funcionando exactamente igual cuando este campo no viene.
+ */
+export interface LedgerSegment {
+  readonly kind: number;
+  readonly count: number;
+  /** -1 dibuja el tramo restado: lleva el menos adelante. */
+  readonly sign: 1 | -1;
+  /** El valor que la clase ya mostró, o `null` mientras nadie lo dijo. */
+  readonly value: number | null;
+}
+
 export interface LedgerConfig {
   readonly kinds: readonly LedgerKind[];
   readonly tokens: readonly LedgerToken[];
@@ -120,6 +139,28 @@ export interface LedgerConfig {
    * segunda línea abajo sería un mostrador donde nunca se apoya nada.
    */
   readonly counter?: boolean;
+  /**
+   * Por fila, los tramos que la ocupan. Ausente: la fila tiene un dueño único y
+   * se dibuja con `owner` y `counts`, que es como la usan los nodos 10 y 15.
+   */
+  readonly segments?: readonly (readonly LedgerSegment[])[];
+  /**
+   * Por fila, lo que hay del otro lado de la línea. `null` en una fila que no
+   * afirma nada todavía. Solo se lee con `segments` puestos.
+   */
+  readonly totals?: readonly (number | null)[];
+  /**
+   * Por fila, para qué lado cae la línea: 1 si pesa más la izquierda, -1 si
+   * pesa más el total, 0 si la fila está derecha o abierta. Es un dato y no una
+   * animación a propósito: la fila inclinada tiene que verse aunque el navegador
+   * esté estrangulando los cuadros.
+   */
+  readonly tilts?: readonly number[];
+  /**
+   * La llave que abraza los renglones y significa "las dos a la vez". Es el
+   * símbolo que nace en el nodo 16 y no lo dibuja ningún otro.
+   */
+  readonly brace?: boolean;
 }
 
 export interface LedgerBox {
@@ -158,6 +199,18 @@ export interface LedgerLayout {
   readonly nodeR: number;
   /** El radio de un objeto de tamaño uno. */
   readonly unit: number;
+  /**
+   * Por fila, dónde cae cada tramo. Es lo que el gesto necesita para saber bajo
+   * qué fruta se soltó una ficha, y sale de la misma cuenta que el dibujo: con
+   * dos geometrías, la ficha entraría donde no se ve. Vacío sin `segments`.
+   */
+  readonly cells: readonly (readonly LedgerSpot[])[];
+  /** Por fila, dónde cae la línea que se inclina. Vacío sin `segments`. */
+  readonly beams: readonly LedgerSpot[];
+  /** Por fila, dónde cae el total. Vacío sin `segments`. */
+  readonly totals: readonly LedgerSpot[];
+  /** Cuánto ocupa un tramo a lo ancho. */
+  readonly cellW: number;
 }
 
 /**
@@ -214,6 +267,31 @@ export function ledgerLayout(
     ? { x: width * 0.47, y: 0, w: width * 0.51, h: height * 0.84 }
     : { x: 0, y: 0, w: 0, h: 0 };
 
+  // El renglón del cartel se parte en tres: los tramos a la izquierda, la línea
+  // en el medio y el total a la derecha. Las tres medidas salen de acá y no del
+  // dibujo, porque la ficha se suelta sobre un tramo y el hit test tiene que
+  // medir lo mismo que se ve.
+  const segments = config.segments;
+  const cellW = (bookW * 0.56) / Math.max(2, anchoDeTramos(segments));
+  const cells: LedgerSpot[][] = [];
+  const beams: LedgerSpot[] = [];
+  const totales: LedgerSpot[] = [];
+  if (segments) {
+    for (let i = 0; i < rowSlots; i++) {
+      const box = rows[i] as LedgerBox;
+      const cy = box.y + box.h / 2;
+      const cuantos = Math.max(2, anchoDeTramos(segments));
+      cells.push(
+        Array.from({ length: cuantos }, (_, j) => ({
+          x: box.x + 14 + (j + 0.5) * cellW,
+          y: cy,
+        })),
+      );
+      beams.push({ x: box.x + bookW * 0.7, y: cy });
+      totales.push({ x: box.x + bookW - 26, y: cy });
+    }
+  }
+
   return {
     width,
     height,
@@ -224,8 +302,16 @@ export function ledgerLayout(
     balance,
     ...treeSpots(config.tree, width * 0.32, top, height * 0.5),
     unit,
+    cells,
+    beams,
+    totals: totales,
+    cellW,
   };
 }
+
+/** Cuántos tramos tiene el renglón más cargado: todos se dibujan con esa medida. */
+const anchoDeTramos = (segments: readonly (readonly LedgerSegment[])[] | undefined): number =>
+  segments ? Math.max(1, ...segments.map((s) => s.length)) : 1;
 
 /**
  * El árbol se acomoda solo: la profundidad da la altura y el orden de las hojas
@@ -467,6 +553,41 @@ const handPath = (): SkPath => {
   return p;
 };
 
+/** Cuánto se inclina la línea de una fila que dejó de ser cierta, en radianes. */
+export const LEDGER_BEAM_TILT = 0.17;
+
+/**
+ * Un numeral listo para el atlas. El menos se emite como U+2212 y no como el
+ * guion de ASCII, que no está horneado: con el guion el número abre un hueco y,
+ * si abre la fila, la fila entera no se dibuja.
+ */
+const numeral = (v: number): string => (v < 0 ? `−${-v}` : String(v));
+
+/**
+ * La llave que abraza los renglones. Es el símbolo que dice "las dos a la vez",
+ * y nace cuando las dos ecuaciones se tratan por primera vez como un objeto
+ * único: escritas en renglones sueltos, nada dice que hablan de la misma
+ * manzana.
+ */
+function bracePath(l: LedgerLayout, rows: number): SkPath {
+  const p = Skia.Path.Make();
+  const primera = l.rows[0];
+  const ultima = l.rows[rows - 1];
+  if (!primera || !ultima) return p;
+  const x = primera.x - 12;
+  const y0 = primera.y + 2;
+  const y1 = ultima.y + ultima.h - 2;
+  const mid = (y0 + y1) / 2;
+  p.moveTo(x + 7, y0);
+  p.lineTo(x, y0 + 7);
+  p.lineTo(x, mid - 6);
+  p.lineTo(x - 6, mid);
+  p.lineTo(x, mid + 6);
+  p.lineTo(x, y1 - 7);
+  p.lineTo(x + 7, y1);
+  return p;
+}
+
 // --- Componente --------------------------------------------------------------
 
 export interface LedgerSceneProps {
@@ -503,17 +624,24 @@ export function LedgerScene(props: LedgerSceneProps) {
   const book = useMemo(() => bookPath(l, config.rows), [l, config.rows]);
   const tray = useMemo(() => trayPath(l), [l]);
   const hand = useMemo(handPath, []);
+  const brace = useMemo(
+    () => (config.brace ? bracePath(l, config.rows) : Skia.Path.Make()),
+    [config.brace, config.rows, l],
+  );
 
   const demoO = useDerivedValue(() => props.demo.value * (1 - Math.min(1, props.replay.value)));
   const demoT = useDerivedValue(() => {
     // La mano lleva el primer objeto del mostrador a la primera fila, en línea
-    // recta. Es toda la instrucción del juego, y no dice una palabra.
+    // recta. Es toda la instrucción del juego, y no dice una palabra. Con el
+    // cartel de tramos el destino es el primer tramo: la mano deja la ficha
+    // debajo de la fruta, que es lo que hay que hacer.
     const from = l.tokens[0] ?? { x: l.width / 2, y: l.tray.y };
-    const to = l.rows[0] ?? { x: l.width / 2, y: l.height / 2, w: 0, h: 0 };
+    const fila = l.rows[0] ?? { x: l.width / 2, y: l.height / 2, w: 0, h: 0 };
+    const to = l.cells[0]?.[0] ?? { x: fila.x + 30, y: fila.y + fila.h / 2 };
     const k = props.demo.value;
     return [
-      { translateX: from.x + (to.x + 30 - from.x) * k },
-      { translateY: from.y + (to.y + to.h / 2 - from.y) * k },
+      { translateX: from.x + (to.x - from.x) * k },
+      { translateY: from.y + (to.y - from.y) * k },
     ];
   }, [l]);
 
@@ -523,22 +651,27 @@ export function LedgerScene(props: LedgerSceneProps) {
       {config.counter === false ? null : (
         <Path path={tray} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
       )}
+      <Path path={brace} color={theme.color.accent} style="stroke" strokeWidth={2} strokeCap="round" />
 
-      {l.rows.map((box, i) => (
-        <RowView
-          key={`row${i}`}
-          index={i}
-          box={box}
-          layout={l}
-          config={config}
-          owner={config.owner[i] ?? -1}
-          count={config.counts[i] ?? 0}
-          bounced={props.bounced === i}
-          pulse={props.pulse}
-          replay={props.replay}
-          replayRows={props.replayRows}
-        />
-      ))}
+      {l.rows.map((box, i) =>
+        config.segments ? (
+          <SegmentRow key={`row${i}`} index={i} box={box} layout={l} config={config} pulse={props.pulse} />
+        ) : (
+          <RowView
+            key={`row${i}`}
+            index={i}
+            box={box}
+            layout={l}
+            config={config}
+            owner={config.owner[i] ?? -1}
+            count={config.counts[i] ?? 0}
+            bounced={props.bounced === i}
+            pulse={props.pulse}
+            replay={props.replay}
+            replayRows={props.replayRows}
+          />
+        ),
+      )}
 
       {config.tree.length > 0 ? (
         <TreeView config={config} layout={l} pulse={props.pulse} />
@@ -760,6 +893,189 @@ function RowView({
         />
         <Path path={conteo} color={theme.color.ink} />
       </Group>
+    </Group>
+  );
+}
+
+/**
+ * Un renglón del cartel: tramos a la izquierda, la línea en el medio y el total
+ * a la derecha.
+ *
+ * La línea no es un adorno. Es la barra de una balanza acostada, y se inclina
+ * exactamente cuando la fila deja de ser cierta. Por eso el ángulo viene del
+ * modelo y no de un cartel de error, y por eso el **color** cambia sin esperar
+ * un cuadro: con el panel del navegador oculto la rotación se congela, y una
+ * fila que se rompió tiene que poder verse igual.
+ *
+ * La fila se dibuja de una sola vez en unos pocos trazos, como manda el
+ * presupuesto: los objetos de un tramo no se animan de a uno, así que no son
+ * componentes.
+ */
+function SegmentRow({
+  index,
+  box,
+  layout: l,
+  config,
+  pulse,
+}: {
+  readonly index: number;
+  readonly box: LedgerBox;
+  readonly layout: LedgerLayout;
+  readonly config: LedgerConfig;
+  readonly pulse: SharedValue<number>;
+}) {
+  const segments = config.segments?.[index] ?? [];
+  const total = config.totals?.[index] ?? null;
+  const tilt = config.tilts?.[index] ?? 0;
+  const cells = l.cells[index] ?? [];
+  const beam = l.beams[index] ?? { x: box.x + box.w * 0.7, y: box.y + box.h / 2 };
+  const totalSpot = l.totals[index] ?? { x: box.x + box.w - 26, y: box.y + box.h / 2 };
+  // Una fila que se quedó sin tramos sigue en el cartel: dice que cero pesa
+  // cero, que es cierto y es lo que queda cuando una fruta ya se reemplazó.
+  const visible = index < config.rows;
+  // Una fruta sin ficha deja la fila abierta: no está mal, todavía no dice nada.
+  const abierta = segments.some((s) => s.value === null);
+
+  /**
+   * Los tramos, un trazo por clase. Se separan por clase y no por tramo porque
+   * lo que los distingue es el color, y una manzana tiene que verse igual esté
+   * en la fila que esté: es el invariante silencioso dicho en el dibujo.
+   */
+  const cuerpos = useMemo(() => {
+    const maxCount = Math.max(1, ...segments.map((s) => Math.abs(s.count)));
+    const porClase = config.kinds.map(() => Skia.Path.Make());
+    segments.forEach((seg, j) => {
+      const spot = cells[j];
+      const kind = config.kinds[seg.kind];
+      const p = porClase[seg.kind];
+      if (!spot || !kind || !p) return;
+      const n = Math.abs(seg.count);
+      if (config.skin === "objects") {
+        const paso = Math.min(l.cellW / (n + 0.6), l.unit * 2.4);
+        for (let i = 0; i < n; i++) {
+          const cx = spot.x + (i - (n - 1) / 2) * paso;
+          const s = shapePath(kind.shape, l.unit);
+          s.transform([1, 0, cx, 0, 1, spot.y - 4, 0, 0, 1]);
+          p.addPath(s);
+        }
+        return;
+      }
+      if (config.skin === "bars") {
+        // La tira: el largo cuenta las frutas, que es la pila aplanada del
+        // morph de `concrete` a `visual`.
+        const w = (l.cellW * 0.82 * n) / maxCount;
+        p.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2, spot.y - 12, w, 16), 3, 3));
+        return;
+      }
+      // La ficha: el coeficiente pegado a la letra. El uno no se escribe, que es
+      // la convención que el renglón estrena.
+      addGlyphs(p, `${n === 1 ? "" : String(n)}${kind.letter || "x"}`, spot.x, spot.y, 22);
+    });
+    return porClase;
+  }, [segments, cells, config.kinds, config.skin, l.cellW, l.unit]);
+
+  /** Los signos entre los tramos: el más y el menos, dibujados del atlas. */
+  const signos = useMemo(() => {
+    const p = Skia.Path.Make();
+    segments.forEach((seg, j) => {
+      const spot = cells[j];
+      if (!spot) return;
+      const previo = cells[j - 1];
+      // El signo que abre la fila va pegado a su tramo: puesto a media casilla
+      // se sale del renglón por la izquierda.
+      const x = previo ? (previo.x + spot.x) / 2 : spot.x - l.cellW * 0.3;
+      if (j === 0 && seg.sign > 0) return;
+      addGlyphs(p, seg.sign < 0 ? "−" : "+", x, spot.y, 20);
+    });
+    return p;
+  }, [segments, cells, l.cellW]);
+
+  /** La ficha numérica que el jugador dejó bajo cada fruta. */
+  const fichas = useMemo(() => {
+    const p = Skia.Path.Make();
+    segments.forEach((seg, j) => {
+      const spot = cells[j];
+      if (!spot || seg.value === null) return;
+      const y = spot.y + 19;
+      p.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - 15, y - 10, 30, 20), 4, 4));
+      addGlyphs(p, numeral(seg.value), spot.x, y, 15);
+    });
+    return p;
+  }, [segments, cells]);
+
+  /** El tramo que todavía espera ficha late: es el único que dice "acá". */
+  const hueco = useMemo(() => {
+    const p = Skia.Path.Make();
+    segments.forEach((seg, j) => {
+      const spot = cells[j];
+      if (!spot || seg.value !== null) return;
+      dashedRect(p, spot.x - 15, spot.y + 9, 30, 20, 3.2);
+    });
+    return p;
+  }, [segments, cells]);
+
+  const barra = useMemo(() => {
+    const p = Skia.Path.Make();
+    if (config.skin === "chips") {
+      // La línea se contrajo en el signo igual y heredó su capacidad de
+      // inclinarse: es el paso 3 del morph, y sigue siendo la misma barra.
+      addGlyphs(p, "=", 0, 0, 26);
+      return p;
+    }
+    p.moveTo(-15, 0);
+    p.lineTo(15, 0);
+    return p;
+  }, [config.skin]);
+
+  const totalPath = useMemo(() => {
+    const p = Skia.Path.Make();
+    if (total === null) return p;
+    addGlyphs(p, numeral(total), totalSpot.x, totalSpot.y, 22);
+    return p;
+  }, [total, totalSpot.x, totalSpot.y]);
+
+  /**
+   * La inclinación viaja en un valor compartido y no en el cierre del render:
+   * un worklet se queda con el cierre en que se armó, que es la trampa que ya
+   * pagaron los nodos 1 y 3.
+   */
+  const angulo = useSharedValue(0);
+  useEffect(() => {
+    angulo.value = withTiming(tilt * LEDGER_BEAM_TILT, { duration: theme.motion.base });
+  }, [tilt, angulo]);
+  const barraT = useDerivedValue(() => [{ rotate: angulo.value }]);
+  const late = useDerivedValue(() => 0.25 + 0.5 * pulse.value);
+
+  if (!visible) return null;
+
+  const color = abierta
+    ? theme.color.inkDim
+    : tilt !== 0
+      ? theme.color.warn
+      : theme.color.ok;
+
+  return (
+    <Group>
+      {cuerpos.map((path, k) => (
+        <Path key={`k${k}`} path={path} color={colorOfKind(config.kinds[k], k)} />
+      ))}
+      <Path path={signos} color={theme.color.inkDim} />
+      <Path path={fichas} color={theme.color.accent} style="stroke" strokeWidth={1.6} />
+      <Group opacity={late}>
+        <Path path={hueco} color={theme.color.accent} style="stroke" strokeWidth={1.6} />
+      </Group>
+      <Group transform={[{ translateX: beam.x }, { translateY: beam.y }]}>
+        <Group transform={barraT}>
+          <Path
+            path={barra}
+            color={color}
+            style={config.skin === "chips" ? "fill" : "stroke"}
+            strokeWidth={2.5}
+            strokeCap="round"
+          />
+        </Group>
+      </Group>
+      <Path path={totalPath} color={theme.color.ink} />
     </Group>
   );
 }

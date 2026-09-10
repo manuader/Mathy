@@ -48,6 +48,32 @@ export interface Spot {
 /** Las etapas de desvanecimiento de `grid_stretch` en E0. */
 export type StretchSkin = "rubber_band" | "segment" | "drawings";
 
+/** Una recta del plano, escrita como la fila que la dibuja: `a x + b y = c`. */
+export interface StretchLine {
+  readonly a: number;
+  readonly b: number;
+  readonly c: number;
+}
+
+/**
+ * El plano con sus rectas: la otra cara de `grid_stretch`, en dos dimensiones.
+ *
+ * La banda es la mecánica en una dimensión y el plano es la misma mecánica con
+ * un eje más, así que vive en esta escena y no en una nueva. Es un modo aparte
+ * y no una capa encima: con el plano puesto la banda no se dibuja, porque una
+ * regla horizontal cruzada con un plano no significa nada. Ausente, que es como
+ * lo dejan los quince nodos que ya usan la banda, no cambia absolutamente nada.
+ */
+export interface StretchPlane {
+  /** Hasta dónde llega la ventana desde el origen, en unidades. */
+  readonly window: number;
+  readonly lines: readonly StretchLine[];
+  /** El cruce, o `null` cuando las rectas no se cruzan en un punto. */
+  readonly cross: readonly [number, number] | null;
+  /** El cruce se marca, o queda para que el jugador lo busque. */
+  readonly showCross: boolean;
+}
+
 /**
  * Todo lo que un nodo decide sobre la banda. Un nodo que reusa la mecánica
  * escribe uno de estos y no toca la escena.
@@ -89,6 +115,10 @@ export interface StretchConfig {
    * abajo y la de vuelta hacia arriba. Ausente: no hay flechas.
    */
   readonly arrows?: boolean;
+  /**
+   * El plano con sus rectas. Ausente o nulo: la escena es la banda de siempre.
+   */
+  readonly plane?: StretchPlane | null;
 }
 
 /** Lo que la actividad anima en una banda. Una por fila. */
@@ -120,6 +150,8 @@ export interface StretchLayout {
   readonly crank: { readonly x: number; readonly y: number; readonly r: number };
   /** El radio del blanco de toque de una marca: generoso a propósito. */
   readonly touchR: number;
+  /** El origen del plano y cuánto mide una unidad. Solo con `config.plane`. */
+  readonly plane: { readonly cx: number; readonly cy: number; readonly unit: number };
 }
 
 const PAD = 56;
@@ -152,6 +184,13 @@ export function stretchLayout(config: StretchConfig, width: number, height: numb
     rulerNail: { x: zeroX, y: rulerY },
     crank: { x: PAD + crankR, y: height - crankR - 16, r: crankR },
     touchR: Math.max(step * 0.6, 26),
+    plane: {
+      cx: width / 2,
+      cy: height * 0.46,
+      // El plano se dibuja cuadrado aunque la región no lo sea: con unidades de
+      // distinto tamaño en cada eje, dos rectas paralelas dejan de parecerlo.
+      unit: (Math.min(width, height * 0.86) * 0.44) / Math.max(1, config.plane?.window ?? 1),
+    },
   };
 }
 
@@ -254,6 +293,82 @@ function buildCrank(r: number, ratio: number): { body: SkPath; teeth: SkPath; ha
     mate.lineTo(r * 0.86 + mr + Math.cos(a) * mr * 1.35, Math.sin(a) * mr * 1.35);
   }
   return { body, teeth, handle, mate };
+}
+
+/**
+ * Los dos puntos donde una recta sale de la ventana. Devuelve `null` cuando la
+ * recta no la cruza, que con los sistemas del nodo pasa solo si la ventana
+ * quedó chica.
+ */
+function planeSegment(
+  line: StretchLine,
+  w: number,
+): readonly [Spot, Spot] | null {
+  const pts: Spot[] = [];
+  const push = (x: number, y: number): void => {
+    if (x < -w - 1e-6 || x > w + 1e-6 || y < -w - 1e-6 || y > w + 1e-6) return;
+    if (pts.some((p) => Math.abs(p.x - x) < 1e-6 && Math.abs(p.y - y) < 1e-6)) return;
+    pts.push({ x, y });
+  };
+  if (line.b !== 0) {
+    push(-w, (line.c + line.a * w) / line.b);
+    push(w, (line.c - line.a * w) / line.b);
+  }
+  if (line.a !== 0) {
+    push((line.c + line.b * w) / line.a, -w);
+    push((line.c - line.b * w) / line.a, w);
+  }
+  const a = pts[0];
+  const b = pts[1];
+  return a && b ? [a, b] : null;
+}
+
+/**
+ * El plano: la cuadrícula, los dos ejes, una recta por fila y el cruce.
+ *
+ * Cada recta es la fila entera dibujada de otra manera, y por eso el nodo puede
+ * preguntar cuántas soluciones tiene un sistema sin resolverlo: dos rectas que
+ * se cruzan dan una, dos paralelas ninguna y dos superpuestas infinitas. Es lo
+ * que hace que el punto de ruptura de la analogía de las balanzas tenga dónde
+ * mostrarse.
+ */
+function buildPlane(
+  plane: StretchPlane,
+  l: StretchLayout,
+): { grid: SkPath; axes: SkPath; lines: SkPath[]; cross: SkPath } {
+  const { cx, cy, unit } = l.plane;
+  const w = Math.max(1, plane.window);
+  const px = (x: number): number => cx + x * unit;
+  const py = (y: number): number => cy - y * unit;
+
+  const grid = Skia.Path.Make();
+  for (let i = -w; i <= w; i++) {
+    grid.moveTo(px(i), py(-w));
+    grid.lineTo(px(i), py(w));
+    grid.moveTo(px(-w), py(i));
+    grid.lineTo(px(w), py(i));
+  }
+
+  const axes = Skia.Path.Make();
+  axes.moveTo(px(-w), py(0));
+  axes.lineTo(px(w), py(0));
+  axes.moveTo(px(0), py(-w));
+  axes.lineTo(px(0), py(w));
+
+  const lines = plane.lines.map((line) => {
+    const p = Skia.Path.Make();
+    const seg = planeSegment(line, w);
+    if (!seg) return p;
+    p.moveTo(px(seg[0].x), py(seg[0].y));
+    p.lineTo(px(seg[1].x), py(seg[1].y));
+    return p;
+  });
+
+  const cross = Skia.Path.Make();
+  if (plane.cross && plane.showCross) {
+    cross.addCircle(px(plane.cross[0]), py(plane.cross[1]), 7);
+  }
+  return { grid, axes, lines, cross };
 }
 
 // --- Componente --------------------------------------------------------------
@@ -413,6 +528,33 @@ export function StretchScene({
     p.addCircle(0, 0, 13);
     return p;
   }, []);
+
+  const plane = useMemo(
+    () => (config.plane ? buildPlane(config.plane, layout) : null),
+    [config.plane, layout],
+  );
+
+  // Con el plano puesto la banda no se dibuja: son dos caras de la misma
+  // mecánica y no dos cosas que convivan en la pantalla.
+  if (plane) {
+    return (
+      <Group opacity={appear}>
+        <Path path={plane.grid} color={theme.color.line} style="stroke" strokeWidth={0.6} opacity={0.5} />
+        <Path path={plane.axes} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+        {plane.lines.map((path, i) => (
+          <Path
+            key={`recta${i}`}
+            path={path}
+            color={i === 0 ? theme.color.accent : theme.color.ok}
+            style="stroke"
+            strokeWidth={2.5}
+            strokeCap="round"
+          />
+        ))}
+        <Path path={plane.cross} color={theme.color.warn} style="stroke" strokeWidth={3} />
+      </Group>
+    );
+  }
 
   return (
     <Group opacity={appear}>

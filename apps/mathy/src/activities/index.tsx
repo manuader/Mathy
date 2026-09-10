@@ -22,6 +22,7 @@ import {
   keyLevelByNumber,
   multiLevelByNumber,
   distLevelByNumber,
+  sysLevelByNumber,
   balLevelByNumber,
   type LevelBase,
   type NodeSpec,
@@ -41,6 +42,7 @@ import { UnknownBoxGame } from "./UnknownBoxGame.tsx";
 import { OperationKeyGame } from "./OperationKeyGame.tsx";
 import { DistributiveGame } from "./DistributiveGame.tsx";
 import { MultiStepGame } from "./MultiStepGame.tsx";
+import { SystemsGame } from "./SystemsGame.tsx";
 import { BalanceEqGame } from "./BalanceEqGame.tsx";
 
 export interface ActivityProps {
@@ -144,6 +146,12 @@ const Distributive = ({ level, ...rest }: ActivityProps) => {
   return <DistributiveGame {...rest} level={full} />;
 };
 
+const Systems = ({ level, ...rest }: ActivityProps) => {
+  const full = sysLevelByNumber(level.n);
+  if (!full) return null;
+  return <SystemsGame {...rest} level={full} />;
+};
+
 const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "found.count.cardinality": Cardinality,
   "alg.eq.one_step": OneStep,
@@ -160,6 +168,7 @@ const ACTIVITIES: Record<string, ComponentType<ActivityProps>> = {
   "prealg.eq.balance": BalanceEq,
   "alg.eq.multi_step": MultiStep,
   "alg.expr.distributive_tiles": Distributive,
+  "alg.sys.two_by_two": Systems,
 };
 
 export const activityFor = (nodeId: string): ComponentType<ActivityProps> | undefined =>
