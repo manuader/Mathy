@@ -723,8 +723,13 @@ function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: n
   }
 }
 
+/**
+ * Un número. El signo se emite como U+2212 y no como el guion de ASCII, que no
+ * está en el atlas: `String(-5)` dejaría un hueco donde va el menos, y si el
+ * número abre la fila el trazo entero se cae.
+ */
 const numeral = (target: SkPath, value: number, cx: number, cy: number, size: number): void =>
-  addGlyphs(target, String(value), cx, cy, size);
+  addGlyphs(target, String(value).replace("-", "−"), cx, cy, size);
 
 /**
  * El signo de cada cerradura aritmética. El menos es U+2212 y no el guion de

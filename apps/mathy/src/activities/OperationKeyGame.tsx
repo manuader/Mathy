@@ -890,10 +890,10 @@ function Handle({
           top: spot.y - h / 2,
           width: w,
           height: h,
+          // Un asa deshabilitada se come los toques de lo que hay debajo, y
+          // desmontarla dejaría al detector de la ronda siguiente sin enganchar.
+          pointerEvents: enabled ? "auto" : "none",
         }}
-        // Un asa deshabilitada se come los toques de lo que hay debajo, y
-        // desmontarla dejaría al detector de la ronda siguiente sin enganchar.
-        pointerEvents={enabled ? "auto" : "none"}
       />
     </GestureDetector>
   );
