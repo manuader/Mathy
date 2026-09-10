@@ -552,16 +552,14 @@ function buildLane(
     if (conCarcasa) {
       boxes.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, b.h), 10, 10));
     }
-    const cx = b.x + b.w / 2;
-    const cy = b.y + b.h / 2;
-    // La máquina opaca no muestra lo que hace, aunque el nodo la marque de otra
-    // manera: es una restricción del 27 y viaja en la máquina, no en la piel.
-    faces.addPath(machineFace(m.opaque ? "opaque" : m.kind, m.value, cx, cy - (config.numerals ? 8 : 0), b.h * 0.3));
+    // Con las máquinas quietas todo el carril es un trazo por capa. Cuando se
+    // arrastran, cada una se dibuja en su propio grupo: si el dibujo quedara
+    // acá, la carcasa seguiría al dedo y su cara se quedaría en la ranura.
+    if (config.reorderable) return;
+    faces.addPath(machineFacePath(config, m, b));
     if (m.inverted) marks.addPath(invertedMark(b.x + b.w - 10, b.y + 10, 11));
-    if (config.numerals) {
-      const texto = m.label !== "" ? m.label : `${OP_CHAR[m.kind] ?? ""}${m.value}`;
-      if (texto !== "") addGlyphs(digits, texto, cx, cy + b.h * 0.28, 17);
-    }
+    const texto = machineLabel(config, m);
+    if (texto !== "") addGlyphs(digits, texto, b.x + b.w / 2, b.y + b.h * 0.78, 17);
   });
 
   // Las ranuras vacías: el caño pide una máquina y no dice cuál.
@@ -594,6 +592,25 @@ function buildLane(
   }
 
   return { pipe, mouths, boxes, faces, marks, digits, counter, target, targetDigits, closed };
+}
+
+/** El dibujo de una máquina, en las coordenadas de su caja. */
+function machineFacePath(config: PipeConfig, m: PipeMachine, b: Box): SkPath {
+  // La máquina opaca no muestra lo que hace, aunque el nodo la marque de otra
+  // manera: es una restricción del 27 y viaja en la máquina, no en la piel.
+  return machineFace(
+    m.opaque ? "opaque" : m.kind,
+    m.value,
+    b.x + b.w / 2,
+    b.y + b.h / 2 - (config.numerals ? 8 : 0),
+    b.h * 0.3,
+  );
+}
+
+/** El rótulo de una máquina, ya compuesto por el nodo o armado con su signo. */
+function machineLabel(config: PipeConfig, m: PipeMachine): string {
+  if (!config.numerals) return "";
+  return m.label !== "" ? m.label : `${OP_CHAR[m.kind] ?? ""}${m.value}`;
 }
 
 // --- Componente --------------------------------------------------------------
@@ -754,9 +771,9 @@ export function PipeScene({
                   se ve pasar cuando el tubo es transparente y no cuando no. */}
               <Machines
                 geom={g}
-                layout={layout}
+                config={config}
                 lane={l}
-                count={data.machines.length}
+                machines={data.machines}
                 pieces={pieces}
                 move={config.reorderable && i === 0}
                 picked={picked}
@@ -863,18 +880,18 @@ function Token({
 /** Las carcasas de las máquinas. Cada una puede llevarse con el dedo. */
 function Machines({
   geom,
-  layout,
+  config,
   lane,
-  count,
+  machines,
   pieces,
   move,
   picked,
   opaca,
 }: {
   readonly geom: LaneGeom;
-  readonly layout: PipeLayout;
+  readonly config: PipeConfig;
   readonly lane: PipeLaneLayout;
-  readonly count: number;
+  readonly machines: readonly PipeMachine[];
   readonly pieces: readonly PipeSlot[];
   readonly move: boolean;
   readonly picked: number;
@@ -899,55 +916,68 @@ function Machines({
           key={i}
           slot={pieces[i] as PipeSlot}
           box={lane.machines[i] as Box}
-          layout={layout}
-          viva={i < count}
+          config={config}
+          machine={machines[i]}
           elegida={picked === i}
           opaca={opaca}
         />
       ))}
-      {/* Los dibujos y los numerales van en un solo trazo por carril: solo la
-          carcasa se mueve con el dedo, y el contenido la sigue por posición. */}
-      <Path path={geom.faces} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
-      <Path path={geom.digits} color={theme.color.ink} />
     </>
   );
 }
 
+/**
+ * Una máquina que el dedo puede llevar. Su carcasa, su dibujo y su rótulo van en
+ * el mismo grupo: lo que se arrastra es la máquina entera, no su caja.
+ */
 function MachinePiece({
   slot,
   box,
-  layout,
-  viva,
+  config,
+  machine,
   elegida,
   opaca,
 }: {
   readonly slot: PipeSlot;
   readonly box: Box;
-  readonly layout: PipeLayout;
-  readonly viva: boolean;
+  readonly config: PipeConfig;
+  readonly machine: PipeMachine | undefined;
   readonly elegida: boolean;
   readonly opaca: boolean;
 }) {
-  const path = useMemo(() => {
-    const p = Skia.Path.Make();
-    p.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, box.h), 10, 10));
-    return p;
-  }, [box]);
+  const geom = useMemo(() => {
+    const caja = Skia.Path.Make();
+    caja.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, box.h), 10, 10));
+    const cara = Skia.Path.Make();
+    const marca = Skia.Path.Make();
+    const digits = Skia.Path.Make();
+    if (machine) {
+      cara.addPath(machineFacePath(config, machine, box));
+      if (machine.inverted) marca.addPath(invertedMark(box.x + box.w - 10, box.y + 10, 11));
+      const texto = machineLabel(config, machine);
+      if (texto !== "") addGlyphs(digits, texto, box.x + box.w / 2, box.y + box.h * 0.78, 17);
+    }
+    return { caja, cara, marca, digits };
+  }, [box, config, machine]);
+
   const transform = useDerivedValue(() => [
     { translateX: slot.dx.value },
     { translateY: slot.dy.value },
   ]);
-  const opacity = useDerivedValue(() => (viva ? slot.alive.value : 0), [viva]);
-  void layout;
+  const opacity = useDerivedValue(() => (machine ? slot.alive.value : 0), [machine]);
+
   return (
     <Group transform={transform} opacity={opacity}>
-      <Path path={path} color={opaca ? theme.color.surfaceHigh : theme.color.surface} />
+      <Path path={geom.caja} color={opaca ? theme.color.surfaceHigh : theme.color.surface} />
       <Path
-        path={path}
+        path={geom.caja}
         color={elegida ? theme.color.accent : theme.color.line}
         style="stroke"
         strokeWidth={elegida ? 2.5 : STROKE}
       />
+      <Path path={geom.cara} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      <Path path={geom.marca} color={theme.color.warn} style="stroke" strokeWidth={2} />
+      <Path path={geom.digits} color={theme.color.ink} />
     </Group>
   );
 }

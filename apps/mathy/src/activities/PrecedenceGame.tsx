@@ -59,7 +59,6 @@ import { getGlyph } from "@mathy/glyphs";
 import { centered, layoutNode, type GlyphMetrics } from "@mathy/typeset";
 import {
   NODE_PRECEDENCE_TREE,
-  PREC_KEY_SLOTS,
   PREC_OPTION_SLOTS,
   TOTAL_PREC_LEVELS,
   generatePrecedence,
@@ -163,9 +162,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     tone: "dim",
   }));
 
-  const sceneH = Math.max(340, Math.min(height * 0.62, 520));
   const usaTuberia = ask === "pipe";
   const usaFiguras = ask === "arbitrary";
+  /**
+   * El lienzo se achica en el último nivel: ahí no hay cofres ni tubería, y la
+   * definición con la figura necesitan el alto. El lienzo no se desmonta —una
+   * pantalla tiene uno solo y montarlo y desmontarlo entre rondas rompe el
+   * modo retained— pero sí cede el espacio que no está usando.
+   */
+  const sceneH = usaFiguras ? 120 : Math.max(340, Math.min(height * 0.62, 520));
 
   // --- Lo que ve la escena del cofre -----------------------------------------
 
@@ -571,7 +576,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
         );
         return;
       }
-      setMessage({ text: "Ese entregó. Ahora el hueco de la tapa siguiente ya no está vacío.", tone: "dim" });
+      setMessage({
+        text:
+          p.ask === "unwrap"
+            ? "Ese salió. Ahora el que estaba adentro quedó afuera de todo."
+            : "Ese entregó. Ahora el hueco de la tapa siguiente ya no está vacío.",
+        tone: "dim",
+      });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [attempt, quiet, succeed],
@@ -717,6 +728,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     modo: 0,
     desdeX: 0,
     desdeY: 0,
+    /** Qué máquina agarró el dedo, o -1. */
+    agarrada: -1,
     sostenido: 0,
     nodeR: 0,
     tree: [] as { x: number; y: number }[],
@@ -735,6 +748,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       modo: ask === "recognize" ? 1 : ask === "wrap" || ask === "ghost" ? 2 : usaTuberia ? 3 : 0,
       desdeX: 0,
       desdeY: 0,
+      agarrada: -1,
       sostenido: 0,
       nodeR: nest?.nodeR ?? 0,
       tree: nest ? nest.tree.map((s) => ({ x: s.x, y: s.y })) : [],
@@ -814,17 +828,51 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     () =>
       Gesture.Pan()
         .onBegin((e) => {
-          geo.value = { ...geo.value, desdeX: e.x, desdeY: e.y, sostenido: 0 };
+          const g = geo.value;
+          let agarrada = -1;
+          if (g.modo === 3) {
+            for (let i = 0; i < g.machines.length; i++) {
+              const b = g.machines[i];
+              if (b && e.x > b.x && e.x < b.x + b.w && e.y > b.y && e.y < b.y + b.h) agarrada = i;
+            }
+          }
+          geo.value = { ...g, desdeX: e.x, desdeY: e.y, agarrada, sostenido: 0 };
+        })
+        .onChange((e) => {
+          // La máquina sigue al dedo. El caño no: lo que se mueve es la pieza,
+          // y por eso el orden se ve cambiar antes de soltarla.
+          const g = geo.value;
+          if (g.agarrada < 0) return;
+          const slot = machineSlots[g.agarrada];
+          if (slot) {
+            slot.dx.value = e.translationX;
+            slot.dy.value = e.translationY;
+          }
         })
         .onFinalize((e) => {
           const g = geo.value;
-          geo.value = { ...g, sostenido: 0 };
+          geo.value = { ...g, agarrada: -1, sostenido: 0 };
+          // La máquina que el dedo llevaba vuelve a su ranura: lo que cambia de
+          // lugar es el orden, y ese lo redibuja la escena.
+          if (g.agarrada >= 0) {
+            const slot = machineSlots[g.agarrada];
+            if (slot) {
+              slot.dx.value = withTiming(0, { duration: theme.motion.quick });
+              slot.dy.value = withTiming(0, { duration: theme.motion.quick });
+            }
+          }
           if (g.sostenido) {
             runOnJS(releaseGhost)();
             return;
           }
           if (!g.activo) return;
           const movido = Math.hypot(e.x - g.desdeX, e.y - g.desdeY);
+          if (g.modo === 3) {
+            // Tocar una máquina o arrastrarla sobre la otra son el mismo
+            // movimiento: los dos dicen "que esta pase primero".
+            if (g.agarrada >= 0) runOnJS(swapMachines)();
+            return;
+          }
           // Un solo gesto contesta el toque y el arrastre: encadenar un `Tap`
           // aparte los hace pelear, y el `Pan` siempre le gana la carrera.
           if (movido >= TAP_SLOP) return;
@@ -842,14 +890,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
             if (Math.abs(e.y - g.rowY) > g.rowH) return;
             runOnJS(tapRow)(e.x);
             return;
-          }
-          if (g.modo === 3) {
-            for (const b of g.machines) {
-              if (e.x > b.x && e.x < b.x + b.w && e.y > b.y && e.y < b.y + b.h) {
-                runOnJS(swapMachines)();
-                return;
-              }
-            }
           }
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -956,10 +996,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
   );
 
   const conSueltos = ask === "nest";
-  /** Tocar una máquina la intercambia con la otra: es el arrastre sin arrastrar. */
-  const tapMachine = useCallback(() => {
-    swapMachines();
-  }, [swapMachines]);
   const conFichas = ask === "explain";
 
   return (
@@ -1052,23 +1088,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
           );
         })}
 
-        {/* Las asas de las máquinas de la tubería. */}
-        {Array.from({ length: PIPE_MACHINE_SLOTS }, (_, i) => {
-          const b = pl.lanes[0]?.machines[i];
-          return (
-            <Handle
-              key={`m${i}`}
-              index={i}
-              spot={b ? { x: b.x + b.w / 2, y: b.y + b.h / 2 } : { x: 0, y: 0 }}
-              slot={machineSlots[i] as PipeSlot}
-              w={b?.w ?? 0}
-              h={b?.h ?? 0}
-              enabled={usaTuberia && i < machines.length && !solved}
-              onDrop={dropMachine}
-              onTap={tapMachine}
-            />
-          );
-        })}
       </View>
 
       <Hint text={message.text} tone={message.tone} />

@@ -1625,9 +1625,13 @@ function NestedChests({
           index={i}
         />
       ))}
-      <Group transform={tesoroT}>
-        <Path path={tesoro} color={theme.color.ok} />
-      </Group>
+      {/* El tesoro. Sin cofres dibujados no hay adónde subir: la fila es lo
+          único que hay y el punto quedaría flotando sin nada alrededor. */}
+      {rings.some((r) => r.drawn) ? (
+        <Group transform={tesoroT}>
+          <Path path={tesoro} color={theme.color.ok} />
+        </Group>
+      ) : null}
 
       {/* El árbol al costado: el mismo encastre visto como líneas. */}
       <Path path={arbol} color={theme.color.inkDim} style="stroke" strokeWidth={2} />

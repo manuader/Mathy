@@ -43,7 +43,11 @@ export const NODE_PRECEDENCE_TREE = NODE;
  * - `explain`: dos animaciones sobre el mismo cofre; tocar la que abre en orden
  *   invertido. Para `literacy: none` este es el formato de todo `explain`.
  * - `recognize`: tocar el nodo del árbol que corresponde al cofre de más
- *   adentro.
+ *   adentro. El documento pide tocar la parte de la fila que está adentro del
+ *   cofre interior, pero en la capa donde este verbo se evalúa todavía no hay
+ *   numerales —llegan en el nivel 5— y por lo tanto no hay fila: la misma
+ *   pregunta se hace sobre el árbol, que es la representación que ese nivel
+ *   estrena. La discrepancia está anotada como tal.
  * - `pipe`: dos máquinas y un caño; cambiar el orden hasta que la salida sea la
  *   mostrada. Es el contraste que aporta `machine_pipe`.
  * - `wrap`: la fila de fichas con las paredes vueltas paréntesis; tocar la

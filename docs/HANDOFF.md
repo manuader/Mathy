@@ -195,10 +195,12 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
    haga resolución por plataforma y tome `index.web.tsx`. Con `"index.ts"` el navegador
    nunca corre `LoadSkiaWeb` y el primer lienzo se dibuja contra un Skia que no existe.
 3. **La implementación web de gesture-handler escucha eventos de puntero.**
-   *Con una advertencia abierta*: la receta funciona sobre las asas del llavero, que son
-   elementos con `touch-action: none` propios; sobre un gesto que cubre el lienzo entero
-   no activó el `Pan` en al menos un intento, y falló igual contra un build sin tocar.
-   Si tu gesto no responde, no supongas que tu código está mal hasta descartar el arnés. Un arrastre
+   **Con un límite medido, confirmado por dos agentes por separado**: la receta activa el
+   `Pan` de las **asas** (elementos propios con `touch-action: none`) y los **toques**
+   sobre el lienzo, pero **no activa un `Pan` que cubre el lienzo entero**. Un arrastre
+   sobre el lienzo no se puede probar desde el arnés. Si tu gesto no responde, descartá
+   el arnés antes de sospechar de tu código: probá el mismo camino con un toque, o
+   verificá con un oráculo determinista en vez de jugando. Un arrastre
    sintético hecho con eventos de mouse no la despierta. La receta que funciona es
    despachar `pointerdown`, doce o más `pointermove` con ~20 ms entre medio y `pointerup`,
    todos con el mismo `pointerId`. Además, `setPointerCapture` con un `pointerId`
@@ -224,23 +226,33 @@ La primera vez, `npx setup-skia-web public` copia el WASM de CanvasKit a
     detrás.** Usar `Gesture.Race`. Y **un `Pan` habilitado siempre le gana la carrera a un
     `Tap`**: si los dos escuchan la misma superficie, el toque no llega nunca. Cada gesto
     tiene que escuchar solo donde su objeto está.
-11. **`e.x` y `e.y` de un gesto vienen medidos desde la vista que escucha, no desde el
+11. **Un `Pan` sobre el lienzo con `.minDistance(0)` cancela el gesto de un asa.** Se
+    activa en el mismo instante del apoyo y se lleva el arrastre: la pieza se mueve y al
+    soltarla no pasa nada. Sacar el `minDistance(0)` y cerrar con `onFinalize` más un
+    umbral de toque.
+12. **Un asa deshabilitada se come los toques del lienzo.** Tiene que quedar montada —si
+    se desmonta, el detector de la ronda siguiente se queda sin enganchar— pero necesita
+    `pointerEvents: "none"`, o lo que está debajo deja de contestar.
+13. **Con objetos concéntricos, la tolerancia generosa de drop le roba al de afuera su
+    anillo.** Buscar contención estricta primero y aplicar la holgura solo cuando el
+    punto no cayó en ninguno.
+14. **`e.x` y `e.y` de un gesto vienen medidos desde la vista que escucha, no desde el
     lienzo.** Con un gesto que cubre el lienzo entero la diferencia es cero y no se nota;
     con un asa chica el error es del tamaño de lo que haya arriba. Es primo de la trampa
     de `onLayout`.
-12. **El guion de ASCII no está en el atlas de glifos.** Un número negativo formateado con
+15. **El guion de ASCII no está en el atlas de glifos.** Un número negativo formateado con
     `String(-5)` deja un hueco donde va el signo y, si el número abre la expresión, la
     ecuación no se dibuja. El signo se emite como U+2212.
-13. **`toText` de `math-core` es un serializador de depuración**, no notación para el
+16. **`toText` de `math-core` es un serializador de depuración**, no notación para el
     jugador: mostraba `-448 = x * 32` en pantalla.
-14. **`userSelect: "none"` es funcional, no cosmético.** Sin él, arrastrar sobre un texto
+17. **`userSelect: "none"` es funcional, no cosmético.** Sin él, arrastrar sobre un texto
     arranca una selección del navegador que se queda con el puntero.
-15. **El stripping de tipos de Node no soporta propiedades de parámetro**
+18. **El stripping de tipos de Node no soporta propiedades de parámetro**
     (`constructor(private readonly x: T)`). Hay que declarar el campo aparte.
-16. **Varios agentes verificando a la vez se pisan el `localStorage`**, porque es por
+19. **Varios agentes verificando a la vez se pisan el `localStorage`**, porque es por
     origen. `http://127.0.0.1:8081` es el mismo servidor con otro origen y por lo tanto
     otro almacén: sirve para sembrar progreso sin que otro te lo borre.
-17. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
+20. **No corras `git add -A` con agentes en vuelo.** Arrastra sus archivos a medio
     escribir al commit. Usá rutas explícitas.
 
 ## 8. Qué falta
