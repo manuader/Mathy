@@ -1502,6 +1502,8 @@ interface Geom {
   readonly leftover: SkPath;
   readonly ruler: SkPath;
   readonly rulerCount: SkPath;
+  /** El hueco donde entra la ficha que dice la medida, debajo de la regla. */
+  readonly rulerSlot: SkPath;
   readonly row: SkPath;
   /** El vidrio debajo del renglón: la cuenta se lee sobre cualquier paisaje. */
   readonly rowPlate: SkPath;
@@ -1601,6 +1603,15 @@ function buildGeom(
   // La regla no dice el número: lo dice la ficha que el jugador trae. Si lo
   // dijera ella, medir sería mirar.
   if (placed !== null) numeral(rulerCount, placed, (xs(ma) + xs(mb)) / 2, row0.y + 52, 24);
+  // El hueco de la ficha: se ve desde que la regla midió hasta que la ficha
+  // entra. Sin él, "traé la ficha" no decía adónde, y la ficha soltada sobre
+  // la regla volvía sin explicación.
+  const rulerSlot = Skia.Path.Make();
+  if (level.ruler && placed === null) {
+    rulerSlot.addRRect(
+      Skia.RRectXY(Skia.XYWHRect((xs(ma) + xs(mb)) / 2 - 26, row0.y + 52 - 24, 52, 48), 12, 12),
+    );
+  }
 
   // El renglón. La casilla tapada se dibuja como hueco: pide la ficha sin decirlo.
   const rowPath = Skia.Path.Make();
@@ -1672,6 +1683,7 @@ function buildGeom(
     leftover,
     ruler,
     rulerCount,
+    rulerSlot,
     row: rowPath,
     rowPlate,
     slot,
@@ -1750,6 +1762,8 @@ export interface ChestSceneProps {
   readonly clock: SharedValue<number>;
   /** Cuánto se estiró la regla plegable, de 0 a 1. */
   readonly ruler: SharedValue<number>;
+  /** Desde qué caminante se estira: 0 el de atrás, 1 el de adelante. Ausente: el de atrás. */
+  readonly rulerFrom?: SharedValue<number>;
   /** La recta que se pide con un toque. */
   readonly line: SharedValue<number>;
   readonly appear: SharedValue<number>;
@@ -1783,6 +1797,7 @@ export function ChestScene({
   demo,
   clock,
   ruler,
+  rulerFrom,
   line,
   appear,
   mounted,
@@ -1938,11 +1953,13 @@ export function ChestScene({
   // La regla se estira con el dedo: una banda rellena que escala, sin trazo que
   // se deforme al escalar.
   const rulerX = (row0.stones[(problem.marks ?? [0, 0])[0]] as Spot | undefined)?.x ?? 0;
-  const rulerT = useDerivedValue(() => [
-    { translateX: rulerX },
-    { translateY: oy },
-    { scaleX: Math.max(0.0001, ruler.value) },
-  ]);
+  const rulerX1 = (row0.stones[(problem.marks ?? [0, 0])[1]] as Spot | undefined)?.x ?? rulerX;
+  // Desde el caminante de adelante la regla crece hacia atrás: el mismo tramo, espejado.
+  const rulerT = useDerivedValue(() => {
+    const back = rulerFrom !== undefined && rulerFrom.value > 0.5;
+    const k = Math.max(0.0001, ruler.value);
+    return [{ translateX: back ? rulerX1 : rulerX }, { translateY: oy }, { scaleX: back ? -k : k }];
+  });
   const rulerCountO = useDerivedValue(() => Math.max(0, (ruler.value - 0.92) / 0.08));
 
   /**
@@ -2106,6 +2123,12 @@ export function ChestScene({
                     ]}
                   />
                 </Path>
+              </Group>
+              {/* El hueco que espera la ficha: dorado, porque es la guía. Aparece
+                  cuando la regla midió y se va cuando la ficha entra. */}
+              <Group opacity={rulerCountO}>
+                <Path path={geom.rulerSlot} color="rgba(255, 255, 255, 0.06)" />
+                <Path path={geom.rulerSlot} color={theme.color.gold} style="stroke" strokeWidth={2} />
               </Group>
               <Group opacity={rulerCountO}>
                 <Ink path={geom.rulerCount} color={theme.color.accent} />

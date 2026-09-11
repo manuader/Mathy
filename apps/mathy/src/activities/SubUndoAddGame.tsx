@@ -118,6 +118,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
   const demo = useSharedValue(0);
   const clock = useSharedValue(0);
   const ruler = useSharedValue(0);
+  /** Desde qué caminante se estira la regla: 0 el de atrás, 1 el de adelante. */
+  const rulerFrom = useSharedValue(0);
   const line = useSharedValue(0);
   const appear = useSharedValue(0);
   /** La piedra desde la que empezó este tirón de manivela. */
@@ -149,6 +151,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
     pos.value = inicio;
     open.value = 0;
     ruler.value = 0;
+    rulerFrom.value = 0;
     leftover.value = 0;
     backArrow.value = 0;
     // La ida ya está hecha y dibujada: el nodo no empieza en cero, empieza en
@@ -475,13 +478,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
         level.mode === "measure"
           ? { x: (x0 + x1) / 2, y: (row0?.y ?? 0) + 52 }
           : layout.slot;
-      const cerca = Math.hypot(x - destino.x, y - destino.y) < 70;
+      // En la regla, la ficha entra en toda la franja entre los dos caminantes,
+      // desde la pista hasta el hueco: soltarla sobre la regla también vale.
+      const fila = row0?.y ?? 0;
+      const cerca =
+        level.mode === "measure"
+          ? x >= Math.min(x0, x1) - 44 && x <= Math.max(x0, x1) + 44 && y >= fila - 70 && y <= fila + 110
+          : Math.hypot(x - destino.x, y - destino.y) < 70;
       const volver = (): void => {
         slot.dx.value = withTiming(0, { duration: theme.motion.base });
         slot.dy.value = withTiming(0, { duration: theme.motion.base });
       };
       if (!cerca) {
         volver();
+        if (level.mode === "measure" && ruler.value >= 0.92) {
+          setMessage({ text: "Soltala en el hueco, debajo de la regla.", tone: "dim" });
+        }
         return;
       }
       if (level.mode === "measure" && ruler.value < 0.92) {
@@ -590,8 +602,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
    * entre renders y el detector no lo tiene que volver a enganchar.
    *
    * Qué agarró el dedo lo decide `sujeto`, como en el camino de piedras del nodo
-   * 2: la manivela solo responde con una llave puesta, y la regla solo nace en
-   * la piedra del caminante de atrás.
+   * 2: la manivela solo responde con una llave puesta, y la regla nace en la
+   * piedra de cualquiera de los dos caminantes.
    */
   const sujeto = useSharedValue(NADA);
   const acciones = useRef({
@@ -644,8 +656,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
     () =>
       Gesture.Pan()
         .onBegin((e) => {
-          if (conRegla && Math.abs(e.x - x0) < 70 && Math.abs(e.y - oy) < 90) {
+          // "De un caminante al otro" vale en los dos sentidos: antes, empezar
+          // por el de adelante no hacía nada y el nivel parecía roto.
+          if (conRegla && Math.abs(e.y - oy) < 90 && (Math.abs(e.x - x0) < 70 || Math.abs(e.x - x1) < 70)) {
             sujeto.value = REGLA;
+            rulerFrom.value = Math.abs(e.x - x1) < Math.abs(e.x - x0) ? 1 : 0;
             ruler.value = 0.02;
             return;
           }
@@ -661,7 +676,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
         })
         .onChange((e) => {
           if (sujeto.value === REGLA) {
-            ruler.value = Math.max(0.02, Math.min(1.15, (e.x - x0) / largoRegla));
+            const tramo = rulerFrom.value > 0.5 ? x1 - e.x : e.x - x0;
+            ruler.value = Math.max(0.02, Math.min(1.15, tramo / largoRegla));
             return;
           }
           if (sujeto.value !== MANIVELA) return;
@@ -704,7 +720,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
           sujeto.value = NADA;
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [conRegla, modo, x0, oy, largoRegla, cx, cy, alMedir, alSoltar],
+    [conRegla, modo, x0, x1, oy, largoRegla, cx, cy, alMedir, alSoltar],
   );
 
   const canvasTap = useMemo(
@@ -771,6 +787,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
             demo={demo}
             clock={clock}
             ruler={ruler}
+            rulerFrom={rulerFrom}
             line={line}
             appear={appear}
             mounted={mounted}
