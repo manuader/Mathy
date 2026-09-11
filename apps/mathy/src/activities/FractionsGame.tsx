@@ -166,6 +166,15 @@ function Activity({ level, onLevelDone, onEvent }: FractionsGameProps) {
     [level, round, seedBase],
   );
   const ask = problem.ask;
+  // La guía se juega en la primera ronda: sus pasos son de la pregunta de esa
+  // ronda. En las rondas de otra pregunta, la pista de Tomi no tiene gesto que
+  // mostrar; si no se lo decimos, habla del gesto de la otra pregunta.
+  const primeraPregunta = useRef(ask);
+  if (round === 0) primeraPregunta.current = ask;
+  const preferHint = lesson?.preferHint;
+  useEffect(() => {
+    preferHint?.(ask === primeraPregunta.current ? null : "");
+  }, [ask, preferHint]);
   /** Con lección, el cartel dice qué hacer y la línea de abajo queda para lo que pasó. */
   const opening = conLeccion ? "" : openingHint(ask);
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
