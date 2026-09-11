@@ -14,8 +14,10 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { ENTER } from "./Motion.tsx";
 import { play } from "./sound.ts";
 import { theme } from "./theme.ts";
 
@@ -149,14 +151,18 @@ export function Overlay({
   /** Pantalla baja (un teléfono): menos aire, para que el botón de seguir entre sin scroll. */
   readonly dense?: boolean;
 }) {
+  // El velo aparece con una curva; la tarjeta llega con resorte, como una pieza
+  // que cae en su lugar: se pasa un poco y vuelve. Es el mismo resorte de `Rise`.
   const k = useSharedValue(0);
+  const drop = useSharedValue(0);
   useEffect(() => {
-    k.value = withTiming(1, { duration: theme.motion.base + 80, easing: Easing.out(Easing.back(1.2)) });
-  }, [k]);
+    k.value = withTiming(1, { duration: theme.motion.base + 80, easing: Easing.out(Easing.quad) });
+    drop.value = withSpring(1, ENTER);
+  }, [k, drop]);
   const veil = useAnimatedStyle(() => ({ opacity: Math.min(1, k.value) }));
   const card = useAnimatedStyle(() => ({
     opacity: Math.min(1, k.value * 1.4),
-    transform: [{ translateY: (1 - k.value) * 36 }, { scale: 0.94 + 0.06 * k.value }],
+    transform: [{ translateY: (1 - drop.value) * 36 }, { scale: 0.94 + 0.06 * drop.value }],
   }));
   return (
     <Animated.View style={[styles.veil, veil]}>
