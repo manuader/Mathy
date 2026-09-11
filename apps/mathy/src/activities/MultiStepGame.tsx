@@ -53,6 +53,7 @@ import {
   NODE_MULTI_STEP,
   TOTAL_MULTI_LEVELS,
   generateMultiStep,
+  multiCorrectKey,
   multiDistribute,
   multiJudge,
   multiOuterLayer,
@@ -86,6 +87,9 @@ import {
 } from "../scenes/PipeScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
+import { eqnMsg } from "../lessons/multi-step.ts";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace, toggleFace } from "../ui/Kit.tsx";
@@ -152,6 +156,14 @@ export function MultiStepGame(props: MultiStepGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel del objetivo dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
 
@@ -159,6 +171,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
     () => generateMultiStep(level, seedBase + round * 1000 + level.n, round),
     [level, round, seedBase],
   );
+  /**
+   * Lo que se dice al empezar la ronda. Con lección, el cartel ya dice qué
+   * hacer; lo que cambia de ronda en ronda (armar la llave, los cofres del mismo
+   * tamaño, el cofre raro) se sigue diciendo abajo.
+   */
+  const abre = (ask: string): string => (conLeccion && ask === "solve" ? "" : openingHint(ask));
 
   /** La ecuación de ahora, con los mismos ids desde el primer renglón. */
   const [eq, setEq] = useState<Equation>(problem.equation);
@@ -175,15 +193,24 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
   /** La palanca de la tubería: corriéndola al revés se lee el despeje. */
   const [pipeBack, setPipeBack] = useState(true);
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: t("multi.hint.outerFirst"),
+    text: abre(problem.ask),
     tone: "dim",
   }));
+  /** Las llaves que ya abrieron su cofre: se quedaron en la cerradura y su asa se apaga. */
+  const [usadas, setUsadas] = useState<readonly number[]>([]);
 
   const chestsVisible = level.chests !== "hidden" && chestsOn;
 
   // --- Medidas ---------------------------------------------------------------
 
-  const sceneH = Math.max(380, Math.min(height * 0.64, 560));
+  // Con lección, el cartel de Lumi se lleva su franja de arriba y el lienzo cede.
+  // En el teléfono el cartel ocupa el doble de renglones: con la misma
+  // proporción, el encabezado quedaba debajo de la barra.
+  const angosta = width < 520;
+  const sceneH = Math.max(
+    angosta ? 340 : 360,
+    Math.min(height * (conLeccion ? (angosta ? 0.46 : 0.54) : 0.64), 560),
+  );
   // La balanza se queda con una columna angosta a la derecha y el encastre con
   // el resto: los dos viven en el mismo lienzo, porque una pantalla tiene uno.
   // La columna la decide el **nivel** y no el interruptor: si el ancho cambiara
@@ -418,7 +445,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
     setBalanceOn(level.balance === "shown");
     setPipeOn(false);
     setPipeBack(true);
-    setMessage({ text: openingHint(problem.ask), tone: "dim" });
+    setUsadas([]);
+    setMessage({ text: abre(problem.ask), tone: "dim" });
     progress.value = 0;
     openedSV.value = 0;
     tree.value = 0;
@@ -446,12 +474,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
     }
     // El latido de la demostración: la mano fantasma lleva la llave a la
     // cerradura del cofre de afuera, que es la única instrucción que hace falta.
+    // Con guía, la luz de Lumi es la demostración: dos manos a la vez señalarían
+    // dos cosas distintas, y en las rondas siguientes la pista de Tomi señala
+    // lo mismo cuando hace falta.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    demo.value = guided
+      ? 0
+      : withRepeat(
+          withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+          -1,
+          false,
+        );
     return () => {
       cancelAnimation(hint);
       cancelAnimation(demo);
@@ -466,6 +499,42 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_MULTI_STEP, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj de la latencia arranca cuando empieza el juego, no detrás de la
+  // tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
+  /**
+   * Qué paso de la guía muestra la pista de Tomi en esta ronda: el cofre que
+   * falta en el primer nivel, la pieza que falta al armar la llave, y el
+   * recordatorio en los niveles que no tienen paso de gesto.
+   */
+  const pasos = lesson?.lesson?.coach;
+  const preferHint = lesson?.preferHint;
+  const pistaDeRonda = useMemo(() => {
+    const ids = (pasos ?? []).map((s) => s.id);
+    const quiero =
+      problem.ask === "assemble"
+        ? slotOp === null
+          ? "op"
+          : "number"
+        : opened.length === 0 && problem.layers.length > 1
+          ? "outer"
+          : "inner";
+    return [quiero, "open", "recall"].find((id) => ids.includes(id)) ?? null;
+  }, [pasos, problem.ask, problem.layers.length, slotOp, opened.length]);
+  useEffect(() => {
+    preferHint?.(pistaDeRonda);
+  }, [preferHint, pistaDeRonda, round]);
 
   // --- El renglón ------------------------------------------------------------
 
@@ -522,6 +591,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
     setRound((r) => r + 1);
   }, [round, level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const cierrePendiente = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      cierrePendiente.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !cierrePendiente.current) return;
+    cierrePendiente.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -529,9 +618,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
       setSolved(true);
       quiet();
       setMessage({ text, tone: "ok" });
-      luego(nextRound, 1700);
+      luego(advance, 1700);
     },
-    [nextRound, quiet, luego],
+    [advance, quiet, luego],
   );
 
   /** La llave vuelve al llavero: el jugador cierra el cofre y prueba desde ahí. */
@@ -560,6 +649,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
 
       if (m.verdict === "opens") {
         const siguiente = [...opened, m.layer as string];
+        say("opened");
+        if (multiSolved(problem.layers, siguiente)) say("solved");
+        if (index >= 0) setUsadas((u) => [...u, index]);
         setPending({ next: m.next, trace: m.trace });
         progress.value = withTiming(1, { duration: theme.motion.morph });
         openedSV.value = withTiming(siguiente.length, { duration: theme.motion.morph });
@@ -670,13 +762,23 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
         const o = problem.ops[index];
         if (!o) return;
         setSlotOp(o);
+        say("opPicked");
+        // La pieza de operación no se queda en la cerradura: vuelve a su gancho
+        // y la llave se completa con el número. Antes quedaba donde el dedo la
+        // soltó, tapando la cerradura, hasta el final de la ronda.
+        const s = keys[index];
+        if (s) {
+          s.dx.value = withTiming(0, { duration: theme.motion.base });
+          s.dy.value = withTiming(0, { duration: theme.motion.base });
+        }
         setMessage({ text: t("multi.hint.needNumber"), tone: "dim" });
         return;
       }
       const k = problem.keys[index];
       if (k) tryKey(k, index);
     },
-    [problem, tryKey],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [problem, tryKey, say],
   );
 
   /** Una ficha numérica. Con la operación ya elegida, la llave queda armada. */
@@ -777,6 +879,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
           s.dx.value = withTiming(0, { duration: theme.motion.base });
           s.dy.value = withTiming(0, { duration: theme.motion.base });
         }
+        // Soltada lejos de la cerradura, vuelve al llavero: la línea dice adónde iba.
+        setMessage({ text: t(eqnMsg("dropOff")), tone: "dim" });
         return;
       }
       if (s) {
@@ -789,9 +893,95 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
     [layout.keys, destino],
   );
 
+  /**
+   * Soltar una ficha numérica. Antes no hacía nada: la ficha se quedaba donde
+   * el dedo la dejaba hasta el final de la ronda. Ahora vuelve siempre a su
+   * lugar, y si cayó sobre la cerradura cuenta como tocarla.
+   */
+  const alSoltarFicha = useCallback(
+    (index: number, x: number, y: number) => {
+      const s = tiles[index];
+      if (s) {
+        s.dx.value = withTiming(0, { duration: theme.motion.base });
+        s.dy.value = withTiming(0, { duration: theme.motion.base });
+      }
+      if (Math.hypot(x - destino.x, y - destino.y) > DROP_R) {
+        setMessage({ text: t(eqnMsg("tileBack")), tone: "dim" });
+        return;
+      }
+      acciones.current.useTile(index);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [destino],
+  );
+
+  /** Lo que dice la línea de abajo cuando un toque no llegó a ningún lado. */
+  const avisar = useCallback((id: string) => {
+    setMessage({ text: t(eqnMsg(id)), tone: "dim" });
+  }, []);
+
   const llaves = vivos(problem);
   const conFichas = problem.tiles.length > 0;
   const esperandoCaso = problem.degenerate !== "none" && pendientes.length === 1 && !pending;
+
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: el cofre
+   * de afuera y su cerradura, la llave que la abre, las piezas para armarla, el
+   * renglón. En los recordatorios (y en la pista de Tomi de esos niveles) la luz
+   * señala la cerradura y el llavero, no la respuesta: elegir es el nivel. La
+   * pista reusa los pasos: señala lo mismo, pero no frena la ronda.
+   */
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const around = (p: Spot, w: number, h: number): Rect => ({ x: p.x - w / 2, y: p.y - h / 2, w, h });
+    const caja = chestsVisible ? layout.nest?.boxes[opened.length] : undefined;
+    const cofre: Rect | null = caja ? { x: caja.x - 6, y: caja.y - 6, w: caja.w + 12, h: caja.h + 12 } : null;
+    const ancho = Math.min(chestW * 0.9, 420);
+    const renglon: Rect = { x: rowX - ancho / 2, y: rowY - 36, w: ancho, h: 72 };
+    const cerradura = around(destino, 70, 70);
+    const llave = (i: number): Rect => around(layout.keys[i] ?? { x: 0, y: 0 }, layout.keyW + 12, layout.keyH + 12);
+    const vivas = Array.from({ length: llaves }, (_, i) => i).filter((i) => !usadas.includes(i));
+    const llavero = union(vivas.map(llave));
+    const fichas = union(
+      problem.tiles.map((_, i) => around(layout.tiles[i] ?? { x: 0, y: 0 }, layout.tileW + 12, layout.tileH + 12)),
+    );
+    const cofres = union((layout.nest?.boxes ?? []).map((b) => ({ x: b.x - 6, y: b.y - 6, w: b.w + 12, h: b.h + 12 })));
+    const solo = (rs: readonly (Rect | null)[]): Focus => ({ rings: rs.filter((r): r is Rect => r !== null) });
+
+    if (id === "look") return solo(chestsVisible ? [cofre, level.row ? renglon : null] : [renglon, llavero]);
+    if (id === "reveal") return solo(level.row ? [renglon] : [chestsVisible ? cofres : renglon]);
+    if (problem.ask === "assemble") {
+      if (slotOp === null) return solo([llavero, renglon]);
+      return solo([fichas, renglon]);
+    }
+    if (esperandoCaso) return solo([renglon]);
+    // En la guía de gesto se muestra la llave que abre; en el recordatorio, no.
+    const buena = capa ? problem.keys.findIndex((k) => k === multiCorrectKey(problem, opened)) : -1;
+    const muestra = id === "outer" || id === "inner" || id === "open";
+    const desde = buena >= 0 ? layout.keys[buena] : undefined;
+    if (muestra && desde) return { rings: [llave(buena), cerradura], drag: { from: desde, to: destino } };
+    return solo([cerradura, llavero]);
+  }, [
+    shown,
+    chestsVisible,
+    layout,
+    opened,
+    chestW,
+    rowX,
+    rowY,
+    destino,
+    llaves,
+    usadas,
+    problem,
+    level.row,
+    slotOp,
+    esperandoCaso,
+    capa,
+  ]);
 
   return (
     <View style={styles.root}>
@@ -801,7 +991,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!conLeccion}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <View style={{ width, height: sceneH }}>
         <Canvas style={{ width, height: sceneH }}>
@@ -902,7 +1095,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
             spot={layout.keys[i] ?? { x: 0, y: 0 }}
             w={layout.keyW}
             h={layout.keyH}
-            enabled={i < llaves && !solved && !pipeOn}
+            // Una llave gastada se queda en su cerradura y ya no se ve en el
+            // llavero: su asa tocaba el aire y probaba de nuevo una llave invisible.
+            enabled={i < llaves && !solved && !pipeOn && !usadas.includes(i)}
             onDrop={alSoltarLlave}
             onTap={alUsarLlave}
           />
@@ -919,22 +1114,25 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
                 w={layout.tileW}
                 h={layout.tileH}
                 enabled={i < problem.tiles.length && !solved && !pipeOn}
-                onDrop={noop3}
+                onDrop={alSoltarFicha}
                 onTap={alUsarFicha}
               />
             ))
           : null}
+
+        {/* Con la tubería abierta las llaves descansan; un toque sobre el
+            tablero lo dice, en vez de no contestar. */}
+        {pipeOn ? (
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => avisar("pipeOpen")} />
+        ) : null}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
-      <Hint text={message.text} tone={message.tone} />
-
-      {problem.ask === "assemble" ? (
-        <Text style={styles.slot}>
-          {slotOp === null
-            ? t("multi.slot.empty")
-            : `${t("multi.slot.filled")} ${OP_CHAR[slotOp]}`}
-        </Text>
-      ) : null}
+      {/* Lo que se toca va pegado al tablero y el texto va al final: al fondo
+          de la columna, en el teléfono, los interruptores y los dos veredictos
+          quedaban debajo de Tomi, que vive en el rincón de abajo a la izquierda. */}
 
       {/* Los dos casos especiales: no son una llave, son un veredicto. */}
       {esperandoCaso ? (
@@ -962,12 +1160,36 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MultiStepGameProps) {
         ) : null}
       </View>
 
+      <Hint text={message.text} tone={message.tone} />
+
+      {problem.ask === "assemble" ? (
+        <Text style={styles.slot}>
+          {slotOp === null
+            ? t("multi.slot.empty")
+            : `${t("multi.slot.filled")} ${OP_CHAR[slotOp]}`}
+        </Text>
+      ) : null}
+
       {level.definition ? <Text style={styles.definition}>{t("multi.definition")}</Text> : null}
     </View>
   );
 }
 
-const noop3 = (): void => {};
+/** El rectángulo que abraza a todos: para señalar una fila de piezas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
 
 /** Cuántas piezas cuelga el llavero en esta ronda. */
 const vivos = (problem: { readonly ask: string; readonly keys: readonly unknown[]; readonly ops: readonly unknown[] }): number =>

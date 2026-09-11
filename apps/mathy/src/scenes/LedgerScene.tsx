@@ -72,6 +72,10 @@ import {
 
 /** Cuánto tarda un objeto soltado en llegar a su fila: ahí rebota y ahí salen las chispas. */
 const LANDING_MS = 170;
+/** El ancho del rincón de Tomi (hasta 72 px desde 16 de margen), que el mostrador no pisa. */
+const TRAY_CORNER = 84;
+/** Lo mínimo entre dos objetos del mostrador en una hilera; con menos, van en dos. */
+const TRAY_MIN_STEP = 36;
 /** Cuánto duran las chispas y el halo de un evento. */
 const BURST_MS = 720;
 
@@ -311,10 +315,15 @@ export function ledgerLayout(
   tokenSlots: number,
 ): LedgerLayout {
   const hayArbol = config.tree.length > 0;
+  // El árbol, cuando lo hay, es lo único que se toca en esa ronda: el libro ya
+  // está escrito. En el teléfono un tercio del ancho dejaba las hojas a 30 px
+  // una de otra y de 26 px de diámetro, y un dedo cubría dos; ahí el árbol se
+  // lleva la mitad del ancho y el libro se corre.
+  const arbolW = hayArbol ? Math.max(width * 0.32, Math.min(width * 0.5, 220)) : 0;
   // La balanza se lleva el costado derecho y el árbol el izquierdo. Los dos no
   // aparecen juntos en ningún nivel, así que el libro nunca queda apretado
   // entre las dos cosas.
-  const disponible0 = hayArbol ? width * 0.36 : width * 0.06;
+  const disponible0 = hayArbol ? arbolW + width * 0.04 : width * 0.06;
   const disponible1 = config.balance ? width * 0.45 : width * 0.94;
   const libre = Math.max(140, disponible1 - disponible0);
 
@@ -339,15 +348,32 @@ export function ledgerLayout(
   }));
 
   const trayY = height - Math.max(34, height * 0.11);
-  const tray: LedgerBox = { x: width * 0.06, y: trayY - 26, w: width * 0.88, h: 52 };
-  // Los objetos que hay se reparten el mostrador centrados. Las ranuras que
-  // sobran quedan montadas donde termina la fila, con opacidad cero.
+  // El mostrador deja libre el rincón de abajo a la izquierda: ahí vive Tomi, y
+  // en el teléfono el mostrador queda a su altura. Con doce objetos, el primero
+  // caía debajo de Tomi y no había cómo agarrarlo.
+  const trayX0 = Math.max(width * 0.06, TRAY_CORNER);
+  const trayW = width * 0.94 - trayX0;
+  // Los objetos que hay se reparten el mostrador centrados. Si en una hilera
+  // quedarían a menos de un dedo uno de otro —doce objetos en el teléfono caían
+  // a 23 px—, van en dos hileras. Las ranuras que sobran quedan montadas donde
+  // termina la fila, con opacidad cero.
   const cuantos = Math.max(1, config.tokens.length);
-  const paso = Math.min(tray.w / cuantos, unit * 3.6);
-  const tokens: LedgerSpot[] = Array.from({ length: tokenSlots }, (_, i) => ({
-    x: width / 2 + (Math.min(i, cuantos - 1) - (cuantos - 1) / 2) * paso,
-    y: trayY,
-  }));
+  const dosHileras = cuantos > 1 && trayW / cuantos < TRAY_MIN_STEP;
+  const porHilera = dosHileras ? Math.ceil(cuantos / 2) : cuantos;
+  const paso = Math.min(trayW / porHilera, unit * 3.6);
+  const medioHilera = dosHileras ? unit * 1.35 : 0;
+  const tray: LedgerBox = { x: trayX0, y: trayY - 26 - medioHilera, w: trayW, h: 52 + medioHilera * 2 };
+  const trayCx = tray.x + tray.w / 2;
+  const tokens: LedgerSpot[] = Array.from({ length: tokenSlots }, (_, i) => {
+    const j = Math.min(i, cuantos - 1);
+    const abajo = dosHileras && j >= porHilera;
+    const col = abajo ? j - porHilera : j;
+    const enHilera = !dosHileras ? cuantos : abajo ? cuantos - porHilera : porHilera;
+    return {
+      x: trayCx + (col - (enHilera - 1) / 2) * paso,
+      y: trayY + (dosHileras ? (abajo ? medioHilera : -medioHilera) : 0),
+    };
+  });
 
   const balance: LedgerBox = config.balance
     ? { x: width * 0.47, y: 0, w: width * 0.51, h: height * 0.84 }
@@ -386,7 +412,7 @@ export function ledgerLayout(
     tray,
     tokens,
     balance,
-    ...treeSpots(config.tree, width * 0.32, top, height * 0.5),
+    ...treeSpots(config.tree, arbolW, top, height * 0.5),
     unit,
     cells,
     beams,

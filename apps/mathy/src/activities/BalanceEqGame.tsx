@@ -92,6 +92,9 @@ import {
 import { play } from "../ui/sound.ts";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
+import { balMsg } from "../lessons/balance-eq.ts";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace } from "../ui/Kit.tsx";
@@ -103,6 +106,12 @@ const TAP_SLOP = 14;
 const HALO_MS = 1500;
 /** Blancos grandes: una mano de cinco años no apunta fino. */
 const SLOP = 16;
+/** Una ficha de la reserva (el asa mide 56 × 56), el aire entre dos y la franja que ocupan. */
+const RESERVE_CHIP = 56;
+const RESERVE_GAP = theme.space[3];
+const TRAY_H = RESERVE_CHIP + theme.space[3] * 2;
+/** El ancho del rincón de Tomi, que la primera ficha de la reserva no pisa. */
+const TOMI_CORNER = 84;
 
 /**
  * La inclinación en radianes que la escena espera. El signo se da vuelta: para
@@ -146,6 +155,14 @@ interface Spot {
 function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel del objetivo dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
 
@@ -153,6 +170,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     () => generateBalanceEq(level, seedBase + round * 1000 + level.n, round),
     [level, round, seedBase],
   );
+  /**
+   * Lo que se dice al empezar la ronda. Con lección, el cartel ya dice qué
+   * hacer, salvo lo que cambia de ronda en ronda: la tarea de conservar (qué
+   * pesa hay que poner o sacar) y las dos preguntas del último nivel.
+   */
+  const abre = (p: BalProblem): string =>
+    conLeccion && (p.ask === "level" || p.ask === "free") ? "" : apertura(p, level);
 
   const [state, setState] = useState<BalState>(() => balStart(problem));
   /** El estado anterior. En la capa visual se dibuja detrás: el antes y el después. */
@@ -164,13 +188,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
   /** El plato que nadie tocó, marcado con un halo mientras se explica. */
   const [haloSide, setHaloSide] = useState<BalSide | null>(null);
   const [ghostOn, setGhostOn] = useState(level.balance === "shown");
+  const ghostOnRef = useRef(ghostOn);
+  ghostOnRef.current = ghostOn;
 
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: apertura(problem, level),
+    text: abre(problem),
     tone: "dim",
   }));
 
-  const sceneH = Math.max(340, Math.min(height * 0.6, 500));
+  // Con lección, el cartel de Lumi se lleva su franja de arriba y el lienzo cede.
+  // En el teléfono el cartel ocupa el doble de renglones y la reserva vive debajo
+  // del lienzo: sin achicarlo, la reserva se salía de la pantalla.
+  const angosta = width < 520;
+  const sceneH = Math.max(
+    angosta ? 290 : 320,
+    Math.min(height * (conLeccion ? (angosta ? 0.4 : 0.5) : 0.6), 500),
+  );
   const conLinea = level.line && problem.ask !== "action";
   const balanceH = conLinea ? sceneH * 0.76 : sceneH;
   const lineY = conLinea ? sceneH * 0.9 : 0;
@@ -221,6 +254,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
    */
   const hint = useMemo<{ left: number | null; right: number | null }>(() => {
     const nada = { left: null, right: null };
+    // Con guía, la luz de Lumi (y después la pista de Tomi) es la demostración:
+    // un latido propio señalaría la respuesta en todas las rondas y dos luces a
+    // la vez dirían dos cosas distintas.
+    if (guided) return nada;
     if (problem.ask === "action" || solved) return nada;
     if (balPairs(problem.ask)) {
       const enLos2 = state.left.find((v) => state.right.includes(v));
@@ -234,7 +271,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     );
     if (sobra === undefined) return nada;
     return pesado === "left" ? { left: sobra, right: null } : { left: null, right: sobra };
-  }, [problem, state, solved]);
+  }, [problem, state, solved, guided]);
 
   const line = useMemo(
     () => (conLinea ? lineLayout(problem, state, width, lineY) : null),
@@ -297,7 +334,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     setHeld(null);
     setSolved(false);
     setHaloSide(null);
-    setMessage({ text: apertura(problem, level), tone: "dim" });
+    setMessage({ text: abre(problem), tone: "dim" });
     tilt.value = withTiming(inclinacion(problem, balStart(problem)), {
       duration: theme.motion.base,
     });
@@ -320,6 +357,43 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_BALANCE_EQ, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj de la latencia arranca cuando empieza el juego, no detrás de la
+  // tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
+  /**
+   * Qué paso de la guía muestra la pista de Tomi en esta ronda. El último nivel
+   * alterna reparar con las acciones sin números, los de recordatorio no tienen
+   * paso de gesto, y con medio movimiento hecho lo que falta es el espejo: sin
+   * elegir, la pista hablaría de otro gesto.
+   */
+  const pasos = lesson?.lesson?.coach;
+  const preferHint = lesson?.preferHint;
+  const pistaDeRonda = useMemo(() => {
+    const ids = (pasos ?? []).map((s) => s.id);
+    const quiero =
+      problem.ask === "level" || problem.ask === "repair"
+        ? "fix"
+        : problem.ask === "action"
+          ? "act"
+          : pending
+            ? "mirror"
+            : "half";
+    return [quiero, "recall"].find((id) => ids.includes(id)) ?? null;
+  }, [pasos, problem.ask, pending]);
+  useEffect(() => {
+    preferHint?.(pistaDeRonda);
+  }, [preferHint, pistaDeRonda, round]);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -352,6 +426,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     setRound(r + 1);
   }, [level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const cierrePendiente = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      cierrePendiente.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !cierrePendiente.current) return;
+    cierrePendiente.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (text: string, abreCaja: boolean) => {
       if (doneRef.current) return;
@@ -363,9 +457,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
       }
       // Abrir el cajón hay que verlo: lo que hay adentro es lo que la barra ya
       // había dicho, y esa comprobación es el nivel entero.
-      setTimeout(nextRound, abreCaja ? 3000 : 1600);
+      setTimeout(advance, abreCaja ? 3000 : 1600);
     },
-    [nextRound, openness],
+    [advance, openness],
   );
 
   /**
@@ -423,6 +517,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
       const cuenta = !empareja || derecha || suelto || v.pending !== null;
       if (cuenta) attempt(derecha, error);
 
+      // Lo que la guía espera, dicho en el mismo lugar donde se registra el
+      // movimiento: medio movimiento, la barra que se endereza, la ronda hecha.
+      if (nuevoPendiente) say("half");
+      if (derecha && !balLevelled(p, antes)) say("levelled");
+      if (!error && balSolved(p, despues)) {
+        say("solved");
+        if (p.ask === "action") say("acted");
+      }
+
       if (error === "equals_as_operator") {
         marcar(balOtherSide(move.side));
         setMessage({
@@ -447,7 +550,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
       setMessage({ text: aviso(p, despues, nuevoPendiente), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, marcar, succeed],
+    [attempt, marcar, succeed, say],
   );
 
   /** Un toque sobre un plato: deja ahí lo que estaba levantado. */
@@ -485,12 +588,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
   const [takenKey, setTakenKey] = useState<string | null>(null);
 
   const tomar = useCallback((h: NonNullable<Held>) => {
-    setHeld((prev) => {
-      if (!prev) return h;
-      if (prev.kind === "weight" && h.kind === "weight" && prev.value === h.value) return null;
-      if (prev.kind === "action" && h.kind === "action" && prev.action === h.action) return null;
-      return h;
-    });
+    const prev = vivo.current.held;
+    const suelta =
+      prev !== null &&
+      ((prev.kind === "weight" && h.kind === "weight" && prev.value === h.value) ||
+        (prev.kind === "action" && h.kind === "action" && prev.action === h.action));
+    setHeld(suelta ? null : h);
+    // Levantar sin decir adónde va dejaba al jugador mirando una ficha
+    // encendida: la línea de abajo dice cuál es el paso que sigue.
+    if (!suelta) {
+      setMessage({
+        text: t(
+          !ghostOnRef.current ? balMsg("ghost") : h.kind === "action" ? balMsg("heldAction") : balMsg("held"),
+        ),
+        tone: "dim",
+      });
+    }
   }, []);
 
   const toggleGhost = useCallback(() => {
@@ -502,7 +615,25 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
 
   // --- Geometría para los gestos ---------------------------------------------
 
-  const [canvasBox, setCanvasBox] = useState({ x: 0, y: 0 });
+  /**
+   * La reserva vive adentro de la vista del lienzo, en su franja de abajo, con
+   * cada ficha en un lugar calculado: el gesto, el dibujo y la guía miden en las
+   * mismas coordenadas. La fila deja libre el rincón de abajo a la izquierda,
+   * donde vive Tomi.
+   */
+  const fichasReserva = problem.ask === "action" ? problem.actions.length : problem.reserve.length;
+  const reservaY = sceneH + TRAY_H / 2;
+  const reservaCx = Math.max(
+    width / 2,
+    TOMI_CORNER + RESERVE_CHIP / 2 + ((fichasReserva - 1) / 2) * (RESERVE_CHIP + RESERVE_GAP),
+  );
+  const fichaEn = useCallback(
+    (i: number): Pt => ({
+      x: reservaCx + (i - (fichasReserva - 1) / 2) * (RESERVE_CHIP + RESERVE_GAP),
+      y: reservaY,
+    }),
+    [reservaCx, fichasReserva, reservaY],
+  );
 
   /** El origen del grupo de un plato, con la barra donde está ahora. */
   const panOrigin = useCallback(
@@ -518,6 +649,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     () => ({ x: l.cx, y: l.beamY + l.hang * 0.46, r: 30 }),
     [l],
   );
+
+  /**
+   * El cajón en coordenadas del lienzo: la misma medida con que la escena lo
+   * dibuja (`boxFootprint`), colgada del plato donde está ahora la barra.
+   */
+  const cajaEnLienzo = useCallback((): { cajaX: number; cajaY: number; cajaW: number; cajaH: number } => {
+    const lado = problem.box?.side;
+    if (!lado || !ghostOn) return { cajaX: -1000, cajaY: -1000, cajaW: 0, cajaH: 0 };
+    const o = panOrigin(lado);
+    return { cajaX: o.x - fp.w / 2, cajaY: o.y + fp.yBase - fp.h, cajaW: fp.w, cajaH: fp.h };
+  }, [problem.box, ghostOn, panOrigin, fp]);
 
   /**
    * Toda la geometría que el gesto necesita, en un solo `SharedValue`. El
@@ -543,6 +685,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     igualLX: -1000,
     igualLY: -1000,
     conBalanza: 0,
+    /** El cajón, en coordenadas del lienzo. Fuera de la pantalla cuando no hay. */
+    cajaX: -1000,
+    cajaY: -1000,
+    cajaW: 0,
+    cajaH: 0,
   });
 
   useEffect(() => {
@@ -599,9 +746,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
       igualLX: line?.equalX ?? -1000,
       igualLY: line?.y ?? -1000,
       conBalanza: ghostOn ? 1 : 0,
+      ...cajaEnLienzo(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spots, line, panOrigin, solved, ghostOn, l, fp, equalSpot]);
+
+  /** Lo que dice la línea de abajo cuando un gesto no llegó a ningún lado. */
+  const avisar = useCallback((id: string) => {
+    setMessage({ text: t(balMsg(id)), tone: "dim" });
+  }, []);
 
   const pan = useMemo(
     () =>
@@ -668,12 +821,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
             const destino = enPlato(e.x, e.y);
             if (destino >= 0 && destino !== lado) {
               runOnJS(cruzar)(lado === 0 ? "left" : "right", valor);
+            } else {
+              // Soltada en su mismo plato o en el aire, vuelve: la línea lo dice.
+              runOnJS(avisar)("crossBack");
             }
             return;
           }
 
           if (idx >= 0) {
             runOnJS(tocarPesa)(lado === 0 ? "left" : "right", valor);
+            return;
+          }
+          // La caja no es un blanco: no se puede quitar lo que no se sabe cuánto
+          // es. Pero tocarla tiene que decir algo, o parece que el juego no oye.
+          if (
+            e.x > g.cajaX - SLOP &&
+            e.x < g.cajaX + g.cajaW + SLOP &&
+            e.y > g.cajaY - SLOP &&
+            e.y < g.cajaY + g.cajaH + SLOP
+          ) {
+            runOnJS(avisar)("box");
             return;
           }
           for (const f of g.fichas) {
@@ -701,26 +868,175 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
     [],
   );
 
-  /** Soltar un asa de la reserva sobre un plato. Las asas miden en coordenadas de página. */
+  /**
+   * Soltar un asa de la reserva sobre un plato. Dónde cayó es su lugar en la
+   * reserva más lo que se movió, en coordenadas del lienzo. Antes se comparaba
+   * la posición del dedo en la página con la caja del lienzo medida con
+   * `onLayout`, que en web solo se entera de los cambios de tamaño: cuando el
+   * cartel de Lumi aparecía arriba, el lienzo bajaba unos 200 px sin cambiar de
+   * tamaño, la caja medida quedaba vieja y ninguna pesa arrastrada caía en un
+   * plato (trampa 10).
+   */
   const soltarAsa = useCallback(
-    (h: Held, absX: number, absY: number) => {
-      if (!h || !ghostOn) return;
+    (h: Held, i: number, dx: number, dy: number) => {
+      if (!h) return;
+      if (!ghostOn) {
+        setMessage({ text: t(balMsg("ghost")), tone: "dim" });
+        return;
+      }
+      const casa = fichaEn(i);
+      const x = casa.x + dx;
+      const yy = casa.y + dy;
       const ol = panOrigin("left");
       const or = panOrigin("right");
-      const y = canvasBox.y + ol.y + fp.yBase - fp.h / 2;
+      const y = ol.y + fp.yBase - fp.h / 2;
       const r = Math.max(l.panW * 0.6, 66);
-      if (Math.hypot(absX - (canvasBox.x + ol.x), absY - y) < r) {
+      if (Math.hypot(x - ol.x, yy - y) < r) {
         setHeld(h);
         setTimeout(() => soltarEn("left"), 0);
         return;
       }
-      if (Math.hypot(absX - (canvasBox.x + or.x), absY - y) < r) {
+      if (Math.hypot(x - or.x, yy - (or.y + fp.yBase - fp.h / 2)) < r) {
         setHeld(h);
         setTimeout(() => soltarEn("right"), 0);
+        return;
       }
+      // Soltada en el aire, la pesa vuelve a la reserva: la línea dice adónde iba.
+      setMessage({ text: t(balMsg("dropOff")), tone: "dim" });
     },
-    [canvasBox, panOrigin, fp, l.panW, ghostOn, soltarEn],
+    [fichaEn, panOrigin, fp, l.panW, ghostOn, soltarEn],
   );
+
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: la pesa que
+   * sobra, las dos iguales que se sacan, la ficha de la reserva que falta poner
+   * y el plato donde va. Todo en coordenadas del lienzo: la reserva vive en la
+   * franja de abajo de la misma vista. La pista de Tomi reusa los pasos: señala
+   * lo mismo, pero no frena la ronda.
+   */
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const ox = 0;
+    const oy = 0;
+    const ol = panOrigin("left");
+    const or = panOrigin("right");
+    const origen = (s: BalSide): { x: number; y: number } => (s === "left" ? ol : or);
+    const conMargen = (x: number, y: number, w: number, h: number, m: number): Rect => ({
+      x: x - m + ox,
+      y: y - m + oy,
+      w: w + m * 2,
+      h: h + m * 2,
+    });
+    /** Una pesa de un plato, y su ficha en la línea si la hay: los dos son el mismo blanco. */
+    const pesa = (s: BalSide, v: number): Rect[] => {
+      const out: Rect[] = [];
+      const sp = ghostOn ? spots[s].find((x) => x.value === v) : undefined;
+      if (sp) {
+        const o = origen(s);
+        out.push(conMargen(o.x + sp.x - sp.w / 2, o.y + sp.y - sp.h / 2, sp.w, sp.h, 7));
+      }
+      const c = line?.terms.find((tm) => tm.side === s && tm.value === v);
+      if (c) out.push(conMargen(c.x - c.w / 2, c.y - c.h / 2, c.w, c.h, 6));
+      return out;
+    };
+    const platoPt = (s: BalSide): Pt => {
+      const o = origen(s);
+      return { x: o.x + ox, y: o.y + fp.yBase - fp.h / 2 + oy };
+    };
+    const plato = (s: BalSide): Rect => {
+      const o = origen(s);
+      return conMargen(o.x - l.panW / 2, o.y + l.hang - 64, l.panW, 80, 6);
+    };
+    const barra = conMargen(l.cx - l.span - 14, l.beamY - 14, l.span * 2 + 28, 28, 4);
+    const caja = (() => {
+      const c = cajaEnLienzo();
+      return c.cajaW > 0 ? conMargen(c.cajaX, c.cajaY, c.cajaW, c.cajaH, 10) : null;
+    })();
+    const renglon = line
+      ? conMargen(line.from, line.y - CHIP_H / 2, line.to - line.from, CHIP_H, 8)
+      : null;
+    /** Una ficha de la reserva, por su lugar en la fila de abajo. */
+    const reserva = (i: number): { rect: Rect; pt: Pt } | null => {
+      if (i < 0 || i >= fichasReserva) return null;
+      const p = fichaEn(i);
+      const m = RESERVE_CHIP / 2 + 6;
+      return { rect: { x: p.x - m, y: p.y - m, w: m * 2, h: m * 2 }, pt: p };
+    };
+    const solo = (rs: readonly (Rect | null)[]): Focus => ({ rings: rs.filter((r): r is Rect => r !== null) });
+    /** La pesa que está en los dos platos: la que se saca de los dos. */
+    const comun = (): number => state.left.find((x) => state.right.includes(x)) ?? state.left[0] ?? 0;
+    /** La pesa del plato pesado que sobra justo: sacarla endereza la barra. */
+    const sobra = (): { rect: Rect }[] => {
+      const d = balMass(problem, state, "left") - balMass(problem, state, "right");
+      if (d === 0) return [];
+      const pesado: BalSide = d > 0 ? "left" : "right";
+      return pesa(pesado, Math.abs(d)).map((rect) => ({ rect }));
+    };
+    /** Poner una pesa de la reserva en un plato: la ficha, el plato y la luz entre los dos. */
+    const poner = (v: number, s: BalSide): Focus => {
+      const ficha = reserva(problem.reserve.indexOf(v));
+      if (!ficha || !ghostOn) return solo([ghostOn ? plato(s) : renglon]);
+      return { rings: [ficha.rect, plato(s)], drag: { from: ficha.pt, to: platoPt(s) } };
+    };
+
+    if (id === "look") {
+      if (problem.ask === "free") return solo(conLinea && level.n === 5 ? [renglon] : [caja, ...pesa("left", comun()), ...pesa("right", comun())]);
+      if (problem.ask === "level" || problem.ask === "repair") return solo([barra, ...sobra().map((x) => x.rect)]);
+      return solo([barra]);
+    }
+    if (id === "reveal") return solo(problem.ask === "free" ? [caja ?? barra] : [barra]);
+
+    if (problem.ask === "level" || problem.ask === "repair") {
+      const s = sobra();
+      if (s.length > 0) return solo(s.map((x) => x.rect));
+      const falta = Math.abs(balMass(problem, state, "left") - balMass(problem, state, "right"));
+      const liviano: BalSide = balMass(problem, state, "left") < balMass(problem, state, "right") ? "left" : "right";
+      return poner(falta, liviano);
+    }
+    if (problem.ask === "action") {
+      if (held?.kind === "action") {
+        const falta: BalSide = state.actedLeft.length <= state.actedRight.length ? "left" : "right";
+        return solo([plato(falta)]);
+      }
+      const fichas = problem.actions
+        .map((a, i) => (a === "pour" ? null : reserva(i)?.rect ?? null))
+        .filter((r): r is Rect => r !== null);
+      return solo([union(fichas), plato("left"), plato("right")]);
+    }
+    // Conservar y dejar la caja sola: la misma acción en los dos platos. Con
+    // medio movimiento hecho, lo que falta es el espejo en el otro plato.
+    if (pending) {
+      const otro = balOtherSide(pending.side);
+      if (pending.kind === "add") return poner(pending.value, otro);
+      if (pending.kind === "remove") return solo(pesa(otro, pending.value));
+      return solo([plato(otro)]);
+    }
+    const task = problem.task;
+    if (problem.ask === "keep" && task?.kind === "add") return poner(task.value, state.taskLeft ? "right" : "left");
+    const v = problem.ask === "keep" && task ? task.value : comun();
+    return solo([...pesa("left", v), ...pesa("right", v)]);
+  }, [
+    shown,
+    panOrigin,
+    ghostOn,
+    spots,
+    line,
+    fp,
+    l,
+    cajaEnLienzo,
+    fichaEn,
+    fichasReserva,
+    problem,
+    state,
+    pending,
+    held,
+    conLinea,
+    level.n,
+  ]);
 
   // --- Dibujo ----------------------------------------------------------------
 
@@ -750,15 +1066,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!conLeccion}
       />
 
-      <View
-        onLayout={(e) => {
-          const { x, y } = e.nativeEvent.layout;
-          setCanvasBox((prev) => (prev.x === x && prev.y === y ? prev : { x, y }));
-        }}
-        style={{ width, height: sceneH }}
-      >
+      <CoachBanner round={round} rounds={level.rounds} />
+
+      <View style={{ width, height: sceneH + TRAY_H }}>
         {/* Un solo lienzo por pantalla: la balanza, la ficha de igual y la
             línea simbólica viven adentro. */}
         <Canvas style={{ width, height: sceneH }}>
@@ -831,37 +1144,55 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
           <Path path={linePath} color={theme.color.ink} />
         </Canvas>
 
-        {/* El gesto va encima del lienzo: Skia dibuja, la vista escucha. */}
+        {/* El gesto va encima del lienzo, y solo del lienzo: la reserva de
+            abajo tiene sus propias asas. Skia dibuja, la vista escucha. */}
         <GestureDetector gesture={pan}>
-          <Animated.View style={StyleSheet.absoluteFill} />
+          <Animated.View style={{ position: "absolute", left: 0, top: 0, width, height: sceneH }} />
         </GestureDetector>
+
+        {/* La reserva, en la franja de abajo de la misma vista: cada ficha en un
+            lugar que el gesto y la guía conocen. */}
+        {problem.ask === "action"
+          ? problem.actions.map((a, i) => {
+              const p = fichaEn(i);
+              return (
+                <View
+                  key={a}
+                  style={[styles.reserveSlot, { left: p.x - RESERVE_CHIP / 2, top: p.y - RESERVE_CHIP / 2 }]}
+                >
+                  <Handle
+                    label={ACTION_LABEL[a]}
+                    on={held?.kind === "action" && held.action === a}
+                    dimmed={solved}
+                    onTake={() => tomar({ kind: "action", action: a })}
+                    onDrop={(dx, dy) => soltarAsa({ kind: "action", action: a }, i, dx, dy)}
+                  />
+                </View>
+              );
+            })
+          : problem.reserve.map((v, i) => {
+              const p = fichaEn(i);
+              return (
+                <View
+                  key={v}
+                  style={[styles.reserveSlot, { left: p.x - RESERVE_CHIP / 2, top: p.y - RESERVE_CHIP / 2 }]}
+                >
+                  <Handle
+                    label={String(v)}
+                    on={held?.kind === "weight" && held.value === v}
+                    dimmed={solved}
+                    onTake={() => tomar({ kind: "weight", value: v })}
+                    onDrop={(dx, dy) => soltarAsa({ kind: "weight", value: v }, i, dx, dy)}
+                  />
+                </View>
+              );
+            })}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
-
-      <View style={styles.tray}>
-        {problem.ask === "action"
-          ? problem.actions.map((a) => (
-              <Handle
-                key={a}
-                label={ACTION_LABEL[a]}
-                on={held?.kind === "action" && held.action === a}
-                dimmed={solved}
-                onTake={() => tomar({ kind: "action", action: a })}
-                onDrop={(x, y) => soltarAsa({ kind: "action", action: a }, x, y)}
-              />
-            ))
-          : problem.reserve.map((v) => (
-              <Handle
-                key={v}
-                label={String(v)}
-                on={held?.kind === "weight" && held.value === v}
-                dimmed={solved}
-                onTake={() => tomar({ kind: "weight", value: v })}
-                onDrop={(x, y) => soltarAsa({ kind: "weight", value: v }, x, y)}
-              />
-            ))}
-      </View>
 
       {definicion ? <Text style={styles.definition}>{t(definicion)}</Text> : null}
       {level.balance === "ghost" ? (
@@ -898,7 +1229,8 @@ function Handle({
   readonly on: boolean;
   readonly dimmed: boolean;
   readonly onTake: () => void;
-  readonly onDrop: (absX: number, absY: number) => void;
+  /** Cuánto se movió la ficha desde su lugar: quien la ubica sabe dónde cayó. */
+  readonly onDrop: (dx: number, dy: number) => void;
 }) {
   const dx = useSharedValue(0);
   const dy = useSharedValue(0);
@@ -915,7 +1247,7 @@ function Handle({
           dx.value = withTiming(0, { duration: theme.motion.base });
           dy.value = withTiming(0, { duration: theme.motion.base });
           if (movido < TAP_SLOP) runOnJS(onTake)();
-          else runOnJS(onDrop)(e.absoluteX, e.absoluteY);
+          else runOnJS(onDrop)(e.translationX, e.translationY);
         }),
     [dx, dy, onTake, onDrop],
   );
@@ -1445,6 +1777,22 @@ function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: n
   }
 }
 
+/** El rectángulo que abraza a todos: para señalar una fila de fichas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
 // --- Texto -------------------------------------------------------------------
 
 const igual = (a: BalState, b: BalState): boolean =>
@@ -1509,12 +1857,12 @@ const styles = StyleSheet.create({
   },
   back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
   backLabel: { color: theme.color.inkFaint, fontSize: 14 },
-  tray: {
-    flexDirection: "row",
-    gap: theme.space[3],
+  reserveSlot: {
+    position: "absolute",
+    width: RESERVE_CHIP,
+    height: RESERVE_CHIP,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: theme.space[1],
   },
   definition: {
     color: theme.color.inkDim,
