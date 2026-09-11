@@ -448,6 +448,13 @@ export interface TrackConfig {
   /** La manivela está en pantalla. */
   readonly crank?: boolean;
   readonly crankAt?: TrackCrankAt;
+  /**
+   * La pista arranca después de la manivela en vez de centrarse en todo el
+   * ancho. En una banda baja, como la del nodo 19, la manivela del rincón queda
+   * a la altura de la pista y en el teléfono se pisaban. Por omisión `false`:
+   * los nodos que ya la usan no cambian.
+   */
+  readonly railAfterCrank?: boolean;
 
   // --- Las capas ---
   readonly drawer?: TrackDrawer | null;
@@ -511,6 +518,7 @@ interface Settled {
   readonly facing: boolean;
   readonly crank: boolean;
   readonly crankAt: TrackCrankAt;
+  readonly railAfterCrank: boolean;
   readonly drawer: TrackDrawer | null;
   readonly ledger: boolean;
   readonly arrows: boolean;
@@ -542,6 +550,7 @@ function settle(c: TrackConfig): Settled {
     facing: c.facing ?? false,
     crank: c.crank ?? true,
     crankAt: c.crankAt ?? "bottomLeft",
+    railAfterCrank: c.railAfterCrank ?? false,
     drawer: c.drawer ?? null,
     ledger: c.ledger ?? false,
     arrows: c.arrows ?? false,
@@ -662,19 +671,25 @@ export function trackLayout(config: TrackConfig, width: number, height: number):
   // El edificio le come ancho al soporte: si no, se pisan.
   const reserved = s.building?.reserve ?? 0;
 
-  const rails = config.railRows.map((row) =>
-    vertical
-      ? upward(config, s, width * row, height, units)
-      : horizontal(config, s, width, height * row, units, width - reserved),
-  );
-  const rail = rails[0] ?? horizontal(config, s, width, height * 0.4, units, width);
-  const step = rail.step;
-
+  // La manivela va antes que las pistas: con `railAfterCrank`, la pista arranca
+  // donde termina la manivela. Sin él, el orden no cambia nada.
   const crankR = Math.max(m.crank.min, Math.min(m.crank.max, height * m.crank.frac));
   const crank =
     s.crankAt === "right"
       ? { x: width - crankR - m.pad, y: height * 0.3, r: crankR }
       : { x: m.pad + crankR, y: height - crankR - m.crank.margin, r: crankR };
+  const lead =
+    s.railAfterCrank && s.crank && s.crankAt === "bottomLeft" && !vertical
+      ? crank.x + crank.r + 14
+      : 0;
+
+  const rails = config.railRows.map((row) =>
+    vertical
+      ? upward(config, s, width * row, height, units)
+      : horizontal(config, s, width, height * row, units, width - reserved, lead),
+  );
+  const rail = rails[0] ?? horizontal(config, s, width, height * 0.4, units, width, lead);
+  const step = rail.step;
 
   // --- El cajón ---
   const d = s.drawer;
@@ -844,12 +859,23 @@ function horizontal(
   y: number,
   units: number,
   usable: number,
+  lead = 0,
 ): Rail {
-  const step = Math.min(((usable - 2 * s.m.pad) / units) * s.stretch, s.m.maxStep);
+  // Con la pista después de la manivela, la manivela ya hace de margen a la
+  // izquierda: se descuenta un solo margen, el de la derecha.
+  const room = usable - lead;
+  const margins = lead > 0 ? s.m.pad : 2 * s.m.pad;
+  const step = Math.min(((room - margins) / units) * s.stretch, s.m.maxStep);
   const drawn = step * units;
   // Con el edificio al costado la pista arranca en el margen y no en el centro:
-  // centrarla la metería debajo del corte.
-  const left = usable === width ? (width - drawn) / 2 : s.m.pad;
+  // centrarla la metería debajo del corte. Después de la manivela, se centra en
+  // lo que queda a su derecha.
+  const left =
+    lead > 0
+      ? lead + (room - s.m.pad - drawn) / 2
+      : usable === width
+        ? (width - drawn) / 2
+        : s.m.pad;
   const origin = { x: left + s.leadIn * step, y };
   const stones: Spot[] = [];
   for (let i = 0; i < c.slots; i++) stones.push({ x: origin.x + i * step, y });
