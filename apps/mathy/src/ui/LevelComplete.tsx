@@ -22,7 +22,7 @@
  * se ve directamente el final: la llave en su ranura.
  */
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -63,6 +63,9 @@ export function LevelComplete({ onOpenCheatsheet }: { readonly onOpenCheatsheet:
   const api = useLesson();
   const { progress } = useProgress();
   const calm = useReducedMotion();
+  // En un teléfono la tarjeta del concepto completo medía más que la pantalla y
+  // el botón de seguir quedaba abajo del borde: en pantallas bajas se aprieta.
+  const tight = useWindowDimensions().height < TIGHT_BELOW;
   if (!api) return null;
   const { node, level, lesson, nav } = api;
 
@@ -85,14 +88,15 @@ export function LevelComplete({ onOpenCheatsheet }: { readonly onOpenCheatsheet:
 
   return (
     <Overlay
+      dense={tight}
       top={
-        <View style={styles.pair}>
+        <View style={tight ? styles.pairTight : styles.pair}>
           <Hop trigger="done" delay={Math.max(200, beat - 40)} height={16}>
-            <Lumi pose={lesson ? "key" : "cheer"} size={128} />
+            <Lumi pose={lesson ? "key" : "cheer"} size={tight ? 96 : 128} />
           </Hop>
           <View style={styles.tomi}>
             <Hop trigger="done" delay={Math.max(320, beat + 110)} height={10}>
-              <Tomi pose={tomiPose} size={56} />
+              <Tomi pose={tomiPose} size={tight ? 46 : 56} />
             </Hop>
           </View>
         </View>
@@ -118,9 +122,11 @@ export function LevelComplete({ onOpenCheatsheet }: { readonly onOpenCheatsheet:
               complete={last && done >= whole.levels.length}
               tag={first ? t("ui.done.newKey") : t("ui.done.keyAgain")}
               title={t(lesson.key.titleKey)}
+              top={tight ? TOP_TIGHT : TOP}
             />
             <Rise delay={beat + 120} style={styles.idea}>
-              <Text style={styles.ideaBody}>{t(lesson.key.bodyKey)}</Text>
+              {/* Con el concepto completo, lo que se aprendió ya lo dice el resumen de arriba. */}
+              {last && whole && tight ? null : <Text style={styles.ideaBody}>{t(lesson.key.bodyKey)}</Text>}
               <Text style={styles.caption}>
                 {tf("ui.done.keys", { k: done, n: whole.levels.length, node: nodeName })}
               </Text>
@@ -135,13 +141,13 @@ export function LevelComplete({ onOpenCheatsheet }: { readonly onOpenCheatsheet:
           <Text style={styles.teaserTitle}>
             {tf("ui.done.levelN", { n: following.n })} · {t(following.titleKey)}
           </Text>
-          {followingLesson ? <Text style={styles.teaserBody}>{t(followingLesson.whyKey)}</Text> : null}
+          {followingLesson && !tight ? <Text style={styles.teaserBody}>{t(followingLesson.whyKey)}</Text> : null}
         </Rise>
       ) : after ? (
         <Rise delay={beat + 220} style={styles.teaser}>
           <Text style={styles.teaserLabel}>{t("ui.done.upNextNode")}</Text>
           <Text style={styles.teaserTitle}>{t(`node.${after.id}.name`)}</Text>
-          <Text style={styles.teaserBody}>{t(`node.${after.id}.tagline`)}</Text>
+          {tight ? null : <Text style={styles.teaserBody}>{t(`node.${after.id}.tagline`)}</Text>}
         </Rise>
       ) : null}
 
@@ -165,8 +171,11 @@ export function LevelComplete({ onOpenCheatsheet }: { readonly onOpenCheatsheet:
   );
 }
 
+/** Por debajo de este alto de ventana la tarjeta se aprieta. */
+const TIGHT_BELOW = 900;
 /** Lo que ocupa la llave grande antes de viajar, y después su nombre. */
 const TOP = 112;
+const TOP_TIGHT = 94;
 const GAP = 8;
 /** Cuánto más grande se ve la llave recién ganada que en su ranura. */
 const BIG = 1.9;
@@ -189,6 +198,7 @@ function KeyStage({
   complete,
   tag,
   title,
+  top,
 }: {
   readonly ring: NodeLesson;
   readonly current: number;
@@ -198,6 +208,7 @@ function KeyStage({
   readonly complete: boolean;
   readonly tag: string;
   readonly title: string;
+  readonly top: number;
 }) {
   const calm = useReducedMotion();
   const [w, setW] = useState(0);
@@ -213,7 +224,7 @@ function KeyStage({
   const idx = Math.max(0, ring.levels.findIndex((l) => l.level === current));
   const slotX = left0 + idx * (size + GAP);
   const startX = w / 2 - size / 2;
-  const startY = (TOP - size) / 2 - 8;
+  const startY = (top - size) / 2 - 8;
   const moving = flies && !calm;
 
   // show: la llave aparece. fly: el viaje. thud: el golpe al entrar. named: su nombre.
@@ -244,7 +255,7 @@ function KeyStage({
   const keyStyle = useAnimatedStyle(() => {
     const f = Math.min(1, Math.max(0, fly.value));
     const x = startX + (slotX - startX) * f;
-    const y = startY + (TOP - startY) * f - ARC * Math.sin(Math.PI * f);
+    const y = startY + (top - startY) * f - ARC * Math.sin(Math.PI * f);
     const grow = 0.3 + 0.7 * show.value;
     return {
       opacity: Math.min(1, show.value * 2),
@@ -267,15 +278,15 @@ function KeyStage({
   }));
 
   return (
-    <View style={[styles.stage, { height: TOP + size + 6 }]} onLayout={onLayout}>
-      <Animated.View style={[styles.name, { height: TOP }, nameStyle]}>
+    <View style={[styles.stage, { height: top + size + 6 }]} onLayout={onLayout}>
+      <Animated.View style={[styles.name, { height: top }, nameStyle]}>
         <Text style={styles.tag}>{tag}</Text>
         <Text style={styles.keyTitle}>{title}</Text>
       </Animated.View>
 
       {w > 0 ? (
         <>
-          <View style={[styles.slots, { left: left0, top: TOP, gap: GAP }]}>
+          <View style={[styles.slots, { left: left0, top: top, gap: GAP }]}>
             {ring.levels.map((l) => {
               const here = l.level === current;
               // La ranura de la llave que vuela queda vacía hasta que llega.
@@ -291,7 +302,7 @@ function KeyStage({
               <Ping
                 key={l.level}
                 x={left0 + i * (size + GAP)}
-                y={TOP}
+                y={top}
                 size={size}
                 // La ranura nueva se enciende al llegar; si el llavero se completó, la luz corre por todas.
                 delay={(moving ? LAND : T.key) + (complete ? 140 + i * 90 : 0)}
@@ -310,7 +321,7 @@ function KeyStage({
           ) : null}
 
           {moving
-            ? Array.from({ length: MOTES }, (_, i) => <Mote key={i} i={i} cx={w / 2} cy={TOP / 2 - 8} />)
+            ? Array.from({ length: MOTES }, (_, i) => <Mote key={i} i={i} cx={w / 2} cy={top / 2 - 8} />)
             : null}
         </>
       ) : null}
@@ -372,6 +383,7 @@ const styles = StyleSheet.create({
   title: { color: theme.color.ink, fontSize: 30, lineHeight: 36, fontWeight: "700", textAlign: "center" },
   lead: { color: theme.color.inkDim, fontSize: 16, lineHeight: 23, textAlign: "center" },
   pair: { width: 128, height: 128 },
+  pairTight: { width: 96, height: 96 },
   tomi: { position: "absolute", right: -50, bottom: 4 },
   stage: { width: "100%", position: "relative" },
   name: {

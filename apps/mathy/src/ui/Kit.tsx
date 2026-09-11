@@ -139,7 +139,16 @@ export function Section({ label, children }: { readonly label: string; readonly 
  * escena en el estado en que quedó, que es lo que el jugador acaba de hacer.
  * `top` es lo que asoma por arriba del borde de la tarjeta: Lumi.
  */
-export function Overlay({ children, top }: { readonly children: ReactNode; readonly top?: ReactNode }) {
+export function Overlay({
+  children,
+  top,
+  dense = false,
+}: {
+  readonly children: ReactNode;
+  readonly top?: ReactNode;
+  /** Pantalla baja (un teléfono): menos aire, para que el botón de seguir entre sin scroll. */
+  readonly dense?: boolean;
+}) {
   const k = useSharedValue(0);
   useEffect(() => {
     k.value = withTiming(1, { duration: theme.motion.base + 80, easing: Easing.out(Easing.back(1.2)) });
@@ -151,10 +160,12 @@ export function Overlay({ children, top }: { readonly children: ReactNode; reado
   }));
   return (
     <Animated.View style={[styles.veil, veil]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, dense && styles.scrollDense]} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.cardWrap, card]}>
           {top ? <View style={styles.top}>{top}</View> : null}
-          <View style={[styles.card, top ? styles.cardWithTop : null]}>{children}</View>
+          <View style={[styles.card, dense && styles.cardDense, top ? (dense ? styles.cardWithTopDense : styles.cardWithTop) : null]}>
+            {children}
+          </View>
         </Animated.View>
       </ScrollView>
     </Animated.View>
@@ -249,4 +260,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 16 },
   },
   cardWithTop: { paddingTop: theme.space[6] + 8 },
+  scrollDense: { paddingTop: theme.space[4] },
+  cardDense: { padding: theme.space[4], gap: theme.space[3] },
+  cardWithTopDense: { paddingTop: theme.space[6] },
 });
