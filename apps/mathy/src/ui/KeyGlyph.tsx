@@ -5,9 +5,25 @@
  * Los dibujos son vistas y no un lienzo. La regla es un solo `<Canvas>` por
  * pantalla, y la llave aparece en la chuleta, que convive con el de la
  * actividad.
+ *
+ * Tres estados, y cada uno dice algo distinto:
+ * - por descubrir (`locked`): el contorno de una llave, sin su dibujo. Se ve que
+ *   ahí va una llave, no qué idea es: esa la descubre el juego.
+ * - ganada: el dibujo de la idea.
+ * - ganada y a la vista (`gold`): con el borde y la luz dorados de lo aprendido
+ *   (N §2.2). Es como se ve en el llavero y en el sendero.
  */
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import type { KeyGlyphName } from "../lessons/types.ts";
 import { theme } from "./theme.ts";
 
@@ -54,22 +70,28 @@ export function KeyGlyph({
   name,
   locked = false,
   size = 48,
+  gold = false,
+  warm = false,
 }: {
   readonly name: KeyGlyphName;
   readonly locked?: boolean;
   readonly size?: number;
+  /** Ganada y a la vista: borde y luz dorados. */
+  readonly gold?: boolean;
+  /** Por descubrir, pero la que se juega ahora: el contorno toma un poco de dorado. */
+  readonly warm?: boolean;
 }) {
   const s = size / 40;
   if (locked) {
     return (
-      <View style={[styles.box, styles.boxLocked, { width: size, height: size }]}>
-        <Text style={[styles.question, { fontSize: 18 * s }]}>?</Text>
+      <View style={[styles.box, styles.boxLocked, warm && styles.boxWarm, { width: size, height: size }]}>
+        <KeyShape s={s} color={warm ? "rgba(255, 209, 102, 0.75)" : theme.color.inkFaint} />
       </View>
     );
   }
   const d = DRAWINGS[name];
   return (
-    <View style={[styles.box, { width: size, height: size }]}>
+    <View style={[styles.box, gold && styles.boxGold, { width: size, height: size }]}>
       {d.bars?.map(([x, y, w, h], i) => (
         <View
           key={`b${i}`}
@@ -100,9 +122,56 @@ export function KeyGlyph({
 }
 
 /**
+ * El contorno de una llave, sobre la caja de 40 × 40: el ojo a la izquierda, la
+ * caña y dos dientes. Es la forma de "acá va una llave", sin decir cuál.
+ */
+function KeyShape({ s, color }: { readonly s: number; readonly color: string }) {
+  const line = Math.max(1.5, 2.6 * s);
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <View
+        style={[
+          styles.abs,
+          { left: 5 * s, top: 13 * s, width: 14 * s, height: 14 * s, borderRadius: 7 * s, borderWidth: line, borderColor: color },
+        ]}
+      />
+      <View style={[styles.abs, { left: 18 * s, top: 20 * s - line / 2, width: 17 * s, height: line, backgroundColor: color }]} />
+      <View style={[styles.abs, { left: 27 * s, top: 20 * s, width: line, height: 5 * s, backgroundColor: color }]} />
+      <View style={[styles.abs, { left: 32 * s, top: 20 * s, width: line, height: 7 * s, backgroundColor: color }]} />
+    </View>
+  );
+}
+
+/**
+ * La luz apenas visible detrás de la llave por descubrir del nivel que se va a
+ * jugar: respira despacio, como la piedra que sigue en el sendero. Con
+ * "reducir movimiento" queda quieta, a media luz.
+ */
+function Glow({ size, children }: { readonly size: number; readonly children: ReactNode }) {
+  const calm = useReducedMotion();
+  const k = useSharedValue(0.5);
+  useEffect(() => {
+    if (calm) return;
+    k.value = 0;
+    k.value = withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.sin) }), -1, true);
+    return () => cancelAnimation(k);
+  }, [k, calm]);
+  const halo = useAnimatedStyle(() => ({
+    opacity: 0.12 + 0.28 * k.value,
+    transform: [{ scale: 1 + 0.12 * k.value }],
+  }));
+  return (
+    <View style={{ width: size, height: size }}>
+      <Animated.View style={[styles.glow, { borderRadius: theme.radius.token + 4 }, halo]} />
+      {children}
+    </View>
+  );
+}
+
+/**
  * La tarjeta de una llave. `locked` es la silueta de una que todavía no se
  * ganó: se ve su lugar, no su contenido, igual que las teclas futuras de la
- * calculadora.
+ * calculadora. `glow` le pone la luz que respira: es la que se gana ahora.
  */
 export function KeyCard({
   glyph,
@@ -111,6 +180,7 @@ export function KeyCard({
   tag,
   locked = false,
   highlight = false,
+  glow = false,
   footer,
 }: {
   readonly glyph: KeyGlyphName;
@@ -119,13 +189,15 @@ export function KeyCard({
   readonly tag?: string;
   readonly locked?: boolean;
   readonly highlight?: boolean;
+  readonly glow?: boolean;
   readonly footer?: ReactNode;
 }) {
+  const icon = <KeyGlyph name={glyph} locked={locked} warm={glow && locked} gold={highlight && !locked} />;
   return (
-    <View style={[styles.keyCard, locked && styles.keyCardLocked, highlight && styles.keyCardOn]}>
-      <KeyGlyph name={glyph} locked={locked} />
+    <View style={[styles.keyCard, locked && styles.keyCardLocked, glow && styles.keyCardGlow, highlight && styles.keyCardOn]}>
+      {glow ? <Glow size={48}>{icon}</Glow> : icon}
       <View style={styles.keyText}>
-        {tag ? <Text style={styles.tag}>{tag}</Text> : null}
+        {tag ? <Text style={[styles.tag, highlight && styles.tagGold]}>{tag}</Text> : null}
         <Text style={[styles.title, locked && styles.titleLocked]}>{title}</Text>
         {body ? <Text style={styles.body}>{body}</Text> : null}
         {footer}
@@ -135,6 +207,7 @@ export function KeyCard({
 }
 
 const styles = StyleSheet.create({
+  abs: { position: "absolute" },
   box: {
     borderRadius: theme.radius.token,
     backgroundColor: theme.color.bg,
@@ -143,8 +216,18 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
-  boxLocked: { borderStyle: "dashed", alignItems: "center", justifyContent: "center" },
-  question: { color: theme.color.inkFaint },
+  boxLocked: { borderStyle: "dashed", backgroundColor: "rgba(12, 22, 36, 0.6)" },
+  boxWarm: { borderColor: "rgba(255, 209, 102, 0.55)" },
+  boxGold: {
+    borderWidth: 1.5,
+    borderColor: theme.color.gold,
+    backgroundColor: "#1a2331",
+    shadowColor: theme.color.gold,
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    overflow: "visible",
+  },
   bar: { position: "absolute", backgroundColor: theme.color.ok, borderRadius: 1 },
   card: {
     position: "absolute",
@@ -155,6 +238,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   numeral: { color: theme.color.accent, fontVariant: ["tabular-nums"] },
+  glow: {
+    position: "absolute",
+    top: -6,
+    left: -6,
+    right: -6,
+    bottom: -6,
+    backgroundColor: theme.color.gold,
+    shadowColor: theme.color.gold,
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+  },
   keyCard: {
     flexDirection: "row",
     gap: theme.space[3],
@@ -166,9 +261,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surfaceHigh,
   },
   keyCardLocked: { borderStyle: "dashed", backgroundColor: "transparent" },
-  keyCardOn: { borderColor: theme.color.accent },
+  keyCardGlow: { borderColor: "rgba(255, 209, 102, 0.4)" },
+  keyCardOn: { borderColor: theme.color.gold, backgroundColor: "rgba(255, 209, 102, 0.06)" },
   keyText: { flex: 1, gap: 4 },
   tag: { color: theme.color.ok, fontSize: 11, letterSpacing: 1.1, textTransform: "uppercase" },
+  tagGold: { color: theme.color.gold },
   title: { color: theme.color.ink, fontSize: 16, lineHeight: 21 },
   titleLocked: { color: theme.color.inkDim },
   body: { color: theme.color.inkDim, fontSize: 14, lineHeight: 20 },

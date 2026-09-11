@@ -3,17 +3,28 @@
  *
  * Sin puntos, sin monedas, sin rachas. El encabezado dice dónde está el jugador
  * (el concepto, con el tono de su área, y el nivel en grande) y cuánto le falta
- * al nivel, como territorio: una marca por nivel del concepto.
+ * al nivel, como territorio: una marca por nivel del concepto. La marca del
+ * nivel que se juega es más larga y se va llenando ronda a ronda, con un pequeño
+ * salto cada vez: el avance se nota en el momento en que pasa, no solo al final.
  *
  * La línea de lo que pasó cambia de color según lo que dice: menta si algo
  * coincidió, ámbar si algo pide que lo miren. Nunca rojo, porque no hay error
  * como categoría (N §2.2).
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { t, tf } from "../i18n.ts";
 import { useLesson } from "../lessons/LessonContext.tsx";
+import { Rise, RoundMarks } from "./Motion.tsx";
 import { AREAS, areaOf, theme } from "./theme.ts";
 
 export function Header({
@@ -37,38 +48,79 @@ export function Header({
     const { node, level } = lesson;
     const hue = AREAS[areaOf(node.id)].hue;
     return (
-      <View style={styles.header}>
+      <Rise from={10} style={styles.header}>
         <Text style={[styles.node, { color: hue }]}>{t(`node.${node.id}.name`)}</Text>
         <Text style={styles.level}>{t(level.titleKey)}</Text>
         <View style={styles.levels}>
-          {node.levels.map((l) => (
-            <View
-              key={l.n}
-              style={[styles.levelSeg, l.n < level.n && styles.levelSegDone, l.n === level.n && { backgroundColor: hue }]}
-            />
-          ))}
+          {node.levels.map((l) =>
+            l.n === level.n ? (
+              <LevelNow key={l.n} hue={hue} round={round} rounds={rounds} />
+            ) : (
+              <View key={l.n} style={[styles.levelSeg, l.n < level.n && styles.levelSegDone]} />
+            ),
+          )}
           <Text style={styles.levelCount}>{tf("ui.header.level", { n: level.n, total: node.levels.length })}</Text>
         </View>
-        {showDots ? <Rounds round={round} rounds={rounds} /> : null}
-      </View>
+        {showDots ? (
+          <View style={styles.dots}>
+            <RoundMarks round={round} rounds={rounds} size={8} />
+          </View>
+        ) : null}
+      </Rise>
     );
   }
   return (
     <View style={styles.header}>
       <Text style={styles.level}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
-      {showDots ? <Rounds round={round} rounds={rounds} /> : null}
+      {showDots ? (
+        <View style={styles.dots}>
+          <RoundMarks round={round} rounds={rounds} size={8} />
+        </View>
+      ) : null}
     </View>
   );
 }
 
-function Rounds({ round, rounds }: { readonly round: number; readonly rounds: number }) {
+const SEG_NOW = 34;
+
+/**
+ * La marca del nivel en juego: se llena con las rondas hechas, en el tono del
+ * área, y salta un poco cada vez que crece. Es la misma barra de niveles del
+ * concepto, así que avanzar una ronda se ve como avanzar en el concepto.
+ */
+function LevelNow({ hue, round, rounds }: { readonly hue: string; readonly round: number; readonly rounds: number }) {
+  const calm = useReducedMotion();
+  const target = rounds > 0 ? Math.min(1, Math.max(0, round / rounds)) : 0;
+  const fill = useSharedValue(target);
+  const pop = useSharedValue(0);
+  const was = useRef(target);
+  useEffect(() => {
+    if (was.current === target) return;
+    const grew = target > was.current;
+    was.current = target;
+    if (calm) {
+      fill.value = target;
+      return;
+    }
+    fill.value = withSpring(target, theme.spring.settle);
+    if (grew) {
+      pop.value = withSequence(
+        withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) }),
+        withSpring(0, theme.spring.settle),
+      );
+    }
+  }, [target, calm, fill, pop]);
+  const fillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -SEG_NOW * (1 - Math.min(1, Math.max(0, fill.value))) }],
+  }));
+  const segStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -3 * pop.value }, { scale: 1 + 0.25 * pop.value }],
+  }));
   return (
-    <View style={styles.dots}>
-      {Array.from({ length: rounds }, (_, i) => (
-        <View key={i} style={[styles.dot, i < round && styles.dotDone, i === round && styles.dotNow]} />
-      ))}
-    </View>
+    <Animated.View style={[styles.levelSeg, styles.levelSegNow, { borderColor: hue }, segStyle]}>
+      <Animated.View style={[styles.levelFill, { backgroundColor: hue }, fillStyle]} />
+    </Animated.View>
   );
 }
 
@@ -78,16 +130,24 @@ const TONE = {
   warn: { fg: theme.color.warn, bg: "rgba(255, 181, 71, 0.12)", line: "rgba(255, 181, 71, 0.45)" },
 } as const;
 
+/** El resorte del aviso: rápido y con un solo rebote, como algo que se apoya. */
+const HINT_SPRING = { damping: 12, stiffness: 260, mass: 0.6 } as const;
+
 /** Lo que pasó, como un aviso que entra con un pequeño salto cada vez que cambia. */
 export function Hint({ text, tone = "dim" }: { readonly text: string; readonly tone?: "dim" | "ok" | "warn" }) {
+  const calm = useReducedMotion();
   const k = useSharedValue(1);
   useEffect(() => {
+    if (calm) {
+      k.value = 1;
+      return;
+    }
     k.value = 0;
-    k.value = withTiming(1, { duration: theme.motion.base, easing: Easing.out(Easing.back(2)) });
-  }, [text, k]);
+    k.value = withSpring(1, HINT_SPRING);
+  }, [text, k, calm]);
   const style = useAnimatedStyle(() => ({
-    opacity: k.value,
-    transform: [{ scale: 0.92 + 0.08 * k.value }, { translateY: (1 - k.value) * 6 }],
+    opacity: Math.min(1, k.value * 1.5),
+    transform: [{ scale: 0.9 + 0.1 * k.value }, { translateY: (1 - k.value) * 8 }],
   }));
   const c = TONE[tone];
   return (
@@ -110,11 +170,17 @@ const styles = StyleSheet.create({
   levels: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   levelSeg: { width: 18, height: 5, borderRadius: 3, backgroundColor: "rgba(255, 255, 255, 0.14)" },
   levelSegDone: { backgroundColor: theme.color.ok },
+  levelSegNow: {
+    width: SEG_NOW,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    overflow: "hidden",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  levelFill: { position: "absolute", top: 0, bottom: 0, left: 0, width: SEG_NOW },
   levelCount: { color: theme.color.inkFaint, fontSize: 12, marginLeft: 6 },
-  dots: { flexDirection: "row", gap: 6, marginTop: theme.space[1] },
-  dot: { width: 8, height: 8, borderRadius: theme.radius.full, backgroundColor: "rgba(255,255,255,0.16)" },
-  dotDone: { backgroundColor: theme.color.ok },
-  dotNow: { backgroundColor: theme.color.accent },
+  dots: { marginTop: theme.space[1] },
   hintRow: { minHeight: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 },
   hint: {
     flexDirection: "row",
