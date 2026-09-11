@@ -1369,6 +1369,13 @@ function Activity({ level, onLevelDone, onEvent }: InverseGameProps) {
   // --- Pantalla --------------------------------------------------------------
 
   const fichasTexto = ask === "exists" || ask === "cut";
+  /**
+   * El ancho de una respuesta escrita en un teléfono: dos por fila, con el
+   * borde del marco, el relleno de la fila y el hueco entre las dos. Con un
+   * tope fijo de 176 px entraba una sola por fila (dos daban 364 y la fila
+   * tenía 342) y en 390 × 844 la tercera quedaba 8 px debajo del borde.
+   */
+  const mitadFila = Math.floor((width - 2 * theme.space[1] - 2 * theme.space[3] - theme.space[2]) / 2);
   const definicion = (
     <>
       {returned ? (
@@ -1521,7 +1528,7 @@ function Activity({ level, onLevelDone, onEvent }: InverseGameProps) {
                   style={[
                     styles.chip,
                     fichasTexto ? styles.chipText : styles.chipTall,
-                    fichasTexto && estrecho && styles.chipTextNarrow,
+                    fichasTexto && estrecho && [styles.chipTextNarrow, { width: mitadFila }],
                     solved && styles.chipDim,
                     picked === i && styles.chipOn,
                   ]}
@@ -1879,8 +1886,9 @@ const styles = StyleSheet.create({
   // En un teléfono las tres respuestas escritas van una debajo de la otra: más
   // bajas y con la letra un punto más chica, para que entren las tres.
   // De a dos por fila: una debajo de la otra, la tercera terminaba debajo del
-  // borde y encima de Tomi. Una frase larga se parte en dos renglones.
-  chipTextNarrow: { minHeight: 40, maxWidth: 176, minWidth: 0, paddingVertical: 4 },
+  // borde y encima de Tomi. Una frase larga se parte en dos renglones. El ancho
+  // lo pone `mitadFila`, medido contra la pantalla.
+  chipTextNarrow: { minHeight: 40, minWidth: 0, paddingVertical: 4 },
   chipLabelNarrow: { fontSize: 14 },
   ringNarrow: { gap: theme.space[2] },
   // Y la definición deja libre el rincón de abajo a la izquierda, que es de Tomi.

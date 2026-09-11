@@ -8,6 +8,7 @@ import {
   SYS_LAYERS,
   SYS_LEVELS,
   SYS_MAX_REPEAT,
+  SYS_PARALLEL_GAP,
   SYS_MISCONCEPTION,
   SYS_SCALING_ORDER,
   TOTAL_SYS_LEVELS,
@@ -358,6 +359,24 @@ test("clasificar reconoce las tres configuraciones de rectas", () => {
     vistas.add(p.kind);
   }
   assert.deepEqual([...vistas].sort(), ["infinite", "none", "unique"]);
+});
+
+test("las dos paralelas de clasificar quedan separadas: no se leen como una recta", () => {
+  let vistas = 0;
+  for (const p of rondas(nivel(7), 400)) {
+    if (p.kind !== "none") continue;
+    vistas++;
+    const [l1, l2] = p.rows.map((r) => sysLineOf(r as SysRow)) as [
+      { a: number; b: number; c: number },
+      { a: number; b: number; c: number },
+    ];
+    // La segunda es la primera escalada por k: se lleva a la misma escala y se
+    // mide la distancia perpendicular entre las dos.
+    const k = Math.hypot(l2.a, l2.b) / Math.hypot(l1.a, l1.b);
+    const gap = Math.abs(l2.c / k - l1.c) / Math.hypot(l1.a, l1.b);
+    assert.ok(gap >= SYS_PARALLEL_GAP - 1e-9, `paralelas a ${gap.toFixed(3)} unidades`);
+  }
+  assert.ok(vistas > 20, "no salieron sistemas sin solución");
 });
 
 test("dos filas paralelas no tienen cruce y dos superpuestas tienen infinitos", () => {

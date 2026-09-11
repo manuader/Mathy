@@ -262,13 +262,16 @@ function Activity({ level, onLevelDone, onEvent }: CompositionGameProps) {
   // Con lección, el cartel de la guía ocupa arriba lo que el lienzo cede; con
   // letras y fichas escritas debajo, cede un poco más. En un teléfono, el nivel
   // con definición cede todavía más: en 390 × 844 la definición terminaba debajo
-  // del borde de la pantalla y encima de Tomi.
+  // del borde de la pantalla y encima de Tomi. Con 0,11 todavía no alcanzaba: en
+  // la ronda de descartar (fichas, un aviso de tres renglones y la definición)
+  // el contenido medía 788 px de los 780 que hay, y se cortaba 4 px arriba y 4
+  // abajo.
   const estrecho = width < 600;
   const sceneH = Math.max(
     estrecho ? 240 : 280,
     Math.min(
       height *
-        ((conLeccion ? (level.named ? 0.44 : 0.5) : 0.56) - (estrecho && level.definition ? 0.11 : 0)),
+        ((conLeccion ? (level.named ? 0.44 : 0.5) : 0.56) - (estrecho && level.definition ? 0.13 : 0)),
       460,
     ),
   );
@@ -1484,6 +1487,13 @@ function Handle({
   );
 }
 
+/**
+ * Lo que Tomi ocupa en un teléfono, desde el borde izquierdo: su dibujo va de
+ * x = 13 a 59 y el resto es aire para que no se toquen. El mismo número que
+ * `DistributiveGame` deja para su banda de fichas.
+ */
+const RINCON_TOMI = 74;
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -1518,7 +1528,9 @@ const styles = StyleSheet.create({
   chipNarrow: { minWidth: 72, height: 48, paddingHorizontal: theme.space[2] },
   chipLabelNarrow: { fontSize: 16 },
   // Y la definición deja libre el rincón de abajo a la izquierda, que es de Tomi.
-  definitionNarrow: { fontSize: 12, paddingHorizontal: 64 },
+  // Sólo de ese lado: con 64 px a cada lado sus renglones empezaban en x = 66,
+  // a 7 px de Tomi, y el texto angosto se llevaba un renglón de más.
+  definitionNarrow: { fontSize: 12, paddingLeft: RINCON_TOMI, paddingRight: theme.space[3] },
   definition: {
     color: theme.color.inkDim,
     fontSize: 13,

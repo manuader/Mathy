@@ -607,6 +607,13 @@ export const SYS_FACTOR_SLOTS = 3;
  * las frutas se monten unas sobre otras.
  */
 export const SYS_MAX_REPEAT = 4;
+/**
+ * Cuántas unidades del plano separan como mínimo las dos paralelas de un
+ * sistema sin solución. En un teléfono el plano del nivel 7 mide 190 px y su
+ * ventana llega a 16 unidades por lado (5,2 px por unidad): 1,5 deja casi 8 px
+ * entre los centros de dos trazos de 3,5, y se ven dos rectas.
+ */
+export const SYS_PARALLEL_GAP = 1.5;
 
 // --- El generador ------------------------------------------------------------
 
@@ -946,7 +953,12 @@ function classifyProblem(rnd: Random): SysProblem {
   }
   if (kind === "none") {
     const escalada = sysScale({ ...arriba, id: "r1" }, k);
-    const abajo = { ...escalada, total: escalada.total + rnd.int(1, 5) };
+    // El corrimiento del total separa las dos rectas `total / (k · |(a, b)|)`
+    // unidades del plano. Con un corrimiento de 1 a 5 sin más, en un teléfono
+    // una de cada cuatro paralelas quedaba a menos de 2 px de la otra y se veía
+    // una sola recta: justo lo que la ronda pregunta. El piso lo garantiza.
+    const piso = Math.ceil(k * Math.hypot(a1, b1) * SYS_PARALLEL_GAP);
+    const abajo = { ...escalada, total: escalada.total + piso + rnd.int(0, 4) };
     return { ...empty(), ask: "classify", rows: [arriba, abajo], kind, solution: [null, null] };
   }
 

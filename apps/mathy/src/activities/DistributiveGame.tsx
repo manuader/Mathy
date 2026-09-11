@@ -1074,16 +1074,16 @@ function Activity({ level, onLevelDone, onEvent }: DistributiveGameProps) {
   ultimo.current = onTap;
   const tocar = useCallback((x: number, y: number) => ultimo.current(x, y), []);
 
-  const puedeTocar = !solved;
+  // Habilitado siempre: `onTap` ya ignora la ronda resuelta, y un gesto que se
+  // apaga y se prende entre rondas es el que en web se queda mudo (trampa 33).
   const tap = useMemo(
     () =>
       Gesture.Tap()
         .maxDistance(24)
-        .enabled(puedeTocar)
         .onEnd((e) => {
           runOnJS(tocar)(e.x, e.y);
         }),
-    [puedeTocar, tocar],
+    [tocar],
   );
 
   // --- Qué señala la guía ----------------------------------------------------
@@ -1415,16 +1415,27 @@ function Handle({
   readonly enabled: boolean;
   readonly onDrop: (index: number, dx: number, dy: number) => void;
 }) {
+  // Nace habilitado y un valor compartido decide (trampa 33): en el nivel 3 la
+  // primera ronda no tiene bandeja, y las tiras nacidas apagadas quedaban
+  // muertas en la ronda de cubrir.
+  const activo = useSharedValue(enabled ? 1 : 0);
+  useEffect(() => {
+    activo.value = enabled ? 1 : 0;
+  }, [activo, enabled]);
+  const vivos = useRef(onDrop);
+  vivos.current = onDrop;
+  const soltar = useCallback((i: number, x: number, y: number) => vivos.current(i, x, y), []);
   const gesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enabled)
         .onChange((e) => {
+          if (!activo.value) return;
           slot.dx.value = e.translationX;
           slot.dy.value = e.translationY;
         })
         .onEnd((e) => {
-          runOnJS(onDrop)(index, e.translationX, e.translationY);
+          if (!activo.value) return;
+          runOnJS(soltar)(index, e.translationX, e.translationY);
         })
         // Si otro gesto se lleva el dedo, la pieza no se queda flotando lejos
         // de su asa: vuelve a su lugar.
@@ -1433,7 +1444,8 @@ function Handle({
           slot.dx.value = withTiming(0, { duration: theme.motion.base });
           slot.dy.value = withTiming(0, { duration: theme.motion.base });
         }),
-    [enabled, index, slot, onDrop],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [index, slot],
   );
   const alto = Math.max(h + 12, DEDO);
   const ancho = Math.max(w + 12, DEDO);
@@ -1474,22 +1486,35 @@ function ChipHandle({
 }) {
   const dx = useSharedValue(0);
   const dy = useSharedValue(0);
+  // El gesto nace una vez y habilitado; si responde lo decide este valor. En
+  // web, un `Pan` nacido con `.enabled(false)` no despierta nunca (trampa 33):
+  // las fichas nacían apagadas en la ronda de la pared y en la de anotar no se
+  // movían ni con el dedo ni con el mouse.
+  const activo = useSharedValue(enabled ? 1 : 0);
+  useEffect(() => {
+    activo.value = enabled ? 1 : 0;
+  }, [activo, enabled]);
+  const vivos = useRef(onDrop);
+  vivos.current = onDrop;
+  const soltar = useCallback((i: number, x: number, y: number) => vivos.current(i, x, y), []);
   const gesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enabled)
         .onChange((e) => {
+          if (!activo.value) return;
           dx.value = e.translationX;
           dy.value = e.translationY;
         })
         .onEnd((e) => {
-          runOnJS(onDrop)(index, e.translationX, e.translationY);
+          if (!activo.value) return;
+          runOnJS(soltar)(index, e.translationX, e.translationY);
         })
         .onFinalize(() => {
           dx.value = withTiming(0, { duration: theme.motion.base });
           dy.value = withTiming(0, { duration: theme.motion.base });
         }),
-    [enabled, index, dx, dy, onDrop],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [index],
   );
   // La ficha que se ve sigue al dedo; el blanco que escucha queda quieto y sin
   // hijos, como el de las tiras. Con la ficha misma como blanco (un texto
