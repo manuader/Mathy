@@ -44,6 +44,8 @@ type Panel = "none" | "cheatsheet" | "calculator";
  * quedaba abajo de la barra y cortado arriba.
  */
 const BAR_SPACE = 64;
+/** Por debajo de este ancho las cuatro píldoras de la barra no entran enteras. */
+const NARROW_BAR = 430;
 
 interface Viewport {
   readonly width: number;
@@ -111,7 +113,7 @@ export function ActivityShell({
         </View>
 
         <View style={styles.bar}>
-          {lesson ? <Pill label={t("ui.bar.levels")} onPress={lesson.nav.levels} icon="‹" /> : <View />}
+          {lesson ? <Pill label={t("ui.bar.levels")} onPress={lesson.nav.levels} icon="‹" iconOnlyWhenNarrow /> : <View />}
           <View style={styles.tools}>
             <Pill
               label={saved > 0 ? `${t("ui.tools.cheatsheet")} · ${saved}` : t("ui.tools.cheatsheet")}
@@ -159,26 +161,38 @@ export function ActivityShell({
   );
 }
 
-/** Una píldora de vidrio: presente, legible sobre el paisaje, sin competir con el tablero. */
+/**
+ * Una píldora de vidrio: presente, legible sobre el paisaje, sin competir con el
+ * tablero. En un teléfono angosto las cuatro no entraban y "Calculadora" quedaba
+ * cortada: ahí se achican y la de volver muestra sólo la flecha (su nombre queda
+ * para el lector de pantalla).
+ */
 function Pill({
   label,
   onPress,
   icon,
   active = false,
   fresh = false,
+  iconOnlyWhenNarrow = false,
 }: {
   readonly label: string;
   readonly onPress: () => void;
   readonly icon?: string;
   readonly active?: boolean;
   readonly fresh?: boolean;
+  readonly iconOnlyWhenNarrow?: boolean;
 }) {
+  const narrow = useWindowDimensions().width < NARROW_BAR;
+  const soloIcono = narrow && iconOnlyWhenNarrow && icon !== undefined;
   return (
     <Pressable
       onPress={onPress}
       hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={label}
       style={({ pressed }) => [
         styles.pill,
+        narrow && styles.pillNarrow,
         active && styles.pillOn,
         fresh && styles.pillFresh,
         pressed && styles.pressed,
@@ -186,7 +200,11 @@ function Pill({
     >
       {fresh ? <View style={styles.freshDot} /> : null}
       {icon ? <Text style={styles.pillIcon}>{icon}</Text> : null}
-      <Text style={[styles.pillLabel, (active || fresh) && styles.pillLabelOn]}>{label}</Text>
+      {soloIcono ? null : (
+        <Text style={[styles.pillLabel, narrow && styles.pillLabelNarrow, (active || fresh) && styles.pillLabelOn]}>
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -217,12 +235,14 @@ const styles = StyleSheet.create({
     borderColor: theme.color.glassLine,
     backgroundColor: theme.color.glass,
   },
+  pillNarrow: { paddingHorizontal: theme.space[2], gap: 4 },
   pillOn: { borderColor: theme.color.accent },
   pillFresh: { borderColor: theme.color.gold },
   pressed: { opacity: 0.8, transform: [{ scale: 0.97 }] },
   freshDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.color.gold },
   pillIcon: { color: theme.color.ink, fontSize: 20, lineHeight: 22, marginTop: -2 },
   pillLabel: { color: theme.color.inkDim, fontSize: 14, fontWeight: "500" },
+  pillLabelNarrow: { fontSize: 13 },
   pillLabelOn: { color: theme.color.ink },
   panel: {
     borderLeftWidth: 1,
