@@ -84,6 +84,13 @@ import { chipFace } from "../ui/Kit.tsx";
 const NOTCH = (2 * Math.PI) / 8;
 /** Las tres bandas del nivel que compara: dos candidatas y la testigo. */
 const BAND_SLOTS = 3;
+/** Qué contesta el lienzo en esta ronda. Viaja como número al worklet. */
+const GIRO = 0;
+const BANDA = 1;
+const PEDIR = 2;
+const NADA = 3;
+/** Cuánto se puede mover el dedo y que el gesto siga siendo un toque. */
+const TAP_SLOP = 26;
 
 export interface DivUndoMulGameProps {
   readonly level: DivLevel;
@@ -761,28 +768,48 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
   const esShrink = ask === "shrink";
   const pedirBanda = level.bandOnDemand;
 
+  /**
+   * Lo que el gesto del lienzo lee de la ronda, en el hilo de la interfaz. El
+   * gesto se arma una sola vez por nivel y nace habilitado: en web, un gesto
+   * que nace con `.enabled(false)` no despierta nunca (trampa 33), y en el
+   * nivel que alterna la banda que miente con la llave, el giro nacía apagado
+   * en la primera ronda y en la segunda la llave puesta no giraba: el nivel no
+   * se podía terminar. Qué contesta lo decide `modoSV`; con el cofre abierto,
+   * `activoSV` lo calla, para que la banda resuelta no se mueva mientras la
+   * guía explica.
+   */
+  const modoSV = useSharedValue(NADA);
+  const activoSV = useSharedValue(1);
+  const lockSV = useSharedValue({ x: lockX, y: lockY });
+  const bandYsSV = useSharedValue<readonly number[]>(bandYs);
+  const desdeX = useSharedValue(0);
+  const desdeY = useSharedValue(0);
+  useEffect(() => {
+    modoSV.value = esShrink ? GIRO : esWhich ? BANDA : pedirBanda ? PEDIR : NADA;
+    activoSV.value = solved ? 0 : 1;
+    lockSV.value = { x: lockX, y: lockY };
+    bandYsSV.value = bandYs;
+  }, [esShrink, esWhich, pedirBanda, solved, lockX, lockY, bandYs, modoSV, activoSV, lockSV, bandYsSV]);
+
   const pan = useMemo(
     () =>
       Gesture.Pan()
-        // Solo donde hay algo que girar. Un `Pan` encendido le gana la carrera al
-        // toque (trampa 11): con él siempre prendido, tocar la banda que miente
-        // o pedir la banda fantasma no llegaba nunca. Y con el cofre abierto se
-        // apaga, para que la banda resuelta no se mueva mientras la guía explica.
-        .enabled(esShrink && !solved)
         .onBegin((e) => {
-          // Sin llave puesta no hay nada que girar, y el dedo no agarra nada.
-          if (esShrink && montada.value >= 0) {
-            sujeto.value = 1;
-            anchorDial.value = dial.value;
-            turned.value = 0;
-            lastAngle.value = Math.atan2(e.y - lockY, e.x - lockX);
-            return;
-          }
+          desdeX.value = e.x;
+          desdeY.value = e.y;
           sujeto.value = 0;
+          // Sin llave puesta no hay nada que girar, y el dedo no agarra nada.
+          if (modoSV.value !== GIRO || activoSV.value !== 1 || montada.value < 0) return;
+          sujeto.value = 1;
+          anchorDial.value = dial.value;
+          turned.value = 0;
+          const l = lockSV.value;
+          lastAngle.value = Math.atan2(e.y - l.y, e.x - l.x);
         })
         .onChange((e) => {
           if (sujeto.value !== 1) return;
-          const a = Math.atan2(e.y - lockY, e.x - lockX);
+          const l = lockSV.value;
+          const a = Math.atan2(e.y - l.y, e.x - l.x);
           let d = a - lastAngle.value;
           while (d > Math.PI) d -= 2 * Math.PI;
           while (d < -Math.PI) d += 2 * Math.PI;
@@ -801,27 +828,29 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
           });
         })
         .onEnd(() => {
+          if (modoSV.value !== GIRO || activoSV.value !== 1) return;
           if (sujeto.value !== 1) {
             if (montada.value < 0) runOnJS(alSinLlave)();
             return;
           }
           sujeto.value = 0;
           runOnJS(alSoltar)(dial.value);
-        }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [esShrink, solved, lockX, lockY, spins, alSoltar, alSinLlave],
-  );
-
-  const tap = useMemo(
-    () =>
-      Gesture.Tap()
-        .maxDistance(26)
-        .onEnd((e) => {
-          if (esWhich) {
+        })
+        // El toque es un arrastre que no se movió. Un solo gesto contesta los
+        // dos: con un `Tap` aparte en carrera, el `Pan` encendido le gana y el
+        // toque no llega nunca (trampa 11), así que tocar la banda que miente o
+        // pedir la banda fantasma dependía de apagar el giro, y apagarlo es lo
+        // que en web no tiene vuelta.
+        .onFinalize((e) => {
+          const modo = modoSV.value;
+          if (modo === GIRO || modo === NADA || activoSV.value !== 1) return;
+          if (Math.hypot(e.x - desdeX.value, e.y - desdeY.value) >= TAP_SLOP) return;
+          if (modo === BANDA) {
+            const ys = bandYsSV.value;
             let row = 0;
             let best = Infinity;
-            for (let i = 0; i < bandYs.length; i++) {
-              const d = Math.abs(e.y - (bandYs[i] as number));
+            for (let i = 0; i < ys.length; i++) {
+              const d = Math.abs(e.y - (ys[i] as number));
               if (d < best) {
                 best = d;
                 row = i;
@@ -830,16 +859,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
             runOnJS(alElegirBanda)(row);
             return;
           }
-          if (pedirBanda) runOnJS(alPedirBanda)();
+          runOnJS(alPedirBanda)();
         }),
+    // Se arma una vez: todo lo que cambia por ronda viaja en valores compartidos
+    // y las acciones en referencias estables (trampa 34).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [esWhich, pedirBanda, bandYs, alElegirBanda, alPedirBanda],
+    [],
   );
 
-  // Carrera y no exclusiva: el arrastre gana si el dedo se mueve y el toque gana
-  // si se levanta rápido. Encadenados en exclusiva, un gesto deshabilitado
-  // bloquea a los que vienen detrás.
-  const canvasGesture = useMemo(() => Gesture.Race(pan, tap), [pan, tap]);
+  const canvasGesture = pan;
 
   const conLlaves = ask === "shrink" || ask === "undo";
   const conFichas = hayFichas;
