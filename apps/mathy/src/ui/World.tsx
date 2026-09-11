@@ -13,6 +13,8 @@
  * 2. No se toca. Nada de acá recibe un toque (`pointerEvents: "none"`).
  * 3. Si la imagen del área no existe, el cielo y el suelo del área se dibujan
  *    con franjas: el juego nunca espera al arte.
+ * 4. Lo que se mueve, se mueve en los bordes (`Ambient.tsx`): el cielo, los
+ *    costados y las esquinas de abajo. El centro, donde se explica, está quieto.
  */
 import { useEffect, useMemo } from "react";
 import { Image, StyleSheet, View } from "react-native";
@@ -20,12 +22,14 @@ import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
 import { worldArt, type WorldKey } from "../art/index.ts";
+import { Ambient } from "./Ambient.tsx";
 import { AREAS, theme } from "./theme.ts";
 
 const BANDS = 14;
@@ -54,6 +58,8 @@ export function World({ area, calm = 0.35 }: { readonly area: WorldKey; readonly
           <Hills color={palette.ground} hue={palette.hue} />
         </View>
       )}
+      {/* Debajo del velo: lo que se mueve se oscurece con el paisaje. */}
+      <Ambient area={area} />
       {/* El velo que devuelve el centro al juego: parejo arriba, más oscuro abajo. */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(7, 14, 24, ${calm})` }]} />
       <View style={styles.floor} />
@@ -74,13 +80,19 @@ function Hills({ color, hue }: { readonly color: string; readonly hue: string })
   );
 }
 
-/** Una luciérnaga: sube lento, titila y vuelve. Es la luz del mapa, en pequeño. */
+/**
+ * Una luciérnaga: sube lento, titila y vuelve. Es la luz del mapa, en pequeño.
+ * Vive en los costados (las pares a la izquierda, las impares a la derecha),
+ * nunca en el centro, donde un punto que titila competiría con el tablero.
+ */
 function Firefly({ seed }: { readonly seed: number }) {
-  const x = rand(seed * 3.1) * 100;
-  const y = 25 + rand(seed * 7.7) * 60;
+  const x = seed % 2 === 0 ? 1 + rand(seed * 3.1) * 12 : 87 + rand(seed * 3.1) * 12;
+  const y = 18 + rand(seed * 7.7) * 70;
+  const still = useReducedMotion();
   const k = useSharedValue(0);
   const glow = useSharedValue(0);
   useEffect(() => {
+    if (still) return;
     const dur = 5200 + rand(seed * 1.3) * 4200;
     k.value = withDelay(seed * 380, withRepeat(withTiming(1, { duration: dur, easing: Easing.inOut(Easing.sin) }), -1, true));
     glow.value = withDelay(seed * 210, withRepeat(withTiming(1, { duration: 1400 + seed * 90 }), -1, true));
@@ -88,7 +100,7 @@ function Firefly({ seed }: { readonly seed: number }) {
       cancelAnimation(k);
       cancelAnimation(glow);
     };
-  }, [k, glow, seed]);
+  }, [k, glow, seed, still]);
   const style = useAnimatedStyle(() => ({
     opacity: 0.15 + 0.6 * glow.value,
     transform: [{ translateY: -26 * k.value }, { translateX: 10 * Math.sin(k.value * Math.PI * 2) }],

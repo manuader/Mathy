@@ -196,6 +196,21 @@ const es: Record<string, string> = {
   "area.graph": "Las islas · caminos",
   "area.geom": "El observatorio · formas y giros",
   "area.disc": "La biblioteca · lógica",
+  "tomi.name": "Tomi",
+  "ui.hint.ask": "Pedirle una pista a Tomi",
+  "ui.hint.offer": "¿Te doy una pista?",
+  "ui.hint.goal": "Lo que hay que lograr",
+  "ui.hint.idea": "La idea de este concepto",
+  "ui.hint.line": "Lo que te dice el juego",
+  "ui.hint.show": "Mirá acá",
+  "ui.hint.key": "Te sirve una llave",
+  "ui.hint.tryTitle": "Si seguís sin saber",
+  "ui.hint.try": "Probá un movimiento cualquiera: acá nada se pierde, y lo que pase te va a decir algo.",
+  "ui.hint.more": "Otra pista",
+  "ui.hint.close": "Entendido",
+  "ui.hint.openKey": "Ver la llave",
+  "ui.tools.sound": "Sonido",
+  "ui.tools.soundOff": "Sin sonido",
   "ui.header.level": "nivel {n} de {total}",
   "ui.map.continue": "Seguí acá",
   "ui.levels.play": "Jugar",
@@ -751,6 +766,10 @@ const es: Record<string, string> = {
   "layer.symbolic": "notación",
   "layer.formal": "definición",
   "layer.abstract": "abstracción",
+
+  // El recorrido entre niveles: la tarjeta de cierre de un nivel que ya estaba
+  // superado. La llave no vuelve a entrar al llavero, y la tarjeta no lo finge.
+  "ui.done.keyAgain": "Ya estaba en tu chuleta",
 };
 
 export function t(key: string): string {

@@ -16,6 +16,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { play } from "./sound.ts";
 import { theme } from "./theme.ts";
 
 export function PrimaryButton({
@@ -26,7 +27,14 @@ export function PrimaryButton({
   readonly onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} hitSlop={8} style={styles.primaryWrap}>
+    <Pressable
+      onPress={() => {
+        play("tap");
+        onPress();
+      }}
+      hitSlop={8}
+      style={styles.primaryWrap}
+    >
       {({ pressed }) => (
         <View style={[styles.primaryEdge, pressed && styles.primaryEdgePressed]}>
           <View style={[styles.primary, pressed && styles.primaryPressed]}>
@@ -50,7 +58,10 @@ export function GhostButton({
 }) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        play("tap");
+        onPress();
+      }}
       hitSlop={8}
       style={({ pressed }) => [styles.ghost, small && styles.ghostSmall, pressed && styles.pressed]}
     >

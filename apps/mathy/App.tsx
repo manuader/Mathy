@@ -12,11 +12,12 @@
  * de cierre dice qué se ganó y ofrece el siguiente con un solo botón.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { isNodeOpen, nodeById, type LevelBase, type NodeSpec } from "@mathy/mechanics";
+import type { Event } from "@mathy/progress";
 import { LevelMap } from "./src/LevelMap";
 import { NodeMap } from "./src/NodeMap";
 import { activityFor } from "./src/activities/index.tsx";
@@ -49,6 +50,19 @@ function Root() {
   const [fresh, setFresh] = useState<string | null>(null);
   const clearFresh = useCallback(() => setFresh(null), []);
   const startPlay = useCallback(() => setPhase("play"), []);
+  // Cada intento que la actividad anota pasa también por acá hacia Tomi, que
+  // ofrece una pista después de varios que no avanzaron.
+  const attempts = useRef<((correct: boolean) => void) | null>(null);
+  // Estable a propósito: las actividades anotan desde efectos que dependen de
+  // `onEvent` (el `sawLayer` al montar). Una función nueva por render hacía que
+  // cada anotación volviera a disparar el efecto y el juego se colgaba en un bucle.
+  const onEvent = useCallback(
+    (event: Event) => {
+      record(event);
+      if (event.kind === "attempt") attempts.current?.(event.correct);
+    },
+    [record],
+  );
 
   // El mapa no debe parpadear de bloqueado a abierto mientras se lee el
   // registro, así que espera. Es un disco local: se ve un cuadro, no una espera.
@@ -114,13 +128,14 @@ function Root() {
         nav={nav}
         fresh={fresh}
         clearFresh={clearFresh}
+        attempts={attempts}
       >
         <Activity
           key={id}
           node={node}
           level={level}
           levelsDone={done}
-          onEvent={record}
+          onEvent={onEvent}
           onLevelDone={() => {
             const key = lessonFor(node.id, level.n)?.key.id;
             if (key) setFresh(key);

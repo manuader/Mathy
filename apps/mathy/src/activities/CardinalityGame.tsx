@@ -54,6 +54,7 @@ import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
 import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
+import { play } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
 
 /** Cuánto tiempo queda a la vista la colección antes de taparse, en `carry`. */
@@ -429,8 +430,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
    * cada movimiento, así que la yema siempre apunta a un gesto que todavía
    * falta hacer.
    */
+  // La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+  const shown = step ?? lesson?.hint;
   const focus = useMemo<Focus | null>(() => {
-    if (!step) return null;
+    if (!shown) return null;
     const R = geom.bowlR;
     // Sin llegar a la altura de la tarjeta del cuenco, que tiene su propio anillo.
     const bowlRect = (cx: number): Rect => ({
@@ -482,7 +485,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       return p && to ? { rings, drag: { from: { x: p.x, y: p.y }, to } } : { rings };
     };
 
-    const id = step.id;
+    const id = shown.id;
     if (problem.mode === "pair") {
       if (id === "look") {
         return { rings: [bowlRect(bowlCenterX(geom, "pair", 0)), bowlRect(bowlCenterX(geom, "pair", 1))] };
@@ -539,7 +542,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       h: geom.cardH + 20,
     };
     return { rings: [fila, bowl] };
-  }, [step, geom, places, slots, problem, lonely, cardPlaces, cardOn, totalObjs, perBowl, enJuego]);
+  }, [shown, geom, places, slots, problem, lonely, cardPlaces, cardOn, totalObjs, perBowl, enJuego]);
 
   // --- Lo que pasa cuando el jugador suelta ----------------------------------
 
@@ -580,7 +583,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
         // exactamente lo que el nivel ejercita.
         attempt(true);
         say("placed");
-        if (next.some((v, k) => v === hueco && (k < perBowl) !== (bowl === 0))) say("bridge");
+        // La madera suena más aguda cuanto más lejos en la fila: contar se escucha.
+        play("drop", { pitch: hueco * 2 });
+        if (next.some((v, k) => v === hueco && (k < perBowl) !== (bowl === 0))) {
+          say("bridge");
+          play("join", { pitch: hueco });
+        }
         const puestos = next.filter((v, k) => v >= 0 && k % perBowl < (enJuego[k < perBowl ? 0 : 1] ?? 0)).length;
         const total = (enJuego[0] ?? 0) + (enJuego[1] ?? 0);
         if (puestos >= total) {
@@ -608,7 +616,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
           demo.value = withTiming(0, { duration: theme.motion.quick });
           const ahora = filled + 1;
           say("added");
+          play("drop", { pitch: ahora * 2 });
           if (ahora === problem.target) {
+            play("join", { pitch: ahora });
             igualar("La tarjeta del cuenco quedó igual a la otra.");
           } else if (ahora > problem.target) {
             // Una fruta de más apaga la iluminación y late: se puede devolver.
@@ -633,6 +643,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
             next[e.k] = pos;
           });
           setSlots(next);
+          play("drop", { pitch: restantes.length * 2 });
           if (restantes.length === problem.target) {
             igualar("Ahora la tarjeta dice lo mismo que la otra.");
           } else {
@@ -675,6 +686,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
       if (card.correct) {
         setCardOn(i);
         say("cardPlaced");
+        play("fit");
         succeed("Los puntos se contraen: ese número es el del cuenco entero.");
       } else {
         // La tarjeta equivocada no dice "mal": se desliza fuera de la colección.
@@ -692,6 +704,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
         setChosen(i);
         if (i === problem.lying) {
           say("chosen");
+          play("fit");
           succeed("Esa es la que miente: reordenar no cambia cuántas hay.");
         } else {
           refuse("En esa el cuenco se reordena y la tarjeta no se mueve: dice la verdad.");

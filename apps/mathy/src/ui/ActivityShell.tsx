@@ -13,8 +13,13 @@
  * el mundo del área detrás, la barra de arriba, y las dos tarjetas de la lección
  * (entrada y cierre). Viven acá y no en cada minijuego para que todos los nodos
  * las tengan sin tocar su actividad.
+ *
+ * Y los dos compañeros: Lumi en la guía (la pone cada actividad con su lección)
+ * y Tomi en el rincón (`HintBuddy`), que ofrece una pista cuando el jugador
+ * lleva un rato sin tocar el tablero. Por eso el marco anota cada toque sobre la
+ * actividad, sin quedarse con él: la actividad lo recibe igual.
  */
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { unlockedEntries } from "@mathy/content";
 import { t } from "../i18n.ts";
@@ -23,8 +28,10 @@ import { useLesson } from "../lessons/LessonContext.tsx";
 import { useProgress } from "../progress.tsx";
 import { Calculator } from "./Calculator.tsx";
 import { Cheatsheet } from "./Cheatsheet.tsx";
+import { HintBuddy } from "./HintBuddy.tsx";
 import { LevelComplete } from "./LevelComplete.tsx";
 import { LevelIntro } from "./LevelIntro.tsx";
+import { play, setMuted, useMuted } from "./sound.ts";
 import { reachedNodes } from "./unlocks.ts";
 import { World } from "./World.tsx";
 import { areaOf, theme } from "./theme.ts";
@@ -57,6 +64,9 @@ export function ActivityShell({
   const lesson = useLesson();
   const [panel, setPanel] = useState<Panel>("none");
   const [highlight, setHighlight] = useState<string | null>(null);
+  const muted = useMuted();
+  // El último toque sobre el tablero: con eso Tomi sabe si el jugador está quieto.
+  const lastTouch = useRef(Date.now());
 
   const reached = useMemo(() => reachedNodes(progress.levelsDone), [progress.levelsDone]);
   const keys = useMemo(() => earnedKeys(progress.levelsDone), [progress.levelsDone]);
@@ -84,7 +94,14 @@ export function ActivityShell({
     <View style={styles.shell}>
       <View style={styles.activity}>
         <World area={lesson ? areaOf(lesson.node.id) : "found"} />
-        <ViewportContext.Provider value={viewport}>{children}</ViewportContext.Provider>
+        <View
+          style={StyleSheet.absoluteFill}
+          onPointerDownCapture={() => {
+            lastTouch.current = Date.now();
+          }}
+        >
+          <ViewportContext.Provider value={viewport}>{children}</ViewportContext.Provider>
+        </View>
 
         <View style={styles.bar}>
           {lesson ? <Pill label={t("ui.bar.levels")} onPress={lesson.nav.levels} icon="‹" /> : <View />}
@@ -96,12 +113,21 @@ export function ActivityShell({
               onPress={() => (panel === "cheatsheet" ? close() : openCheatsheet())}
             />
             <Pill
+              label={muted ? t("ui.tools.soundOff") : t("ui.tools.sound")}
+              onPress={() => {
+                setMuted(!muted);
+                if (muted) play("tap");
+              }}
+            />
+            <Pill
               label={t("ui.tools.calculator")}
               active={panel === "calculator"}
               onPress={() => setPanel((p) => (p === "calculator" ? "none" : "calculator"))}
             />
           </View>
         </View>
+
+        <HintBuddy lastTouch={lastTouch} onOpenKey={openCheatsheet} />
 
         {lesson?.phase === "intro" && lesson.lesson ? <LevelIntro onOpenKey={openCheatsheet} /> : null}
         {lesson?.phase === "done" ? <LevelComplete onOpenCheatsheet={openCheatsheet} /> : null}

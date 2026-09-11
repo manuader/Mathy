@@ -3,7 +3,8 @@
   "configurations": [
     {
       "name": "mathy-web",
-      "url": "http://localhost:8081",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "web", "-w", "apps/mathy"],
       "port": 8081
     }
   ]

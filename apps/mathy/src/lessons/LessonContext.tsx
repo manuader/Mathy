@@ -8,8 +8,13 @@
  *
  * El proveedor se monta con la misma clave que la actividad, así que la guía
  * arranca de cero en cada nivel y en cada repetición.
+ *
+ * También lleva lo que Tomi necesita para ofrecer una pista: cuántos intentos
+ * seguidos no avanzaron (lo avisa App, que ve pasar los eventos) y qué paso de
+ * la guía está mostrando como pista, para que la actividad lo señale igual que
+ * a un paso de la guía. Una pista señala; nunca frena la ronda.
  */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { LevelBase, NodeSpec } from "@mathy/mechanics";
 import { lessonFor } from "./index.ts";
 import type { CoachStep, LevelLesson } from "./types.ts";
@@ -41,6 +46,12 @@ export interface LessonApi {
   /** La llave recién ganada, hasta que el jugador abre la chuleta. */
   readonly fresh: string | null;
   readonly clearFresh: () => void;
+  /** El paso de la guía que Tomi muestra como pista. La actividad lo señala como a `step`, sin frenar nada. */
+  readonly hint: CoachStep | undefined;
+  readonly showHint: (step: CoachStep | undefined) => void;
+  /** Intentos seguidos que no avanzaron, desde el último que sí o desde la última pista. */
+  readonly misses: number;
+  readonly clearMisses: () => void;
 }
 
 const Ctx = createContext<LessonApi | null>(null);
@@ -53,6 +64,7 @@ export function LessonProvider({
   nav,
   fresh,
   clearFresh,
+  attempts,
   children,
 }: {
   readonly node: NodeSpec;
@@ -62,6 +74,8 @@ export function LessonProvider({
   readonly nav: LessonNav;
   readonly fresh: string | null;
   readonly clearFresh: () => void;
+  /** Por dónde App avisa cada intento. La actividad no sabe nada de pistas: sólo anota. */
+  readonly attempts?: { current: ((correct: boolean) => void) | null };
   readonly children: ReactNode;
 }) {
   const lesson = useMemo(() => lessonFor(node.id, level.n), [node.id, level.n]);
@@ -100,6 +114,19 @@ export function LessonProvider({
 
   const skipCoach = useCallback(() => setStepIndex(-1), []);
 
+  const [hint, setHint] = useState<CoachStep | undefined>(undefined);
+  const [misses, setMisses] = useState(0);
+  useEffect(() => {
+    if (!attempts) return;
+    attempts.current = (correct) => setMisses((m) => (correct ? 0 : m + 1));
+    return () => {
+      attempts.current = null;
+    };
+  }, [attempts]);
+  const showHint = useCallback((s: CoachStep | undefined) => setHint(s), []);
+  const clearMisses = useCallback(() => setMisses(0), []);
+  const shownHint = phase === "play" ? hint : undefined;
+
   const step = phase === "play" && stepIndex >= 0 ? steps?.[stepIndex] : undefined;
 
   const api = useMemo<LessonApi>(
@@ -117,8 +144,12 @@ export function LessonProvider({
       nav,
       fresh,
       clearFresh,
+      hint: shownHint,
+      showHint,
+      misses,
+      clearMisses,
     }),
-    [node, level, lesson, phase, step, stepIndex, start, signal, nextStep, skipCoach, nav, fresh, clearFresh],
+    [node, level, lesson, phase, step, stepIndex, start, signal, nextStep, skipCoach, nav, fresh, clearFresh, shownHint, showHint, misses, clearMisses],
   );
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
