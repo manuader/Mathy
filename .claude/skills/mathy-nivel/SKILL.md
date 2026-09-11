@@ -45,8 +45,8 @@ seguidos no avanzaron. El nodo pone cuatro cosas:
 
 | Qué | Dónde | Detalle |
 |---|---|---|
-| La lección | `apps/mathy/src/lessons/<slug>.ts` + una línea en `lessons/index.ts` | [references/leccion-y-guia.md](references/leccion-y-guia.md) |
-| Los textos | `apps/mathy/src/i18n.ts` | claves, nunca literales; reglas de microcopy abajo |
+| La lección | su módulo `apps/mathy/src/lessons/<nodo>.ts`, que ya existe vacío y registrado | [references/leccion-y-guia.md](references/leccion-y-guia.md) |
+| Los textos | `texts` del mismo módulo (`t()` los lee) | claves, nunca literales; reglas de microcopy abajo |
 | La guía en la actividad | la actividad del nodo | señales, foco, pausa de ronda: [references/integracion.md](references/integracion.md) |
 | La escena con estilo de juego | `apps/mathy/src/scenes/` | volumen, color, jugo: [references/estilo-visual.md](references/estilo-visual.md) |
 
@@ -89,8 +89,8 @@ una definición escolar.
 - Título de cinco palabras o menos, como idea: "Emparejar compara", "Mover no
   cambia cuántas hay". Nunca el nombre de un tema ("Cardinalidad").
 - Cuerpo de una o dos frases, narrable en voz alta, con cuándo sirve.
-- Un dibujo (`KeyGlyph`) que la cuente sin palabras; si ninguno sirve, se agrega
-  uno a `DRAWINGS` en `ui/KeyGlyph.tsx`.
+- Un dibujo que la cuente sin palabras: uno de los seis base, o uno nuevo en
+  `glyphs` del módulo del nodo (puntos y barras sobre 40 × 40).
 - Al diseñar los niveles siguientes (de este nodo o de otros), se busca qué llave
   anterior resuelve el nivel y se pone en `uses`: así la chuleta deja de ser un
   archivo y pasa a ser una herramienta.
@@ -150,8 +150,8 @@ tiene mundo. Si hace falta una pose o un mundo nuevo, se genera con
 
 ## Antes de entregar
 
-- [ ] `lessons/<slug>.ts` con un `LevelLesson` por nivel y registrado en `LESSONS`.
-- [ ] Todas las claves de texto en `i18n.ts`, revisadas contra el microcopy.
+- [ ] `lessons/<nodo>.ts` con un `LevelLesson` por nivel, sus `texts` y, si hace falta, sus `glyphs`.
+- [ ] Todas las claves de texto en `texts`, revisadas contra el microcopy.
 - [ ] La actividad emite las señales de sus pasos, frena la ronda en `holds`, y
       calcula el foco de cada paso desde la geometría.
 - [ ] Nada corre antes de `play`; la actividad no tiene fondo propio ni botón "‹ Niveles".

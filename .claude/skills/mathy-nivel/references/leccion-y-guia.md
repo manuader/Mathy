@@ -1,8 +1,14 @@
 # La lección y la guía, como datos
 
-La lección de un nodo es un archivo de datos en `apps/mathy/src/lessons/`: sólo
-claves de texto, ningún literal. Los tipos están en `lessons/types.ts`; el ejemplo
-completo es `lessons/cardinality.ts`.
+La lección de un nodo es **su módulo** en `apps/mathy/src/lessons/<nodo>.ts`, que ya
+existe vacío y ya está registrado en `lessons/index.ts`: escribir la lección es llenar
+ese archivo. El módulo lleva tres cosas: la lección (sólo claves), **sus textos**
+(`texts`, que `t()` lee después del diccionario) y **sus dibujos de llaves** si
+necesita alguno nuevo (`glyphs`). Así un nodo se escribe sin tocar `i18n.ts`,
+`lessons/index.ts` ni `ui/KeyGlyph.tsx`, y varios nodos se escriben a la vez.
+
+Los tipos están en `lessons/types.ts`. El nodo 1 (`lessons/cardinality.ts`) es la
+referencia de forma, aunque es anterior a los módulos y sus textos viven en `i18n.ts`.
 
 ## Plantilla
 
@@ -11,8 +17,9 @@ completo es `lessons/cardinality.ts`.
  * La lección de <nombre del minijuego>, nivel por nivel.
  * <Una o dos frases: qué gestos estrena cada nivel y cuáles repiten uno conocido.>
  */
-import { NODE_<X> as NODE } from "@mathy/mechanics";
-import type { CoachStep, KeyGlyphName, KeySpec, NodeLesson } from "./types.ts";
+import type { CoachStep, KeySpec, LessonModule } from "./types.ts";
+
+const NODE = "<id del nodo>";
 
 const k = (n: number, part: string): string => `lesson.${NODE}.${n}.${part}`;
 
@@ -25,14 +32,15 @@ const step = (n: number, id: string, advance: CoachStep["advance"]): CoachStep =
 /** El paso que explica el resultado: la ronda espera a que se lea. */
 const reveal = (n: number): CoachStep => ({ ...step(n, "reveal", "tap"), holds: true });
 
-const key = (id: string, glyph: KeyGlyphName): KeySpec => ({
+const key = (id: string, glyph: string): KeySpec => ({
   id,
   titleKey: `key.${id}.title`,
   bodyKey: `key.${id}.body`,
   glyph,
 });
 
-export const <X>_LESSON: NodeLesson = {
+export const MODULE: LessonModule = {
+  lesson: {
   node: NODE,
   learnedKey: `node.${NODE}.learned`,
   levels: [
@@ -50,10 +58,25 @@ export const <X>_LESSON: NodeLesson = {
     },
     // … un objeto por nivel del nodo, en orden
   ],
+  },
+  texts: {
+    [k(1, "why")]: "…",
+    [k(1, "goal")]: "…",
+    [k(1, "coach.look")]: "…",
+    "key.<area>.<idea>.title": "…",
+    "key.<area>.<idea>.body": "…",
+    [`node.${NODE}.learned`]: "…",
+  },
+  // Sólo si ningún dibujo base sirve (pair, plusOne, shuffle, travel, oneByOne,
+  // sameCount): puntos y barras sobre una caja de 40 × 40.
+  glyphs: {
+    "<area>.<dibujo>": { dots: [[10, 20, 4], [30, 20, 4, true]], bars: [[12, 19, 16, 2]] },
+  },
 };
 ```
 
-Y en `lessons/index.ts`: `const LESSONS = [CARDINALITY_LESSON, <X>_LESSON];`.
+No hace falta registrarlo: el módulo ya está en `lessons/index.ts`. Un módulo con
+`levels` vacío es un nodo sin lección, y se juega como antes.
 
 ## Los campos
 
@@ -83,7 +106,7 @@ Nombres de paso usados en el nodo 1, para reusar: `look`, `drag`, `bridge`,
 `bridge`, `solved`, `added`, `matched`, `chosen`, `cardPlaced`. Son de la
 actividad, no globales: cada nodo nombra las suyas.
 
-## Los textos (en `i18n.ts`)
+## Los textos (en `texts` del módulo)
 
 ```ts
 "lesson.<nodo>.1.why": "…",

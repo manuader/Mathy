@@ -37,7 +37,7 @@ import { tomiArt, type TomiPose } from "../art/index.ts";
 import { t, tf } from "../i18n.ts";
 import { lessonFor, nodeAfter, nodeLesson } from "../lessons/index.ts";
 import { useLesson } from "../lessons/LessonContext.tsx";
-import type { KeyGlyphName, NodeLesson } from "../lessons/types.ts";
+import type { NodeLesson } from "../lessons/types.ts";
 import { useProgress } from "../progress.tsx";
 import { doneAtStart } from "./journey.ts";
 import { KeyGlyph } from "./KeyGlyph.tsx";
@@ -193,7 +193,7 @@ function KeyStage({
   readonly ring: NodeLesson;
   readonly current: number;
   readonly done: number;
-  readonly glyph: KeyGlyphName;
+  readonly glyph: string;
   readonly flies: boolean;
   readonly complete: boolean;
   readonly tag: string;

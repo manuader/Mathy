@@ -24,22 +24,11 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import type { KeyGlyphName } from "../lessons/types.ts";
+import { LESSON_GLYPHS } from "../lessons/index.ts";
+import type { KeyDrawing, KeyGlyphName } from "../lessons/types.ts";
 import { theme } from "./theme.ts";
 
-/** [x, y, radio, resaltado] sobre una caja de 40 × 40. */
-type Dot = readonly [number, number, number, boolean?];
-/** [x, y, ancho, alto]. */
-type Bar = readonly [number, number, number, number];
-
-interface Drawing {
-  readonly dots: readonly Dot[];
-  readonly bars?: readonly Bar[];
-  /** Una tarjeta con un numeral: el número que viaja. */
-  readonly card?: string;
-}
-
-const DRAWINGS: Record<KeyGlyphName, Drawing> = {
+const DRAWINGS: Record<KeyGlyphName, KeyDrawing> = {
   // Dos filas con puentes; la de arriba tiene una sin pareja.
   pair: {
     dots: [[9, 11, 4], [20, 11, 4], [31, 11, 4, true], [9, 29, 4], [20, 29, 4]],
@@ -66,6 +55,15 @@ const DRAWINGS: Record<KeyGlyphName, Drawing> = {
   },
 };
 
+/**
+ * El dibujo de una llave: primero los de acá, después los que trae cada lección.
+ * Un nombre que no existe dibuja la llave de a uno, que es genérica: la llave se
+ * sigue viendo y el error se nota en la chuleta, no rompe la pantalla.
+ */
+function drawingOf(name: string): KeyDrawing {
+  return (DRAWINGS as Record<string, KeyDrawing>)[name] ?? LESSON_GLYPHS[name] ?? DRAWINGS.oneByOne;
+}
+
 export function KeyGlyph({
   name,
   locked = false,
@@ -73,7 +71,8 @@ export function KeyGlyph({
   gold = false,
   warm = false,
 }: {
-  readonly name: KeyGlyphName;
+  /** Un dibujo base o uno que trae la lección de su nodo (`glyphs`). */
+  readonly name: string;
   readonly locked?: boolean;
   readonly size?: number;
   /** Ganada y a la vista: borde y luz dorados. */
@@ -89,7 +88,7 @@ export function KeyGlyph({
       </View>
     );
   }
-  const d = DRAWINGS[name];
+  const d = drawingOf(name);
   return (
     <View style={[styles.box, gold && styles.boxGold, { width: size, height: size }]}>
       {d.bars?.map(([x, y, w, h], i) => (
@@ -183,7 +182,7 @@ export function KeyCard({
   glow = false,
   footer,
 }: {
-  readonly glyph: KeyGlyphName;
+  readonly glyph: string;
   readonly title: string;
   readonly body?: string;
   readonly tag?: string;

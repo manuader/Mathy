@@ -7,8 +7,25 @@
  * tarjeta de entrada y la llave.
  */
 
-/** Los dibujos de las llaves. Cuentan la idea sin palabras. */
+/** Los dibujos de llaves que trae `ui/KeyGlyph.tsx`. Cuentan la idea sin palabras. */
 export type KeyGlyphName = "pair" | "plusOne" | "shuffle" | "travel" | "oneByOne" | "sameCount";
+
+/** [x, y, radio, resaltado] sobre una caja de 40 × 40. */
+export type KeyDot = readonly [number, number, number, boolean?];
+/** [x, y, ancho, alto] sobre la misma caja. */
+export type KeyBar = readonly [number, number, number, number];
+
+/**
+ * Un dibujo de llave, como dato: puntos, barras y a lo sumo una tarjeta con un
+ * numeral. Una lección que necesita un dibujo nuevo lo exporta en `glyphs` de
+ * su módulo, sin tocar `ui/KeyGlyph.tsx`.
+ */
+export interface KeyDrawing {
+  readonly dots: readonly KeyDot[];
+  readonly bars?: readonly KeyBar[];
+  /** Una tarjeta con un numeral: el número que viaja. */
+  readonly card?: string;
+}
 
 /**
  * Una llave: una idea corta que el jugador ya probó con las manos. Se guarda en
@@ -19,7 +36,8 @@ export interface KeySpec {
   readonly id: string;
   readonly titleKey: string;
   readonly bodyKey: string;
-  readonly glyph: KeyGlyphName;
+  /** Un dibujo base (`KeyGlyphName`) o uno que el módulo de la lección exporta en `glyphs`. */
+  readonly glyph: string;
 }
 
 /**
@@ -57,4 +75,16 @@ export interface NodeLesson {
   /** Lo que el concepto entero deja, para la tarjeta de cierre del último nivel. */
   readonly learnedKey: string;
   readonly levels: readonly LevelLesson[];
+}
+
+/**
+ * Todo lo de un nodo en un archivo: la lección, sus textos y sus dibujos de
+ * llaves. Así cada nodo se escribe sin tocar `i18n.ts` ni `ui/KeyGlyph.tsx`, y
+ * varios se pueden escribir a la vez. `t()` busca en `texts` después del
+ * diccionario.
+ */
+export interface LessonModule {
+  readonly lesson: NodeLesson;
+  readonly texts: Readonly<Record<string, string>>;
+  readonly glyphs?: Readonly<Record<string, KeyDrawing>>;
 }

@@ -10,7 +10,11 @@
  *
  * `es` es el locale fuente. Una clave sin traducción devuelve la clave, que se
  * ve horrible a propósito: un texto sin traducir tiene que doler.
+ *
+ * Los textos de cada lección viven en su módulo (`lessons/<nodo>.ts`) y se buscan
+ * después de este diccionario: así varios nodos se escriben a la vez sin pisarse.
  */
+import { LESSON_TEXTS } from "./lessons/index.ts";
 
 const es: Record<string, string> = {
   "app.name": "Mathy",
@@ -773,7 +777,7 @@ const es: Record<string, string> = {
 };
 
 export function t(key: string): string {
-  return es[key] ?? key;
+  return es[key] ?? LESSON_TEXTS[key] ?? key;
 }
 
 /** Una clave con huecos `{nombre}`. Es lo mínimo hasta que entre ICU MessageFormat. */
