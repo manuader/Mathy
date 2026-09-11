@@ -466,11 +466,21 @@ export function tilesLayout(
   height: number,
   slots: number,
 ): TilesLayout {
+  // Las baldosas que sobran se apilan al costado del piso: el ancho que se
+  // reparte las cuenta, y el piso con su columna de sobrantes se centra junto.
+  // Sin esto, en un teléfono la columna quedaba fuera del lienzo, y es justo lo
+  // que el nivel pide mirar. Sin sobrantes, `aparte` es cero y nada cambia.
+  const sobran = config.leftover ?? 0;
+  const aparte = sobran > 0 ? Math.ceil(sobran / Math.max(1, config.rows)) + 0.9 : 0;
   const span = Math.max(config.rows, config.cols, config.frameRows, config.frameCols, 1);
   const frameH = height * 0.52;
-  const unit = Math.min(MAX_UNIT, (width * 0.62) / span, frameH / span);
+  const unit = Math.min(
+    MAX_UNIT,
+    (width * 0.62) / Math.max(span, config.cols + aparte),
+    frameH / span,
+  );
 
-  const center = { x: width / 2, y: height * 0.3 };
+  const center = { x: width / 2 - (aparte * unit) / 2, y: height * 0.3 };
   const frame = {
     x: center.x - (config.frameCols * unit) / 2,
     y: center.y - (config.frameRows * unit) / 2,

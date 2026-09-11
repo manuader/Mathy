@@ -566,6 +566,13 @@ export interface StretchSceneProps {
   /** La marca que el jugador anticipó, o `null`. */
   readonly guess: number | null;
   readonly appear: SharedValue<number>;
+  /**
+   * La expresión con su propia opacidad, fuera de `appear`. Es para el nivel
+   * que pide la banda con un toque: ahí la cuenta tiene que estar sola desde el
+   * principio, porque es lo que el nivel enseña, y la banda llega después.
+   * Ausente: la expresión aparece y se va con la banda, como antes.
+   */
+  readonly exprAppear?: SharedValue<number>;
 }
 
 /**
@@ -596,6 +603,7 @@ export function StretchScene({
   picked,
   guess,
   appear,
+  exprAppear,
 }: StretchSceneProps) {
   const ruler = useMemo(() => buildRuler(config, layout), [config, layout]);
   const nail = useMemo(() => buildNail(7), []);
@@ -1018,6 +1026,7 @@ export function StretchScene({
   }
 
   return (
+    <>
     <Group opacity={appear}>
       {/* La regla, sobre su vidrio. El cero lleva la marca más larga: ahí está
           el clavo. Las marcas que se tocan son fichas. */}
@@ -1059,7 +1068,6 @@ export function StretchScene({
       <Path path={arrowsGeom.vuelta} color={SHADE} style="stroke" strokeWidth={6} strokeCap="round" strokeJoin="round" opacity={0.55} />
       <Path path={arrowsGeom.ida} color={theme.color.inkDim} style="stroke" strokeWidth={3} strokeCap="round" strokeJoin="round" />
       <Path path={arrowsGeom.vuelta} color={theme.color.ink} style="stroke" strokeWidth={3} strokeCap="round" strokeJoin="round" />
-      <Legible path={exprGeom} color={theme.color.ink} />
 
       {config.crank ? (
         <>
@@ -1140,6 +1148,12 @@ export function StretchScene({
         <Path path={handGeom} color={theme.color.ink} style="stroke" strokeWidth={2.5} />
       </Group>
     </Group>
+    {/* La expresión va en su propio grupo, siempre montado: sin `exprAppear`
+        sigue a la banda como siempre; con él, puede estar sola antes que ella. */}
+    <Group opacity={exprAppear ?? appear}>
+      <Legible path={exprGeom} color={theme.color.ink} />
+    </Group>
+    </>
   );
 }
 

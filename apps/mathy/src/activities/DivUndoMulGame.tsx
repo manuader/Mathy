@@ -74,6 +74,8 @@ import {
 import { TilesScene, tilesLayout, type RowSlot, type TilesConfig } from "../scenes/TilesScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace } from "../ui/Kit.tsx";
@@ -102,6 +104,15 @@ export function DivUndoMulGame(props: DivUndoMulGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  /** El paso de la guía a la vista. */
+  const guia = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -116,11 +127,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
   );
   const ask = problem.ask;
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: openingHint(ask),
+    text: conLeccion ? "" : openingHint(ask),
     tone: "dim",
   }));
 
-  const sceneH = Math.max(340, Math.min(height * 0.66, 560));
+  // Con lección el cartel de la guía ocupa su renglón, y en las rondas de
+  // fichas la bandeja va debajo: el lienzo cede lo justo para que nada quede afuera.
+  const hayFichas = problem.options.length > 0;
+  const sceneH = Math.max(
+    300,
+    Math.min(height * (conLeccion ? (hayFichas ? 0.48 : 0.56) : 0.66), 560),
+  );
   const conBanda = ask === "shrink" || ask === "which" || ask === "ghost";
   const conPiso = ask === "wall" || ask === "leftover";
   const conCofre = ask === "shrink" || ask === "undo";
@@ -242,6 +259,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
   const chestAppear = useSharedValue(0);
   const bandAppear = useSharedValue(0);
   const tilesAppear = useSharedValue(0);
+  /** La cuenta escrita, que en el nivel fantasma está sola antes que la banda. */
+  const exprV = useSharedValue(0);
 
   const placed = useSharedValue(0);
   const spin = useSharedValue(0);
@@ -273,7 +292,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
     setSolved(false);
     setMounted(-1);
     setPicked(-1);
-    setMessage({ text: openingHint(ask), tone: "dim" });
+    setMessage({ text: conLeccion ? "" : openingHint(ask), tone: "dim" });
 
     open.value = 0;
     spin.value = 0;
@@ -296,6 +315,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
     bandAppear.value = withTiming(conBanda && !level.bandOnDemand ? 1 : 0, {
       duration: theme.motion.base,
     });
+    // La cuenta no espera a la banda: en el nivel fantasma es lo único que hay
+    // a la vista, y antes quedaba escondida con ella hasta el primer toque.
+    exprV.value = withTiming(conBanda && level.expr ? 1 : 0, { duration: theme.motion.base });
 
     for (let i = 0; i < KEY_SLOTS; i++) {
       const s = keys[i] as Slot;
@@ -317,8 +339,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
 
     // El latido de la demostración no es un adorno: es la única instrucción.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+    // Con guía, la luz de Lumi es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
     demo.value =
-      ask === "shrink"
+      ask === "shrink" && !guided
         ? withRepeat(
             withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
             -1,
@@ -374,6 +398,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_DIV_UNDO_MUL, layer: level.layer });
   }, [level.layer, onEvent]);
 
+  // El reloj arranca cuando el nivel empieza, no detrás de la tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [problem, playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa, en el
+  // mismo lugar donde registra el movimiento. Por referencia: el callback de un
+  // gesto puede estar un render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
     (correct: boolean, misconception?: string) => {
@@ -409,6 +445,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
     setRound((r) => r + 1);
   }, [round, level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = guia?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (guia?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [guia, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -417,9 +473,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       quiet();
       cancelAnimation(clock);
       setMessage({ text, tone: "ok" });
-      setTimeout(nextRound, 1700);
+      setTimeout(advance, 1700);
     },
-    [nextRound, quiet, clock],
+    [advance, quiet, clock],
   );
 
   // --- La banda y la llave ---------------------------------------------------
@@ -443,9 +499,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
     open.value = withTiming(1, { duration: theme.motion.base });
     (bands[0] as BandValues).factor.value = withTiming(1, { duration: theme.motion.quick });
     attempt(true);
+    say("opened");
     succeed("Las marcas cayeron justo sobre las de la testigo. El cofre se abrió.");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt, succeed, open]);
+  }, [attempt, succeed, open, say]);
 
   /** El jugador soltó la llave. El veredicto lo da la banda, no un cartel. */
   const released = useCallback(
@@ -505,6 +562,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       };
       if (!cerca) {
         volver();
+        // Ningún rechazo en silencio: la llave vuelve y la línea dice adónde va.
+        setMessage({ text: t(`lesson.${NODE_DIV_UNDO_MUL}.msg.keyBack`), tone: "dim" });
         return;
       }
       quiet();
@@ -546,10 +605,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
         duration: theme.motion.base,
       });
       setMounted(index);
+      say("keyIn");
       setMessage({ text: "La llave entró. Ahora girá hasta que las marcas coincidan.", tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem, cl, solved, quiet, attempt],
+    [problem, cl, solved, quiet, attempt, say],
   );
 
   // --- Las dos animaciones ---------------------------------------------------
@@ -562,6 +622,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       const ok = row === problem.liar;
       attempt(ok);
       if (ok) {
+        say("chosen");
         succeed("Esa cortó el extremo: el largo coincide y las marcas del medio no.");
       } else {
         setMessage({
@@ -570,7 +631,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
         });
       }
     },
-    [solved, problem.liar, attempt, quiet, succeed],
+    [solved, problem.liar, attempt, quiet, succeed, say],
   );
 
   // --- El piso y las fichas --------------------------------------------------
@@ -578,8 +639,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
   const summonBand = useCallback(() => {
     if (!level.bandOnDemand) return;
     bandAppear.value = withTiming(1, { duration: theme.motion.base });
+    say("summoned");
     setMessage({ text: "Ahí está la banda. La expresión dice lo mismo.", tone: "dim" });
-  }, [level.bandOnDemand, bandAppear]);
+  }, [level.bandOnDemand, bandAppear, say]);
 
   const pickOption = useCallback(
     (option: DivOption) => {
@@ -589,6 +651,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       if (option.correct) {
         token.value = withTiming(1, { duration: theme.motion.base });
         keysV.value = withTiming(1, { duration: theme.motion.morph });
+        say("picked");
         succeed(
           ask === "leftover"
             ? "Esas son las filas enteras. Lo que sobró quedó afuera, sin manera de anotarlo."
@@ -618,7 +681,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [solved, ask, problem.rows, attempt, quiet, succeed, token, keysV, placed],
+    [solved, ask, problem.rows, attempt, quiet, succeed, token, keysV, placed, say],
   );
 
   // --- Las vueltas arbitrarias -----------------------------------------------
@@ -632,6 +695,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       attempt(a.correct);
       if (a.correct) {
         open.value = withTiming(1, { duration: theme.motion.base });
+        say("opened");
         succeed(
           a.uninvertible
             ? "Ese cofre no tiene llave: la acción borró lo que había y no hay vuelta."
@@ -654,7 +718,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem.actions, solved, quiet, attempt, open, succeed],
+    [problem.actions, solved, quiet, attempt, open, succeed, say],
   );
 
   // --- Gestos ----------------------------------------------------------------
@@ -664,8 +728,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
    * cambiar de identidad entre renders: gesture-handler en web pierde el gesto
    * si cambia, y el giro se corta a mitad de camino.
    */
-  const acciones = useRef({ released, pickBand, summonBand, dropKey, pickAction });
-  acciones.current = { released, pickBand, summonBand, dropKey, pickAction };
+  /** Girar sin llave puesta no hace nada, y eso también se dice. */
+  const sinLlave = useCallback(() => {
+    if (solved) return;
+    setMessage({ text: t(`lesson.${NODE_DIV_UNDO_MUL}.msg.noKey`), tone: "dim" });
+  }, [solved]);
+
+  const acciones = useRef({ released, pickBand, summonBand, dropKey, pickAction, sinLlave });
+  acciones.current = { released, pickBand, summonBand, dropKey, pickAction, sinLlave };
+  const alSinLlave = useCallback(() => acciones.current.sinLlave(), []);
   const alSoltar = useCallback((v: number) => acciones.current.released(v), []);
   const alElegirBanda = useCallback((r: number) => acciones.current.pickBand(r), []);
   const alPedirBanda = useCallback(() => acciones.current.summonBand(), []);
@@ -684,6 +755,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
   const pan = useMemo(
     () =>
       Gesture.Pan()
+        // Solo donde hay algo que girar. Un `Pan` encendido le gana la carrera al
+        // toque (trampa 11): con él siempre prendido, tocar la banda que miente
+        // o pedir la banda fantasma no llegaba nunca. Y con el cofre abierto se
+        // apaga, para que la banda resuelta no se mueva mientras la guía explica.
+        .enabled(esShrink && !solved)
         .onBegin((e) => {
           // Sin llave puesta no hay nada que girar, y el dedo no agarra nada.
           if (esShrink && montada.value >= 0) {
@@ -716,12 +792,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
           });
         })
         .onEnd(() => {
-          if (sujeto.value !== 1) return;
+          if (sujeto.value !== 1) {
+            if (montada.value < 0) runOnJS(alSinLlave)();
+            return;
+          }
           sujeto.value = 0;
           runOnJS(alSoltar)(dial.value);
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [esShrink, lockX, lockY, spins, alSoltar],
+    [esShrink, solved, lockX, lockY, spins, alSoltar, alSinLlave],
   );
 
   const tap = useMemo(
@@ -754,7 +833,130 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
   const canvasGesture = useMemo(() => Gesture.Race(pan, tap), [pan, tap]);
 
   const conLlaves = ask === "shrink" || ask === "undo";
-  const conFichas = problem.options.length > 0;
+  const conFichas = hayFichas;
+
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Dónde quedan, respecto del lienzo, las fichas de abajo. Viven fuera del
+   * lienzo, así que se miden: el lienzo y la bandeja son hijos directos de la
+   * raíz y `onLayout` los mide contra el mismo padre.
+   */
+  const [canvasAt, setCanvasAt] = useState<{ x: number; y: number } | null>(null);
+  const [trayAt, setTrayAt] = useState<Rect | null>(null);
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda, con la
+   * misma geometría con la que las escenas lo dibujan. La pista de Tomi reusa
+   * los pasos sin frenar la ronda. Manda la pregunta de la ronda: en los
+   * niveles que alternan, la pista puede ser un paso de la otra pregunta.
+   */
+  const shown = guia ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const around = (x: number, y: number, r: number): Rect => ({ x: x - r, y: y - r, w: r * 2, h: r * 2 });
+    const pad = (b: Rect, p: number): Rect => ({ x: b.x - p, y: b.y - p, w: b.w + p * 2, h: b.h + p * 2 });
+    const bandRect = (i: number): Rect => {
+      const n = sl.nails[i] ?? sl.rulerNail;
+      return { x: n.x - 22, y: n.y - 28, w: problem.length * sl.step + 44, h: 56 };
+    };
+    // La cerradura dibujada, no el blanco de drop, que es más generoso.
+    const lockRect = around(cl.crank.x, cl.crank.y, 34);
+    const usadas = ask === "undo" ? problem.actions.length : problem.keys.length;
+    const spots = cl.keys.slice(0, usadas);
+    const keyring: Rect | null =
+      spots.length > 0
+        ? pad(
+            {
+              x: Math.min(...spots.map((s) => s.x)) - cl.keyW / 2,
+              y: Math.min(...spots.map((s) => s.y)) - cl.keyH / 2,
+              w: Math.max(...spots.map((s) => s.x)) - Math.min(...spots.map((s) => s.x)) + cl.keyW,
+              h: cl.keyH,
+            },
+            8,
+          )
+        : null;
+    const tray =
+      trayAt && canvasAt
+        ? pad({ x: trayAt.x - canvasAt.x, y: trayAt.y - canvasAt.y, w: trayAt.w, h: trayAt.h }, 8)
+        : null;
+    // El piso con sus llaves, que se dibujan por fuera de las baldosas.
+    const floorRect = pad(
+      { x: tl.center.x - tl.floor.w / 2, y: tl.center.y - tl.floor.h / 2, w: tl.floor.w, h: tl.floor.h },
+      tl.unit * 1.1,
+    );
+    // La cuenta escrita debajo de la regla, donde la pone `StretchScene`.
+    const exprRect: Rect = {
+      x: (sl.ruler.from + sl.ruler.to) / 2 - 90,
+      y: sl.ruler.y + 62 - 28,
+      w: 180,
+      h: 56,
+    };
+
+    switch (ask) {
+      case "shrink": {
+        const encoger = problem.keys.findIndex((k) => k.kind === "shrink");
+        const desde = cl.keys[encoger];
+        if (id === "look" || id === "reveal") return { rings: [bandRect(0), bandRect(1)] };
+        if (mounted >= 0) {
+          // La llave puesta: la luz gira alrededor de la cerradura, hacia donde
+          // el dial tiene que ir desde donde arranca.
+          const r = 40;
+          const baja = problem.dialStart > problem.factor;
+          return {
+            rings: [lockRect, bandRect(1)],
+            drag: {
+              from: { x: cl.crank.x, y: cl.crank.y - r },
+              to: { x: cl.crank.x + (baja ? -r : r), y: cl.crank.y },
+            },
+          };
+        }
+        // En el nivel de una sola llave la luz la lleva; con el llavero entero
+        // elegir es el nivel, y la luz no lo regala.
+        if ((id === "key" || id === "turn") && desde) {
+          return { rings: [lockRect], drag: { from: desde, to: cl.crank } };
+        }
+        return { rings: keyring ? [keyring, lockRect] : [lockRect] };
+      }
+      case "which":
+        if (id === "reveal") return { rings: [bandRect(problem.liar)] };
+        if (id === "look") return { rings: [bandRect(0), bandRect(1), bandRect(2)] };
+        return { rings: [bandRect(0), bandRect(1)] };
+      case "wall":
+      case "leftover": {
+        if (id === "pick" && tray) return { rings: [tray] };
+        const n = problem.leftover;
+        if (ask === "leftover" && n > 0) {
+          // Las sueltas, donde `TilesScene` las apila: una columna al costado.
+          const u = tl.unit;
+          const alto = Math.max(1, problem.rows);
+          const cols = Math.ceil(n / alto);
+          const sueltas = pad(
+            {
+              x: tl.center.x + tl.floor.w / 2 + u * 0.9,
+              y: tl.center.y - tl.floor.h / 2,
+              w: cols * u,
+              h: Math.min(n, alto) * u,
+            },
+            6,
+          );
+          return { rings: [floorRect, sueltas] };
+        }
+        return { rings: [floorRect] };
+      }
+      case "ghost":
+        if (id === "pick" && tray) return { rings: [tray] };
+        if (id === "reveal") return { rings: [exprRect, bandRect(0), bandRect(1)] };
+        return { rings: [exprRect] };
+      default: {
+        // `undo`: el cartel de la cerradura, sobre el cofre, y las acciones.
+        const card: Rect = { x: cl.lock.x - 38, y: cl.lock.y - 82, w: 76, h: 72 };
+        if (id === "look" || id === "reveal") return { rings: [card] };
+        return { rings: keyring ? [card, keyring] : [card] };
+      }
+    }
+  }, [shown, ask, sl, tl, cl, problem, mounted, trayAt, canvasAt]);
 
   return (
     <View style={styles.root}>
@@ -764,9 +966,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
 
-      <View style={{ width, height: sceneH }}>
+      <CoachBanner round={round} rounds={level.rounds} />
+
+      <View
+        style={{ width, height: sceneH }}
+        onLayout={(e) => {
+          const l = e.nativeEvent.layout;
+          setCanvasAt((a) => (a && a.x === l.x && a.y === l.y ? a : { x: l.x, y: l.y }));
+        }}
+      >
         {/* Un solo lienzo por pantalla: las tres escenas viven adentro y las que
             no juegan esta ronda se quedan en opacidad cero. */}
         <Canvas style={{ width, height: sceneH }}>
@@ -797,6 +1008,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
             picked={picked}
             guess={null}
             appear={bandAppear}
+            exprAppear={exprV}
           />
           <ChestScene
             problem={chestProblem}
@@ -849,13 +1061,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DivUndoMulGameProps) 
             />
           );
         })}
+
+        {/* Encima de todo y sin llevarse ningún toque: anillos y la luz de Lumi. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
 
       {/* Las fichas de las rondas de piso y de expresión. */}
       {conFichas ? (
-        <View style={styles.ring}>
+        <View
+          style={styles.ring}
+          onLayout={(e) => {
+            const l = e.nativeEvent.layout;
+            setTrayAt({ x: l.x, y: l.y, w: l.width, h: l.height });
+          }}
+        >
           {Array.from({ length: DIV_OPTION_SLOTS }, (_, i) => {
             const option = problem.options[i];
             if (!option) return <View key={i} style={styles.chipGhost} />;
@@ -926,7 +1147,16 @@ function Handle({
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
-        style={{ position: "absolute", left: spot.x - w / 2, top: spot.y - h / 2, width: w, height: h }}
+        style={{
+          position: "absolute",
+          left: spot.x - w / 2,
+          top: spot.y - h / 2,
+          width: w,
+          height: h,
+          // Apagada, el asa sigue montada pero no se come los toques del lienzo
+          // (trampa 13): en las rondas de piso quedaba sobre el tablero.
+          pointerEvents: enabled ? "auto" : "none",
+        }}
       />
     </GestureDetector>
   );

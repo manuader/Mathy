@@ -18,7 +18,7 @@
  *   desplazamiento del nodo 3.
  * - Arrastrar filas de baldosas al marco. La fila que no mide lo que el marco
  *   pide no entra; la que sí, se funde con las que ya están.
- * - Toque sostenido sobre el piso. Lo levanta y lo gira un cuarto de vuelta:
+ * - Un toque sobre el piso (o un toque sostenido). Lo levanta y lo gira un cuarto de vuelta:
  *   las filas se vuelven columnas y el total no cambia. Es la conmutatividad y
  *   nadie la nombra.
  * - Pellizcar o arrastrar la banda. El clavo no se mueve y todas las marcas se
@@ -55,6 +55,7 @@ import {
   factorValue,
   generateMulScaling,
   misconceptionFor,
+  type MulFactor,
   type MulLevel,
   type MulOption,
 } from "@mathy/mechanics";
@@ -73,6 +74,8 @@ import {
 } from "../scenes/StretchScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace } from "../ui/Kit.tsx";
@@ -99,6 +102,15 @@ export function MulScalingGame(props: MulScalingGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  /** El paso de la guía a la vista. `step` a secas es el paso de la regla. */
+  const guia = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -115,11 +127,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
   );
   const ask = problem.ask;
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: openingHint(ask),
+    text: conLeccion ? "" : openingHint(ask),
     tone: "dim",
   }));
 
-  const sceneH = Math.max(340, Math.min(height * 0.66, 560));
+  // Con lección el cartel de la guía ocupa su renglón, y en el nivel del total
+  // las fichas van debajo: el lienzo cede lo justo para que nada quede afuera.
+  const conFichas = ask === "total";
+  const sceneH = Math.max(
+    300,
+    Math.min(height * (conLeccion ? (conFichas ? 0.48 : 0.56) : 0.66), 560),
+  );
   const usesFloor = ask === "cover" || ask === "rotate" || ask === "total";
 
   const tilesConfig = useMemo<TilesConfig>(
@@ -157,7 +175,19 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       // En `explain` no se tira de ninguna banda: se mira y se elige.
       gripBand: ask === "which" ? -1 : 0,
       crank: level.gears ? { ratio: problem.rows } : null,
-      marks: ask === "predict" || ask === "flip" ? problem.options.map((o) => o.value) : [],
+      // Sin numerales, las marcas vecinas (una más, una menos) no se distinguen
+      // más que por puntería: el jugador acertaba el lado y erraba la raya. En
+      // `flip` sin números quedan la correcta y la espejada, que es la decisión
+      // que el nivel enseña: dos vueltas, ¿de qué lado queda?
+      marks:
+        ask === "predict" || ask === "flip"
+          ? problem.options
+              .filter((o) => !(ask === "flip" && level.bandSkin === "drawings") || o.correct || o.lure === "double_flip")
+              .map((o) => o.value)
+          : [],
+      // Para anticipar hay que saber por cuánto se estira: la cuenta queda
+      // escrita debajo de la regla. Sin ella el nivel se jugaba a ciegas.
+      expr: ask === "predict" ? `${problem.rest}×${factorText(problem.factor)}` : null,
     }),
     [problem, level, ask, guess],
   );
@@ -217,7 +247,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
     setGuess(null);
     setPicked(-1);
     setSolved(false);
-    setMessage({ text: openingHint(ask), tone: "dim" });
+    setMessage({ text: conLeccion ? "" : openingHint(ask), tone: "dim" });
 
     spin.value = 0;
     split.value = 0;
@@ -259,11 +289,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
 
     // El latido de la demostración no es un adorno: es la única instrucción.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1300 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    // Con guía, la luz de Lumi es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
+    demo.value = guided
+      ? 0
+      : withRepeat(
+          withSequence(withTiming(1, { duration: 1300 }), withTiming(0, { duration: 1 })),
+          -1,
+          false,
+        );
     // Las dos animaciones de `explain` corren solas: en una las marcas se
     // separan por igual y en la otra solo el extremo se mueve.
     if (ask === "which") {
@@ -294,6 +328,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_MUL_SCALING, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj arranca cuando el nivel empieza, no detrás de la tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [problem, playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa, en el
+  // mismo lugar donde registra el movimiento. Por referencia: el callback de un
+  // gesto puede estar un render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -330,6 +376,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
     setRound((r) => r + 1);
   }, [round, level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = guia?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (guia?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [guia, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -337,9 +403,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       setSolved(true);
       quiet();
       setMessage({ text, tone: "ok" });
-      setTimeout(nextRound, 1600);
+      setTimeout(advance, 1600);
     },
-    [nextRound, quiet],
+    [advance, quiet],
   );
 
   /**
@@ -393,6 +459,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       if (!dentro) {
         slot.dx.value = withTiming(0, { duration: theme.motion.base });
         slot.dy.value = withTiming(0, { duration: theme.motion.base });
+        // Ningún rechazo en silencio: la fila vuelve y la línea dice por qué.
+        setMessage({ text: t(`lesson.${NODE_MUL_SCALING}.msg.rowBack`), tone: "dim" });
         return;
       }
 
@@ -427,7 +495,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       setUsedRows(bag.current.used);
       const next = bag.current.placed;
       placed.value = withTiming(next, { duration: 220 });
+      say("merged");
       if (next >= problem.frameRows) {
+        say("covered");
         revealSymbols();
         succeed(
           level.keys
@@ -439,17 +509,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem, tl, solved, attempt, quiet, succeed, revealSymbols, level.keys],
+    [problem, tl, solved, attempt, quiet, succeed, revealSymbols, level.keys, say],
   );
 
-  /** El toque sostenido que gira el piso. La ficha del total no se mueve. */
+  /** El toque (corto o sostenido) que gira el piso. La ficha del total no se mueve. */
   const rotateFloor = useCallback(() => {
     if (solved || ask !== "rotate") return;
     quiet();
     spin.value = withTiming(1, { duration: theme.motion.morph });
     attempt(true);
+    say("rotated");
     succeed("Las mismas baldosas, dadas vuelta. El total no cambió.");
-  }, [solved, ask, quiet, spin, attempt, succeed]);
+  }, [solved, ask, quiet, spin, attempt, succeed, say]);
 
   // --- La ficha del total ----------------------------------------------------
 
@@ -458,8 +529,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
     // hay piso que pedir, y el toque no tiene que contestar nada.
     if (!level.floorOnDemand || !usesFloor) return;
     ghost.value = withTiming(1, { duration: theme.motion.base });
+    say("summoned");
     setMessage({ text: "Ahí está el piso. Contá filas, no baldosas.", tone: "dim" });
-  }, [level.floorOnDemand, usesFloor, ghost]);
+  }, [level.floorOnDemand, usesFloor, ghost, say]);
 
   const pickTotal = useCallback(
     (option: MulOption) => {
@@ -468,6 +540,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       attempt(option.correct, misconceptionFor(option));
       if (option.correct) {
         token.value = withTiming(1, { duration: theme.motion.base });
+        say("picked");
         succeed("Ese es el piso entero.");
         return;
       }
@@ -490,7 +563,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [solved, problem, attempt, quiet, succeed, token, ghost],
+    [solved, problem, attempt, quiet, succeed, token, ghost, say],
   );
 
   // --- La banda --------------------------------------------------------------
@@ -502,11 +575,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       const objetivo = ask === "match" ? problem.rest * factorValue(problem.factor) : problem.target;
       const error = Math.abs(end - objetivo);
       quiet();
+      say("pulled");
       if (error <= TOLERANCE) {
         (bands[0] as BandValues).factor.value = withTiming(objetivo / problem.rest, {
           duration: theme.motion.quick,
         });
         attempt(true);
+        say("landed");
         succeed(
           ask === "match"
             ? "Los tres dibujos cayeron encima de los otros tres: es el mismo estirado."
@@ -529,7 +604,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       setMessage({ text: "Todavía falta. Seguí estirando desde donde quedó.", tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [solved, problem, ask, attempt, quiet, succeed, jam],
+    [solved, problem, ask, attempt, quiet, succeed, jam, say],
   );
 
   /** El caminante de la manivela soltó el pie: la ficha quedó en una casilla. */
@@ -539,6 +614,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       quiet();
       if (mark === problem.target) {
         attempt(true);
+        say("landed");
         succeed("Cada vuelta movió lo mismo, y la ficha llegó.");
       } else if (mark > problem.target) {
         attempt(false);
@@ -547,7 +623,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
         setMessage({ text: "Falta. Seguí dando vueltas.", tone: "dim" });
       }
     },
-    [solved, problem.target, attempt, quiet, succeed],
+    [solved, problem.target, attempt, quiet, succeed, say],
   );
 
   /** `explain`: tocar la banda que no escala. */
@@ -582,6 +658,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       const k = factorValue(problem.factor);
       if (ok) {
         (bands[0] as BandValues).factor.value = withTiming(k, { duration: theme.motion.morph });
+        say("guessed");
         succeed(
           ask === "flip"
             ? "Dos vueltas y quedó mirando para el mismo lado que al principio."
@@ -606,7 +683,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [solved, problem, ask, attempt, quiet, succeed],
+    [solved, problem, ask, attempt, quiet, succeed, say],
   );
 
   // --- Gestos ----------------------------------------------------------------
@@ -632,6 +709,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
   const lastAngle = useSharedValue(0);
   const turned = useSharedValue(0);
   const dragging = useSharedValue(0);
+
+  // Con dos marcas lejanas (una de cada lado) el toque se acepta cerca de la
+  // marca, no sólo encima: lo que se decide es el lado, no la raya exacta.
+  const pocasMarcas = ask === "flip" && level.bandSkin === "drawings";
+  const markR = pocasMarcas ? Math.max(touchR * 1.4, step * 2.5) : Math.max(touchR * 1.4, 34);
 
   const pan = useMemo(
     () =>
@@ -661,7 +743,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
             lastAngle.value = a;
             const vueltas = Math.max(0, Math.round((turned.value / (2 * Math.PI)) * 4) / 4);
             turn.value = vueltas * 2 * Math.PI;
-            bandToken.value = Math.min(problem.length, Math.round(vueltas) * ratio);
+            const casilla = Math.min(problem.length, Math.round(vueltas) * ratio);
+            if (casilla !== bandToken.value) {
+              bandToken.value = casilla;
+              // La primera vuelta entera es el paso de la guía que se cumple.
+              if (casilla > 0) runOnJS(say)("turned");
+            }
             return;
           }
           // El clavo no se mueve: lo que el dedo cambia es la distancia a él.
@@ -699,6 +786,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
       problem.length,
       ask,
       guess,
+      say,
     ],
   );
 
@@ -708,6 +796,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
         .maxDistance(26)
         .enabled(!solved)
         .onEnd((e) => {
+          // Girar el piso también se hace con un toque: con el mouse, lo natural es
+          // un clic, y antes el clic no hacía nada ni decía nada (el nivel parecía
+          // roto). El toque sostenido sigue andando.
+          if (ask === "rotate") {
+            runOnJS(rotateFloor)();
+            return;
+          }
           if (ask === "which") {
             let row = 0;
             let best = Infinity;
@@ -723,7 +818,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
           }
           if (ask === "predict" || ask === "flip") {
             let best = NaN;
-            let bestD = Math.max(touchR * 1.4, 34);
+            let bestD = markR;
             for (const m of markValues) {
               const d = Math.hypot(e.x - (nailX + m * step), e.y - rulerY);
               if (d < bestD) {
@@ -737,7 +832,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
           runOnJS(summonFloor)();
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [solved, ask, bandYs, markValues, nailX, step, rulerY, touchR, pickBand, guessMark, summonFloor],
+    [solved, ask, bandYs, markValues, nailX, step, rulerY, touchR, markR, pickBand, guessMark, summonFloor, rotateFloor],
   );
 
   const hold = useMemo(
@@ -756,6 +851,161 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
   // en exclusiva, un gesto deshabilitado bloquea a los que vienen detrás.
   const canvasGesture = useMemo(() => Gesture.Race(hold, pan, tap), [hold, pan, tap]);
 
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Dónde quedan, respecto del lienzo, las fichas del total. Viven debajo de la
+   * línea de abajo, fuera del lienzo, así que se miden: el lienzo y la bandeja
+   * son hijos directos de la raíz y `onLayout` los mide contra el mismo padre.
+   */
+  const [canvasAt, setCanvasAt] = useState<{ x: number; y: number } | null>(null);
+  const [trayAt, setTrayAt] = useState<Rect | null>(null);
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda, calculado
+   * con la misma geometría con la que la escena lo dibuja. La pista de Tomi
+   * reusa los pasos: señala lo mismo, pero no frena la ronda. Lo que se señala
+   * lo decide primero la pregunta de la ronda: en los niveles que alternan, la
+   * pista de Tomi puede ser un paso de la otra pregunta.
+   */
+  const shown = guia ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const around = (x: number, y: number, r: number): Rect => ({ x: x - r, y: y - r, w: r * 2, h: r * 2 });
+    const pad = (b: Rect, p: number): Rect => ({ x: b.x - p, y: b.y - p, w: b.w + p * 2, h: b.h + p * 2 });
+    const nail0 = sl.nails[0] ?? sl.rulerNail;
+    const bandRect = (i: number): Rect => {
+      const n = sl.nails[i] ?? sl.rulerNail;
+      const units = problem.length * (problem.flipped ? 2 : 1);
+      const from = problem.flipped ? n.x - problem.length * sl.step : n.x;
+      return { x: from - 22, y: n.y - 28, w: units * sl.step + 44, h: 56 };
+    };
+    const rulerRect: Rect = {
+      x: sl.ruler.from - 14,
+      y: sl.ruler.y - 58,
+      w: sl.ruler.to - sl.ruler.from + 28,
+      h: 80,
+    };
+    // La misma medida con la que `StretchScene` dibuja la ficha objetivo.
+    const chipAt = (mark: number): Rect =>
+      around(sl.rulerNail.x + mark * sl.step, sl.ruler.y - 34, Math.min(sl.step * 0.42, 17) + 10);
+    const marksRect = (): Rect => {
+      const xs = bandConfig.marks.map((m) => sl.rulerNail.x + m * sl.step);
+      const lo = xs.length > 0 ? Math.min(...xs) : sl.rulerNail.x;
+      const hi = xs.length > 0 ? Math.max(...xs) : sl.rulerNail.x;
+      const r = Math.max(sl.touchR, 22);
+      return { x: lo - r, y: sl.ruler.y - r, w: hi - lo + r * 2, h: r * 2 };
+    };
+    const frameRect = pad(tl.frame, 8);
+    const floorRect = pad(
+      { x: tl.center.x - tl.floor.w / 2, y: tl.center.y - tl.floor.h / 2, w: tl.floor.w, h: tl.floor.h },
+      8,
+    );
+    // El piso con sus llaves y la cuenta escrita debajo: todo lo que se lee.
+    const readRect: Rect = {
+      x: tl.frame.x - tl.unit * 1.4,
+      y: tl.frame.y - tl.unit * 1.2,
+      w: tl.frame.w + tl.unit * 2.8,
+      h: tl.frame.h + tl.unit * 2.8,
+    };
+    const grip = { x: nail0.x + problem.rest * sl.step, y: nail0.y };
+
+    switch (ask) {
+      case "turn": {
+        const r = sl.crank.r;
+        const crank = around(sl.crank.x, sl.crank.y, r + 12);
+        // La perilla arranca arriba; la luz la lleva en el sentido del reloj.
+        const drag = {
+          from: { x: sl.crank.x, y: sl.crank.y - r * 0.62 },
+          to: { x: sl.crank.x + r * 0.62, y: sl.crank.y + r * 0.1 },
+        };
+        if (id === "look") return { rings: [crank, rulerRect] };
+        if (id === "reveal") return { rings: [rulerRect] };
+        if (id === "land") return { rings: [chipAt(problem.target), crank], drag };
+        return { rings: [crank], drag };
+      }
+      case "cover": {
+        const libres = problem.tileRows
+          .map((row, i) => ({ row, i, spot: tl.drawer[i] }))
+          .filter((e) => !usedRows.includes(e.i) && e.spot !== undefined);
+        const cajas = libres.map((e) => {
+          const s = e.spot as { x: number; y: number };
+          const w = e.row.cells * tl.unit;
+          return { x: s.x - w / 2, y: s.y - tl.unit / 2, w, h: tl.unit };
+        });
+        const x0 = Math.min(...cajas.map((b) => b.x));
+        const y0 = Math.min(...cajas.map((b) => b.y));
+        const monton =
+          cajas.length > 0
+            ? pad(
+                {
+                  x: x0,
+                  y: y0,
+                  w: Math.max(...cajas.map((b) => b.x + b.w)) - x0,
+                  h: Math.max(...cajas.map((b) => b.y + b.h)) - y0,
+                },
+                10,
+              )
+            : null;
+        if (id === "look") return { rings: monton ? [frameRect, monton] : [frameRect] };
+        // La luz lleva una fila que entra hasta el primer renglón libre del marco.
+        const justa = libres.find((e) => e.row.fits);
+        if ((id === "drag" || id === "fill") && justa?.spot) {
+          const destino = {
+            x: tl.frame.x + tl.frame.w / 2,
+            y: tl.frame.y + (Math.min(usedRows.length, problem.frameRows - 1) + 0.5) * tl.unit,
+          };
+          return { rings: [frameRect], drag: { from: justa.spot, to: destino } };
+        }
+        return { rings: [frameRect] };
+      }
+      case "rotate":
+        if (id === "reveal") return { rings: [frameRect] };
+        if (id === "look") return { rings: [floorRect, frameRect] };
+        return { rings: [floorRect] };
+      case "which":
+        return { rings: [bandRect(0), bandRect(1)] };
+      case "stretch":
+        if (id === "look") return { rings: [bandRect(0), chipAt(problem.target)] };
+        if (id === "reveal") return { rings: [bandRect(0)] };
+        return {
+          rings: [chipAt(problem.target)],
+          drag: { from: grip, to: { x: nail0.x + problem.target * sl.step, y: nail0.y } },
+        };
+      case "total":
+        if (id === "summon") return { rings: [frameRect] };
+        if (id === "pick" && trayAt && canvasAt) {
+          return {
+            rings: [pad({ x: trayAt.x - canvasAt.x, y: trayAt.y - canvasAt.y, w: trayAt.w, h: trayAt.h }, 8)],
+          };
+        }
+        return { rings: [readRect] };
+      case "predict": {
+        // La cuenta escrita debajo de la regla, donde la pone `StretchScene`.
+        const exprRect: Rect = {
+          x: (sl.ruler.from + sl.ruler.to) / 2 - 80,
+          y: sl.ruler.y + 62 - 26,
+          w: 160,
+          h: 52,
+        };
+        if (id === "look") return { rings: [exprRect, bandRect(0)] };
+        if (id === "reveal") return { rings: [bandRect(0)] };
+        return { rings: [marksRect(), exprRect] };
+      }
+      case "match":
+        return {
+          rings: [bandRect(0), bandRect(1)],
+          drag: {
+            from: grip,
+            to: { x: nail0.x + problem.rest * factorValue(problem.factor) * sl.step, y: nail0.y },
+          },
+        };
+      default:
+        return { rings: [marksRect(), bandRect(0)] };
+    }
+  }, [shown, ask, sl, tl, problem, bandConfig.marks, usedRows, trayAt, canvasAt]);
+
   return (
     <View style={styles.root}>
 
@@ -764,9 +1014,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
 
-      <View style={{ width, height: sceneH }}>
+      <CoachBanner round={round} rounds={level.rounds} />
+
+      <View
+        style={{ width, height: sceneH }}
+        onLayout={(e) => {
+          const l = e.nativeEvent.layout;
+          setCanvasAt((a) => (a && a.x === l.x && a.y === l.y ? a : { x: l.x, y: l.y }));
+        }}
+      >
         {/* Un solo lienzo por pantalla: las dos escenas viven adentro y la que
             no juega esta ronda se queda en opacidad cero. */}
         <Canvas style={{ width, height: sceneH }}>
@@ -823,13 +1082,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
             />
           );
         })}
+
+        {/* Encima de todo y sin llevarse ningún toque: anillos y la luz de Lumi. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
 
       {/* El teclado de fichas del total. Fuera del nivel que lo usa, no está. */}
       {ask === "total" ? (
-        <View style={styles.ring}>
+        <View
+          style={styles.ring}
+          onLayout={(e) => {
+            const l = e.nativeEvent.layout;
+            setTrayAt({ x: l.x, y: l.y, w: l.width, h: l.height });
+          }}
+        >
           {Array.from({ length: MUL_OPTION_SLOTS }, (_, i) => {
             const option = problem.options[i];
             if (!option) return <View key={i} style={styles.chipGhost} />;
@@ -883,9 +1151,22 @@ function RowHandle({
         }),
     [enabled, index, slot, onDrop],
   );
+  // El blanco es más alto que la fila dibujada: una baldosa mide lo que entra
+  // en el marco, y un dedo necesita más. Apagada, el asa sigue montada pero no
+  // se come los toques del lienzo (trampa 13).
+  const alto = Math.max(h, Math.min(44, h + 14));
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={{ position: "absolute", left: x, top: y, width: w, height: h }} />
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: x - 6,
+          top: y - (alto - h) / 2,
+          width: w + 12,
+          height: alto,
+          pointerEvents: enabled ? "auto" : "none",
+        }}
+      />
     </GestureDetector>
   );
 }
@@ -902,6 +1183,11 @@ function useBand(): BandValues {
   return { factor: useSharedValue(1), deform: useSharedValue(0) };
 }
 
+/** El factor como se escribe en la cuenta: entero, o fracción con su barra. */
+function factorText(f: MulFactor): string {
+  return f.den === 1 ? String(f.num) : `${f.num}/${f.den}`;
+}
+
 function openingHint(ask: string): string {
   switch (ask) {
     case "turn":
@@ -909,7 +1195,7 @@ function openingHint(ask: string): string {
     case "cover":
       return "Llevá filas de baldosas al marco hasta cubrirlo.";
     case "rotate":
-      return "Mantené el dedo sobre el piso: se da vuelta y entra.";
+      return "Tocá el piso: se da vuelta y entra en el marco.";
     case "which":
       return "Una de las dos no estira. Tocala.";
     case "stretch":
