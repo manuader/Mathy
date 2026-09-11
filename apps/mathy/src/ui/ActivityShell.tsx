@@ -38,6 +38,13 @@ import { areaOf, theme } from "./theme.ts";
 
 type Panel = "none" | "cheatsheet" | "calculator";
 
+/**
+ * Lo que ocupa la barra de arriba (su margen, su alto y un respiro). La actividad
+ * empieza debajo: centrada en la pantalla entera, en el teléfono el título le
+ * quedaba abajo de la barra y cortado arriba.
+ */
+const BAR_SPACE = 64;
+
 interface Viewport {
   readonly width: number;
   readonly height: number;
@@ -78,7 +85,7 @@ export function ActivityShell({
   // Como máximo el 40 % del ancho, y con un piso para que la chuleta se lea.
   const panelWidth = panel === "none" ? 0 : Math.round(Math.min(Math.max(width * 0.4, 300), 420));
   const viewport = useMemo(
-    () => ({ width: Math.max(width - panelWidth, 1), height }),
+    () => ({ width: Math.max(width - panelWidth, 1), height: Math.max(height - BAR_SPACE, 1) }),
     [width, panelWidth, height],
   );
 
@@ -95,7 +102,7 @@ export function ActivityShell({
       <View style={styles.activity}>
         <World area={lesson ? areaOf(lesson.node.id) : "found"} />
         <View
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, styles.below]}
           onPointerDownCapture={() => {
             lastTouch.current = Date.now();
           }}
@@ -198,6 +205,7 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   tools: { flexDirection: "row", gap: theme.space[1] },
+  below: { top: BAR_SPACE },
   pill: {
     flexDirection: "row",
     alignItems: "center",

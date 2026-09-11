@@ -100,7 +100,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
     [level, round, seedBase],
   );
 
-  const sceneH = Math.max(300, Math.min(height * (lesson?.lesson ? 0.56 : 0.66), 540));
+  /**
+   * El alto que de verdad le queda al tablero, medido (como en las fracciones).
+   * Calculado como fracción de la ventana, en un teléfono de 390 × 844 con el
+   * cartel de la guía, la línea de abajo quedaba fuera de pantalla y la
+   * actividad centrada cortaba el título arriba.
+   */
+  const [areaH, setAreaH] = useState(0);
+  const estimado = height * (lesson?.lesson ? 0.5 : 0.66);
+  const sceneH = Math.max(280, Math.min(areaH > 0 ? areaH : estimado, 540));
   const geom = useMemo(
     () => bowlGeom(width, sceneH, level.params.count[1]),
     [width, sceneH, level.params.count],
@@ -870,6 +878,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
 
       <CoachBanner round={round} rounds={level.rounds} />
 
+      <View
+        style={styles.area}
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          setAreaH((prev) => (Math.abs(prev - h) > 2 ? h : prev));
+        }}
+      >
       <GestureDetector gesture={gesture}>
         <View testID="cuencos" style={{ width, height: sceneH }}>
           <Canvas style={{ width, height: sceneH }}>
@@ -903,8 +918,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CardinalityGameProps)
           <Spotlight focus={focus} />
         </View>
       </GestureDetector>
+      </View>
 
-      <Hint text={message.text} tone={message.tone} />
+      {/* La línea de abajo tiene su lugar aunque esté vacía: así el tablero no
+          lo ocupa y el mensaje, cuando llega, no queda fuera de pantalla. */}
+      <View style={styles.hintSlot}>
+        <Hint text={message.text} tone={message.tone} />
+      </View>
     </View>
   );
 }
@@ -925,6 +945,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.space[2],
   },
+  area: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
+  hintSlot: { height: 66, alignSelf: "stretch", justifyContent: "center" },
   back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
   backLabel: { color: theme.color.inkFaint, fontSize: 14 },
 });
