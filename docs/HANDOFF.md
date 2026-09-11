@@ -477,6 +477,20 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
     de la skill `mathy-nivel`. Y mientras hay agentes editando, las recargas en
     caliente reinician la actividad en medio de una prueba y, en una pestaña vieja,
     pueden dejar CanvasKit roto (trampa 32).
+36. **En web, `onLayout` avisa cambios de tamaño, no de posición.** Una actividad que
+    compara coordenadas de página contra una caja medida con `onLayout` se queda con la
+    caja vieja cuando algo de arriba la corre sin cambiarle el tamaño: el cartel de Lumi
+    baja el lienzo unos 200 px y en `prealg.eq.balance` ninguna pesa caía en su plato.
+    Lo que se suelta vive dentro de la vista del lienzo y el punto de suelta es su
+    lugar más lo que se movió (`translationX/Y`), no `absoluteX/Y` contra una medida.
+37. **Guardar un archivo reinicia la prueba abierta.** Fast Refresh vuelve a correr los
+    efectos de la actividad montada y le reinicia el tablero en medio de una ronda; y un
+    cambio en una escena no siempre llega a un nivel abierto. Después de editar,
+    recargá la pestaña antes de sacar conclusiones.
+38. **Un agente que prueba con `computer` y el panel oculto se cuelga** (cada acción
+    espera a que la página se dibuje). Uno se trabó diez minutos sin dejar nada en disco.
+    Con el panel oculto se prueba sólo con `javascript_tool`, `get_page_text`, `find` y
+    `read_page`, y el agente guarda seguido, en partes que compilen.
 
 ## 8. Qué falta
 

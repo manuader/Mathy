@@ -198,6 +198,16 @@ agente de la pista, 2026-09-11). Buscalos en toda actividad que toques:
 - **El alto del lienzo, medido**: una zona `flex: 1` con `onLayout` y la línea de
   abajo con alto fijo (como `CardinalityGame`). Como fracción de la ventana, en un
   teléfono con el cartel de la guía la línea de abajo quedaba fuera de pantalla.
+- **`onLayout` en web avisa tamaño, no posición**: el cartel de la guía baja el
+  lienzo sin cambiarle el tamaño, y una caja medida para comparar contra
+  `absoluteX/Y` queda vieja (en la balanza ninguna pesa caía en su plato). Lo que
+  se arrastra vive dentro de la vista del lienzo y se suelta en su lugar más
+  `translationX/Y`.
+- **Con el panel del navegador oculto, no pruebes con `computer`**: cada clic o
+  captura espera a que la página se dibuje y se cuelga (un agente quedó trabado
+  diez minutos). Toques sintéticos con `javascript_tool`, estado con fibras o
+  `get_page_text`. Y después de guardar un archivo, recargá: Fast Refresh reinicia
+  el tablero abierto a mitad de ronda.
 
 - **Un índice que comparte valor con "nada agarrado"** (el nodo 1 usaba `-1` en las
   tarjetas fijas y `-1` como "ninguna tarjeta levantada"): arrastrar una fruta
