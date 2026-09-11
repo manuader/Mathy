@@ -352,8 +352,10 @@ const styles = StyleSheet.create({
   move: { flexDirection: "row", alignItems: "center", gap: 8 },
   moveDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.color.gold },
   moveText: { color: theme.color.gold, fontSize: 14, fontWeight: "600" },
-  steps: { flexDirection: "row", gap: 4 },
-  step: { width: 16, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.14)" },
+  // En un teléfono "Paso 1 de 5", las rayas y "Saltar guía" no entraban y el botón
+  // se salía del cartel: las rayas ceden ancho, el botón no.
+  steps: { flexDirection: "row", gap: 4, flexShrink: 1, minWidth: 0 },
+  step: { flexBasis: 16, flexShrink: 1, minWidth: 5, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.14)" },
   stepOn: { backgroundColor: theme.color.gold },
   ring: {
     position: "absolute",

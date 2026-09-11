@@ -554,7 +554,7 @@ const es: Record<string, string> = {
   "comp.lure.only_inner": "Esa es lo que salió de la primera. Todavía le falta la segunda.",
   "comp.lure.same_either_way": "Esa es la que salía antes. Sumar y multiplicar no cambiaban con el orden; encadenar sí.",
   "comp.lure.wrong_order": "Eso es aplicarlas al revés. La que actúa primero es la que está pegada a la entrada.",
-  "comp.lure.ratios_added": "Ahí las razones están sumadas. Cada rueda estira lo que le llega: se multiplican.",
+  "comp.lure.ratios_added": "Ahí las razones están sumadas. Cada máquina estira lo que le llega: se multiplican.",
   "comp.lure.default": "Esa no es. Seguí la bola por adentro de las dos.",
 
   "comp.done.watch": "Esa salió. Pasó por las dos, en ese orden.",
@@ -562,7 +562,7 @@ const es: Record<string, string> = {
   "comp.done.connect": "La cadena está armada y la bola la atraviesa entera. Dos máquinas con un tubo son una máquina.",
   "comp.done.which": "Ese carril la saca. El otro tiene las mismas cajas y da otra cosa.",
   "comp.done.order": "En ese orden sale la pedida. Encadenar no es sumar: importa cuál recibe a cuál.",
-  "comp.done.predict": "Eso marcó. Cada rueda estira lo que le llega, así que las razones se multiplican.",
+  "comp.done.predict": "Eso marcó. Cada máquina estira lo que le llega, así que las razones se multiplican.",
   "comp.done.lasso": "Las dos entraron en una caja sola, con un tubo de entrada y uno de salida. Esa caja tiene nombre.",
   "comp.done.nest": "Eso sale. Lo que está más adentro actúa primero, aunque se lea al final.",
   "comp.done.reject": "Esa no se puede correr: lo que sale de la primera no entra en la boca de la segunda.",
