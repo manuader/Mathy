@@ -689,7 +689,7 @@ export function trackLayout(config: TrackConfig, width: number, height: number):
     d?.spread === "views"
       ? views * chipW + (views - 1) * gap
       : shown * chipW + (shown - 1) * gap;
-  const drawerCx =
+  const wanted =
     d === null ? width / 2
     : d.center === "midRight" ? (crank.x + crank.r + width) / 2
     : d.center === "afterCrank" ?
@@ -699,11 +699,32 @@ export function trackLayout(config: TrackConfig, width: number, height: number):
     d === null ? height
     : d.at === "top" ? height * d.margin
     : height - chipH / 2 - d.margin;
+  // La franja donde el cajón puede vivir sin salirse del lienzo ni pisar la
+  // manivela. En un teléfono de 390 de ancho, seis fichas después de la manivela
+  // terminaban en 480: la ficha que hacía falta quedaba afuera y el nivel no se
+  // podía terminar. Si la fila entra, se corre hasta entrar; si no entra, las
+  // fichas se apilan en filas, la de abajo llena y las de arriba desde el mismo
+  // borde, que es donde menos estorban (el libro vive a la derecha).
+  const edge = 8;
+  const bandL = d === null || d.center === "canvas" ? edge : Math.max(edge, crank.x + crank.r + 12);
+  const bandR = width - edge;
+  const bandW = Math.max(chipW, bandR - bandL);
+  const inDrawer = d?.spread === "views" ? views : shown;
+  const perRow = Math.max(1, Math.min(inDrawer, Math.floor((bandW + gap) / (chipW + gap))));
+  const wrapped = inDrawer > perRow;
+  const drawerCx = wrapped
+    ? bandL + bandW / 2
+    : Math.max(bandL + laid / 2, Math.min(bandR - laid / 2, wanted));
+  const rowW = perRow * chipW + (perRow - 1) * gap;
+  const rowX0 = wrapped ? bandL + (bandW - rowW) / 2 : drawerCx - laid / 2;
+  const rowDir = d?.at === "top" ? 1 : -1;
   const chips: Spot[] = [];
   for (let i = 0; i < views; i++) {
+    const row = Math.floor(i / perRow);
+    const col = wrapped ? i % perRow : i;
     chips.push(
       i < (d?.chips.length ?? 0)
-        ? { x: drawerCx - laid / 2 + chipW / 2 + i * (chipW + gap), y: chipY }
+        ? { x: rowX0 + chipW / 2 + col * (chipW + gap), y: chipY + (wrapped ? rowDir * row * (chipH + gap) : 0) }
         : { x: drawerCx, y: height + chipH * 2 },
     );
   }
@@ -881,8 +902,14 @@ function makeCells(line: TrackLine, width: number, y: number): Cell[] {
   kinds.push({ kind: "eq", value: 0 });
   kinds.push({ kind: line.hidden >= 0 ? "num" : "slot", value: line.arrival });
 
-  const widths = kinds.map((k) => (k.kind === "plus" || k.kind === "eq" ? sign : w));
-  const gap = 8;
+  // Con tres tramos el renglón tiene nueve celdas y en un teléfono de 390 no
+  // entraba: la llegada, que es la pregunta, quedaba cortada contra el borde.
+  // Si no entra, se achica entero, celdas y separaciones por igual.
+  const natural =
+    kinds.reduce((a, k) => a + (k.kind === "plus" || k.kind === "eq" ? sign : w), 0) + 8 * (kinds.length - 1);
+  const fit = Math.min(1, (width - 16) / natural);
+  const widths = kinds.map((k) => (k.kind === "plus" || k.kind === "eq" ? sign : w) * fit);
+  const gap = 8 * fit;
   const totalW = widths.reduce((a, b) => a + b, 0) + gap * (kinds.length - 1);
   let x = (width - totalW) / 2;
   return kinds.map((k, i) => {
