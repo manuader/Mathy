@@ -137,6 +137,16 @@ dentro de `World`, decisión 20). Tomi se entera de los intentos porque App pasa
 
 ## 4. Qué cambió, sesión por sesión
 
+### Sesión 2026-09-11 — las lecciones de los 21 nodos
+Los 21 nodos tienen lección: 152 niveles con tarjeta de entrada, guía de Lumi o
+recordatorio, y una llave cada uno. Cada nodo vive en su módulo `lessons/<slug>.ts`, así
+varios agentes escriben a la vez. Tomi señala el paso de la pregunta de cada ronda
+(`preferHint`), y las llaves pueden cruzar nodos. Los agentes jugaron cada nivel hasta el
+cierre y arreglaron una docena de niveles imposibles de terminar, más los tres bugs que
+reportó el dueño (dos caminantes, dar vuelta el piso, bandas sin números). El marco entra
+en un teléfono de 390×844. Detalle en
+[SESSION-2026-09-11-lecciones-completas.md](SESSION-2026-09-11-lecciones-completas.md).
+
 ### Sesión 2026-09-10 (noche) — que el juego sea muy estimulante
 Las diez escenas viejas pasaron al estándar de la skill (volumen, color con trabajo, jugo
 y sonido en el evento), con cuatro bugs de paso: la balanza que nunca festejaba, bytes NUL
@@ -465,12 +475,12 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
     megas. Cerrar la pestaña, después reiniciar el servidor; al revés, se vuelve a colgar.
 33. **En web, los gestos que cambian de `.enabled` a mitad de nivel dejaban fichas
     muertas** en la segunda ronda y niveles imposibles de terminar (nodos 2, 3, 4, 5,
-    7 y 19); y un asa ubicada con `useAnimatedStyle` no sigue a la pieza. La causa
-    exacta **no está confirmada**: el 2026-09-11 dos gestos nacidos apagados sí
-    despertaron en RNGH 2.32, y lo que falló comprobadamente fue un `Gesture.Tap` en
-    carrera con un `Pan` apagado. El patrón que no falla: los gestos nacen habilitados
-    y un `SharedValue` decide; el toque se atiende en `onFinalize` de un `Pan` que no
-    se movió, sin `Tap` aparte.
+    7, 15 y 19); y un asa ubicada con `useAnimatedStyle` no sigue a la pieza. Lo
+    comprobado el 2026-09-11 con RNGH 2.32: un `Pan` solo nacido apagado queda muerto
+    aunque después se habilite; gestos dentro de `Gesture.Race` nacidos apagados sí
+    despertaron; y un `Gesture.Tap` en carrera con un `Pan` apagado no contestó nunca.
+    El patrón que no falla: los gestos nacen habilitados y un `SharedValue` decide; el
+    toque se atiende en `onFinalize` de un `Pan` que no se movió, sin `Tap` aparte.
 34. **Un gesto rearmado en cada ronda se queda con la ronda anterior** (`runOnJS`
     captura la función de cuando se armó): la ficha se evaluaba contra las fichas de
     la primera ronda. Se arma una vez por nivel y lee de referencias estables.
@@ -501,9 +511,14 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 
 **Código:**
 - **Mergear a `main`** la rama `rediseno-juego` de Mathy y `chatgpt-multiref` del
-  generador: el trabajo de la tarde del 2026-09-10 está commiteado ahí y en ningún otro lado.
-- **La lección de los nodos 2 a 21**, con la skill `mathy-nivel`. Hoy heredan el marco
-  (mundo, barra, tarjeta de cierre) pero no tienen tarjeta de entrada, guía ni llaves.
+  generador: el trabajo del 2026-09-10 y el 2026-09-11 está commiteado ahí y en ningún otro lado.
+- **Jugar a ojo, con el panel visible, un nodo de cada área en un teléfono real o a
+  390×844**: las lecciones de los 21 nodos se verificaron midiendo, con el panel oculto.
+- Restos que dejaron los agentes: `WalkScene` con un color propio para el escalón que
+  flota (`ghostStepColor`); en `packages/mechanics`, `writtenOptions` genera una recta que
+  el nodo 19 esconde y `answerFor` da mal la vertical (la actividad lo corrige); claves
+  `sl.hint.*` sin uso en `i18n.ts`; y un reinicio del nivel sin tocar nada que se vio 3 o 4
+  veces con agentes editando (probablemente recargas en caliente; no se reprodujo solo).
 - **Mirar a ojo las diez escenas rehechas**, nodo por nodo (legibilidad sobre el paisaje,
   superposiciones): los agentes las verificaron midiendo, con el panel oculto. Y escuchar
   los sonidos: se contaron, no se oyeron.
@@ -566,6 +581,7 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 |---|---|
 | **este** | punto de entrada: estado, reglas, arquitectura, decisiones, trampas |
 | [`.claude/skills/mathy-nivel/`](../.claude/skills/mathy-nivel/SKILL.md) | cómo se construye un nivel: lección, guía, llaves, estilo de juego. Obligatoria para todo nodo |
+| [`SESSION-2026-09-11-lecciones-completas.md`](SESSION-2026-09-11-lecciones-completas.md) | cómo llegaron las lecciones a los 21 nodos, los niveles que no se podían terminar y por qué la trampa 33 quedó dudosa |
 | [`SESSION-2026-09-10-juego-estimulante.md`](SESSION-2026-09-10-juego-estimulante.md) | Tomi, el sonido, el fondo que se mueve y las diez escenas al estándar; los seis diagnósticos de la noche |
 | [`SESSION-2026-09-10-rediseno-juego.md`](SESSION-2026-09-10-rediseno-juego.md) | por qué el juego tiene capa de juego y este arte, y qué diagnósticos resultaron falsos |
 | [`U-desarrollo/U4-rediseno-juego.md`](U-desarrollo/U4-rediseno-juego.md) | el plan del rediseño: qué se conserva de N, qué cambia, imagen o código |

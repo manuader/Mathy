@@ -191,9 +191,9 @@ Tres de los gestos que en web hacían imposible terminar un nivel (los encontró
 agente de la pista, 2026-09-11). Buscalos en toda actividad que toques:
 
 - **No cambies `.enabled` a mitad de nivel**: las fichas que no existían en la
-  primera ronda quedaban muertas en la segunda. La causa exacta no está confirmada
-  (un gesto nacido apagado a veces despierta; un `Gesture.Tap` en carrera con un
-  `Pan` apagado no contestó nunca). Que el gesto nazca habilitado y un
+  primera ronda quedaban muertas en la segunda. Comprobado: un `Pan` solo nacido
+  apagado no despierta; en `Gesture.Race` sí despertaron; un `Gesture.Tap` en carrera
+  con un `Pan` apagado no contestó nunca. Que el gesto nazca habilitado y un
   `SharedValue` decida si responde; el toque, en `onFinalize` de un `Pan` que no se
   movió.
 - **Un gesto rearmado en cada ronda se queda con la anterior**: `runOnJS` captura
