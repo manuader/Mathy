@@ -389,14 +389,23 @@ export function pipeLayout(config: PipeConfig, width: number, height: number): P
     const haciaAfuera = alReves ? -1 : 1;
     const branchSpout = { x: ultima.x + haciaAfuera * machineW * 0.9, y: y + machineH * 0.95 };
 
+    // El objetivo y el contador cuelgan al lado del pico, pero nunca afuera del
+    // lienzo: en un teléfono angosto el objetivo quedaba en x = 396 sobre un
+    // lienzo de 390, y el jugador no veía el tamaño que se le pedía. Cuando el
+    // borde lo empuja hacia el pico, el contador sube para no tapar la salida.
+    const deseado = spout.x + (alReves ? -tokenR * 2.4 : tokenR * 2.4);
+    const borde = tokenR + 6;
+    const alLado = alReves ? Math.max(borde, deseado) : Math.min(width - borde, deseado);
+    const empujado = alLado !== deseado;
+
     lanes.push({
       y,
       machines,
       mouth,
       spout,
       path: camino,
-      counter: { x: spout.x + (alReves ? -tokenR * 2.4 : tokenR * 2.4), y },
-      target: { x: spout.x + (alReves ? -tokenR * 2.4 : tokenR * 2.4), y: y + machineH * 0.62 },
+      counter: { x: alLado, y: empujado ? y - machineH * 0.62 : y },
+      target: { x: alLado, y: y + machineH * 0.62 },
       branchSpout,
       lamp: { x: ultima.x, y: y - machineH * 0.78 },
     });

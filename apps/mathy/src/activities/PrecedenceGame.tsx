@@ -98,9 +98,16 @@ import {
 } from "../scenes/PipeScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace } from "../ui/Kit.tsx";
+
+/** Las fichas de orden de `explain`, dentro del lienzo: la guía las señala con su medida. */
+const CHIP_W = 92;
+const CHIP_H = 66;
+const CHIP_GAP = 16;
 
 /** Cuánto se puede mover el dedo y que el gesto siga siendo un toque. */
 const TAP_SLOP = 14;
@@ -145,6 +152,13 @@ export function PrecedenceGame(props: PrecedenceGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que haya que mirar corre hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -158,8 +172,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     [level, round, seedBase],
   );
   const ask = problem.ask;
+  /** Con lección, el cartel del objetivo dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const opening = conLeccion ? "" : openingHint(ask);
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: openingHint(ask),
+    text: opening,
     tone: "dim",
   }));
 
@@ -171,7 +187,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
    * pantalla tiene uno solo y montarlo y desmontarlo entre rondas rompe el
    * modo retained— pero sí cede el espacio que no está usando.
    */
-  const sceneH = usaFiguras ? 120 : Math.max(340, Math.min(height * 0.62, 520));
+  const sceneH = usaFiguras
+    ? 120
+    : // Con lección, el cartel de la guía ocupa arriba lo que el lienzo cede.
+      Math.max(340, Math.min(height * (conLeccion ? 0.54 : 0.62), 520));
 
   // --- Lo que ve la escena del cofre -----------------------------------------
 
@@ -445,7 +464,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     setOpened(0);
     setSolved(false);
     setOrder(problem.machines.map((m) => m.id));
-    setMessage({ text: openingHint(ask), tone: "dim" });
+    setMessage({ text: conLeccion ? "" : openingHint(problem.ask), tone: "dim" });
 
     openedV.value = 0;
     vain.value = 0;
@@ -454,9 +473,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     marked.value = -1;
     flow.value = 0;
     jam.value = 0;
-    // La tubería corre sola al entrar: el jugador ve salir la bolita con el
-    // tamaño equivocado antes de tocar nada, que es toda la instrucción que hay.
-    if (problem.ask === "pipe") flow.value = withTiming(1, { duration: theme.motion.reveal });
     unfold.value = 1;
     for (const s of [...keySlots, ...machineSlots, ...traySlots]) {
       s.dx.value = 0;
@@ -470,11 +486,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
 
     // El latido de la demostración no es un adorno: es la única instrucción.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    // Con guía, la luz de la guía es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
+    if (guided) {
+      demo.value = 0;
+    } else {
+      demo.value = withRepeat(
+        withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+        -1,
+        false,
+      );
+    }
     return () => {
       cancelAnimation(hint);
       cancelAnimation(demo);
@@ -482,11 +504,31 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem]);
 
+  // La tubería corre sola al empezar: el jugador ve salir la bolita con el
+  // tamaño equivocado antes de tocar nada. Espera a `play`: corrida detrás de
+  // la tarjeta de entrada, nadie la veía.
+  useEffect(() => {
+    if (problem.ask !== "pipe" || !playing) return;
+    flow.value = 0;
+    flow.value = withTiming(1, { duration: theme.motion.reveal });
+  }, [problem, playing, flow]);
+
   // La capa vista se registra al entrar y no al terminar: es lo que hace crecer
   // la chuleta, y el jugador ya la vio.
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_PRECEDENCE_TREE, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // La latencia se mide desde que empieza el juego, no detrás de la tarjeta.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia: el callback de un gesto puede estar un render atrasado.
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -524,6 +566,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     setRound(r + 1);
   }, [level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -531,9 +593,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       setSolved(true);
       quiet();
       setMessage({ text, tone: "ok" });
-      setTimeout(nextRound, 1700);
+      setTimeout(advance, 1700);
     },
-    [nextRound, quiet],
+    [advance, quiet],
   );
 
   // --- Abrir y deshacer ------------------------------------------------------
@@ -552,6 +614,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       const fallo = precMisconceptionFor(p, chestId, abiertos);
       attempt(muerde, fallo);
       if (!muerde) {
+        say("vain");
         vain.value = withSequence(
           withTiming(1, { duration: 90 }),
           withTiming(-1, { duration: 120 }),
@@ -570,6 +633,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       openedV.value = withTiming(siguiente, { duration: theme.motion.morph });
       treeV.value = withTiming(siguiente, { duration: theme.motion.morph });
       if (siguiente >= p.chests.length) {
+        say("solved");
         succeed(
           p.ask === "unwrap"
             ? "De afuera hacia adentro. Deshacer recorre el mismo árbol al revés."
@@ -577,6 +641,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
         );
         return;
       }
+      say("bit");
       setMessage({
         text:
           p.ask === "unwrap"
@@ -586,7 +651,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, succeed],
+    [attempt, quiet, succeed, say],
   );
 
   // --- Armar el anidamiento --------------------------------------------------
@@ -615,14 +680,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       }
       const siguiente = puestos + 1;
       setOpened(siguiente);
+      say("placed");
       if (siguiente >= p.chests.length) {
+        say("solved");
         succeed("Quedó el mismo encastre. El orden en que los metiste está dibujado en el tamaño.");
         return;
       }
       setMessage({ text: "Entró. Ahora el que sigue va adentro de ese.", tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, succeed],
+    [attempt, quiet, succeed, say],
   );
 
   // --- Tocar el árbol y la fila ----------------------------------------------
@@ -645,13 +712,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       if (bien) {
         treeV.value = withTiming(p.chests.length, { duration: theme.motion.morph });
         openedV.value = withTiming(p.chests.length, { duration: theme.motion.morph });
+        // Tocar la fila y tocar el árbol son el mismo gesto de elegir: cada
+        // nivel espera su señal y la otra no mueve nada.
+        say("picked");
+        say("chosen");
         succeed(successFor(p.ask));
         return;
       }
       setMessage({ text: lureHint(opcion.lure), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, succeed],
+    [attempt, quiet, succeed, say],
   );
 
   // --- La tubería ------------------------------------------------------------
@@ -676,13 +747,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     const bien = salida === p.output;
     attempt(bien);
     if (bien) {
-      setTimeout(
-        () =>
-          succeed(
-            "Con las máquinas en ese orden la bolita sale como pedía. El caño decide, no los números.",
-          ),
-        theme.motion.reveal,
-      );
+      setTimeout(() => {
+        // La guía explica cuando la bolita ya salió, no mientras viaja.
+        say("solved");
+        succeed(
+          "Con las máquinas en ese orden la bolita sale como pedía. El caño decide, no los números.",
+        );
+      }, theme.motion.reveal);
       return;
     }
     setMessage({
@@ -690,7 +761,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       tone: "warn",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt, quiet, succeed, runPipe]);
+  }, [attempt, quiet, succeed, runPipe, say]);
 
   // --- Los encastres que nunca vio -------------------------------------------
 
@@ -701,6 +772,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       quiet();
       attempt(option.correct);
       if (option.correct) {
+        say("chosen");
         succeed("Ese es el orden que deja la figura así. Las cerraduras no son números y el orden igual manda.");
         return;
       }
@@ -710,7 +782,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, succeed],
+    [attempt, quiet, succeed, say],
   );
 
   // --- Gestos ----------------------------------------------------------------
@@ -729,6 +801,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     modo: 0,
     desdeX: 0,
     desdeY: 0,
+    /** Cuándo se apoyó el dedo: separa un toque de un dedo que se quedó apoyado. */
+    desdeT: 0,
     /** Qué máquina agarró el dedo, o -1. */
     agarrada: -1,
     sostenido: 0,
@@ -749,6 +823,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       modo: ask === "recognize" ? 1 : ask === "wrap" || ask === "ghost" ? 2 : usaTuberia ? 3 : 0,
       desdeX: 0,
       desdeY: 0,
+      desdeT: 0,
       agarrada: -1,
       sostenido: 0,
       nodeR: nest?.nodeR ?? 0,
@@ -773,19 +848,37 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     (x: number) => {
       const g = geo.value;
       const ids = vivo.current.ids;
+      // La ficha más cercana, con tolerancia: los signos son angostos y un
+      // dedo que cae entre dos glifos no puede quedarse sin respuesta.
+      let mejor = -1;
+      let lejos = Infinity;
       for (let i = 0; i < g.row.length; i++) {
         const c = g.row[i];
         if (!c) continue;
-        if (x > c.x - c.w / 2 - 4 && x < c.x + c.w / 2 + 4) {
-          const id = ids[i];
-          if (id) pickNode(id);
-          return;
+        const d = Math.max(0, Math.abs(x - c.x) - c.w / 2);
+        if (d < lejos) {
+          lejos = d;
+          mejor = i;
         }
       }
+      const id = mejor >= 0 && lejos <= 14 ? ids[mejor] : undefined;
+      if (id) {
+        pickNode(id);
+        return;
+      }
+      setMessage({ text: "Tocá una operación de la fila.", tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [pickNode],
   );
+
+  /** Un toque que no cayó sobre nada que conteste: nunca en silencio. */
+  const missTap = useCallback((modo: number) => {
+    setMessage({
+      text: modo === 1 ? "Tocá uno de los nodos del árbol." : "Tocá una operación de la fila.",
+      tone: "dim",
+    });
+  }, []);
 
   /** El nodo del árbol que el dedo señaló. Por la misma razón, desde la referencia. */
   const tapTree = useCallback(
@@ -807,11 +900,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       -1,
       false,
     );
+    say("ghost");
     setMessage({
       text: "Ese cofre no lo dibujó nadie: es un acuerdo para ahorrar tinta. Soltá y sigue estando.",
       tone: "dim",
     });
-  }, [ghost]);
+  }, [ghost, say]);
 
   const releaseGhost = useCallback(() => {
     cancelAnimation(ghost);
@@ -837,7 +931,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
               if (b && e.x > b.x && e.x < b.x + b.w && e.y > b.y && e.y < b.y + b.h) agarrada = i;
             }
           }
-          geo.value = { ...g, desdeX: e.x, desdeY: e.y, agarrada, sostenido: 0 };
+          geo.value = { ...g, desdeX: e.x, desdeY: e.y, desdeT: Date.now(), agarrada, sostenido: 0 };
         })
         .onChange((e) => {
           // La máquina sigue al dedo. El caño no: lo que se mueve es la pieza,
@@ -852,7 +946,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
         })
         .onFinalize((e) => {
           const g = geo.value;
-          geo.value = { ...g, agarrada: -1, sostenido: 0 };
+          // `sostenido` no se toca acá: lo apaga el gesto largo cuando el dedo
+          // se levanta, que es cuando el cofre fantasma deja de repetirse.
+          geo.value = { ...g, agarrada: -1 };
           // La máquina que el dedo llevaba vuelve a su ranura: lo que cambia de
           // lugar es el orden, y ese lo redibuja la escena.
           if (g.agarrada >= 0) {
@@ -862,10 +958,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
               slot.dy.value = withTiming(0, { duration: theme.motion.quick });
             }
           }
-          if (g.sostenido) {
-            runOnJS(releaseGhost)();
-            return;
-          }
+          if (g.sostenido) return;
           if (!g.activo) return;
           const movido = Math.hypot(e.x - g.desdeX, e.y - g.desdeY);
           if (g.modo === 3) {
@@ -885,10 +978,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
                 return;
               }
             }
+            runOnJS(missTap)(1);
             return;
           }
           if (g.modo === 2) {
-            if (Math.abs(e.y - g.rowY) > g.rowH) return;
+            // Un dedo que se quedó apoyado pidió el cofre fantasma, no eligió.
+            // El gesto largo cancela a este antes de avisar que empezó, así que
+            // sin esta cuenta la operación más cercana quedaba elegida sin querer.
+            if (Date.now() - g.desdeT > 380) return;
+            if (Math.abs(e.y - g.rowY) > g.rowH) {
+              runOnJS(missTap)(2);
+              return;
+            }
             runOnJS(tapRow)(e.x);
             return;
           }
@@ -909,6 +1010,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
           if (Math.abs(e.y - g.rowY) > g.rowH) return;
           geo.value = { ...g, sostenido: 1 };
           runOnJS(holdGhost)();
+        })
+        // El cofre fantasma se repite mientras el dedo esté apoyado, y se apaga
+        // cuando se levanta. Antes lo apagaba el gesto del lienzo, que a esa
+        // altura ya estaba cancelado, y el fantasma quedaba latiendo solo.
+        .onFinalize(() => {
+          const g = geo.value;
+          if (!g.sostenido) return;
+          geo.value = { ...g, sostenido: 0 };
+          runOnJS(releaseGhost)();
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -931,7 +1041,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       }
       if (!nest || !key) return;
       const elegido = chestAt(p, nest, x, y);
-      if (elegido === null) return;
+      if (elegido === null) {
+        // Un rechazo nunca es mudo: la llave que vuelve dice adónde tenía que ir.
+        setMessage({ text: "La llave volvió al llavero. Soltala sobre la cerradura de un cofre.", tone: "dim" });
+        return;
+      }
       // La llave equivocada no gira: se traba, que es el distractor que el nodo
       // 12 le presta a este. La llave correcta en el momento equivocado sí gira,
       // y en el vacío. Esa diferencia distingue "llave equivocada" de "cofre
@@ -967,8 +1081,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       if (!fuera) return;
       // Todo el encastre es el blanco: lo que importa no es dónde cae sino cuál
       // se soltó, porque el orden es lo que el nivel evalúa.
-      if (x < fuera.x - 40 || x > fuera.x + fuera.w + 40) return;
-      if (y < fuera.y - 40 || y > fuera.y + fuera.h + 40) return;
+      const afuera =
+        x < fuera.x - 40 || x > fuera.x + fuera.w + 40 || y < fuera.y - 40 || y > fuera.y + fuera.h + 40;
+      if (afuera) {
+        setMessage({ text: "El cofre volvió a su lugar. Soltalo adentro del contorno.", tone: "dim" });
+        return;
+      }
       placeChest(index);
     },
     [cl.nest, keySlots, placeChest],
@@ -999,6 +1117,153 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
   const conSueltos = ask === "nest";
   const conFichas = ask === "explain";
 
+  /** Dónde quedan las fichas de orden de `explain`: abajo del lienzo, centradas. */
+  const fichasY = sceneH - CHIP_H - 14;
+  const fichasN = problem.options.length;
+  const fichasW = fichasN * CHIP_W + Math.max(0, fichasN - 1) * CHIP_GAP;
+
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: la llave y
+   * la cerradura que conviene, el cofre suelto que va primero, la fila, las
+   * máquinas. Sale de la misma geometría con que las escenas dibujan y se
+   * recalcula con cada movimiento, así que la luz siempre apunta a lo que falta.
+   */
+  // La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const pad = (b: { x: number; y: number; w: number; h: number }, m: number): Rect => ({
+      x: b.x - m,
+      y: b.y - m,
+      w: b.w + 2 * m,
+      h: b.h + 2 * m,
+    });
+    const around = (p: Pt, w: number, h: number): Rect => ({ x: p.x - w / 2, y: p.y - h / 2, w, h });
+    const solo = (rs: readonly (Rect | null | undefined)[]): Focus => ({
+      rings: rs.filter((r): r is Rect => r !== null && r !== undefined),
+    });
+    const centro = (b: { x: number; y: number; w: number; h: number }): Pt => ({
+      x: b.x + b.w / 2,
+      y: b.y + b.h / 2,
+    });
+
+    if (ask === "pipe") {
+      const lane = pl.lanes[0];
+      if (!lane) return null;
+      const usadas = lane.machines.slice(0, Math.max(machines.length, 1));
+      const maquinas = union(usadas.map((b) => pad(b, 8)));
+      const salida = union([
+        around(lane.spout, pl.tokenR * 3, pl.tokenR * 3),
+        around(lane.target, pl.tokenR * 3, pl.tokenR * 3),
+      ]);
+      if (id === "look") return solo([maquinas, salida]);
+      if (id === "reveal") return solo([salida]);
+      const a = usadas[0];
+      const b = usadas[1];
+      if (maquinas && a && b) return { rings: [maquinas], drag: { from: centro(a), to: centro(b) } };
+      return solo([maquinas]);
+    }
+
+    const nest = cl.nest;
+    if (!nest || ask === "arbitrary") return null;
+    const n = problem.chests.length;
+    const cajaAfuera = nest.boxes[0];
+    const afuera = cajaAfuera ? pad(cajaAfuera, 8) : null;
+    const arbol = level.tree ? union(nest.tree.slice(0, n).map((s) => around(s, 36, 36))) : null;
+    const filaRect =
+      fila.glyphs.length > 0
+        ? pad(
+            union(
+              fila.glyphs.map((g, i) => ({
+                x: g.x - (fila.spans[i] ?? 0) / 2,
+                y: nest.row.y - fila.size * 0.9,
+                w: fila.spans[i] ?? 0,
+                h: fila.size * 1.8,
+              })),
+            ) ?? { x: 0, y: 0, w: 0, h: 0 },
+            8,
+          )
+        : null;
+    const dentro = problem.chests[n - 1];
+    /** El signo de la operación de un cofre, en la fila: lo que el `reveal` nombra. */
+    const signo = (chestId: string | undefined): Rect | null => {
+      const i = fila.glyphs.findIndex((g, j) => fila.ids[j] === chestId && g.char !== "(" && g.char !== ")");
+      const g = fila.glyphs[i];
+      if (!g) return null;
+      const w = fila.spans[i] ?? fila.size * 0.6;
+      return { x: g.x - w / 2 - 8, y: nest.row.y - fila.size * 0.9 - 4, w: w + 16, h: fila.size * 1.8 + 8 };
+    };
+
+    if (ask === "open" || ask === "unwrap") {
+      /** Llevar la llave de un cofre a su cerradura, en la esquina de su placa. */
+      const llevar = (depth: number): Focus => {
+        const i = problem.keys.findIndex((k) => k.depth === depth);
+        const desde = cl.keys[i];
+        const caja = nest.boxes[depth];
+        if (!desde || !caja) return solo([afuera]);
+        const cerradura = { x: caja.x + caja.w - 20, y: caja.y + caja.h - 18 };
+        return {
+          rings: [around(desde, cl.keyW + 14, cl.keyH + 14), around(cerradura, 44, 44)],
+          drag: { from: desde, to: cerradura },
+        };
+      };
+      if (id === "look") return solo([afuera, nest.holes[0] ? around(nest.holes[0], 36, 36) : null]);
+      if (id === "reveal" || id === "recall") return solo([afuera]);
+      if (id === "vain") return llevar(0);
+      if (id === "inner") return llevar(n - 1);
+      return llevar(precAccessible(problem, opened)?.depth ?? 0);
+    }
+    if (ask === "nest") {
+      const sueltos = union(
+        nest.loose.slice(0, n).filter((_, i) => i >= opened).map((b) => pad(b, 6)),
+      );
+      if (id === "look") return solo([afuera, sueltos]);
+      if (id === "reveal") return solo([afuera]);
+      const suelto = nest.loose[opened];
+      const destino = nest.boxes[opened];
+      if (!suelto || !destino) return solo([afuera]);
+      return { rings: [pad(suelto, 6), pad(destino, 6)], drag: { from: centro(suelto), to: centro(destino) } };
+    }
+    if (ask === "explain") {
+      const fichas = { x: width / 2 - fichasW / 2 - 8, y: fichasY - 8, w: fichasW + 16, h: CHIP_H + 16 };
+      if (id === "look" || id === "reveal") return solo([afuera, arbol]);
+      return solo([fichas]);
+    }
+    if (ask === "recognize") {
+      const hoja = nest.tree[n - 1];
+      if (id === "reveal" && hoja) return solo([around(hoja, 40, 40)]);
+      if (id === "look") return solo([afuera, arbol]);
+      return solo([arbol]);
+    }
+    if (ask === "wrap") {
+      if (id === "look") return solo([filaRect, afuera]);
+      if (id === "reveal") return solo([signo(dentro?.id) ?? filaRect]);
+      return solo([filaRect]);
+    }
+    // `ghost`: la fila sin paredes, el árbol, y el cofre que nadie dibujó.
+    if (id === "look") return solo([arbol, filaRect]);
+    if (id === "hold") return solo([filaRect]);
+    if (id === "reveal") return solo([signo(dentro?.id) ?? filaRect]);
+    return solo([ghostBox ? pad(ghostBox, 4) : filaRect]);
+  }, [
+    shown,
+    ask,
+    pl,
+    machines.length,
+    cl,
+    problem,
+    opened,
+    fila,
+    ghostBox,
+    level.tree,
+    width,
+    fichasW,
+    fichasY,
+  ]);
+
   return (
     <View style={styles.root}>
 
@@ -1007,7 +1272,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <View style={{ width, height: sceneH }}>
         {/* Un solo lienzo por pantalla: las dos escenas viven adentro y la que
@@ -1086,33 +1354,39 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
           );
         })}
 
+        {/* Las dos animaciones de `explain`, abajo del lienzo y adentro de él:
+            ahí el encastre deja lugar, y la guía las señala con su medida. */}
+        {conFichas ? (
+          <View
+            style={[
+              styles.ring,
+              { position: "absolute", left: 0, right: 0, top: fichasY, gap: CHIP_GAP, pointerEvents: "box-none" },
+            ]}
+          >
+            {problem.options.slice(0, PREC_OPTION_SLOTS).map((option) => {
+              const desdeAfuera = option.order[0] === problem.chests[0]?.id;
+              return (
+                <Pressable
+                  key={option.id}
+                  disabled={solved}
+                  onPress={() => pickOrderExplain(option)}
+                  style={[styles.chip, solved && styles.chipDim]}
+                >
+                  <OrderToken outward={desdeAfuera} />
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
 
       {/* La figura objetivo del último nivel, y los dos órdenes posibles. */}
       {usaFiguras ? <Figures problem={problem} onPick={pickOrder} solved={solved} /> : null}
-
-      {/* Las dos animaciones de `explain`. */}
-      {conFichas ? (
-        <View style={styles.ring}>
-          {Array.from({ length: PREC_OPTION_SLOTS }, (_, i) => {
-            const option = problem.options[i];
-            if (!option) return <View key={i} style={styles.chipGhost} />;
-            const desdeAfuera = option.order[0] === problem.chests[0]?.id;
-            return (
-              <Pressable
-                key={option.id}
-                disabled={solved}
-                onPress={() => pickOrderExplain(option)}
-                style={[styles.chip, solved && styles.chipDim]}
-              >
-                <OrderToken outward={desdeAfuera} />
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
 
       {level.definition ? <Text style={styles.definition}>{t("prec.definition")}</Text> : null}
     </View>
@@ -1128,6 +1402,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
     treeV.value = withTiming(problem.chests.length, { duration: theme.motion.reveal });
     attempt(option.correct);
     if (option.correct) {
+      say("chosen");
       succeed("Esa es la que abre al revés: la llave de afuera gira en el vacío porque el hueco está vacío.");
       return;
     }
@@ -1136,6 +1411,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: PrecedenceGameProps) 
       tone: "warn",
     });
   }
+}
+
+/** El rectángulo que abraza a todos: para señalar una fila de piezas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
 /**
@@ -1452,8 +1743,8 @@ const styles = StyleSheet.create({
   backLabel: { color: theme.color.inkFaint, fontSize: 14 },
   ring: { flexDirection: "row", gap: theme.space[3], alignItems: "center", justifyContent: "center" },
   chip: {
-    minWidth: 92,
-    height: 66,
+    minWidth: CHIP_W,
+    height: CHIP_H,
     paddingHorizontal: theme.space[2],
     borderRadius: theme.radius.token,
     ...chipFace,

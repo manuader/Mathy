@@ -123,6 +123,11 @@ actividad le da dos cosas, sin saberlo:
   intentos deja a Tomi sin saber que el jugador está trabado.
 - **El foco.** La pista "Mirá acá" pone en `lesson.hint` el paso de la guía que
   espera un gesto; la actividad lo señala con el mismo `focus` de la guía (sección 4).
+- **Qué paso vale en esta ronda.** En un nivel que alterna preguntas, la actividad
+  llama `lesson?.preferHint("<id del paso>")` al empezar cada ronda; sin eso, la
+  pista toma el primer paso del nivel y en las rondas de la otra pregunta habla
+  del gesto equivocado. `preferHint("")` dice que esta ronda no tiene gesto que
+  mostrar (Tomi salta el "Mirá acá"); `preferHint(null)` vuelve al de siempre.
 
 `onEvent` es estable y así tiene que seguir: un efecto de la actividad depende de
 él (el `sawLayer` al montar), y una función nueva por render colgó el juego en un

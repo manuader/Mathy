@@ -52,6 +52,13 @@ export interface LessonApi {
   /** Intentos seguidos que no avanzaron, desde el último que sí o desde la última pista. */
   readonly misses: number;
   readonly clearMisses: () => void;
+  /**
+   * El paso "hacelo" que la pista de Tomi muestra en esta ronda. Lo elige la
+   * actividad cuando el nivel alterna preguntas; sin elegir, Tomi usa el primero
+   * del nivel, que en las rondas de la otra pregunta habla del gesto equivocado.
+   */
+  readonly hintPref: string | null;
+  readonly preferHint: (stepId: string | null) => void;
 }
 
 const Ctx = createContext<LessonApi | null>(null);
@@ -125,6 +132,8 @@ export function LessonProvider({
   }, [attempts]);
   const showHint = useCallback((s: CoachStep | undefined) => setHint(s), []);
   const clearMisses = useCallback(() => setMisses(0), []);
+  const [hintPref, setHintPref] = useState<string | null>(null);
+  const preferHint = useCallback((stepId: string | null) => setHintPref(stepId), []);
   const shownHint = phase === "play" ? hint : undefined;
 
   const step = phase === "play" && stepIndex >= 0 ? steps?.[stepIndex] : undefined;
@@ -148,8 +157,10 @@ export function LessonProvider({
       showHint,
       misses,
       clearMisses,
+      hintPref,
+      preferHint,
     }),
-    [node, level, lesson, phase, step, stepIndex, start, signal, nextStep, skipCoach, nav, fresh, clearFresh, shownHint, showHint, misses, clearMisses],
+    [node, level, lesson, phase, step, stepIndex, start, signal, nextStep, skipCoach, nav, fresh, clearFresh, shownHint, showHint, misses, clearMisses, hintPref, preferHint],
   );
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }

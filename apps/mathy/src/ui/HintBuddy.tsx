@@ -92,7 +92,12 @@ export function HintBuddy({
     if (!lesson) return [];
     const out: Tier[] = [];
     const l = lesson.lesson;
-    const doStep = l?.coach.find((s) => s.advance !== "tap");
+    // La actividad puede elegir qué paso vale en esta ronda (niveles que alternan
+    // preguntas); si no eligió, el primero que espera un gesto.
+    const pedido = lesson.hintPref ? l?.coach.find((s) => s.id === lesson.hintPref) : undefined;
+    // `""` es "esta ronda no tiene gesto que mostrar": la pregunta de la ronda no
+    // es la del paso de la guía, y un "Mirá acá" hablaría del gesto equivocado.
+    const doStep = lesson.hintPref === "" ? undefined : (pedido ?? l?.coach.find((s) => s.advance !== "tap"));
     if (doStep)
       out.push({
         title: t("ui.hint.show"),
@@ -316,7 +321,9 @@ const styles = StyleSheet.create({
     zIndex: 7,
   },
   rootNarrow: { left: 10, bottom: 10 },
-  row: { flexDirection: "row", alignItems: "center", gap: theme.space[2] },
+  // La burbuja sale arriba del botón y no al costado: al costado tapaba las
+  // fichas del teclado en el teléfono, justo cuando el jugador iba a contestar.
+  row: { flexDirection: "column-reverse", alignItems: "flex-start", gap: theme.space[1] },
   button: {
     alignItems: "center",
     justifyContent: "center",

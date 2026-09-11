@@ -54,9 +54,12 @@ import {
   TILE_SLOTS,
   TOOTH_ANGLE,
   chestLayout,
+  chestRowBox,
   type Slot,
 } from "../scenes/ChestScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
@@ -80,6 +83,14 @@ export function SubUndoAddGame(props: SubUndoAddGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: la latencia no corre hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel del objetivo dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const opening = lesson?.lesson ? "" : openingHint(level);
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -93,16 +104,19 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
   /** La recta que el nivel simbólico pide con un toque. */
   const [lineOn, setLineOn] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: openingHint(level),
+    text: opening,
     tone: "dim",
   }));
+  /** La regla ya midió en esta ronda: la guía y la pista pasan a señalar la ficha. */
+  const [midio, setMidio] = useState(false);
 
   const problem = useMemo(
     () => generateUndo(level, seedBase + round * 1000 + level.n),
     [level, round, seedBase],
   );
 
-  const sceneH = Math.max(340, Math.min(height * 0.68, 560));
+  // Con lección, el cartel de la guía ocupa arriba lo que el lienzo cede.
+  const sceneH = Math.max(340, Math.min(height * (lesson?.lesson ? 0.56 : 0.68), 560));
   const layout = useMemo(
     () => chestLayout(problem, level, width, sceneH),
     [problem, level, width, sceneH],
@@ -124,6 +138,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
   const appear = useSharedValue(0);
   /** La piedra desde la que empezó este tirón de manivela. */
   const anchor = useSharedValue(0);
+  /**
+   * La piedra hacia la que va el caminante, que no es donde está dibujado: el
+   * paso anima 200 ms, y un tirón rápido que suelta antes de que termine
+   * aterrizaba en una piedra intermedia, como si la llave hubiera sido corta.
+   */
+  const destino = useSharedValue(problem.landing);
   const turned = useSharedValue(0);
   const lastAngle = useSharedValue(0);
   /** 1 si la manivela llegó a trabarse contra la orilla en este tirón. */
@@ -132,6 +152,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
   // Siempre las mismas ranuras montadas: el árbol no puede cambiar entre rondas.
   const keys: Slot[] = [useSlot(), useSlot(), useSlot(), useSlot()];
   const tiles: Slot[] = [useSlot(), useSlot(), useSlot(), useSlot(), useSlot()];
+  /** La ficha que se arma con el teclado, mientras el dedo la lleva al hueco. */
+  const composedDrag = useSlot();
 
   const shownAt = useRef(Date.now());
   const doneRef = useRef(false);
@@ -144,11 +166,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
     setPicked(-1);
     setPlaced(null);
     setComposed(null);
+    setMidio(false);
+    composedDrag.dx.value = 0;
+    composedDrag.dy.value = 0;
     // Donde hay dos caminantes, el que se mueve es el de atrás: el otro está
     // dibujado en su piedra y la regla va de uno al otro.
     const inicio = level.ruler ? problem.home : problem.landing;
     setAt(inicio);
     pos.value = inicio;
+    destino.value = inicio;
     open.value = 0;
     ruler.value = 0;
     rulerFrom.value = 0;
@@ -180,11 +206,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
     }
     // El latido no es un adorno: es la única instrucción.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    // Con guía, la luz de la guía es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas, y en las rondas siguientes la pista de
+    // Tomi señala lo mismo cuando hace falta.
+    if (guided) {
+      demo.value = 0;
+    } else {
+      demo.value = withRepeat(
+        withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+        -1,
+        false,
+      );
+    }
     if (level.mode === "judge") {
       clock.value = 0;
       clock.value = withRepeat(
@@ -212,6 +245,19 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_UNDO_ADD, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj de la latencia arranca cuando empieza el juego, no detrás de la
+  // tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -246,8 +292,28 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       return;
     }
     setRound((r) => r + 1);
-    setMessage({ text: openingHint(level), tone: "dim" });
-  }, [round, level, onEvent, onLevelDone]);
+    setMessage({ text: opening, tone: "dim" });
+  }, [round, level, opening, onEvent, onLevelDone]);
+
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
 
   const succeed = useCallback(
     (text: string) => {
@@ -257,9 +323,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       quiet();
       cancelAnimation(clock);
       setMessage({ text, tone: "ok" });
-      setTimeout(nextRound, 1600);
+      setTimeout(advance, 1600);
     },
-    [nextRound, quiet, clock],
+    [advance, quiet, clock],
   );
 
   /** El cofre se abre solo y las dos flechas se apagan juntas. Sin cartel. */
@@ -269,8 +335,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
     backArrow.value = withTiming(0, { duration: theme.motion.morph });
     open.value = withTiming(1, { duration: theme.motion.base });
     attempt(true);
+    say("opened");
     succeed("Las dos flechas midieron lo mismo. El cofre se abrió.");
-  }, [leftover, outArrow, backArrow, open, attempt, succeed]);
+  }, [leftover, outArrow, backArrow, open, attempt, succeed, say]);
 
   // --- Girar la manivela -----------------------------------------------------
 
@@ -318,6 +385,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       if (!cerca) {
         slot.dx.value = withTiming(0, { duration: theme.motion.base });
         slot.dy.value = withTiming(0, { duration: theme.motion.base });
+        // Un rechazo nunca es mudo: la llave que vuelve dice adónde tenía que ir.
+        setMessage({ text: "La llave volvió al llavero. Soltala sobre la manivela.", tone: "dim" });
         return;
       }
       quiet();
@@ -333,10 +402,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       slot.dx.value = withTiming(layout.crank.x - home.x, { duration: theme.motion.quick });
       slot.dy.value = withTiming(layout.crank.y - home.y, { duration: theme.motion.quick });
       setMounted(index);
+      say("mounted");
       setMessage({ text: "La llave entró. Ahora girá.", tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem.keys, layout, solved, quiet],
+    [problem.keys, layout, solved, quiet, say],
   );
 
   /**
@@ -407,12 +477,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       const ok = row === problem.liar;
       attempt(ok);
       if (ok) {
+        say("chosen");
         succeed("Ese volvió un paso de más y quedó del otro lado del cofre.");
       } else {
         setMessage({ text: "Ese pisó justo la piedra del cofre. Mirá el otro.", tone: "warn" });
       }
     },
-    [solved, problem.liar, attempt, succeed, quiet],
+    [solved, problem.liar, attempt, succeed, quiet, say],
   );
 
   // --- Las cerraduras que no son pasos ---------------------------------------
@@ -425,6 +496,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       attempt(a.correct);
       if (a.correct) {
         open.value = withTiming(1, { duration: theme.motion.base });
+        say("opened");
         succeed("Esa es la que deshace: el cofre se abrió.");
         return;
       }
@@ -463,9 +535,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       }
       quiet();
       ruler.value = withTiming(1, { duration: theme.motion.quick });
-      setMessage({ text: "Ahora traé la ficha con los pasos que mide.", tone: "dim" });
+      setMidio(true);
+      say("measured");
+      setMessage({ text: "Ahora traé al hueco dorado la ficha con los pasos que mide.", tone: "dim" });
     },
-    [ruler, quiet],
+    [ruler, quiet, say],
   );
 
   /** La ficha entra en el hueco, o se resiste. El juego nunca dice "mal". */
@@ -491,8 +565,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       };
       if (!cerca) {
         volver();
-        if (level.mode === "measure" && ruler.value >= 0.92) {
-          setMessage({ text: "Soltala en el hueco, debajo de la regla.", tone: "dim" });
+        // Un rechazo nunca es mudo: la ficha que vuelve dice adónde tenía que ir.
+        if (level.mode === "measure") {
+          setMessage({
+            text:
+              ruler.value >= 0.92
+                ? "Soltala en el hueco dorado, debajo de la regla."
+                : "Primero estirá la regla de un caminante al otro.",
+            tone: "dim",
+          });
+        } else {
+          setMessage({ text: "Soltala en el hueco del renglón.", tone: "dim" });
         }
         return;
       }
@@ -525,6 +608,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       }
       slot.alive.value = withTiming(0, { duration: 140 });
       setPlaced(tile.value);
+      say("placed");
       succeed(
         level.mode === "measure"
           ? "La regla se contrajo en la ficha: esa es la distancia."
@@ -532,7 +616,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem.tiles, layout, solved, level.mode, x0, x1, row0, attempt, quiet, succeed],
+    [problem.tiles, layout, solved, level.mode, x0, x1, row0, attempt, quiet, succeed, say],
   );
 
   /** El teclado del último nivel simbólico: la ficha ya no viene armada. */
@@ -540,21 +624,38 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
     (digit: number) => {
       if (solved) return;
       quiet();
+      composedDrag.dx.value = 0;
+      composedDrag.dy.value = 0;
       setComposed((prev) => (prev === null || prev >= 10 ? digit : prev * 10 + digit));
+      say("typed");
+      setMessage({ text: "Cuando el número esté, arrastralo al hueco del renglón.", tone: "dim" });
     },
-    [solved, quiet],
+    [solved, quiet, say, composedDrag],
   );
 
   const dropComposed = useCallback(
     (x: number, y: number) => {
-      if (composed === null || solved) return;
-      if (Math.hypot(x - layout.slot.x, y - layout.slot.y) > 80) return;
+      const volver = (): void => {
+        composedDrag.dx.value = withTiming(0, { duration: theme.motion.base });
+        composedDrag.dy.value = withTiming(0, { duration: theme.motion.base });
+      };
+      if (composed === null || solved) {
+        volver();
+        return;
+      }
+      if (Math.hypot(x - layout.slot.x, y - layout.slot.y) > 80) {
+        volver();
+        setMessage({ text: "Arrastrá tu número hasta el hueco del renglón.", tone: "dim" });
+        return;
+      }
       quiet();
       const esperado = problem.row.hidden === "minuend" ? problem.row.minuend : problem.row.result;
       const ok = composed === esperado;
       // Solo clasifica lo que el catálogo nombra: el resto es puntería.
       const fallo = problem.tiles.find((t) => t.value === composed && !t.correct);
       attempt(ok, ok ? undefined : fallo?.misconception);
+      composedDrag.dx.value = 0;
+      composedDrag.dy.value = 0;
       if (!ok) {
         setMessage({ text: "Ese numeral no cierra el renglón. Armá otro.", tone: "warn" });
         setComposed(null);
@@ -562,10 +663,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       }
       setPlaced(composed);
       setComposed(null);
+      say("placed");
       succeed("El renglón quedó completo.");
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [composed, solved, layout.slot, problem.row, problem.tiles, attempt, quiet, succeed],
+    [composed, solved, layout.slot, problem.row, problem.tiles, attempt, quiet, succeed, say],
   );
 
   // --- Gestos del lienzo -----------------------------------------------------
@@ -594,7 +696,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       line.value = withTiming(on ? 0 : 1, { duration: theme.motion.base });
       return !on;
     });
-  }, [problem.landing, problem.track, line]);
+    say("line");
+  }, [problem.landing, problem.track, line, say]);
 
   /**
    * Un solo gesto para todo el lienzo, con lo que necesita en valores
@@ -666,7 +769,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
           }
           if (modo === "turn" && montada.value >= 0) {
             sujeto.value = MANIVELA;
-            anchor.value = Math.round(pos.value);
+            anchor.value = destino.value;
             turned.value = 0;
             jammed.value = 0;
             lastAngle.value = Math.atan2(e.y - cy, e.x - cx);
@@ -697,7 +800,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
           if (crudo < 0) jammed.value = 1;
           // Rehacer la ida siempre se puede, pero la pista no da más que su ida.
           const stone = Math.max(0, Math.min(tope.value, crudo));
-          if (stone === Math.round(pos.value)) return;
+          if (stone === destino.value) return;
           if (crudo < 0) {
             jam.value = withSequence(
               withTiming(1, { duration: 70 }),
@@ -705,6 +808,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
               withTiming(0, { duration: 90 }),
             );
           }
+          destino.value = stone;
           pos.value = withTiming(stone, { duration: 200 });
         })
         .onEnd(() => {
@@ -713,7 +817,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
             runOnJS(alMedir)(f);
             if (f < 0.92) ruler.value = withTiming(0, { duration: theme.motion.base });
           } else if (sujeto.value === MANIVELA) {
-            const stone = Math.max(0, Math.min(tope.value, Math.round(pos.value)));
+            // Donde iba, no donde el dibujo alcanzó a llegar.
+            const stone = Math.max(0, Math.min(tope.value, destino.value));
             pos.value = withTiming(stone, { duration: 160 });
             runOnJS(alSoltar)(stone, jammed.value === 1);
           }
@@ -761,6 +866,103 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
 
   const conLlaves = level.mode === "turn" || level.mode === "pick" || level.mode === "unlock";
 
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: la llave
+   * que conviene llevar, la manivela, los dos caminantes, el hueco. Sale de la
+   * misma geometría con que la escena dibuja y se recalcula con cada
+   * movimiento, así que la luz siempre apunta a un gesto que todavía falta.
+   */
+  // La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const fila = layout.rows[0];
+    if (!fila) return null;
+    const xs = (i: number): number =>
+      (fila.stones[Math.max(0, Math.min(problem.track - 1, i))] ?? { x: 0 }).x;
+    const around = (p: Pt, w: number, h: number): Rect => ({ x: p.x - w / 2, y: p.y - h / 2, w, h });
+    const tramo = (a: number, b: number, y: number, h: number): Rect => {
+      const lo = Math.min(a, b);
+      const hi = Math.max(a, b);
+      return { x: lo - 26, y: y - h / 2, w: hi - lo + 52, h };
+    };
+    const id = shown.id;
+    const cofre = around({ x: xs(problem.home), y: fila.y - 20 }, 64, 68);
+    const viaje = tramo(xs(problem.home), xs(problem.landing), fila.y - 22, 96);
+    const manivela = around(layout.crank, layout.crank.r * 2 + 22, layout.crank.r * 2 + 22);
+    const llave = (i: number): Rect =>
+      around(layout.keys[i] ?? { x: 0, y: 0 }, layout.keyW + 14, layout.keyH + 14);
+    const usadas = level.mode === "unlock" ? problem.actions.length : problem.keys.length;
+    const llavero = union(Array.from({ length: Math.min(usadas, KEY_SLOTS) }, (_, i) => llave(i)));
+    const fichas = union(
+      problem.tiles
+        .slice(0, TILE_SLOTS)
+        .map((_, i) => around(layout.tiles[i] ?? { x: 0, y: 0 }, layout.tileW + 12, layout.tileH + 12)),
+    );
+    const teclado = union(layout.pads.map((p) => around(p, layout.padR * 2 + 10, layout.padR * 2 + 10)));
+    const solo = (rs: readonly (Rect | null)[]): Focus => ({ rings: rs.filter((r): r is Rect => r !== null) });
+
+    if (level.mode === "turn") {
+      if (id === "look") return solo([viaje]);
+      if (id === "reveal") return solo([cofre]);
+      const buena = problem.keys.findIndex((k) => k.correct);
+      if (buena >= 0 && mounted === buena) {
+        // Girar: la luz recorre un cuarto de vuelta en el sentido que devuelve.
+        const r = layout.crank.r;
+        return {
+          rings: [manivela, cofre],
+          drag: {
+            from: { x: layout.crank.x, y: layout.crank.y - r * 0.9 },
+            to: { x: layout.crank.x + r * 0.9, y: layout.crank.y + r * 0.2 },
+          },
+        };
+      }
+      const desde = layout.keys[buena];
+      if (!desde) return solo([llavero, manivela]);
+      return { rings: [llave(buena), manivela], drag: { from: desde, to: layout.crank } };
+    }
+    if (level.mode === "pick") {
+      if (id === "look") return solo([viaje, llavero]);
+      if (id === "reveal") return solo([cofre]);
+      return solo([llavero]);
+    }
+    if (level.mode === "judge") {
+      const filas = layout.rows.map((r) => tramo(r.from.x, r.to.x, r.y - 14, 84));
+      if (id === "reveal") return solo([filas[problem.liar] ?? null]);
+      return solo(filas);
+    }
+    if (level.mode === "measure") {
+      const [m0, m1] = problem.marks ?? [problem.home, problem.landing];
+      const a = { x: xs(m0), y: fila.y };
+      const b = { x: xs(m1), y: fila.y };
+      const regla = tramo(a.x, b.x, fila.y, 60);
+      const hueco = around({ x: (a.x + b.x) / 2, y: fila.y + 52 }, 66, 62);
+      if (id === "look") return solo([around({ ...a, y: a.y - 18 }, 50, 66), around({ ...b, y: b.y - 18 }, 50, 66)]);
+      if (id === "reveal") return solo([union([regla, hueco])]);
+      if (id === "carry" || (id !== "stretch" && midio)) return solo([hueco, fichas]);
+      return { rings: [regla], drag: { from: a, to: b } };
+    }
+    if (level.mode === "write") {
+      const caja = chestRowBox(problem, layout);
+      const renglon = { x: caja.x - 8, y: caja.y - 8, w: caja.w + 16, h: caja.h + 16 };
+      const hueco = around(layout.slot, layout.slotW + 16, layout.slotH + 16);
+      if (id === "look" || id === "reveal") return solo([renglon]);
+      if (id === "line") return solo([tramo(fila.from.x, fila.to.x, fila.y, 90)]);
+      if (!level.keyboard) return solo([fichas, hueco]);
+      if (composed !== null && id !== "type") {
+        return { rings: [hueco], drag: { from: layout.composed, to: layout.slot } };
+      }
+      return solo([teclado]);
+    }
+    // Las cerraduras que no son pasos: el cartel del cofre y las acciones.
+    return solo([
+      { x: layout.lock.x - 60, y: layout.lock.y - 84, w: 120, h: 170 },
+      llavero,
+    ]);
+  }, [shown, layout, problem, level.mode, level.keyboard, mounted, composed, midio]);
+
   return (
     <View style={styles.root}>
 
@@ -769,7 +971,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <View style={{ width, height: sceneH }}>
         <Canvas style={{ width, height: sceneH }}>
@@ -797,6 +1002,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
             placed={placed}
             keys={keys}
             tiles={tiles}
+            composedDrag={composedDrag}
           />
         </Canvas>
 
@@ -854,10 +1060,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
         {conTeclado && composed !== null ? (
           <ComposedHandle
             spot={layout.composed}
+            slot={composedDrag}
             enabled={!solved}
             onDrop={alSoltarCompuesta}
           />
         ) : null}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
@@ -866,6 +1076,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
 }
 
 const noop = (): void => {};
+
+/** El rectángulo que abraza a todos: para señalar una fila de piezas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
 
 /** Qué agarró el dedo. Vive en un `SharedValue` porque lo decide el hilo de UI. */
 const NADA = 0;
@@ -939,10 +1165,13 @@ function Handle({
 /** La ficha compuesta con el teclado: nace de los dígitos y viaja al hueco. */
 function ComposedHandle({
   spot,
+  slot,
   enabled,
   onDrop,
 }: {
   readonly spot: { x: number; y: number };
+  /** Cuánto la lleva el dedo: la escena dibuja la ficha corrida en eso. */
+  readonly slot: Slot;
   readonly enabled: boolean;
   readonly onDrop: (absX: number, absY: number) => void;
 }) {
@@ -950,10 +1179,16 @@ function ComposedHandle({
     () =>
       Gesture.Pan()
         .enabled(enabled)
-        .onEnd((e) => {
+        .onChange((e) => {
+          slot.dx.value = e.translationX;
+          slot.dy.value = e.translationY;
+        })
+        // `onFinalize` y no `onEnd`: si el arrastre se cancela a mitad de
+        // camino, la ficha igual tiene que volver o entrar, no quedar en el aire.
+        .onFinalize((e) => {
           runOnJS(onDrop)(spot.x + e.translationX, spot.y + e.translationY);
         }),
-    [enabled, spot.x, spot.y, onDrop],
+    [enabled, spot.x, spot.y, onDrop, slot],
   );
   return (
     <GestureDetector gesture={gesture}>

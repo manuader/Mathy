@@ -1083,6 +1083,18 @@ function rowMetrics(problem: ChestProblem, cx: number, cy: number): RowMetrics {
   };
 }
 
+/**
+ * El vidrio del renglón, como rectángulo. Lo exporta la escena para que la guía
+ * de la actividad lo señale con la misma cuenta con que se dibuja: un anillo
+ * calculado aparte quedaría corrido del renglón que dice rodear.
+ */
+export function chestRowBox(problem: ChestProblem, layout: ChestLayout): ChestBox {
+  const rm = rowMetrics(problem, layout.center, layout.rowY);
+  const x0 = (rm.chars[0]?.cx ?? layout.center) - ROW_SIZE * 0.6;
+  const x1 = (rm.chars[rm.chars.length - 1]?.cx ?? layout.center) + ROW_SIZE * 0.6;
+  return { x: x0, y: layout.rowY - ROW_SIZE * 0.95, w: x1 - x0, h: ROW_SIZE * 1.9 };
+}
+
 // --- Piezas ------------------------------------------------------------------
 
 /** Una flecha con cola y punta, del nodo 3. Acá la punta también mira a la izquierda. */
@@ -1514,6 +1526,8 @@ interface Geom {
   readonly lockCard: SkPath;
   readonly lockBox: ChestParts;
   readonly composed: SkPath;
+  /** La ficha donde queda el número que se arma con el teclado: vacía si no hay número. */
+  readonly composedBox: SkPath;
   readonly pads: SkPath;
   readonly padDigits: SkPath;
 }
@@ -1659,6 +1673,14 @@ function buildGeom(
 
   const composedPath = Skia.Path.Make();
   if (composed !== null) numeral(composedPath, composed, l.composed.x, l.composed.y, 26);
+  // El número armado es una ficha como las del cajón: con cuerpo y canto, así
+  // se ve que es algo que se agarra y se lleva, y no un número pintado.
+  const composedBox = Skia.Path.Make();
+  if (composed !== null) {
+    composedBox.addRRect(
+      Skia.RRectXY(Skia.XYWHRect(l.composed.x - 34, l.composed.y - 26, 68, 52), 10, 10),
+    );
+  }
 
   const pads = Skia.Path.Make();
   const padDigits = Skia.Path.Make();
@@ -1692,6 +1714,7 @@ function buildGeom(
     lockCard,
     lockBox,
     composed: composedPath,
+    composedBox,
     pads,
     padDigits,
   };
@@ -1781,6 +1804,11 @@ export interface ChestSceneProps {
   readonly tiles: readonly Slot[];
   /** El encastre del nodo 9. Ausente: la escena dibuja lo de siempre. */
   readonly nest?: ChestNestValues;
+  /**
+   * Cuánto lleva el dedo la ficha armada con el teclado. Ausente: la ficha se
+   * queda quieta en su lugar, como antes.
+   */
+  readonly composedDrag?: { readonly dx: SharedValue<number>; readonly dy: SharedValue<number> };
 }
 
 export function ChestScene({
@@ -1808,7 +1836,14 @@ export function ChestScene({
   keys,
   tiles,
   nest,
+  composedDrag,
 }: ChestSceneProps) {
+  // La ficha armada sigue al dedo: sin eso, arrastrarla no movía nada hasta
+  // soltarla, y parecía que no se podía llevar.
+  const composedT = useDerivedValue(() => [
+    { translateX: composedDrag ? composedDrag.dx.value : 0 },
+    { translateY: composedDrag ? composedDrag.dy.value : 0 },
+  ]);
   const geom = useMemo(
     () => buildGeom(problem, level, layout, at, placed, composed),
     [problem, level, layout, at, placed, composed],
@@ -2277,7 +2312,10 @@ export function ChestScene({
         <>
           <ChipBodies path={geom.pads} />
           <Path path={geom.padDigits} color={theme.color.ink} />
-          <Ink path={geom.composed} color={theme.color.ink} />
+          <Group transform={composedT}>
+            <ChipBodies path={geom.composedBox} />
+            <Ink path={geom.composed} color={theme.color.ink} />
+          </Group>
         </>
       ) : null}
 
