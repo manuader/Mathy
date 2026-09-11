@@ -69,8 +69,10 @@ function poseFor(step: CoachStep | undefined): LumiPose {
  * el objetivo del nivel y la ronda. Nunca desaparece: la pregunta "¿qué tengo
  * que hacer?" tiene que tener respuesta a la vista en todo momento.
  */
-export function CoachBanner({ round, rounds }: { readonly round: number; readonly rounds: number }) {
+export function CoachBanner({ round: reported, rounds }: { readonly round: number; readonly rounds: number }) {
   const api = useLesson();
+  // El nivel hecho enciende la última marca aunque la actividad no avance la ronda.
+  const round = api?.phase === "done" ? rounds : reported;
   const active = api?.lesson !== undefined && api.phase !== "intro";
   const step = api?.step;
   const stepIndex = api?.stepIndex ?? -1;

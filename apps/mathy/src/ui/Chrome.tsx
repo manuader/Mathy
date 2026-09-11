@@ -30,7 +30,7 @@ import { AREAS, areaOf, theme } from "./theme.ts";
 export function Header({
   title,
   subtitle,
-  round,
+  round: reported,
   rounds,
   showDots = true,
 }: {
@@ -42,6 +42,9 @@ export function Header({
   readonly showDots?: boolean;
 }) {
   const lesson = useLesson();
+  // Las actividades avisan que el nivel terminó sin avanzar la última ronda: con
+  // el nivel hecho, todas las marcas se encienden antes de que llegue la tarjeta.
+  const round = lesson?.phase === "done" ? rounds : reported;
   // Con el contexto del nivel, el encabezado se arma solo y es igual en los 21
   // nodos; sin él, muestra lo que la actividad le pasa.
   if (lesson) {
