@@ -271,6 +271,13 @@ export interface WalkConfig {
   readonly label: boolean;
   /** Las gotas marcadas entre las que hay que elegir. */
   readonly marked: readonly GpPoint[];
+  /**
+   * Un lugar señalado en la regla de abajo: un triángulo ámbar que late debajo
+   * de esa posición. Es la pregunta de "¿qué altura tenía acá?" cuando la regla
+   * todavía no tiene números —el nivel 1 del 18—, y sin él la posición pedida
+   * sólo se podía encontrar contando marcas. Ausente o nulo: no hay ninguno.
+   */
+  readonly mark?: number | null;
   /** Las curvas candidatas, cada una con su color. */
   readonly options: readonly GpCurve[];
   /** La curva que hay que juzgar con la recta vertical. */
@@ -991,6 +998,22 @@ export function WalkScene({
     [config.options, sheet],
   );
 
+  /** El triángulo bajo el lugar señalado, apuntando hacia arriba: "subí desde acá". */
+  const markGeom = useMemo(() => {
+    const path = Skia.Path.Make();
+    const m = config.mark;
+    if (m === undefined || m === null) return path;
+    const w = config.window;
+    const ejeY = Math.min(Math.max(0, w.y0), w.y1);
+    const x = walkPx(sheet, m);
+    const y = walkPy(sheet, ejeY) + 8;
+    path.moveTo(x, y);
+    path.lineTo(x - 9, y + 15);
+    path.lineTo(x + 9, y + 15);
+    path.close();
+    return path;
+  }, [config.mark, config.window, sheet]);
+
   const curve = useMemo(
     () => (config.curve ? buildCurve(config.curve, sheet) : Skia.Path.Make()),
     [config.curve, sheet],
@@ -1410,6 +1433,11 @@ export function WalkScene({
       {/* Las gotas marcadas entre las que hay que elegir: laten, piden que las miren. */}
       <Group opacity={attentionO}>
         <Path path={marked} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+      </Group>
+      {/* El lugar señalado en la regla: late con lo que pide atención. */}
+      <Path path={markGeom} color={SHADE} style="stroke" strokeWidth={3} strokeJoin="round" />
+      <Group opacity={attentionO}>
+        <Path path={markGeom} color={theme.color.warn} />
       </Group>
 
       {/* La gota encendida, sus hilos y el par escrito. */}

@@ -43,7 +43,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Canvas } from "@shopify/react-native-skia";
+import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
@@ -56,6 +56,7 @@ import Animated, {
 import {
   NODE_FUNCTION_AS_MACHINE,
   TOTAL_FN_LEVELS,
+  fnArrowTarget,
   fnCallPieces,
   fnFormulaPieces,
   fnMisconceptionFor,
@@ -65,6 +66,7 @@ import {
   fnRun,
   generateMachine,
   type FnArrow,
+  type FnAsk,
   type FnLevel,
   type FnMachine,
   type FnOption,
@@ -79,6 +81,7 @@ import {
   pipeLayout,
   type PipeConfig,
   type PipeItem,
+  type PipeLayout,
   type PipeMachine,
   type PipeRow,
   type PipeSlot,
@@ -94,9 +97,69 @@ import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace } from "../ui/Kit.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
+import { FN_MSG } from "../lessons/function-machine.ts";
 
 /** Cuánto se puede mover el dedo y que el gesto siga siendo un toque. */
 const TAP_SLOP = 14;
+
+/**
+ * Qué paso de la guía vale como pista de Tomi en cada pregunta. La guía
+ * acompaña sólo la primera ronda de un nivel; en las rondas de la otra
+ * pregunta, Tomi tiene que callar el "mirá acá" antes que señalar un gesto que
+ * no corresponde.
+ */
+const HINT_STEP: Partial<Record<FnAsk, string>> = {
+  guess: "feed",
+  build: "place",
+  broken: "place",
+  network: "hang",
+  name: "pick",
+  letters: "choose",
+};
+
+/** Lo que el gesto avisa desde el hilo de la interfaz, en vez de callar. */
+const NUDGE = [FN_MSG.pickInputFirst, FN_MSG.inputPicked, FN_MSG.tapANetwork, FN_MSG.tapAMachine] as const;
+
+const nonNull = <T,>(v: T | null | undefined): v is T => v !== null && v !== undefined;
+
+/** El rectángulo que abarca a todos. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  const x0 = Math.min(...rs.map((r) => r.x));
+  const y0 = Math.min(...rs.map((r) => r.y));
+  const x1 = Math.max(...rs.map((r) => r.x + r.w));
+  const y1 = Math.max(...rs.map((r) => r.y + r.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+/**
+ * La misma geometría de la tubería, corrida en x: lo que `PipeScene` dibuja
+ * adentro de su grupo trasladado, visto desde el lienzo. La usan el dedo y la
+ * guía, que viven en coordenadas del lienzo.
+ */
+function shiftLayout(l: PipeLayout, dx: number): PipeLayout {
+  if (dx === 0) return l;
+  const s = (p: { readonly x: number; readonly y: number }) => ({ x: p.x + dx, y: p.y });
+  return {
+    ...l,
+    lanes: l.lanes.map((ln) => ({
+      ...ln,
+      machines: ln.machines.map((b) => ({ ...b, x: b.x + dx })),
+      mouth: s(ln.mouth),
+      spout: s(ln.spout),
+      path: ln.path.map(s),
+      counter: s(ln.counter),
+      target: s(ln.target),
+      branchSpout: s(ln.branchSpout),
+      lamp: s(ln.lamp),
+    })),
+    tray: l.tray.map(s),
+    table: { ...l.table, x: l.table.x + dx },
+    formula: s(l.formula),
+  };
+}
 
 /** Los nombres de las dos máquinas. Nacen en el nivel 4 y no antes. */
 const NAMES = ["f", "g"] as const;
@@ -153,9 +216,17 @@ export function MachineGame(props: MachineGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
+  /** Las piezas de desvío que ya se probaron: sacaron dos cosas y quedan apagadas. */
+  const [spent, setSpent] = useState<readonly string[]>([]);
   /** Las máquinas que el jugador ya puso en el caño. */
   const [placed, setPlaced] = useState<readonly FnMachine[]>([]);
   /** Las filas que la tabla fue juntando, o la tabla objetivo del nivel. */
@@ -177,13 +248,44 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
   );
   const ask = problem.ask;
 
+  /**
+   * Lo que la línea de abajo dice al empezar la ronda. Con lección y una sola
+   * pregunta, el cartel ya dice qué hacer y la línea queda para lo que pasó; en
+   * los niveles que alternan, el cartel nombra todas y la línea dice cuál toca.
+   */
+  const conLeccion = lesson?.lesson !== undefined;
+  const opening = useCallback(
+    (a: FnAsk) => (conLeccion && level.asks.length === 1 ? "" : t(`fn.ask.${a}`)),
+    [conLeccion, level.asks.length],
+  );
+
+  /**
+   * En la ronda de nombrar, en qué carril está la máquina que saca la salida
+   * pedida. Antes era siempre el de arriba y la pregunta se contestaba sin
+   * seguir la ficha; ahora sale de la ronda, arriba o abajo.
+   */
+  const fLane = ask === "name" && (problem.input + problem.target) % 2 === 1 ? 1 : 0;
+
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: t(`fn.ask.${ask}`),
+    text: opening(ask),
     tone: "dim",
   }));
 
   const soloFichas = ask === "sameRule";
-  const sceneH = soloFichas ? 140 : Math.max(320, Math.min(height * 0.58, 500));
+  // Con lección, el cartel de la guía se lleva su banda de arriba y el lienzo
+  // se achica un poco para que las fichas de respuesta sigan en pantalla.
+  const sceneH = soloFichas
+    ? 140
+    : Math.max(conLeccion ? 360 : 320, Math.min(height * (conLeccion ? 0.52 : 0.58), 500));
+
+  /**
+   * En un teléfono Tomi vive en el rincón de abajo a la izquierda (52 px), justo
+   * donde `PipeScene` pone la primera ficha del cajón: la tapaba y se llevaba el
+   * toque. La tubería se dibuja corrida a la derecha lo justo para dejarle el
+   * rincón libre; en una pantalla ancha el cajón queda centrado y lejos de él.
+   */
+  const pipeInset = width < 600 ? 40 : 0;
+  const pipeW = width - pipeInset;
 
   // --- Lo que ve la tubería --------------------------------------------------
 
@@ -305,8 +407,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     // cada ficha apuntaría a otra pieza en cuanto se pusiera la primera.
     const cajon = ask === "build" || ask === "broken" ? problem.tray.map((m) => machineOf(m)) : [];
 
-    return {
-      lanes: [laneF, ...laneG],
+    const base: PipeConfig = {
+      lanes: fLane === 1 ? [...laneG, laneF] : [laneF, ...laneG],
       skin: level.skin,
       direction: "forward",
       numerals: level.numerals,
@@ -325,11 +427,31 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
           ? composeText(fnFormulaPieces(NAMES[0], problem.machines))
           : "",
     };
+
+    // La tabla no puede meterse debajo del cajón. Con el cartel de la guía el
+    // lienzo es más bajo, y la cuarta fila de `guess` quedaba tapada por las
+    // fichas: se ve lo que entra, las filas más nuevas, y siempre la que está
+    // encendida, que es la que dice "misma ficha, misma salida". Sólo en
+    // `guess`, que es donde las filas se juntan probando: en las demás rondas
+    // la tabla es la pregunta misma y no se le puede sacar ninguna fila.
+    if (ask !== "guess") return base;
+    const medida = pipeLayout(base, pipeW, sceneH);
+    const primera = medida.tray[0];
+    const conCajon = base.tray.length > 0 || (base.trayItems ?? []).length > 0;
+    const techo = conCajon && primera ? primera.y - medida.trayH / 2 - 6 : sceneH - 6;
+    const caben = Math.max(1, Math.floor((techo - medida.table.y) / medida.table.rowH));
+    if (base.table.length <= caben) return base;
+    const nuevas = base.table.slice(-caben);
+    const encendida = base.table.find((r) => r.repeated);
+    const visibles =
+      encendida && !nuevas.includes(encendida) ? [encendida, ...nuevas.slice(1)] : nuevas;
+    return { ...base, table: visibles };
   }, [
     ask,
     cadena,
     entrada,
     fed,
+    fLane,
     item,
     level.named,
     level.numerals,
@@ -342,9 +464,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     run,
     solved,
     tabla,
+    pipeW,
+    sceneH,
   ]);
 
-  const pl = useMemo(() => pipeLayout(pipeConfig, width, sceneH), [pipeConfig, width, sceneH]);
+  const pl = useMemo(() => pipeLayout(pipeConfig, pipeW, sceneH), [pipeConfig, pipeW, sceneH]);
+  /** La geometría de la tubería en coordenadas del lienzo: la usan el dedo y la guía. */
+  const plv = useMemo(() => shiftLayout(pl, pipeInset), [pl, pipeInset]);
 
   // --- Lo que ve la red ------------------------------------------------------
 
@@ -400,10 +526,21 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
    * el callback del render en que se armó el gesto, así que lo leído del cierre
    * sería lo de la primera ronda para siempre.
    */
-  const vivo = useRef({ problem, ask, solved, placed, rows, arrows, order, named });
-  vivo.current = { ...vivo.current, problem, ask, solved, placed, rows, arrows, order, named };
+  const vivo = useRef({ problem, ask, solved, placed, rows, arrows, order, named, fLane });
+  vivo.current = { ...vivo.current, problem, ask, solved, placed, rows, arrows, order, named, fLane };
   const roundRef = useRef(round);
   roundRef.current = round;
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+  const preferRef = useRef(lesson?.preferHint);
+  preferRef.current = lesson?.preferHint;
+  const coachIds = useRef<readonly string[]>([]);
+  coachIds.current = lesson?.lesson?.coach.map((s) => s.id) ?? [];
 
   useEffect(() => {
     shownAt.current = Date.now();
@@ -419,7 +556,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     // La tabla llega llena en las rondas que se leen y vacía en las que se
     // llenan probando: la tabla de `guess` es lo que el jugador descubre.
     setRows(problem.ask === "guess" ? [] : problem.rows);
-    setMessage({ text: t(`fn.ask.${problem.ask}`), tone: "dim" });
+    setSpent([]);
+    setMessage({ text: opening(problem.ask), tone: "dim" });
+    // Qué paso de la guía muestra Tomi como pista en esta ronda: el gesto de
+    // esta pregunta, o ninguno si la guía del nivel es de la otra.
+    const pista = HINT_STEP[problem.ask];
+    preferRef.current?.(pista !== undefined && coachIds.current.includes(pista) ? pista : "");
 
     flow.value = 0;
     jam.value = 0;
@@ -436,12 +578,19 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     netAppear.value = withTiming(conRed ? 1 : 0, { duration: theme.motion.base });
 
     // El latido de la demostración no es un adorno: es la única instrucción.
-    hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    // Con guía, la luz de Lumi es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
+    if (guided) {
+      hint.value = 0;
+      demo.value = 0;
+    } else {
+      hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+      demo.value = withRepeat(
+        withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+        -1,
+        false,
+      );
+    }
     blink.value = withRepeat(withTiming(1, { duration: 420 }), -1, true);
     return () => {
       cancelAnimation(hint);
@@ -451,13 +600,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem]);
 
-  /** Una ficha ya puesta en el caño sigue en el cajón, apagada y sin escuchar. */
+  // La latencia se mide desde que empieza el juego, no desde la tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  /**
+   * Una ficha ya puesta en el caño sigue en el cajón, apagada y sin escuchar. El
+   * desvío que ya se probó, también: se ve igual que la pieza buena, y sin
+   * apagarlo el jugador tendría que acordarse de cuál de las dos gemelas era.
+   */
   const yaPuesta = useCallback(
     (i: number) => {
       const pieza = problem.tray[i];
-      return pieza !== undefined && placed.some((m) => m.id === pieza.id);
+      return pieza !== undefined && (placed.some((m) => m.id === pieza.id) || spent.includes(pieza.id));
     },
-    [problem.tray, placed],
+    [problem.tray, placed, spent],
   );
 
   useEffect(() => {
@@ -509,6 +667,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     setRound(r + 1);
   }, [level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (key: string) => {
       if (doneRef.current) return;
@@ -516,9 +694,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
       setSolved(true);
       quiet();
       setMessage({ text: t(key), tone: "ok" });
-      setTimeout(nextRound, 1800);
+      setTimeout(advance, 1800);
     },
-    [nextRound, quiet],
+    [advance, quiet],
   );
 
   /** Ganar. Cierra la ronda ya, y recién después muestra el cartel. */
@@ -577,9 +755,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
         setMessage({ text: t("fn.hint.extraRow"), tone: "dim" });
         return;
       }
+      say("fed");
+      if (yaEstaba) say("repeated");
       const bien = corrida.output === p.target;
       attempt(bien);
       if (bien) {
+        say("solved");
         win(a === "reject" ? "fn.done.reject" : "fn.done.guess", theme.motion.reveal);
         return;
       }
@@ -602,6 +783,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
       if (hecho || cerrado.current) return;
       const pieza = p.tray[index];
       if (!pieza || puestas.some((m) => m.id === pieza.id)) return;
+      // Mientras el desvío está adentro mostrando sus dos salidas, el caño no
+      // recibe otra pieza: entraría en la ranura de después y, al salir el
+      // desvío, la cadena quedaría corrida un lugar.
+      if (puestas.some((m) => m.fork !== null)) return;
       quiet();
       const esperada = p.solution[puestas.length];
       const esDesvio = pieza.fork !== null;
@@ -616,10 +801,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
         flow.value = 0;
         flow.value = withTiming(1, { duration: theme.motion.reveal });
         setMessage({ text: t("fn.hint.twoOutputs"), tone: "warn" });
-        setTimeout(
-          () => setPlaced((antes) => antes.filter((m) => m.id !== pieza.id)),
-          theme.motion.reveal + 900,
-        );
+        setTimeout(() => {
+          setPlaced((antes) => antes.filter((m) => m.id !== pieza.id));
+          setSpent((antes) => (antes.includes(pieza.id) ? antes : [...antes, pieza.id]));
+          if (!cerrado.current) setMessage({ text: t(FN_MSG.forkOff), tone: "dim" });
+        }, theme.motion.reveal + 900);
         return;
       }
       if (!bien) {
@@ -630,7 +816,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
 
       const ahora = [...puestas, pieza];
       setPlaced(ahora);
+      say("placed");
       if (ahora.length >= p.solution.length) {
+        say("built");
         setFed(p.rows[0]?.input ?? p.input);
         flow.value = 0;
         flow.value = withTiming(1, { duration: theme.motion.reveal });
@@ -680,6 +868,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
         return;
       }
       setArrows([...puestas, { from, to }]);
+      say("hung");
       setMessage({ text: t("fn.hint.nextArrow"), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -697,8 +886,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
   useEffect(() => {
     if (ask !== "network" || arrows.length === 0) return;
     const red = problem.networks[0];
-    if (red && fnNetworkIsFunction(red.inputs.length, arrows)) win("fn.done.network");
-  }, [ask, arrows, problem.networks, win]);
+    if (red && fnNetworkIsFunction(red.inputs.length, arrows) && !cerrado.current) {
+      say("solved");
+      win("fn.done.network");
+    }
+  }, [ask, arrows, problem.networks, win, say]);
 
   /** Elegir cuál de las dos redes no es una máquina. */
   const pickNetwork = useCallback(
@@ -729,9 +921,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
       const { problem: p, solved: hecho } = vivo.current;
       if (hecho || cerrado.current) return;
       quiet();
-      const bien = lane === 0;
+      const bien = lane === vivo.current.fLane;
       attempt(bien);
       if (bien) {
+        say("named");
         setNamed(true);
         setFed(p.input);
         flow.value = 0;
@@ -777,6 +970,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
       quiet();
       attempt(option.correct);
       if (option.correct) {
+        say("chosen");
         win(`fn.done.${vivo.current.ask}`);
         return;
       }
@@ -822,6 +1016,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     [swap, pickMachine],
   );
 
+  /**
+   * Un toque que no cayó en nada no se calla: la línea de abajo dice dónde
+   * tocar. Viaja por referencia porque el gesto se arma una sola vez.
+   */
+  const avisarRef = useRef<(code: number) => void>(() => undefined);
+  avisarRef.current = (code: number) => {
+    if (vivo.current.solved || cerrado.current) return;
+    const key = NUDGE[code];
+    if (key) setMessage({ text: t(key), tone: "dim" });
+  };
+  const avisar = useCallback((code: number) => avisarRef.current(code), []);
+
   // --- Gestos ----------------------------------------------------------------
 
   /**
@@ -858,8 +1064,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
     // siempre; un asa encima de una pieza dibujada, no: la del cajón contesta y
     // la de la carcasa no, y perseguir esa diferencia no vale lo que cuesta.
     const carcasas: { x: number; y: number; w: number; h: number; lane: number; slot: number }[] = [];
-    pl.lanes.forEach((l, carril) => {
-      const cuantasMaq = carril === 0 ? cadena.length : problem.other.length;
+    plv.lanes.forEach((l, carril) => {
+      const cuantasMaq = carril === fLane ? cadena.length : problem.other.length;
       l.machines.slice(0, cuantasMaq).forEach((b, slot) => {
         carcasas.push({ x: b.x, y: b.y, w: b.w, h: b.h, lane: carril, slot });
       });
@@ -884,7 +1090,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
       machines: carcasas,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nl, pl, ask, solved, problem.networks, problem.other, cadena.length]);
+  }, [nl, plv, ask, solved, problem.networks, problem.other, cadena.length, fLane]);
 
   /**
    * El gesto del lienzo. Sin `minDistance(0)`: con cero se activa en el mismo
@@ -951,6 +1157,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
             // Tocar una máquina y arrastrarla son el mismo movimiento: los dos
             // dicen "usá esta".
             if (g.activo && b) runOnJS(tapMachine)(b.lane);
+            else if (g.activo) runOnJS(avisar)(3);
             return;
           }
           if (!g.activo) {
@@ -966,6 +1173,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
                 return;
               }
             }
+            runOnJS(avisar)(2);
             return;
           }
           if (g.modo !== 1) return;
@@ -980,11 +1188,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
             drag.value = { group: 0, from: -1, x: 0, y: 0 };
             return;
           }
+          // Un toque sobre un punto de salida sin haber elegido de dónde sale la
+          // flecha no se calla: dice por dónde se empieza.
+          if (destino >= 0) runOnJS(avisar)(0);
           // El toque sobre un punto de entrada lo deja elegido y la flecha queda
           // esperando el segundo toque: dos toques hacen lo mismo que el
           // arrastre, y un toque sobre el lienzo anda siempre.
           if (movido < TAP_SLOP && g.tomado >= 0) {
             drag.value = { group: 0, from: g.tomado, x: e.x, y: e.y };
+            runOnJS(avisar)(1);
             return;
           }
           geo.value = { ...g, tomado: -1 };
@@ -1004,23 +1216,32 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
         slot.dx.value = withTiming(0, { duration: theme.motion.base });
         slot.dy.value = withTiming(0, { duration: theme.motion.base });
       }
-      const lane = pl.lanes[0];
+      const lane = plv.lanes[0];
       if (!lane) return;
       const { ask: a, problem: p } = vivo.current;
       if (a === "build" || a === "broken") {
         // Todo el caño es el blanco: lo que importa no es dónde cae sino cuál se
         // soltó, porque el orden lo decide la ranura vacía que sigue.
-        if (Math.abs(y - lane.y) > 120) return;
+        if (Math.abs(y - lane.y) > 120) {
+          setMessage({ text: t(FN_MSG.pieceBack), tone: "dim" });
+          return;
+        }
         install(index);
         return;
       }
+      // La boca, o cualquier punto del caño antes del pico: soltarla sobre la
+      // máquina también es meterla. Lo que cae lejos vuelve, y se dice.
       const cerca = Math.hypot(x - lane.mouth.x, y - lane.mouth.y);
-      if (cerca > 140) return;
+      const sobreCano = Math.abs(y - lane.y) < 100 && x > lane.mouth.x - 60 && x < lane.spout.x;
+      if (cerca > 140 && !sobreCano) {
+        setMessage({ text: t(FN_MSG.backToTray), tone: "dim" });
+        return;
+      }
       const valor = p.tokens[index];
       if (valor !== undefined) feed(valor);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [traySlots, pl.lanes, install, feed],
+    [traySlots, plv.lanes, install, feed],
   );
 
   /** Tocar una ficha del cajón hace lo mismo que arrastrarla hasta la ranura. */
@@ -1055,6 +1276,115 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
 
   const conFichas = problem.options.length > 0;
 
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda, calculado
+   * con la misma geometría que dibuja la escena: la ficha que conviene meter, la
+   * ranura libre, el punto que todavía no tiene flecha. Se recalcula con cada
+   * movimiento, así la luz siempre apunta a un gesto que falta. La pista de Tomi
+   * reusa los mismos pasos: señala lo mismo, pero no frena la ronda.
+   */
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown || shown.id === "recall") return null;
+    const id = shown.id;
+    const around = (s: Pt, m: number): Rect => ({ x: s.x - m, y: s.y - m, w: m * 2, h: m * 2 });
+    const grow = (b: Rect, m: number): Rect => ({ x: b.x - m, y: b.y - m, w: b.w + m * 2, h: b.h + m * 2 });
+
+    if (ask === "network" || ask === "judge") {
+      const red = problem.networks[0];
+      const g = nl.groups[0];
+      if (!red || !g) return null;
+      if (ask === "judge") {
+        return {
+          rings: nl.groups
+            .slice(0, problem.networks.length)
+            .map((b) => ({ x: b.box.x + 6, y: b.box.y - 34, w: b.box.w - 12, h: b.box.h + 44 })),
+        };
+      }
+      const pr = nl.pointR * 1.7;
+      const colIn = union(g.inputs.slice(0, red.inputs.length).map((s) => around(s, pr)));
+      const colOut = union(g.outputs.slice(0, red.outputs.length).map((s) => around(s, pr)));
+      const regla: Rect = { x: g.box.x + g.box.w * 0.2, y: g.rule.y - 20, w: g.box.w * 0.6, h: 40 };
+      if (id === "look") return { rings: [regla, colIn, colOut].filter(nonNull) };
+      if (id === "reveal") {
+        // El punto de la derecha al que no llega ninguna flecha: sobra y no rompe nada.
+        const huerfana = red.outputs.findIndex((_, j) => !arrows.some((a) => a.to === j));
+        const s = g.outputs[huerfana];
+        return { rings: [colIn, s ? around(s, pr) : null].filter(nonNull) };
+      }
+      // Colgar: el primer punto sin flecha y el punto adonde lo manda la regla.
+      const i = red.inputs.findIndex((_, j) => !arrows.some((a) => a.from === j));
+      const j = i >= 0 ? fnArrowTarget(red, i, problem.solution) : -1;
+      const desde = g.inputs[i];
+      const hasta = j >= 0 ? g.outputs[j] : undefined;
+      if (!desde || !hasta) return { rings: [colIn].filter(nonNull) };
+      return { rings: [around(desde, pr), around(hasta, pr)], drag: { from: desde, to: hasta } };
+    }
+
+    const lane = plv.lanes[0];
+    if (!lane) return null;
+    const cajon = Math.max(pipeConfig.tray.length, (pipeConfig.trayItems ?? []).length);
+    const pieza = (i: number): Rect | null => {
+      const s = plv.tray[i];
+      return s ? { x: s.x - plv.trayW / 2 - 6, y: s.y - plv.trayH / 2 - 6, w: plv.trayW + 12, h: plv.trayH + 12 } : null;
+    };
+    const trayRect = union(Array.from({ length: cajon }, (_, i) => pieza(i)).filter(nonNull));
+    const filas = pipeConfig.table.length;
+    const tableRect: Rect | null =
+      filas > 0 ? { x: plv.table.x - 10, y: plv.table.y - 10, w: plv.table.w + 20, h: plv.table.rowH * filas + 20 } : null;
+    const laneRect = (i: number): Rect | null => {
+      const l = plv.lanes[i];
+      if (!l) return null;
+      const cuantas = i === fLane ? cadena.length : problem.other.length;
+      return union(l.machines.slice(0, Math.max(1, cuantas)).map((b) => grow(b, 8)));
+    };
+    const salida = (i: number): Rect | null => {
+      const l = plv.lanes[i];
+      return l ? around(l.target, plv.tokenR * 1.8) : null;
+    };
+    const formula: Rect = { x: plv.formula.x - 130, y: plv.formula.y - 20, w: 260, h: 40 };
+
+    if (ask === "guess") {
+      if (id === "look") return { rings: [laneRect(0), salida(0), trayRect].filter(nonNull) };
+      if (id === "reveal") return { rings: [tableRect ?? laneRect(0)].filter(nonNull) };
+      if (id === "find") return { rings: [trayRect, salida(0)].filter(nonNull) };
+      // Meter una ficha: la que todavía no se probó o, para repetir, la última.
+      const usada = fed !== null ? problem.tokens.indexOf(fed) : -1;
+      const nueva = problem.tokens.findIndex((v) => !rows.some((f) => f.input === v));
+      const i = id === "again" && usada >= 0 ? usada : Math.max(0, nueva);
+      const s = plv.tray[i];
+      const rings = [pieza(i), id === "again" ? tableRect : around(lane.mouth, plv.tokenR * 1.8)].filter(nonNull);
+      return s ? { rings, drag: { from: s, to: lane.mouth } } : { rings };
+    }
+    if (ask === "build" || ask === "broken") {
+      if (id === "look") return { rings: [tableRect, trayRect].filter(nonNull) };
+      const hueco = lane.machines[placed.length];
+      if (id === "reveal" || !hueco || placed.length >= problem.solution.length) {
+        return { rings: [tableRect, laneRect(0)].filter(nonNull) };
+      }
+      // La pieza que va en la ranura libre, nunca su gemela de dos salidas.
+      const esperada = problem.solution[placed.length];
+      const i = problem.tray.findIndex(
+        (m, k) =>
+          esperada !== undefined && m.fork === null && m.op === esperada.op && m.value === esperada.value && !yaPuesta(k),
+      );
+      const s = i >= 0 ? plv.tray[i] : undefined;
+      const destino = { x: hueco.x + hueco.w / 2, y: hueco.y + hueco.h / 2 };
+      return s ? { rings: [pieza(i), grow(hueco, 8)].filter(nonNull), drag: { from: s, to: destino } } : { rings: [trayRect].filter(nonNull) };
+    }
+    if (ask === "name") {
+      if (id === "reveal") return { rings: [laneRect(fLane), formula].filter(nonNull) };
+      return { rings: [union([laneRect(0), salida(0)].filter(nonNull)), union([laneRect(1), salida(1)].filter(nonNull))].filter(nonNull) };
+    }
+    if (ask === "letters") {
+      if (id === "look") return { rings: [laneRect(0)].filter(nonNull) };
+      return { rings: [pipeConfig.formula ? formula : laneRect(0)].filter(nonNull) };
+    }
+    return null;
+  }, [shown, ask, problem, nl, plv, pipeConfig, arrows, placed, rows, fed, fLane, cadena.length, yaPuesta]);
+
   return (
     <View style={styles.root}>
 
@@ -1063,12 +1393,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <View style={{ width, height: sceneH }}>
         {/* Un solo lienzo por pantalla: las dos escenas viven adentro y la que
             no juega esta ronda se queda en opacidad cero. */}
         <Canvas style={{ width, height: sceneH }}>
+          {/* Corrida a la derecha en un teléfono: el rincón de abajo a la izquierda es de Tomi. */}
+          <Group transform={[{ translateX: pipeInset }]}>
           <PipeScene
             config={pipeConfig}
             layout={pl}
@@ -1083,6 +1418,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
             trayPieces={traySlots}
             picked={-1}
           />
+          </Group>
           <NetworkScene
             config={netConfig}
             layout={nl}
@@ -1104,7 +1440,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
             ronda que las desmonta deja al detector de la siguiente sin
             enganchar, y el arrastre se pierde sin decir nada. */}
         {Array.from({ length: PIPE_TRAY_SLOTS }, (_, i) => {
-          const spot = pl.tray[i] ?? { x: 0, y: 0 };
+          const spot = plv.tray[i] ?? { x: 0, y: 0 };
           const viva =
             i < Math.max(pipeConfig.tray.length, (pipeConfig.trayItems ?? []).length) &&
             !yaPuesta(i);
@@ -1114,8 +1450,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
               index={i}
               spot={spot}
               slot={traySlots[i] as PipeSlot}
-              w={pl.trayW}
-              h={pl.trayH}
+              w={plv.trayW}
+              h={plv.trayH}
               enabled={viva && !solved}
               onDrop={dropTray}
               onTap={tapTray}
@@ -1123,6 +1459,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MachineGameProps) {
           );
         })}
 
+        {/* La guía encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       {prompt !== "" ? <Text style={styles.prompt}>{prompt}</Text> : null}
