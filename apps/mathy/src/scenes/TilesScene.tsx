@@ -315,6 +315,44 @@ export interface TilesRooms {
   readonly product: string;
   /** La suma escrita, que ocupa el mismo lugar cuando la pared sale. */
   readonly sum: string;
+  /**
+   * Las llaves de los lados se dibujan. Ausente: sí. Con `false` queda sólo el
+   * renglón escrito: un piso que no se puede dibujar (un largo negativo) o que
+   * todavía nadie pidió no tiene lados que medir, y unas llaves alrededor de
+   * nada se leían como un marco roto.
+   */
+  readonly braces?: boolean;
+  /**
+   * Dónde va el renglón escrito. Ausente o `below`: debajo del piso. `center`:
+   * en el medio del marco, para un piso que nunca se dibuja; debajo de un piso
+   * invisible quedaba pegado al borde de abajo con el lienzo vacío arriba.
+   */
+  readonly writingAt?: "below" | "center";
+}
+
+/**
+ * El tamaño de las etiquetas de las habitaciones y del renglón. Tiene piso: con
+ * un marco de treinta y ocho columnas la baldosa mide cinco píxeles, y una
+ * etiqueta proporcional no se leía.
+ */
+export function tilesLabelSize(layout: { readonly unit: number }): number {
+  return Math.max(12, Math.min(layout.unit * 0.7, 22));
+}
+
+/**
+ * Dónde cae el renglón escrito de las habitaciones. La escena lo dibuja ahí y
+ * la guía lo señala ahí: una sola cuenta para las dos cosas.
+ */
+export function tilesWritingBox(
+  layout: { readonly unit: number; readonly frame: Box },
+  rooms: TilesRooms | null | undefined,
+): Box {
+  const { x, y, w, h } = layout.frame;
+  const size = tilesLabelSize(layout) * 1.2;
+  const cy =
+    rooms?.writingAt === "center" ? y + h / 2 : y + h + Math.max(layout.unit * 1.2, size * 1.1);
+  const ancho = Math.max(w, size * 7);
+  return { x: x + w / 2 - ancho / 2, y: cy - size * 0.8, w: ancho, h: size * 1.6 };
 }
 
 /**
@@ -414,6 +452,16 @@ export interface TilesConfig {
   readonly leftover?: number;
   /** Las dos habitaciones y la pared. Ausente o nula: el piso es uno solo. */
   readonly rooms?: TilesRooms | null;
+  /**
+   * Dónde va el piso respecto de la bandeja. Ausente o `below`: el piso arriba
+   * y la bandeja abajo, como siempre. `none`: no hay bandeja, y el piso se
+   * centra en el alto con aire arriba para sus llaves; pegado arriba, un piso
+   * cuadrado de cinco se comía las llaves contra el borde del lienzo.
+   * `beside`: la bandeja va a la derecha del piso, en columna; es para piezas
+   * altas (los rectángulos del cuadrado de una suma), que abajo se montaban
+   * sobre el piso.
+   */
+  readonly arrange?: "below" | "none" | "beside";
 }
 
 /** Una fila del montón mientras el dedo la lleva. */
@@ -473,14 +521,22 @@ export function tilesLayout(
   const sobran = config.leftover ?? 0;
   const aparte = sobran > 0 ? Math.ceil(sobran / Math.max(1, config.rows)) + 0.9 : 0;
   const span = Math.max(config.rows, config.cols, config.frameRows, config.frameCols, 1);
-  const frameH = height * 0.52;
+  const arrange = config.arrange ?? "below";
+  // Sin bandeja abajo, el piso vive entre el 14 % y el 74 % del alto: arriba
+  // quedan las llaves y abajo el renglón escrito. Con la bandeja al costado,
+  // el piso se queda con la parte izquierda del ancho.
+  const suelto = arrange !== "below";
+  const frameH = suelto ? height * 0.6 : height * 0.52;
+  const anchoPiso = arrange === "beside" ? width * 0.62 : width;
   const unit = Math.min(
     MAX_UNIT,
-    (width * 0.62) / Math.max(span, config.cols + aparte),
+    (anchoPiso * 0.62) / Math.max(span, config.cols + aparte),
     frameH / span,
   );
 
-  const center = { x: width / 2 - (aparte * unit) / 2, y: height * 0.3 };
+  const center = suelto
+    ? { x: arrange === "beside" ? width * 0.36 : width / 2 - (aparte * unit) / 2, y: height * 0.44 }
+    : { x: width / 2 - (aparte * unit) / 2, y: height * 0.3 };
   const frame = {
     x: center.x - (config.frameCols * unit) / 2,
     y: center.y - (config.frameRows * unit) / 2,
@@ -492,7 +548,7 @@ export function tilesLayout(
   // El montón se acomoda solo en las líneas que le entran: una fila de seis
   // baldosas y una de dos no pueden repartirse el ancho por partes iguales.
   const drawer: Spot[] = [];
-  const top = height * 0.64;
+  let top = height * 0.64;
   // La pieza más alta manda el alto del renglón: con un rectángulo de tres
   // celdas de alto en la bandeja, un renglón del alto de una baldosa se pisa
   // con el siguiente.
@@ -513,14 +569,36 @@ export function tilesLayout(
     (lines[row] as number[]).push(i);
     x += w + gap;
   }
-  for (let l = 0; l < lines.length; l++) {
-    const ids = lines[l] as number[];
-    const total = ids.reduce((s, i) => s + (widths[i] as number), 0) + gap * (ids.length - 1);
-    let cx = (width - total) / 2;
-    for (const i of ids) {
-      const w = widths[i] as number;
-      drawer[i] = { x: cx + w / 2, y: top + l * line };
-      cx += w + gap;
+  // Si el montón no entra debajo, sube: en un teléfono, con el libro al lado,
+  // las tiras se partían en tres líneas y la última quedaba medio afuera del
+  // lienzo, con su asa en el borde. Sólo corre cuando se saldría: los montones
+  // que ya entraban quedan exactamente donde estaban.
+  const ultimo = top + (lines.length - 1) * line + line / 2;
+  if (ultimo > height - 6) {
+    const pisoAbajo = frame.y + frame.h + line / 2;
+    top = Math.max(pisoAbajo, height - 6 - (lines.length - 1) * line - line / 2);
+  }
+  if (arrange === "beside") {
+    // En columna, a la derecha del piso y centradas en su alto.
+    const altos = config.loose.map((r) => (r.tall ?? 1) * unit);
+    const total = altos.reduce((s, h) => s + h, 0) + gap * Math.max(0, altos.length - 1);
+    let y = center.y - total / 2;
+    const col = width * 0.8;
+    for (let i = 0; i < altos.length; i++) {
+      const h = altos[i] as number;
+      drawer[i] = { x: col, y: y + h / 2 };
+      y += h + gap;
+    }
+  } else {
+    for (let l = 0; l < lines.length; l++) {
+      const ids = lines[l] as number[];
+      const total = ids.reduce((s, i) => s + (widths[i] as number), 0) + gap * (ids.length - 1);
+      let cx = (width - total) / 2;
+      for (const i of ids) {
+        const w = widths[i] as number;
+        drawer[i] = { x: cx + w / 2, y: top + l * line };
+        cx += w + gap;
+      }
     }
   }
   // Las ranuras que esta ronda no usa se van del lienzo: así el árbol de la
@@ -1116,7 +1194,9 @@ export function TilesScene({
 
   const keyGeom = useMemo(() => {
     const { x, y, w, h } = layout.frame;
-    const size = Math.min(layout.unit * 0.7, 22);
+    // Con habitaciones, la etiqueta tiene un tamaño mínimo (`tilesLabelSize`);
+    // sin ellas, los nodos 5 y 6 siguen como estaban.
+    const size = rooms ? tilesLabelSize(layout) : Math.min(layout.unit * 0.7, 22);
     // La normal de cada lado apunta hacia afuera del rectángulo: una llave
     // dibujada por dentro taparía justo las baldosas que está midiendo.
     const top = buildKey({ x, y }, { x: x + w, y }, 10, String(config.frameCols), size);
@@ -1129,7 +1209,8 @@ export function TilesScene({
     );
     // La expresión va debajo del piso y no encima: arriba se la comen las
     // llaves, y con un piso alto se saldría del lienzo.
-    const abajo = y + h + layout.unit * 1.2;
+    const renglon = tilesWritingBox(layout, rooms);
+    const abajo = rooms ? renglon.y + renglon.h / 2 : y + h + layout.unit * 1.2;
     const escribir = (text: string): SkPath => {
       const p = Skia.Path.Make();
       addGlyphs(p, text, x + w / 2, abajo, size * 1.2);
@@ -1343,6 +1424,36 @@ export function TilesScene({
   const hayPared = rooms !== null;
   const wallO = useDerivedValue(() => (hayPared ? 1 - Math.max(0, Math.min(1, split.value)) : 1));
   const gap = layout.unit * SPLIT;
+  const conLlaves = rooms?.braces !== false;
+
+  // --- El evento de la pared: el mismo piso, escrito de la otra manera -------
+  //
+  // Cuando la pared sale o vuelve por un gesto, el renglón cambia de escritura
+  // y el piso no pierde una baldosa: es lo que `alg.expr.distributive_tiles`
+  // enseña. El renglón que llega responde una vez, con chispas y vidrio. Una
+  // ronda nueva pone la pared de golpe, sin pasar por el medio, y eso no se
+  // celebra. Sin habitaciones no hay pared, y los nodos que separan las tiras
+  // como demostración (5 y 6) no oyen nada nuevo.
+  const writeBurst = useSharedValue(1);
+  const lastSplit = useSharedValue(-1);
+  useAnimatedReaction(
+    () => split.value,
+    (now) => {
+      const prev = lastSplit.value;
+      lastSplit.value = now;
+      if (!hayPared || prev < 0) return;
+      const enMedio = prev > 0.001 && prev < 0.999;
+      const llego = now >= 0.999 || now <= 0.001;
+      if (!enMedio || !llego) return;
+      writeBurst.value = 0;
+      writeBurst.value = withTiming(1, { duration: 720 });
+      runOnJS(sfx)("join", 0, 0);
+    },
+    [hayPared],
+  );
+  const writeHalo = useDerivedValue(() => (writeBurst.value < 1 ? 1 - writeBurst.value : 0));
+  const writeBox = useMemo<Box>(() => tilesWritingBox(layout, rooms), [layout, rooms]);
+  const writeFrame = useMemo(() => roundRect(writeBox, 10), [writeBox]);
 
   // --- El evento: el rectángulo quedó armado --------------------------------
   //
@@ -1604,7 +1715,7 @@ export function TilesScene({
       {config.keys ? (
         <>
           <Group opacity={keys}>
-            {rooms ? (
+            {!conLlaves ? null : rooms ? (
               keyGeom.spans.map((span, i) => (
                 <Group key={`span${i}`}>
                   <Path
@@ -1631,16 +1742,32 @@ export function TilesScene({
                 <Legible path={keyGeom.top.digits} color={theme.color.ink} />
               </>
             )}
-            <Path
-              path={keyGeom.left.brace}
-              color={theme.color.inkDim}
-              style="stroke"
-              strokeWidth={2.5}
-              strokeCap="round"
-              strokeJoin="round"
-            />
-            <Legible path={keyGeom.left.digits} color={theme.color.ink} />
+            {conLlaves ? (
+              <>
+                <Path
+                  path={keyGeom.left.brace}
+                  color={theme.color.inkDim}
+                  style="stroke"
+                  strokeWidth={2.5}
+                  strokeCap="round"
+                  strokeJoin="round"
+                />
+                <Legible path={keyGeom.left.digits} color={theme.color.ink} />
+              </>
+            ) : null}
           </Group>
+          {/* El renglón que llega cuando la pared se mueve: un halo menta y
+              chispas, una vez. Montado siempre, con opacidad cero. */}
+          {rooms ? (
+            <>
+              <Group opacity={writeHalo}>
+                <Path path={writeFrame} color={theme.color.ok} style="stroke" strokeWidth={6}>
+                  <BlurMask blur={7} style="normal" />
+                </Path>
+              </Group>
+              <Sparks box={writeBox} burst={writeBurst} />
+            </>
+          ) : null}
           {/* Las dos escrituras ocupan el mismo renglón y se cruzan con la
               pared: no son dos textos, son el mismo piso dicho de dos maneras. */}
           <Group opacity={cross}>

@@ -37,7 +37,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { BlurMask, Canvas, Group, LinearGradient, Path, Skia, vec, type SkPath } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -89,6 +89,8 @@ import { BalanceScene, MAX_TILT, balanceLayout, boxFootprint } from "../scenes/B
 import { StretchScene, stretchLayout, type StretchConfig } from "../scenes/StretchScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace, toggleFace } from "../ui/Kit.tsx";
@@ -96,6 +98,39 @@ import { ChipBodies } from "../ui/ChipBodies.tsx";
 
 /** Radio del blanco donde entra una ficha soltada sobre el cartel. */
 const DROP_R = 74;
+/** El blanco mínimo de todo lo que se toca con el dedo (N §11). */
+const DEDO = 44;
+/**
+ * El rincón de Tomi, abajo a la izquierda (`ui/HintBuddy.tsx`). Los botones de
+ * abajo no llegan ahí: un toque en el primero abría una pista en vez de contestar.
+ */
+const TOMI_ANGOSTO = 74;
+const TOMI_ANCHO = 92;
+/** El alto mínimo del tablero: menos, y la fila que nace al volcar pisa las fichas. */
+const MIN_SCENE = 330;
+
+/** Los mensajes que nombran la fruta, y su versión con letras (en `lessons/systems.ts`). */
+const CON_LETRAS: Readonly<Record<string, string>> = {
+  "sys.hint.pickChip": "pickChipLetter",
+  "sys.hint.chipHeld": "chipHeldLetter",
+  "sys.hint.needValue": "needValueLetter",
+  "sys.hint.alreadyGone": "alreadyGoneLetter",
+  "sys.hint.poured": "pouredLetter",
+  "sys.hint.pouredNothing": "pouredNothingLetter",
+  [`lesson.${NODE_TWO_BY_TWO}.msg.chipBack`]: "chipBackLetter",
+};
+
+const pad = (b: Rect, p: number): Rect => ({ x: b.x - p, y: b.y - p, w: b.w + p * 2, h: b.h + p * 2 });
+
+/** El rectángulo que abraza varios. */
+function around(rects: readonly Rect[]): Rect | null {
+  if (rects.length === 0) return null;
+  const x0 = Math.min(...rects.map((r) => r.x));
+  const y0 = Math.min(...rects.map((r) => r.y));
+  const x1 = Math.max(...rects.map((r) => r.x + r.w));
+  const y1 = Math.max(...rects.map((r) => r.y + r.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
 /** Las dos frutas del cartel, con la letra que cada una recibe en el morph. */
 const FRUITS: readonly LedgerKind[] = [
   { shape: "apple", mark: -1, closed: false, letter: "x" },
@@ -180,6 +215,15 @@ export function SystemsGame(props: SystemsGameProps) {
 function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  /** El paso de la guía a la vista. */
+  const guia = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
 
@@ -187,6 +231,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
     () => generateSystems(level, seedBase + round * 1000 + level.n, round),
     [level, round, seedBase],
   );
+
+  // La guía se juega en la primera ronda: sus pasos son de la pregunta de esa
+  // ronda. En las rondas de otra pregunta, la pista de Tomi no tiene gesto que
+  // mostrar; si no se lo decimos, habla del gesto de la otra pregunta.
+  const primeraPregunta = useRef(problem.ask);
+  if (round === 0) primeraPregunta.current = problem.ask;
+  const preferHint = lesson?.preferHint;
+  useEffect(() => {
+    preferHint?.(problem.ask === primeraPregunta.current ? null : "");
+  }, [problem.ask, preferHint]);
 
   /** Las filas de ahora. Volcar agrega una; sustituir reescribe las que hay. */
   const [rows, setRows] = useState<readonly SysRow[]>(problem.rows);
@@ -202,20 +256,40 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
   const [balanceRow, setBalanceRow] = useState(0);
   const [gridOn, setGridOn] = useState(level.asks.includes("classify"));
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: t(openingHint(problem.ask)),
+    text: conLeccion ? "" : t(openingHint(problem.ask)),
     tone: "dim",
   }));
 
   // --- Medidas ---------------------------------------------------------------
 
-  const sceneH = Math.max(380, Math.min(height * 0.64, 560));
+  /**
+   * El alto que de verdad le queda al tablero, medido. Calculado como fracción
+   * de la ventana, con el cartel de la guía arriba, los botones de abajo
+   * quedaban debajo del borde de la pantalla. El tablero toma lo que sobra.
+   */
+  const [area, setArea] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const estimado = height * (conLeccion ? 0.5 : 0.62);
+  const sceneH = Math.max(MIN_SCENE, Math.min(area && area.h > 0 ? area.h : estimado, 560));
+  const ventana = useWindowDimensions();
+  const rincon = ventana.width < 600 ? TOMI_ANGOSTO : TOMI_ANCHO;
   // La columna del costado la decide el **nivel** y no el interruptor: si el
   // ancho cambiara al pedir la balanza, el cartel y el mostrador se moverían
   // debajo del dedo en mitad de una ronda. Guardarla la apaga, no le devuelve
   // el espacio.
   const conCostado = level.balance !== "hidden" || level.grid;
-  const sideW = conCostado ? Math.round(width * 0.34) : 0;
+  // En el nivel de clasificar, en un teléfono, la grilla es lo que hay que
+  // mirar: con un tercio del ancho el plano medía 118 px y dos paralelas
+  // cercanas se leían como una sola recta. El cartel ahí no lleva fichas ni
+  // balanza, así que cede la mitad del ancho.
+  const soloClasifica = level.asks.every((a) => a === "classify");
+  // El cartel no baja de 200: el costado se queda con lo que el cartel deja, o
+  // el plano se salía por el borde derecho de la pantalla.
+  const sideW = conCostado
+    ? Math.min(Math.round(width * (width < 600 && soloClasifica ? 0.52 : 0.34)), Math.max(0, width - 200))
+    : 0;
   const cartelW = Math.max(width - sideW, 200);
+  /** Un teléfono: el mostrador y la balanza se acomodan distinto (ver `chipSpots`). */
+  const angosto = width < 600;
 
   // --- El cartel -------------------------------------------------------------
 
@@ -273,13 +347,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
   );
 
   /** Dónde espera cada ficha del mostrador y cada ficha de factor. */
+  // En un teléfono el cartel se queda con dos tercios del ancho, y seis fichas
+  // de 44 caían a 37 de distancia: se pisaban, dibujadas y como blanco, y un
+  // toque en el borde elegía la de al lado. Angosto, el mostrador usa el ancho
+  // entero; queda debajo del cartel y de la balanza, que ahí termina más arriba.
   const chipSpots = useMemo<readonly LedgerSpot[]>(() => {
-    const paso = Math.min(cartelW / (SYS_CHIP_SLOTS + 1), 68);
+    const ancho = angosto ? width : cartelW;
+    const paso = Math.min(ancho / (SYS_CHIP_SLOTS + 1), 68);
     return Array.from({ length: SYS_CHIP_SLOTS }, (_, i) => ({
-      x: cartelW / 2 + (i - (SYS_CHIP_SLOTS - 1) / 2) * paso,
+      x: ancho / 2 + (i - (SYS_CHIP_SLOTS - 1) / 2) * paso,
       y: sceneH - 74,
     }));
-  }, [cartelW, sceneH]);
+  }, [angosto, width, cartelW, sceneH]);
 
   const factorSpots = useMemo<readonly LedgerSpot[]>(() => {
     const paso = Math.min(cartelW / (SYS_FACTOR_SLOTS + 1), 68);
@@ -416,7 +495,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
   // corta contra el borde de la pantalla.
   const balanceW = Math.max(sideW * 0.82, 1);
   const balanceX = cartelW + sideW * 0.09;
-  const balanceH = sceneH * 0.78;
+  // En un teléfono el mostrador pasa por debajo de la balanza: que termine
+  // antes de las fichas.
+  const balanceH = sceneH * (angosto ? 0.6 : 0.78);
 
   /**
    * La fila repartida en dos platos. Un tramo restado **cruza la línea**: la
@@ -593,20 +674,23 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
     setBalanceOn(false);
     setBalanceRow(0);
     setGridOn(level.asks.includes("classify"));
-    setMessage({ text: t(openingHint(problem.ask)), tone: "dim" });
+    setMessage({ text: conLeccion ? "" : t(openingHint(problem.ask)), tone: "dim" });
     balanceAppear.value = 0;
     gridAppear.value = level.asks.includes("classify") ? 1 : 0;
     balanceTilt.value = 0;
     replay.value = 0;
     dragIdx.value = -1;
     // El latido de la demostración: la mano fantasma lleva una ficha bajo la
-    // primera fruta y las dos filas responden a la vez.
+    // primera fruta y las dos filas responden a la vez. Con guía, la luz de
+    // Lumi es la demostración: dos manos a la vez señalarían dos cosas.
     pulse.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1500 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    demo.value = guided
+      ? 0
+      : withRepeat(
+          withSequence(withTiming(1, { duration: 1500 }), withTiming(0, { duration: 1 })),
+          -1,
+          false,
+        );
     return () => {
       cancelAnimation(pulse);
       cancelAnimation(demo);
@@ -621,6 +705,32 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_TWO_BY_TWO, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj arranca cuando el nivel empieza, no detrás de la tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [problem, playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa, en el
+  // mismo lugar donde registra el movimiento. Por referencia: el callback de un
+  // gesto puede estar un render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
+  /**
+   * Un mensaje de la línea de abajo. Desde `symbolic` las frutas ya cedieron su
+   * lugar a las letras, y un mensaje que siguiera diciendo "fruta" contradiría
+   * el morph que el jugador acaba de ver: esos mensajes tienen su versión con
+   * letras en `lessons/systems.ts`.
+   */
+  const dicho = useCallback(
+    (key: string): string => {
+      const letra = level.letters ? CON_LETRAS[key] : undefined;
+      return t(letra ? `lesson.${NODE_TWO_BY_TWO}.msg.${letra}` : key);
+    },
+    [level.letters],
+  );
 
   // --- Movimientos -----------------------------------------------------------
 
@@ -664,6 +774,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
     setRound((r) => r + 1);
   }, [round, level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = guia?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (guia?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [guia, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -671,9 +801,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       setSolved(true);
       quiet();
       setMessage({ text, tone: "ok" });
-      luego(nextRound, 2100);
+      say("solved");
+      luego(advance, 2100);
     },
-    [nextRound, quiet, luego],
+    [advance, quiet, luego, say],
   );
 
   /**
@@ -760,7 +891,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       if (solved) return;
       quiet();
       if (which < 0) {
-        setMessage({ text: t("sys.hint.pickChip"), tone: "dim" });
+        setMessage({ text: dicho("sys.hint.pickChip"), tone: "dim" });
         return;
       }
       const v = problem.chips[which];
@@ -768,6 +899,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       const proximos = values.map((old, i) => (i === fruit ? v : old));
       setValues(proximos);
       setChip(-1);
+      // El clic de la ficha que entra lo toca el cartel (`LedgerScene`), una
+      // vez para todas las filas: acá no suena nada más.
+      say("placed");
 
       // La fila sola: cada par que la deja derecha cuenta, y ninguno es "la"
       // respuesta. Es la dificultad principal del nodo, hecha gesto.
@@ -788,6 +922,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
         }
         const proximosPares = [...found, clave];
         setFound(proximosPares);
+        say("pairFound");
         if (proximosPares.length >= problem.picks) {
           succeed(t("sys.hint.pairsDone"));
           return;
@@ -800,7 +935,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
 
       revisar(rows, proximos);
     },
-    [solved, quiet, problem, values, rows, found, attempt, succeed, luego, revisar],
+    [solved, quiet, problem, values, rows, found, attempt, succeed, luego, revisar, dicho, say],
   );
 
   /**
@@ -814,20 +949,22 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       quiet();
       const v = values[fruit];
       if (v === null || v === undefined) {
-        setMessage({ text: t("sys.hint.needValue"), tone: "dim" });
+        setMessage({ text: dicho("sys.hint.needValue"), tone: "dim" });
         return;
       }
       if (!rows.some((r) => sysCoef(r, fruit) !== 0)) {
-        setMessage({ text: t("sys.hint.alreadyGone"), tone: "dim" });
+        setMessage({ text: dicho("sys.hint.alreadyGone"), tone: "dim" });
         return;
       }
       const proximas = sysSubstituteAll(rows, fruit, v);
       setRows(proximas);
+      play("settle");
+      say("substituted");
       // La fruta ya cedió su lugar al nombre: desde `symbolic` lo que se va es
       // la incógnita, y llamarla fruta contradiría el morph que acaba de pasar.
       revisar(proximas, values, t(level.letters ? "sys.hint.substitutedLetter" : "sys.hint.substituted"));
     },
-    [solved, quiet, values, rows, revisar, level.letters],
+    [solved, quiet, values, rows, revisar, level.letters, dicho, say],
   );
 
   /** Volcar un renglón sobre otro: los dos lados se juntan en una fila nueva. */
@@ -849,16 +986,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       const proximas = [...rows, nueva];
       setRows(proximas);
       setHeldRow(-1);
+      play(cancelo ? "join" : "drop");
+      say("poured");
       // Volcar sin que se cancele nada es válido y no sirve: empujón suave, no
       // explicación. Ninguna entrada del catálogo apunta a este nodo para ese
       // movimiento, así que el `attempt` va sin campo.
       attempt(cancelo);
       setMessage({
-        text: t(cancelo ? "sys.hint.poured" : "sys.hint.pouredNothing"),
+        text: dicho(cancelo ? "sys.hint.poured" : "sys.hint.pouredNothing"),
         tone: cancelo ? "ok" : "dim",
       });
     },
-    [solved, quiet, rows, attempt],
+    [solved, quiet, rows, attempt, dicho, say],
   );
 
   /** Agrandar una fila entera: todos sus términos crecen juntos, y el total. */
@@ -872,6 +1011,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       const proximas = rows.map((r, i) => (i === index ? sysScale(r, k) : r));
       setRows(proximas);
       setFactor(-1);
+      play("fit");
+      say("scaled");
       // El factor sirve si acerca la eliminación: o las dos filas ya se pueden
       // volcar sin escalar más, o el plan que queda es más barato que el de
       // antes. Con `both_rows` la primera fila escalada todavía no cancela nada
@@ -906,7 +1047,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
         succeed(t(`sys.hint.class.${problem.kind}`));
         return;
       }
-      setMessage({ text: t("sys.hint.wrongClass"), tone: "warn" });
+      // "No es esa" calificaba; el mensaje del nodo dice qué mirar.
+      setMessage({ text: t(`lesson.${NODE_TWO_BY_TWO}.msg.wrongClass`), tone: "warn" });
     },
     [solved, quiet, problem.kind, attempt, succeed],
   );
@@ -942,6 +1084,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       }
       if (heldRow < 0) {
         setHeldRow(index);
+        say("rowHeld");
         setMessage({ text: t("sys.hint.rowHeld"), tone: "dim" });
         return;
       }
@@ -960,9 +1103,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
       if (solved) return;
       setFactor(-1);
       setChip((c) => (c === index ? -1 : index));
-      setMessage({ text: t("sys.hint.chipHeld"), tone: "dim" });
+      setMessage({ text: dicho("sys.hint.chipHeld"), tone: "dim" });
     },
-    [solved],
+    [solved, dicho],
   );
 
   const touchFactor = useCallback(
@@ -994,11 +1137,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
           }
         });
       });
-      if (mejor < 0) return;
+      if (mejor < 0) {
+        // Soltada lejos de toda fruta, vuelve al mostrador; en silencio parecía
+        // que el cartel no aceptaba fichas.
+        const lejos = Math.hypot(x - (chipSpots[index]?.x ?? x), y - (chipSpots[index]?.y ?? y)) > 20;
+        if (lejos) setMessage({ text: dicho(`lesson.${NODE_TWO_BY_TWO}.msg.chipBack`), tone: "dim" });
+        return;
+      }
       const term = rows[Math.floor(mejor / 2)]?.terms[mejor % 2];
       if (term) placeChip(term.fruit, index);
     },
-    [ll.cells, rows, placeChip],
+    [ll.cells, rows, placeChip, chipSpots, dicho],
   );
 
   /**
@@ -1034,6 +1183,125 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
     });
   }, [gridAppear]);
 
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Dónde quedan, respecto del lienzo, los botones de clase. Viven fuera del
+   * lienzo, así que se miden: la franja del tablero y la de los botones son
+   * hijas directas de la raíz y `onLayout` las mide contra el mismo padre.
+   */
+  const canvasAt = useMemo<Pt | null>(
+    () => (area ? { x: area.x + (area.w - width) / 2, y: area.y + (area.h - sceneH) / 2 } : null),
+    [area, width, sceneH],
+  );
+  const [answersAt, setAnswersAt] = useState<Rect | null>(null);
+
+  /**
+   * Cada paso de la guía señala algo real del cartel de esta ronda, calculado
+   * con la misma geometría con la que la escena lo dibuja (`ledgerLayout`, las
+   * ranuras del mostrador, las perillas). La pista de Tomi reusa los pasos:
+   * señala lo mismo, pero no frena la ronda.
+   */
+  const shown = guia ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const rowRect = (i: number): Rect | null => {
+      const box = ll.rows[i];
+      const grip = rowGrips[i];
+      if (!box || i >= rows.length) return null;
+      const x1 = grip ? grip.x + 16 : box.x + box.w;
+      return { x: box.x - 8, y: box.y - 6, w: x1 - box.x + 16, h: box.h + 12 };
+    };
+    const cellRect = (i: number, j: number): Rect | null => {
+      const s = ll.cells[i]?.[j];
+      if (!s) return null;
+      return { x: s.x - ll.cellW * 0.46, y: s.y - 30, w: ll.cellW * 0.92, h: 60 };
+    };
+    /** La celda de una fruta en una fila, si la fila todavía la tiene. */
+    const celdaDe = (i: number, fruit: number): { rect: Rect; at: Pt } | null => {
+      const j = rows[i]?.terms.findIndex((term) => term.fruit === fruit) ?? -1;
+      const s = j >= 0 ? ll.cells[i]?.[j] : undefined;
+      const r = j >= 0 ? cellRect(i, j) : null;
+      return s && r ? { rect: r, at: { x: s.x, y: s.y } } : null;
+    };
+    const spotsRect = (spots: readonly LedgerSpot[], n: number, half: number): Rect | null =>
+      around(
+        spots.slice(0, n).map((s) => ({ x: s.x - half, y: s.y - DEDO / 2, w: half * 2, h: DEDO })),
+      );
+    const fichas = spotsRect(chipSpots, problem.chips.length, 26);
+    const factores = spotsRect(factorSpots, problem.factors.length, 22);
+    // La luz sale del medio del mostrador: no señala una ficha, señala el gesto.
+    const desdeMostrador: Pt | null = fichas ? { x: fichas.x + fichas.w / 2, y: fichas.y + fichas.h / 2 } : null;
+    const conLuz = (rings: (Rect | null)[], to: Pt | null): Focus => {
+      const rs = rings.filter((r): r is Rect => r !== null);
+      return desdeMostrador && to ? { rings: rs, drag: { from: desdeMostrador, to } } : { rings: rs };
+    };
+    const filas = (): Rect[] => rows.map((_, i) => rowRect(i)).filter((r): r is Rect => r !== null);
+    /** Una fruta de las filas que todavía no mostró su valor. */
+    const sinValor = (): { rect: Rect; at: Pt } | null => {
+      for (let i = rows.length - 1; i >= 0; i--) {
+        for (const term of rows[i]?.terms ?? []) {
+          if (values[term.fruit] === null || values[term.fruit] === undefined) {
+            const c = celdaDe(i, term.fruit);
+            if (c) return c;
+          }
+        }
+      }
+      return null;
+    };
+    const grip = (i: number): Rect | null => {
+      const g = rowGrips[i];
+      return g && i < rows.length ? { x: g.x - 22, y: g.y - 22, w: 44, h: 44 } : null;
+    };
+
+    switch (problem.ask) {
+      case "share":
+      case "pairs": {
+        if (id === "look" || id === "reveal") return { rings: filas() };
+        const c = sinValor() ?? celdaDe(0, 0);
+        return conLuz([c?.rect ?? null, fichas], c?.at ?? null);
+      }
+      case "substitute": {
+        if (id === "look" || id === "reveal") return { rings: filas() };
+        if (id === "swap") {
+          // La fruta que ya mostró su valor, en las dos filas donde está.
+          const f = values.findIndex((v) => v !== null && v !== undefined);
+          const cs = rows.map((_, i) => celdaDe(i, f)?.rect ?? null).filter((r): r is Rect => r !== null);
+          if (f >= 0 && cs.length > 0) return { rings: cs };
+        }
+        // Primero la fruta de la fila que está sola; después la que falte.
+        const sola = rows.findIndex((r) => r.terms.length === 1 && (values[r.terms[0]?.fruit ?? 0] ?? null) === null);
+        const c = sola >= 0 ? celdaDe(sola, rows[sola]?.terms[0]?.fruit ?? 0) : sinValor();
+        return conLuz([c?.rect ?? null, fichas], c?.at ?? null);
+      }
+      case "pour":
+      case "choose": {
+        if (id === "look") return { rings: filas() };
+        if (id === "reveal") return { rings: [rowRect(rows.length - 1)].filter((r): r is Rect => r !== null) };
+        if (id === "scale") return { rings: [factores, grip(0), grip(1)].filter((r): r is Rect => r !== null) };
+        if (id === "hold" || id === "pour") {
+          const otra = heldRow >= 0 ? (heldRow === 0 ? 1 : 0) : 0;
+          return { rings: [grip(otra)].filter((r): r is Rect => r !== null) };
+        }
+        const c = sinValor();
+        return conLuz([c?.rect ?? null, fichas], c?.at ?? null);
+      }
+      default: {
+        // Clasificar: las dos rectas del plano, y abajo los tres veredictos.
+        const p = pl.plane;
+        const w = (planeCfg.plane?.window ?? 1) * p.unit;
+        const plano: Rect = { x: cartelW + p.cx - w - 8, y: p.cy - w - 8, w: w * 2 + 16, h: w * 2 + 16 };
+        const botones =
+          answersAt && canvasAt
+            ? pad({ x: answersAt.x - canvasAt.x, y: answersAt.y - canvasAt.y, w: answersAt.w, h: answersAt.h }, 6)
+            : null;
+        if (id === "classify" && botones) return { rings: [botones, plano] };
+        return { rings: [plano] };
+      }
+    }
+  }, [shown, problem, rows, values, ll, rowGrips, chipSpots, factorSpots, heldRow, pl, planeCfg.plane, cartelW, answersAt, canvasAt]);
+
   const preguntaClase = problem.ask === "classify" && !solved;
   const conFichas = problem.chips.length > 0;
   const conFactores = problem.factors.length > 0;
@@ -1046,8 +1314,23 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
 
+      <CoachBanner round={round} rounds={level.rounds} />
+
+      <View
+        style={styles.area}
+        onLayout={(e) => {
+          const l = e.nativeEvent.layout;
+          const r = { x: Math.round(l.x), y: Math.round(l.y), w: Math.round(l.width), h: Math.round(l.height) };
+          setArea((a) =>
+            a && Math.abs(a.x - r.x) < 2 && Math.abs(a.y - r.y) < 2 && Math.abs(a.w - r.w) < 2 && Math.abs(a.h - r.h) < 2
+              ? a
+              : r,
+          );
+        }}
+      >
       <View style={{ width, height: sceneH }}>
         {/* Un solo lienzo por pantalla: el cartel, la balanza y el plano viven
             adentro del mismo. */}
@@ -1171,10 +1454,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
             <Handle
               key={`g${i}`}
               index={i}
-              x={spot.x - 18}
-              y={spot.y - 18}
-              w={36}
-              h={36}
+              x={spot.x - DEDO / 2}
+              y={spot.y - DEDO / 2}
+              w={DEDO}
+              h={DEDO}
               enabled={i < rows.length && !solved && !preguntaClase}
               onTap={alTocarAsa}
             />
@@ -1189,9 +1472,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
                   key={`h${i}`}
                   index={i}
                   x={spot.x - 24}
-                  y={spot.y - 19}
+                  y={spot.y - DEDO / 2}
                   w={48}
-                  h={38}
+                  h={DEDO}
                   enabled={i < problem.chips.length && !solved}
                   onTap={alTocarFicha}
                   onDrop={alSoltarFicha}
@@ -1211,30 +1494,43 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
                 <Handle
                   key={`x${i}`}
                   index={i}
-                  x={spot.x - 19}
-                  y={spot.y - 19}
-                  w={38}
-                  h={38}
+                  x={spot.x - DEDO / 2}
+                  y={spot.y - DEDO / 2}
+                  w={DEDO}
+                  h={DEDO}
                   enabled={i < problem.factors.length && !solved}
                   onTap={alTocarFactor}
                 />
               );
             })
           : null}
+        {/* Encima de todo y sin llevarse ningún toque: anillos y la luz de Lumi. */}
+        <Spotlight focus={focus} />
+      </View>
       </View>
 
-      <Hint text={message.text} tone={message.tone} />
+      {/* Un renglón fijo: si la línea de abajo entrara y saliera, el tablero
+          saltaría debajo del dedo. */}
+      <View style={styles.hintSlot}>
+        <Hint text={message.text} tone={message.tone} />
+      </View>
 
       {/* Las tres clases de sistema: no son un movimiento, son un veredicto. */}
       {preguntaClase ? (
-        <View style={styles.answers}>
+        <View
+          style={[styles.answers, { marginLeft: ventana.width < 600 ? rincon - 12 : 0 }]}
+          onLayout={(e) => {
+            const l = e.nativeEvent.layout;
+            setAnswersAt({ x: l.x, y: l.y, w: l.width, h: l.height });
+          }}
+        >
           <Choice label={t("sys.answer.unique")} onPress={() => classify("unique")} />
           <Choice label={t("sys.answer.none")} onPress={() => classify("none")} />
           <Choice label={t("sys.answer.infinite")} onPress={() => classify("infinite")} />
         </View>
       ) : null}
 
-      <View style={styles.tools}>
+      <View style={[styles.tools, { paddingLeft: ventana.width < 600 ? rincon : 0 }]}>
         {level.balance === "onDemand" ? (
           <Toggle label={t(balanceOn ? "multi.balance.hide" : "multi.balance.show")} onPress={toggleBalance} />
         ) : null}
@@ -1249,7 +1545,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
         ) : null}
       </View>
 
-      {level.definition ? <Text style={styles.definition}>{t("sys.definition")}</Text> : null}
+      {level.definition ? (
+        <Text style={[styles.definition, { paddingLeft: rincon }]}>{t("sys.definition")}</Text>
+      ) : null}
     </View>
   );
 }
@@ -1370,19 +1668,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.space[1],
   },
-  back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
-  backLabel: { color: theme.color.inkFaint, fontSize: 14 },
-  answers: { flexDirection: "row", gap: theme.space[2] },
+  area: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
+  hintSlot: { minHeight: 52, alignSelf: "stretch", justifyContent: "center" },
+  answers: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: theme.space[2] },
+  // Todo lo que se toca mide 44 de alto como mínimo (N §11): los veredictos
+  // medían 38 y las pastillas de herramientas, menos.
   choice: {
+    minHeight: DEDO,
+    justifyContent: "center",
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[1],
     borderRadius: theme.radius.token,
     ...chipFace,
   },
-  choiceLabel: { color: theme.color.ink, fontSize: 14 },
-  tools: { flexDirection: "row", gap: theme.space[2] },
+  choiceLabel: { color: theme.color.ink, fontSize: 15 },
+  tools: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: theme.space[2] },
   toggle: {
-    paddingHorizontal: theme.space[2],
+    minHeight: DEDO,
+    justifyContent: "center",
+    paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[0],
     borderRadius: theme.radius.full,
     ...toggleFace,

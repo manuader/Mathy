@@ -2,9 +2,8 @@
  * Dos habitaciones: el minijuego de `alg.expr.distributive_tiles`.
  *
  * Un chico que no lee tiene que poder empezarlo. Por eso no hay ninguna
- * instrucción escrita en las capas concretas: una mano fantasma lleva la
- * primera tira al marco y el objeto contesta. Los mensajes de abajo son para el
- * adulto que mira.
+ * instrucción escrita en las capas concretas: la guía de Lumi lleva la primera
+ * tira al marco y el objeto contesta. Los mensajes de abajo cuentan lo que pasó.
  *
  * El nodo no estrena ninguna escena. El piso es `TilesScene` —la del nodo 5,
  * que ya traía el corte de la base pensado para esto— con las habitaciones
@@ -25,29 +24,34 @@
  *
  * - Arrastrar una tira al marco. Si mide lo que esa habitación pide, entra y la
  *   columna del libro sube. Si no, el marco se resiste y la devuelve.
- * - Tocar la pared. La saca o la pone. El piso no cambia de tamaño, el contador
- *   de superficie no se mueve, y las dos escrituras se cruzan en el renglón.
+ * - Tocar el piso. Saca o pone la pared, en las rondas que la mueven: el piso
+ *   entero es el blanco, porque apuntarle a una raya de tres píxeles era la
+ *   parte difícil del nivel y no la matemática. El piso no cambia de tamaño y
+ *   las dos escrituras se cruzan en el renglón.
  * - Arrastrar la ficha de un bloque a su columna del libro.
  * - Tocar una ficha entre varias, que es como se contestan reconocer,
- *   explicar, generalizar y el cuadrado.
- * - Tocar el producto para que aparezca el piso, cuando ya no está dibujado.
+ *   explicar, repartir, el cuadrado, recomponer y el contraejemplo.
+ * - Tocar el tablero para que aparezca el piso, cuando ya no está dibujado.
  *
  * Los dos errores que clasifican son los dos que el catálogo de L declara sobre
  * este nodo: `variable_as_label` cuando se apilan dos piezas de forma distinta,
  * con la repetición corriendo en el libro, y `distribute_over_wrong_op` cuando
  * se reparte sobre un cuadrado o sobre un producto, con el patrón
  * `missing_piece_tiles` colocando las piezas que el jugador nombró y dejando
- * parpadear los dos rectángulos que faltan. Todo lo demás se muestra y no se
- * anota.
+ * vacíos los dos rectángulos que faltan. Todo lo demás se muestra y no se anota.
+ *
+ * La lección (tarjetas, guía y llaves) vive en `lessons/distributive.ts`, y los
+ * textos de la línea de abajo también: acá sólo hay claves.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
   runOnJS,
+  useAnimatedStyle,
   useSharedValue,
   withDelay,
   withRepeat,
@@ -78,13 +82,17 @@ import type { Event } from "@mathy/progress";
 import {
   TilesScene,
   tilesLayout,
+  tilesWritingBox,
   type RowSlot,
   type TilesConfig,
 } from "../scenes/TilesScene.tsx";
 import { LedgerScene, ledgerLayout, type LedgerConfig } from "../scenes/LedgerScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { t } from "../i18n.ts";
+import { play } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
 import { chipFace } from "../ui/Kit.tsx";
 
@@ -94,6 +102,18 @@ const MENOS = "−";
 const HOLGURA = 0.6;
 /** La repetición del error va en cámara lenta: es para mirarla, no para pasarla. */
 const REPLAY_MS = 1300;
+/** El blanco mínimo de todo lo que se agarra con el dedo (N §11). */
+const DEDO = 44;
+/**
+ * El rincón de Tomi, abajo a la izquierda (`ui/HintBuddy.tsx`): 52 más 10 de
+ * margen en una pantalla angosta, 64 más 16 en una ancha, y holgura. Las
+ * fichas de abajo no llegan ahí: un toque en la primera abría una pista.
+ */
+const TOMI_ANGOSTO = 74;
+const TOMI_ANCHO = 92;
+
+/** Un texto de la línea de abajo. Viven en `lessons/distributive.ts`. */
+const m = (id: string): string => t(`lesson.${NODE_DISTRIBUTIVE_TILES}.msg.${id}`);
 
 export interface DistributiveGameProps {
   readonly level: DistLevel;
@@ -141,9 +161,30 @@ export function distFormText(form: DistForm): string {
 const shapeGlyph = (shape: string): string =>
   shape === "x_strip" ? "tile_strip" : shape === "x_square" ? "tile_square" : "tile_unit";
 
-function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps) {
+const pad = (b: Rect, p: number): Rect => ({ x: b.x - p, y: b.y - p, w: b.w + p * 2, h: b.h + p * 2 });
+
+/** El rectángulo que abraza varios. */
+function around(rects: readonly Rect[]): Rect | null {
+  if (rects.length === 0) return null;
+  const x0 = Math.min(...rects.map((r) => r.x));
+  const y0 = Math.min(...rects.map((r) => r.y));
+  const x1 = Math.max(...rects.map((r) => r.x + r.w));
+  const y1 = Math.max(...rects.map((r) => r.y + r.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+function Activity({ level, onLevelDone, onEvent }: DistributiveGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: nada que corra contra el reloj arranca hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  /** El paso de la guía a la vista. */
+  const guia = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  /** Con lección, el cartel dice qué hacer y la línea de abajo queda para lo que pasó. */
+  const conLeccion = lesson?.lesson !== undefined;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -153,6 +194,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
     [level, round, seedBase],
   );
   const ask = problem.ask;
+
+  // La guía se juega en la primera ronda: sus pasos son de la pregunta de esa
+  // ronda. En las rondas de otra pregunta, la pista de Tomi no tiene gesto que
+  // mostrar; si no se lo decimos, habla del gesto de la otra pregunta.
+  const primeraPregunta = useRef(ask);
+  if (round === 0) primeraPregunta.current = ask;
+  const preferHint = lesson?.preferHint;
+  useEffect(() => {
+    preferHint?.(ask === primeraPregunta.current ? null : "");
+  }, [ask, preferHint]);
 
   /** Cuántas tiras entraron en cada habitación. */
   const [strips, setStrips] = useState<readonly number[]>([0, 0]);
@@ -172,16 +223,33 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
   const [missing, setMissing] = useState(false);
 
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: apertura(ask),
+    text: conLeccion ? "" : m(`open.${ask}`),
     tone: "dim",
   }));
 
-  const sceneH = Math.max(340, Math.min(height * 0.6, 500));
+  /**
+   * El alto que de verdad le queda al tablero, medido. Calculado como fracción
+   * de la ventana, con el cartel de la guía y las fichas abajo, las fichas
+   * quedaban debajo del borde de la pantalla y la ronda no se podía contestar.
+   * El tablero toma lo que sobra, como en el nodo 8.
+   */
+  const conFichas = problem.options.length > 0;
+  const [area, setArea] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const estimado = height * (conLeccion ? 0.5 : 0.62) - (conFichas ? 76 : 0);
+  const sceneH = Math.max(220, Math.min(area && area.h > 0 ? area.h : estimado, 520));
+  const ventana = useWindowDimensions();
+  const rincon = ventana.width < 600 ? TOMI_ANGOSTO : TOMI_ANCHO;
   // El libro va a la derecha y el piso se queda con el resto, que es la
   // disposición que pide el documento: marco al centro, bandeja abajo, libro al
-  // costado.
-  const ledgerW = level.ledger ? Math.min(Math.max(width * 0.32, 200), 300) : 0;
-  const tilesW = Math.max(240, width - ledgerW);
+  // costado. En un teléfono el libro se lleva un poco más de la mitad de lo
+  // que se llevaría en proporción: con menos, sus columnas se salían del lienzo.
+  const angosto = width < 600;
+  const ledgerW = level.ledger
+    ? angosto
+      ? Math.round(Math.max(150, width * 0.4))
+      : Math.min(Math.max(width * 0.32, 200), 300)
+    : 0;
+  const tilesW = Math.max(200, width - ledgerW);
 
   // --- Lo que ven las escenas ------------------------------------------------
 
@@ -195,6 +263,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
    */
   const drawable =
     problem.width.every((w) => w.coef > 0) && problem.rooms.every((r) => r.length.coef > 0);
+  /**
+   * Las llaves de los lados van con el marco: si el marco se dibuja, sus lados
+   * se leen (el cuadrado de lado a más b no se entiende sin ellos). Sin marco
+   * que dibujar no hay lados, y unas llaves alrededor de nada no dicen nada.
+   */
+  const conLlaves = drawable;
 
   const tilesCfg = useMemo<TilesConfig>(
     () => ({
@@ -214,8 +288,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
       })),
       cut: 2,
       total: problem.area,
-      keys: drawable,
+      // El renglón escrito va siempre: sin piso dibujado es lo único que queda,
+      // y es lo que la ronda pregunta.
+      keys: true,
+      // En recomponer lo que se busca es el ancho: la llave del costado lo
+      // diría, así que va hueca.
+      hollow: ask === "recompose" ? "rows" : null,
       onDemand: level.floor === "onDemand",
+      // Sin bandeja, el piso se centra y sus llaves no se cortan arriba; los
+      // rectángulos del cuadrado son altos y esperan al costado.
+      arrange: problem.tray.length === 0 ? "none" : ask === "square" ? "beside" : "below",
       rooms: {
         at: cutAt,
         wall: problem.rooms.length > 1,
@@ -223,9 +305,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
         side: sumText(problem.width),
         product: distFormText(problem.product),
         sum: distFormText(problem.sum),
+        braces: conLlaves,
+        // Un piso que no se puede dibujar deja el renglón solo, en el medio.
+        writingAt: drawable ? "below" : "center",
       },
     }),
-    [problem, level.floorSkin, level.floor, cols, cutAt, drawable],
+    [problem, level.floorSkin, level.floor, cols, cutAt, drawable, ask, conLlaves],
   );
 
   const tl = useMemo(
@@ -308,7 +393,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
   const cross = useSharedValue(0);
   const token = useSharedValue(0);
   const ghost = useSharedValue(0);
-  const hint = useSharedValue(0);
   const demo = useSharedValue(0);
   const tilesAppear = useSharedValue(0);
   const ledgerAppear = useSharedValue(0);
@@ -376,17 +460,19 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
       toggles: 0,
     };
     espejar();
-    setMessage({ text: apertura(problem.ask), tone: "dim" });
+    setMessage({ text: conLeccion ? "" : m(`open.${problem.ask}`), tone: "dim" });
 
     placed.value = cubierto ? problem.widthCells : 0;
     placedRight.value = cubierto ? problem.widthCells : 0;
     spin.value = 0;
     split.value = problem.wallIn ? 0 : 1;
     token.value = problem.area !== null && cubierto ? 1 : 0;
-    // Las llaves y el renglón llegan con el marco ya cerrado en las rondas que
-    // no se cubren; en las que sí, nacen al cerrarlo.
-    keys.value = cubierto ? 1 : 0;
-    cross.value = cubierto ? 1 : 0;
+    // Las llaves y el renglón llegan puestos en las rondas que no se cubren; en
+    // las de cubrir, nacen al cerrar el marco. El cuadrado llega con sus lados
+    // escritos: sin ellos no se sabe de qué cuadrado se habla.
+    const escrito = problem.ask !== "cover";
+    keys.value = escrito ? 1 : 0;
+    cross.value = escrito ? 1 : 0;
     ghost.value = level.floor === "onDemand" ? 0 : 1;
     replay.value = 0;
     tilesAppear.value = withTiming(1, { duration: theme.motion.base });
@@ -402,10 +488,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
         i < problem.tray.length && problem.ask !== "square" ? 1 : 0;
     }
 
-    // El latido y la mano fantasma no son adornos: son la única instrucción.
+    // El latido del marco no es un adorno: dice dónde va lo que se arrastra.
     pulse.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+    // Con guía, la luz de Lumi es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
     demo.value =
-      problem.ask === "cover"
+      problem.ask === "cover" && !guided
         ? withRepeat(
             withSequence(withTiming(1, { duration: 1300 }), withTiming(0, { duration: 1 })),
             -1,
@@ -419,11 +507,23 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem, espejar]);
 
+  // El reloj arranca cuando el nivel empieza, no detrás de la tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [problem, playing]);
+
   // La capa vista se registra al entrar y no al terminar: es lo que hace crecer
   // la chuleta, y el jugador ya la vio.
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_DISTRIBUTIVE_TILES, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa, en el
+  // mismo lugar donde registra el movimiento. Por referencia: el callback de un
+  // gesto puede estar un render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -461,6 +561,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
     setRound(r + 1);
   }, [level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = guia?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (guia?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [guia, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -468,9 +588,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
       setSolved(true);
       quiet();
       setMessage({ text, tone: "ok" });
-      setTimeout(nextRound, 1900);
+      say("solved");
+      setTimeout(advance, 1900);
     },
-    [nextRound, quiet],
+    [advance, quiet, say],
   );
 
   // --- La pared --------------------------------------------------------------
@@ -480,53 +601,52 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
    * vuelve y los bloques se juntan. El marco no cambia de tamaño y el contador
    * de superficie no se mueve: es el mismo piso contado de dos maneras, y por
    * eso las dos escrituras valen lo mismo.
+   *
+   * Sólo se mueve en las rondas que la piden. En las otras, sacarla cerraba la
+   * ronda sin contestar nada (la cuenta de toques alcanzaba a la de fichas), y
+   * en la de anotar desarmaba las columnas debajo del dedo.
    */
   const toggleWall = useCallback(() => {
     const v = vivo.current;
-    const m = mesa.current;
+    const mm = mesa.current;
     if (v.solved) return;
-    const cerrado = m.strips.every((s) => s >= v.problem.widthCells);
+    if (v.problem.ask !== "cover" && v.problem.ask !== "wall") {
+      setMessage({ text: m("wallNotHere"), tone: "dim" });
+      return;
+    }
+    const cerrado = mm.strips.every((s) => s >= v.problem.widthCells);
     if (!cerrado) {
-      setMessage({ text: "Primero cubrí el piso: la pared se saca cuando el marco cierra.", tone: "dim" });
+      setMessage({ text: m("wallFirst"), tone: "dim" });
       return;
     }
     quiet();
-    m.wallOut = !m.wallOut;
-    m.toggles += 1;
+    mm.wallOut = !mm.wallOut;
+    mm.toggles += 1;
     espejar();
-    split.value = withTiming(m.wallOut ? 1 : 0, { duration: theme.motion.morph });
+    split.value = withTiming(mm.wallOut ? 1 : 0, { duration: theme.motion.morph });
     attempt(true);
+    say("wallToggled");
+    if (mm.wallOut) say("wallOut");
 
-    const faltan = v.problem.picks - m.toggles;
+    const faltan = v.problem.picks - mm.toggles;
     if (v.problem.ask === "cover" || faltan <= 0) {
-      succeed(
-        m.wallOut
-          ? "El mismo piso, partido en dos bloques. Las dos escrituras miden lo mismo."
-          : "La pared volvió y los dos bloques son otra vez un solo piso.",
-      );
+      succeed(m(mm.wallOut ? "wallSplit" : "wallJoined"));
       return;
     }
-    setMessage({
-      text: m.wallOut
-        ? "Repartido. Ahora volvé a poner la pared: la igualdad vale para los dos lados."
-        : "Juntado. Sacala de nuevo para verlo repartido.",
-      tone: "dim",
-    });
-  }, [attempt, espejar, quiet, split, succeed]);
+    setMessage({ text: m(mm.wallOut ? "wallSplitMore" : "wallJoinMore"), tone: "dim" });
+  }, [attempt, espejar, quiet, split, succeed, say]);
 
-  /** El piso que ya no está dibujado se pide con un toque sobre el producto. */
+  /** El piso que ya no está dibujado se pide con un toque sobre el tablero. */
   const summonFloor = useCallback(() => {
     if (level.floor !== "onDemand") return;
     if (!drawable) {
-      setMessage({
-        text: "Ese piso no se puede dibujar: una habitación no mide menos que nada.",
-        tone: "dim",
-      });
+      setMessage({ text: m("noFloor"), tone: "dim" });
       return;
     }
     ghost.value = withTiming(1, { duration: theme.motion.base });
-    setMessage({ text: "Ahí está el piso. El ancho cubre todos los largos.", tone: "dim" });
-  }, [level.floor, drawable, ghost]);
+    say("summoned");
+    setMessage({ text: m("floorHere"), tone: "dim" });
+  }, [level.floor, drawable, ghost, say]);
 
   // --- Las baldosas ----------------------------------------------------------
 
@@ -546,118 +666,6 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
       setTimeout(() => setReplayRows([-1, -1]), REPLAY_MS * 2.4);
     },
     [replay],
-  );
-
-  const dropPiece = useCallback(
-    (index: number, dx: number, dy: number) => {
-      const v = vivo.current;
-      const m = mesa.current;
-      const piece = v.problem.tray[index];
-      const slot = rows[index];
-      const home = tl.drawer[index];
-      if (!piece || !slot || !home || v.solved || m.used.includes(index)) return;
-
-      const volver = (): void => {
-        slot.dx.value = withTiming(0, { duration: theme.motion.base });
-        slot.dy.value = withTiming(0, { duration: theme.motion.base });
-      };
-
-      // El punto de suelta se mide desde la ranura de la pieza y no desde la
-      // página: la traslación del gesto y la geometría de la escena están en el
-      // mismo sistema, y así no hace falta saber dónde empieza el lienzo.
-      const x = home.x + dx;
-      const y = home.y + dy;
-      const dentro =
-        x > tl.frame.x - tl.unit &&
-        x < tl.frame.x + tl.frame.w + tl.unit &&
-        y > tl.frame.y - tl.unit &&
-        y < tl.frame.y + tl.frame.h + tl.unit;
-      if (!dentro) {
-        volver();
-        return;
-      }
-      quiet();
-
-      // Las dos piezas del cuadrado tapan huecos y no habitaciones.
-      if (piece.room < 0) {
-        dropIntoHole(index, piece, x, y, volver);
-        return;
-      }
-
-      // En qué habitación cayó: los tramos de la base, en orden.
-      let inicio = 0;
-      let destino = -1;
-      for (let i = 0; i < v.problem.rooms.length; i++) {
-        const r = v.problem.rooms[i] as DistRoom;
-        const x0 = tl.frame.x + inicio * tl.unit;
-        const x1 = x0 + r.cells * tl.unit;
-        if (x > x0 - tl.unit * HOLGURA && x < x1 + tl.unit * HOLGURA) {
-          destino = i;
-          break;
-        }
-        inicio += r.cells;
-      }
-      if (destino < 0) {
-        volver();
-        return;
-      }
-
-      const room = v.problem.rooms[destino] as DistRoom;
-      if (!distFits(piece, room)) {
-        // La pieza que no mide lo que la habitación pide no entra: se asoma y
-        // vuelve. El marco se resiste y nadie dice "mal".
-        volver();
-        const error = distDropMisconceptionFor(v.level, piece, room);
-        attempt(false, error);
-        if (error) {
-          const propia = v.problem.columns.findIndex((c) => c.shape === piece.shape);
-          const otra = v.problem.columns.findIndex((c) => c.shape === room.shape);
-          replayError(otra, propia);
-          setMessage({
-            text: "Estas dos piezas no tienen la misma forma. ¿Se pueden apilar en la misma columna?",
-            tone: "warn",
-          });
-        } else {
-          setMessage({
-            text: "Esa tira no mide lo que esa habitación pide. Queda un borde sin cubrir.",
-            tone: "warn",
-          });
-        }
-        return;
-      }
-
-      if ((m.strips[destino] ?? 0) >= v.problem.widthCells) {
-        volver();
-        setMessage({ text: "Esa habitación ya está cubierta. Falta la otra.", tone: "dim" });
-        return;
-      }
-
-      slot.alive.value = withTiming(0, { duration: 120 });
-      m.used = [...m.used, index];
-      m.strips[destino] = (m.strips[destino] ?? 0) + 1;
-      // Cada tira anota lo suyo: la de la habitación numérica vale sus baldosas,
-      // la de largo desconocido vale una tira.
-      m.filled[destino] = (m.filled[destino] ?? 0) + Math.abs(room.length.coef);
-      espejar();
-      attempt(true);
-
-      const izquierda = m.strips[0] ?? 0;
-      const derecha = m.strips[1] ?? 0;
-      placed.value = withTiming(izquierda, { duration: 220 });
-      placedRight.value = withTiming(derecha, { duration: 220 });
-
-      if (m.strips.every((s) => s >= v.problem.widthCells)) {
-        revealSymbols();
-        setMessage({
-          text: "El marco quedó cubierto y los lados se etiquetaron solos. Tocá la pared.",
-          tone: "dim",
-        });
-        return;
-      }
-      setMessage({ text: "Entró. Seguí cubriendo.", tone: "dim" });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tl, attempt, quiet, espejar, replayError],
   );
 
   /**
@@ -685,7 +693,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
   const dropIntoHole = useCallback(
     (index: number, piece: DistPiece, x: number, y: number, volver: () => void) => {
       const v = vivo.current;
-      const m = mesa.current;
+      const mm = mesa.current;
       const [ca, cb] = v.problem.prefilled;
       const u = tl.unit;
       const huecos = [
@@ -698,44 +706,187 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
       );
       if (!hueco) {
         volver();
+        setMessage({ text: m("holeBack"), tone: "dim" });
         return;
       }
       if (hueco.cells !== piece.cells || hueco.tall !== piece.tall) {
         volver();
         attempt(false);
-        setMessage({ text: "Esa pieza está acostada al revés: no tapa ese hueco.", tone: "warn" });
+        setMessage({ text: m("holeTurned"), tone: "warn" });
         return;
       }
 
       const slot = rows[index] as RowSlot;
       slot.alive.value = withTiming(0, { duration: 120 });
-      m.used = [...m.used, index];
+      mm.used = [...mm.used, index];
       espejar();
       attempt(true);
-      if (m.used.length >= v.problem.tray.length) {
+      play("fit");
+      if (mm.used.length >= v.problem.tray.length) {
         // El hueco quedó tapado: el cuadrado está entero y la escritura pasa de
         // `aa + bb` a `aa + 2ab + bb` con el piso como testigo.
         placed.value = withTiming(v.problem.widthCells, { duration: theme.motion.morph });
         placedRight.value = withTiming(v.problem.widthCells, { duration: theme.motion.morph });
-        succeed("Ahí está el cuadrado entero: dos cuadrados y dos rectángulos iguales.");
+        succeed(m("squareWhole"));
         return;
       }
-      setMessage({ text: "Uno tapado. Falta el otro rectángulo.", tone: "dim" });
+      setMessage({ text: m("holeOne"), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tl, attempt, espejar, succeed],
   );
 
+  const dropPiece = useCallback(
+    (index: number, dx: number, dy: number) => {
+      const v = vivo.current;
+      const mm = mesa.current;
+      const piece = v.problem.tray[index];
+      const slot = rows[index];
+      const home = tl.drawer[index];
+      if (!piece || !slot || !home || v.solved || mm.used.includes(index)) return;
+
+      const volver = (): void => {
+        slot.dx.value = withTiming(0, { duration: theme.motion.base });
+        slot.dy.value = withTiming(0, { duration: theme.motion.base });
+      };
+
+      // El punto de suelta se mide desde la ranura de la pieza y no desde la
+      // página: la traslación del gesto y la geometría de la escena están en el
+      // mismo sistema, y así no hace falta saber dónde empieza el lienzo.
+      const x = home.x + dx;
+      const y = home.y + dy;
+      const dentro =
+        x > tl.frame.x - tl.unit &&
+        x < tl.frame.x + tl.frame.w + tl.unit &&
+        y > tl.frame.y - tl.unit &&
+        y < tl.frame.y + tl.frame.h + tl.unit;
+      if (!dentro) {
+        volver();
+        // Un arrastre corto es un toque que se corrió: no hace falta decir nada.
+        if (Math.hypot(dx, dy) > tl.unit) setMessage({ text: m("stripBack"), tone: "dim" });
+        return;
+      }
+      quiet();
+
+      // Las dos piezas del cuadrado tapan huecos y no habitaciones.
+      if (piece.room < 0) {
+        dropIntoHole(index, piece, x, y, volver);
+        return;
+      }
+
+      // En qué habitación cayó: los tramos de la base, en orden. Primero la
+      // que contiene el punto; la holgura sólo si no cayó adentro de ninguna,
+      // o la de la izquierda le robaría a la derecha su borde (trampa 14).
+      const tramos: { i: number; x0: number; x1: number }[] = [];
+      let inicio = 0;
+      for (let i = 0; i < v.problem.rooms.length; i++) {
+        const r = v.problem.rooms[i] as DistRoom;
+        const x0 = tl.frame.x + inicio * tl.unit;
+        tramos.push({ i, x0, x1: x0 + r.cells * tl.unit });
+        inicio += r.cells;
+      }
+      // La tira entra en la habitación que la acepta si la toca con un buen
+      // pedazo, aunque su centro haya caído del otro lado de la pared: una
+      // habitación de una baldosa mide lo que un dedo, y pedirle al centro de
+      // la tira que caiga adentro era puntería y no matemática. Soltada lejos
+      // de la suya, en cambio, cae donde está su centro y ahí se ve que no mide.
+      const ancho = piece.cells * tl.unit;
+      const solape = (s: { x0: number; x1: number }): number =>
+        Math.min(s.x1, x + ancho / 2) - Math.max(s.x0, x - ancho / 2);
+      const suya = tramos.find((s) => {
+        const r = v.problem.rooms[s.i] as DistRoom;
+        const libre = (mm.strips[s.i] ?? 0) < v.problem.widthCells;
+        return libre && distFits(piece, r) && solape(s) >= 0.3 * Math.min(ancho, s.x1 - s.x0);
+      });
+      const exacto = tramos.find((s) => x >= s.x0 && x < s.x1);
+      const cerca = suya ?? exacto ?? tramos.find((s) => x > s.x0 - tl.unit * HOLGURA && x < s.x1 + tl.unit * HOLGURA);
+      const destino = cerca?.i ?? -1;
+      if (destino < 0) {
+        volver();
+        setMessage({ text: m("stripBack"), tone: "dim" });
+        return;
+      }
+
+      const room = v.problem.rooms[destino] as DistRoom;
+      if (!distFits(piece, room)) {
+        // La pieza que no mide lo que la habitación pide no entra: se asoma y
+        // vuelve. El marco se resiste y nadie dice "mal".
+        volver();
+        const error = distDropMisconceptionFor(v.level, piece, room);
+        attempt(false, error);
+        if (piece.shape !== room.shape) {
+          const propia = v.problem.columns.findIndex((c) => c.shape === piece.shape);
+          const otra = v.problem.columns.findIndex((c) => c.shape === room.shape);
+          if (error) replayError(otra, propia);
+          setMessage({ text: m("notSameShape"), tone: "warn" });
+        } else {
+          setMessage({ text: m("stripShort"), tone: "warn" });
+        }
+        return;
+      }
+
+      if ((mm.strips[destino] ?? 0) >= v.problem.widthCells) {
+        volver();
+        setMessage({ text: m("roomFull"), tone: "dim" });
+        return;
+      }
+
+      slot.alive.value = withTiming(0, { duration: 120 });
+      mm.used = [...mm.used, index];
+      mm.strips[destino] = (mm.strips[destino] ?? 0) + 1;
+      // Cada tira anota lo suyo: la de la habitación numérica vale sus baldosas,
+      // la de largo desconocido vale una tira.
+      mm.filled[destino] = (mm.filled[destino] ?? 0) + Math.abs(room.length.coef);
+      espejar();
+      attempt(true);
+      say("stripIn");
+
+      const izquierda = mm.strips[0] ?? 0;
+      const derecha = mm.strips[1] ?? 0;
+      placed.value = withTiming(izquierda, { duration: 220 });
+      placedRight.value = withTiming(derecha, { duration: 220 });
+
+      if (mm.strips.every((s) => s >= v.problem.widthCells)) {
+        revealSymbols();
+        say("covered");
+        setMessage({ text: m("covered"), tone: "ok" });
+        return;
+      }
+      setMessage({ text: m("stripIn"), tone: "dim" });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tl, attempt, quiet, espejar, replayError, dropIntoHole, revealSymbols, say],
+  );
+
   // --- El libro --------------------------------------------------------------
+
+  /** Dónde queda la ficha de un bloque: encima de su parte del piso. */
+  const chipHome = useCallback(
+    (block: number): Pt => {
+      let inicio = 0;
+      for (let i = 0; i < block && i < problem.rooms.length; i++) {
+        inicio += (problem.rooms[i] as DistRoom).cells;
+      }
+      const room = problem.rooms[block];
+      const ancho = (room?.cells ?? 1) * tl.unit;
+      // Con la pared afuera los bloques se separan: la ficha sigue a su bloque.
+      const corrido = (block === 0 ? -1 : 1) * tl.unit * 0.35 * (wallOut ? 1 : 0);
+      return {
+        x: tl.frame.x + inicio * tl.unit + ancho / 2 + corrido,
+        y: tl.frame.y + tl.frame.h / 2,
+      };
+    },
+    [problem.rooms, tl, wallOut],
+  );
 
   /** La ficha de un bloque llega a una columna. Toda la regla del libro está acá. */
   const dropChip = useCallback(
     (block: number, dx: number, dy: number) => {
       const v = vivo.current;
-      const m = mesa.current;
+      const mm = mesa.current;
       const columna = v.problem.columns[block];
       const home = chipHome(block);
-      if (!columna || v.solved || (m.filled[block] ?? 0) > 0) return;
+      if (!columna || v.solved || (mm.filled[block] ?? 0) > 0) return;
       const x = home.x + dx - tilesW;
       const y = home.y + dy;
 
@@ -748,7 +899,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
           break;
         }
       }
-      if (destino < 0) return;
+      if (destino < 0) {
+        if (Math.hypot(dx, dy) > 12) setMessage({ text: m("chipBack"), tone: "dim" });
+        return;
+      }
       quiet();
 
       const fila = visibles[destino] as DistColumn;
@@ -760,33 +914,65 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
         );
         attempt(false, distDropMisconceptionFor(v.level, columna, fila));
         replayError(destino, propia >= 0 ? propia : destino);
-        setMessage({
-          text: "Estas dos piezas no tienen la misma forma. ¿Se pueden apilar en la misma columna?",
-          tone: "warn",
-        });
+        setMessage({ text: m("notSameShape"), tone: "warn" });
         return;
       }
 
-      m.filled[block] = columna.count;
+      mm.filled[block] = columna.count;
       espejar();
       attempt(true);
-      if (m.filled.filter((f) => f > 0).length >= v.problem.columns.length) {
-        succeed("Cada bloque quedó anotado en su columna, y el renglón dice el total.");
+      play("drop", { pitch: mm.filled.filter((f) => f > 0).length * 2 });
+      say("tallied");
+      if (mm.filled.filter((f) => f > 0).length >= v.problem.columns.length) {
+        succeed(m("tallyDone"));
         return;
       }
-      setMessage({ text: "Anotado. Falta el otro bloque.", tone: "dim" });
+      setMessage({ text: m("tallyOne"), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ll, visibles, tilesW, attempt, espejar, quiet, replayError, succeed],
+    [ll, visibles, tilesW, chipHome, attempt, espejar, quiet, replayError, succeed, say],
   );
 
   // --- Las fichas ------------------------------------------------------------
 
+  /** Armar la suma: cada ficha buena ocupa la ranura de su sumando. */
+  const expandStep = useCallback(
+    (option: DistOption, error: string | undefined) => {
+      const v = vivo.current;
+      const mm = mesa.current;
+      attempt(option.correct, error);
+      if (!option.correct) {
+        setMessage({ text: reproche(option, v.problem.ask), tone: "warn" });
+        return;
+      }
+      const term = option.form.head[0] as DistTerm;
+      const bloques = distAreaTerms(v.problem.width, v.problem.rooms);
+      const i = bloques.findIndex(
+        (b, k) => b.coef === term.coef && b.letters === term.letters && (mm.filled[k] ?? 0) === 0,
+      );
+      if (i < 0) return;
+      mm.filled[i] = Math.abs(term.coef);
+      mm.taken = [...mm.taken, option.id];
+      espejar();
+      play("fit");
+      say("picked");
+      if (mm.taken.length >= v.problem.picks) {
+        // Repartido: la pared sale y el renglón pasa del producto a la suma.
+        split.value = withTiming(1, { duration: theme.motion.morph });
+        succeed(m("expandDone"));
+        return;
+      }
+      setMessage({ text: m("expandOne"), tone: "ok" });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attempt, espejar, succeed, say],
+  );
+
   const pickOption = useCallback(
     (option: DistOption) => {
       const v = vivo.current;
-      const m = mesa.current;
-      if (v.solved || m.taken.includes(option.id)) return;
+      const mm = mesa.current;
+      if (v.solved || mm.taken.includes(option.id)) return;
       quiet();
       const error = distMisconceptionFor(v.level, option);
 
@@ -799,68 +985,94 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
       if (!option.correct) {
         if (v.problem.ask === "square" && option.lure === "square_of_parts") {
           // `missing_piece_tiles`: el juego coloca las piezas que el jugador
-          // nombró y los dos rectángulos que faltan quedan vacíos.
-          m.missing = true;
+          // nombró y los dos rectángulos que faltan quedan vacíos. El piso se
+          // muestra aunque nadie lo haya pedido: el hueco es la respuesta.
+          mm.missing = true;
           espejar();
           const [ca, cb] = v.problem.prefilled;
+          ghost.value = withTiming(1, { duration: theme.motion.base });
           placed.value = withTiming(ca, { duration: theme.motion.morph });
           placedRight.value = withTiming(cb, { duration: theme.motion.morph });
           for (let i = 0; i < v.problem.tray.length; i++) {
             (rows[i] as RowSlot).alive.value = withTiming(1, { duration: theme.motion.base });
           }
-          setMessage({
-            text: "Al cuadrado le falta un pedazo. ¿Qué rectángulos faltan?",
-            tone: "warn",
-          });
+          setMessage({ text: m("missing"), tone: "warn" });
           return;
         }
         setMessage({ text: reproche(option, v.problem.ask), tone: "warn" });
         return;
       }
 
-      m.taken = [...m.taken, option.id];
-
+      mm.taken = [...mm.taken, option.id];
       espejar();
-      if (m.taken.length >= v.problem.picks) {
-        succeed(acierto(v.problem.ask));
+      play("fit");
+      say("picked");
+      if (mm.taken.length >= v.problem.picks) {
+        if (v.problem.ask === "square") {
+          // El cuadrado entero aparece con sus cuatro piezas.
+          ghost.value = withTiming(1, { duration: theme.motion.base });
+          placed.value = withTiming(v.problem.widthCells, { duration: theme.motion.morph });
+          placedRight.value = withTiming(v.problem.widthCells, { duration: theme.motion.morph });
+        }
+        if (v.problem.ask === "recompose") {
+          // La pared vuelve: la suma se junta en el producto.
+          split.value = withTiming(0, { duration: theme.motion.morph });
+        }
+        succeed(m(`ok.${v.problem.ask}`));
         return;
       }
-      setMessage({ text: "Esa sí. Falta una más.", tone: "dim" });
+      setMessage({ text: m("pickOne"), tone: "ok" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, espejar, quiet, succeed],
-  );
-
-  /** Armar la suma: cada ficha buena ocupa la ranura de su sumando. */
-  const expandStep = useCallback(
-    (option: DistOption, error: string | undefined) => {
-      const v = vivo.current;
-      const m = mesa.current;
-      attempt(option.correct, error);
-      if (!option.correct) {
-        setMessage({ text: reproche(option, v.problem.ask), tone: "warn" });
-        return;
-      }
-      const term = option.form.head[0] as DistTerm;
-      const bloques = distAreaTerms(v.problem.width, v.problem.rooms);
-      const i = bloques.findIndex(
-        (b, k) => b.coef === term.coef && b.letters === term.letters && (m.filled[k] ?? 0) === 0,
-      );
-      if (i < 0) return;
-      m.filled[i] = Math.abs(term.coef);
-      m.taken = [...m.taken, option.id];
-      espejar();
-      if (m.taken.length >= v.problem.picks) {
-        succeed("Repartido: el ancho llegó a cada sumando y ninguno quedó afuera.");
-        return;
-      }
-      setMessage({ text: "Ese va. Falta repartir sobre el resto.", tone: "dim" });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, espejar, succeed],
+    [attempt, espejar, quiet, succeed, expandStep, say],
   );
 
   // --- Gestos ----------------------------------------------------------------
+
+  /**
+   * Lo que las asas llaman viaja en una referencia estable. El gesto de un asa
+   * se quedaba con el `dropPiece` de la ronda anterior (trampa 8): la primera
+   * tira de una ronda nueva se soltaba contra el marco y la bandeja de la
+   * ronda de antes, y caía en otra habitación o en ninguna. Con la referencia,
+   * el gesto no cambia nunca y la decisión es siempre la de ahora.
+   */
+  const acciones = useRef({ dropPiece, dropChip });
+  acciones.current = { dropPiece, dropChip };
+  const soltarPieza = useCallback(
+    (i: number, dx: number, dy: number) => acciones.current.dropPiece(i, dx, dy),
+    [],
+  );
+  const soltarFicha = useCallback(
+    (i: number, dx: number, dy: number) => acciones.current.dropChip(i, dx, dy),
+    [],
+  );
+
+  /**
+   * Un toque sobre el tablero. Adentro del marco mueve la pared en las rondas
+   * que la mueven; con el piso escondido, lo pide. Todo el piso es el blanco de
+   * la pared: la raya dibujada es de tres píxeles y el dedo no.
+   */
+  const onTap = useCallback(
+    (x: number, y: number) => {
+      const v = vivo.current;
+      if (v.solved) return;
+      if (level.floor === "onDemand") {
+        summonFloor();
+        return;
+      }
+      const margen = tl.unit * 0.8;
+      const enPiso =
+        x > tl.frame.x - margen &&
+        x < tl.frame.x + tl.frame.w + margen &&
+        y > tl.frame.y - margen &&
+        y < tl.frame.y + tl.frame.h + margen;
+      if (enPiso && v.problem.rooms.length > 1) toggleWall();
+    },
+    [level.floor, tl, summonFloor, toggleWall],
+  );
+  const ultimo = useRef(onTap);
+  ultimo.current = onTap;
+  const tocar = useCallback((x: number, y: number) => ultimo.current(x, y), []);
 
   const puedeTocar = !solved;
   const tap = useMemo(
@@ -869,32 +1081,174 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
         .maxDistance(24)
         .enabled(puedeTocar)
         .onEnd((e) => {
-          // La pared es el paréntesis: se toca donde está dibujada. Lo que está
-          // afuera del marco pide el piso, que es el otro toque del juego.
-          const wx = tl.frame.x + tl.cutAt * tl.unit;
-          const cerca =
-            Math.abs(e.x - wx) < tl.unit * 1.1 &&
-            e.y > tl.frame.y - tl.unit &&
-            e.y < tl.frame.y + tl.frame.h + tl.unit;
-          if (cerca) runOnJS(toggleWall)();
-          else runOnJS(summonFloor)();
+          runOnJS(tocar)(e.x, e.y);
         }),
-    [puedeTocar, tl, toggleWall, summonFloor],
+    [puedeTocar, tocar],
   );
 
-  const definition = level.definition ? DEFINICION[round % DEFINICION.length] : null;
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Dónde quedan, respecto del lienzo, las fichas de abajo. Viven fuera del
+   * lienzo, así que se miden: el lienzo y la bandeja son hijos directos de la
+   * raíz y `onLayout` los mide contra el mismo padre (trampa 10).
+   */
+  const canvasAt = useMemo<Pt | null>(
+    () => (area ? { x: area.x + (area.w - width) / 2, y: area.y + (area.h - sceneH) / 2 } : null),
+    [area, width, sceneH],
+  );
+  const [bandAt, setBandAt] = useState<Pt | null>(null);
+  const [ringAt, setRingAt] = useState<Rect | null>(null);
+  const trayAt = useMemo<Rect | null>(
+    () => (bandAt && ringAt ? { x: bandAt.x + ringAt.x, y: bandAt.y + ringAt.y, w: ringAt.w, h: ringAt.h } : null),
+    [bandAt, ringAt],
+  );
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda, calculado
+   * con la misma geometría con la que la escena lo dibuja. La pista de Tomi
+   * reusa los pasos: señala lo mismo, pero no frena la ronda.
+   */
+  const shown = guia ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const u = tl.unit;
+    const frame = tl.frame;
+    const frameRect = pad(frame, 8);
+    // El piso con sus llaves: arriba y al costado hay etiquetas que se leen.
+    const readRect: Rect = { x: frame.x - u * 1.3, y: frame.y - u * 1.1, w: frame.w + u * 1.6, h: frame.h + u * 1.4 };
+    // El renglón escrito, con la misma cuenta con la que `TilesScene` lo pone.
+    const writeRect = pad(tilesWritingBox(tl, tilesCfg.rooms), 6);
+    const wallX = frame.x + tl.cutAt * u;
+    const wallRect: Rect = { x: wallX - 24, y: frame.y - 12, w: 48, h: frame.h + 24 };
+    const chipsRect =
+      trayAt && canvasAt
+        ? pad({ x: trayAt.x - canvasAt.x, y: trayAt.y - canvasAt.y, w: trayAt.w, h: trayAt.h }, 6)
+        : null;
+    const conFichasA = (rs: Rect[]): Rect[] => (chipsRect ? [chipsRect, ...rs] : rs);
+
+    // La habitación de cada tramo, y adónde entra la próxima tira: la izquierda
+    // se llena desde arriba y la derecha desde abajo, como las dibuja la escena.
+    const tramo = (room: number): Rect => {
+      let inicio = 0;
+      for (let i = 0; i < room; i++) inicio += (problem.rooms[i] as DistRoom).cells;
+      const r = problem.rooms[room];
+      return { x: frame.x + inicio * u, y: frame.y, w: (r?.cells ?? 1) * u, h: frame.h };
+    };
+    const destinoDe = (room: number): Pt => {
+      const b = tramo(room);
+      const hechas = strips[room] ?? 0;
+      const fila = Math.min(hechas, problem.widthCells - 1);
+      const y = room === 0 ? frame.y + (fila + 0.5) * u : frame.y + frame.h - (fila + 0.5) * u;
+      return { x: b.x + b.w / 2, y };
+    };
+
+    switch (ask) {
+      case "cover": {
+        const libres = problem.tray
+          .map((p, i) => ({ p, i, spot: tl.drawer[i] }))
+          .filter((e) => !used.includes(e.i) && e.spot !== undefined);
+        const cajas = libres.map((e) => {
+          const s = e.spot as Pt;
+          const w = e.p.cells * u;
+          const h = e.p.tall * u;
+          return { x: s.x - w / 2, y: s.y - h / 2, w, h };
+        });
+        const bandeja = around(cajas);
+        if (id === "look") return { rings: bandeja ? [frameRect, pad(bandeja, 10)] : [frameRect] };
+        if (id === "wall") return { rings: [wallRect, frameRect] };
+        if (id === "reveal") return { rings: [frameRect, writeRect] };
+        // Una tira que falta, hasta su habitación: primero la de la izquierda.
+        for (let room = 0; room < problem.rooms.length; room++) {
+          if ((strips[room] ?? 0) >= problem.widthCells) continue;
+          const e = libres.find((l) => l.p.room === room);
+          if (e?.spot) return { rings: [pad(tramo(room), 6)], drag: { from: e.spot, to: destinoDe(room) } };
+        }
+        return { rings: [frameRect] };
+      }
+      case "explain":
+        if (id === "look") return { rings: conFichasA([readRect]) };
+        return { rings: conFichasA([]) .length > 0 ? conFichasA([]) : [readRect] };
+      case "wall":
+        if (id === "look") return { rings: [writeRect] };
+        if (id === "reveal") return { rings: [frameRect, writeRect] };
+        return { rings: [wallRect, writeRect] };
+      case "tally": {
+        for (let b = 0; b < problem.columns.length; b++) {
+          if ((filled[b] ?? 0) > 0) continue;
+          const c = problem.columns[b] as DistColumn;
+          const j = visibles.findIndex((v) => v.shape === c.shape && v.letter === c.letter);
+          const box = ll.rows[j];
+          const from = chipHome(b);
+          if (!box) break;
+          const to = { x: tilesW + box.x + box.w / 2, y: box.y + box.h / 2 };
+          return {
+            rings: [{ x: tilesW + box.x - 6, y: box.y - 6, w: box.w + 12, h: box.h + 12 }],
+            drag: { from, to },
+          };
+        }
+        return { rings: [frameRect] };
+      }
+      case "expand":
+        if (id === "look" || id === "reveal") return { rings: [writeRect] };
+        return { rings: conFichasA([writeRect]) };
+      case "square": {
+        if (id === "look") return { rings: [readRect] };
+        if (id === "reveal") return { rings: [frameRect] };
+        if (missing) {
+          // Los dos huecos, y la luz lleva la pieza que falta hasta el suyo.
+          const [ca, cb] = problem.prefilled;
+          const huecos: Rect[] = [
+            { x: frame.x + ca * u, y: frame.y, w: cb * u, h: ca * u },
+            { x: frame.x, y: frame.y + ca * u, w: ca * u, h: cb * u },
+          ];
+          for (let i = 0; i < problem.tray.length; i++) {
+            if (used.includes(i)) continue;
+            const piece = problem.tray[i] as DistPiece;
+            const spot = tl.drawer[i];
+            const k = huecos.findIndex((h) => Math.round(h.w / u) === piece.cells && Math.round(h.h / u) === piece.tall);
+            const h = huecos[k];
+            if (spot && h) {
+              return { rings: [pad(h, 4)], drag: { from: spot, to: { x: h.x + h.w / 2, y: h.y + h.h / 2 } } };
+            }
+          }
+          return { rings: huecos };
+        }
+        return { rings: conFichasA([]).length > 0 ? conFichasA([]) : [readRect] };
+      }
+      default:
+        return { rings: conFichasA([writeRect]) };
+    }
+  }, [shown, ask, tl, tilesCfg.rooms, problem, strips, used, filled, visibles, ll.rows, tilesW, chipHome, missing, trayAt, canvasAt]);
+
+  const definition = level.definition ? m(`definition.${round % 2}`) : null;
   const chips = problem.options;
 
   return (
     <View style={styles.root}>
-
       <Header
         title={`${t(`node.${NODE_DISTRIBUTIVE_TILES}.name`)} · nivel ${level.n} de ${TOTAL_DIST_LEVELS}`}
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!lesson?.lesson}
       />
 
+      <CoachBanner round={round} rounds={level.rounds} />
+
+      <View
+        style={styles.area}
+        onLayout={(e) => {
+          const l = e.nativeEvent.layout;
+          const r = { x: Math.round(l.x), y: Math.round(l.y), w: Math.round(l.width), h: Math.round(l.height) };
+          setArea((a) =>
+            a && Math.abs(a.x - r.x) < 2 && Math.abs(a.y - r.y) < 2 && Math.abs(a.w - r.w) < 2 && Math.abs(a.h - r.h) < 2
+              ? a
+              : r,
+          );
+        }}
+      >
       <View style={{ width, height: sceneH }}>
         {/* Un solo lienzo por pantalla: el piso y el libro viven adentro. */}
         <Canvas style={{ width, height: sceneH }}>
@@ -959,36 +1313,60 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
               w={w}
               h={h}
               enabled={activo}
-              onDrop={dropPiece}
+              onDrop={soltarPieza}
             />
           );
         })}
 
-        {/* Las fichas de los bloques, para llevarlas al libro. */}
-        {ask === "tally"
-          ? problem.columns.map((c, i) => {
-              const home = chipHome(i);
-              if ((filled[i] ?? 0) > 0) return null;
-              return (
-                <ChipHandle
-                  key={c.id}
-                  index={i}
-                  label={termText({ coef: c.count, letters: c.letter })}
-                  x={home.x - 30}
-                  y={home.y - 17}
-                  enabled={!solved}
-                  onDrop={dropChip}
-                />
-              );
-            })
-          : null}
+        {/* Las fichas de los bloques, para llevarlas al libro. Montadas
+            siempre: la que ya se anotó queda sorda y sin verse. */}
+        {Array.from({ length: DIST_COLUMN_SLOTS }, (_, i) => {
+          const c = ask === "tally" ? problem.columns[i] : undefined;
+          const home = chipHome(i);
+          const vivoChip = !!c && (filled[i] ?? 0) === 0;
+          return (
+            <ChipHandle
+              key={`chip${i}`}
+              index={i}
+              label={c ? termText({ coef: c.count, letters: c.letter }) : ""}
+              x={home.x}
+              y={home.y}
+              visible={vivoChip}
+              enabled={vivoChip && !solved}
+              onDrop={soltarFicha}
+            />
+          );
+        })}
+
+        {/* Encima de todo y sin llevarse ningún toque: anillos y la luz de Lumi. */}
+        <Spotlight focus={focus} />
+      </View>
       </View>
 
-      <Hint text={message.text} tone={message.tone} />
+      {/* Un renglón fijo: si la línea de abajo entrara y saliera, el tablero
+          saltaría debajo del dedo. */}
+      <View style={styles.hintSlot}>
+        <Hint text={message.text} tone={message.tone} />
+      </View>
 
       {/* El teclado de fichas. Fuera de las rondas que lo usan, no está. */}
       {chips.length > 0 ? (
-        <View style={styles.ring}>
+        <View
+          style={[styles.ringBand, { paddingLeft: rincon, paddingRight: ventana.width < 600 ? 12 : rincon }]}
+          onLayout={(e) => {
+            const l = e.nativeEvent.layout;
+            setBandAt((a) => (a && a.x === l.x && a.y === l.y ? a : { x: l.x, y: l.y }));
+          }}
+        >
+        {/* La fila de fichas mide lo que ocupan sus fichas: así el anillo de
+            la guía rodea las fichas y no la franja entera. */}
+        <View
+          style={styles.ring}
+          onLayout={(e) => {
+            const l = e.nativeEvent.layout;
+            setRingAt({ x: l.x, y: l.y, w: l.width, h: l.height });
+          }}
+        >
           {Array.from({ length: DIST_OPTION_SLOTS }, (_, i) => {
             const option = chips[i];
             if (!option) return <View key={i} style={styles.chipGhost} />;
@@ -1005,28 +1383,19 @@ function Activity({ level, onLevelDone, onExit, onEvent }: DistributiveGameProps
             );
           })}
         </View>
+        </View>
       ) : null}
 
       {definition ? <Text style={styles.definition}>{definition}</Text> : null}
     </View>
   );
-
-  /** Dónde queda la ficha de un bloque: encima de su parte del piso. */
-  function chipHome(block: number): { x: number; y: number } {
-    let inicio = 0;
-    for (let i = 0; i < block && i < problem.rooms.length; i++) {
-      inicio += (problem.rooms[i] as DistRoom).cells;
-    }
-    const room = problem.rooms[block];
-    const ancho = (room?.cells ?? 1) * tl.unit;
-    return {
-      x: tl.frame.x + inicio * tl.unit + ancho / 2,
-      y: tl.frame.y + tl.frame.h / 2,
-    };
-  }
 }
 
-/** Un asa invisible sobre una pieza dibujada: la baldosa es dibujo, no interfaz. */
+/**
+ * Un asa invisible sobre una pieza dibujada: la baldosa es dibujo, no interfaz.
+ * El blanco es más grande que la pieza: en un teléfono una tira mide veinte
+ * píxeles de alto, y un dedo necesita más del doble.
+ */
 function Handle({
   index,
   slot,
@@ -1056,14 +1425,29 @@ function Handle({
         })
         .onEnd((e) => {
           runOnJS(onDrop)(index, e.translationX, e.translationY);
+        })
+        // Si otro gesto se lleva el dedo, la pieza no se queda flotando lejos
+        // de su asa: vuelve a su lugar.
+        .onFinalize((_, success) => {
+          if (success) return;
+          slot.dx.value = withTiming(0, { duration: theme.motion.base });
+          slot.dy.value = withTiming(0, { duration: theme.motion.base });
         }),
     [enabled, index, slot, onDrop],
   );
+  const alto = Math.max(h + 12, DEDO);
+  const ancho = Math.max(w + 12, DEDO);
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
-        pointerEvents={enabled ? "auto" : "none"}
-        style={{ position: "absolute", left: x, top: y, width: w, height: h }}
+        style={{
+          position: "absolute",
+          left: x - (ancho - w) / 2,
+          top: y - (alto - h) / 2,
+          width: ancho,
+          height: alto,
+          pointerEvents: enabled ? "auto" : "none",
+        }}
       />
     </GestureDetector>
   );
@@ -1075,13 +1459,16 @@ function ChipHandle({
   label,
   x,
   y,
+  visible,
   enabled,
   onDrop,
 }: {
   readonly index: number;
   readonly label: string;
+  /** El centro de la ficha, en coordenadas del lienzo. */
   readonly x: number;
   readonly y: number;
+  readonly visible: boolean;
   readonly enabled: boolean;
   readonly onDrop: (index: number, dx: number, dy: number) => void;
 }) {
@@ -1097,75 +1484,53 @@ function ChipHandle({
         })
         .onEnd((e) => {
           runOnJS(onDrop)(index, e.translationX, e.translationY);
+        })
+        .onFinalize(() => {
           dx.value = withTiming(0, { duration: theme.motion.base });
           dy.value = withTiming(0, { duration: theme.motion.base });
         }),
     [enabled, index, dx, dy, onDrop],
   );
+  // La ficha que se ve sigue al dedo; el blanco que escucha queda quieto y sin
+  // hijos, como el de las tiras. Con la ficha misma como blanco (un texto
+  // adentro y el desplazamiento en su estilo), en la pantalla táctil el gesto
+  // no llegaba a engancharse y la ficha no se movía: la ronda no se podía
+  // terminar en un teléfono.
+  const moving = useAnimatedStyle(() => ({
+    transform: [{ translateX: dx.value }, { translateY: dy.value }],
+  }));
   return (
-    <GestureDetector gesture={gesture}>
+    <>
       <Animated.View
-        pointerEvents={enabled ? "auto" : "none"}
         style={[
           styles.blockChip,
-          { left: x, top: y },
-          { transform: [{ translateX: dx }, { translateY: dy }] },
+          { left: x - CHIP_W / 2, top: y - CHIP_H / 2, opacity: visible ? 1 : 0, pointerEvents: "none" },
+          moving,
         ]}
       >
         <Text style={styles.blockChipLabel}>{label}</Text>
       </Animated.View>
-    </GestureDetector>
+      <GestureDetector gesture={gesture}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            left: x - CHIP_W / 2 - 4,
+            top: y - CHIP_H / 2 - 4,
+            width: CHIP_W + 8,
+            height: CHIP_H + 8,
+            pointerEvents: enabled ? "auto" : "none",
+          }}
+        />
+      </GestureDetector>
+    </>
   );
 }
 
+const CHIP_W = 64;
+const CHIP_H = 44;
+
 function useSlot(): RowSlot {
   return { dx: useSharedValue(0), dy: useSharedValue(0), alive: useSharedValue(0) };
-}
-
-/** Las dos frases de la capa formal, de a una por ronda. */
-const DEFINICION: readonly string[] = [
-  "Multiplicar por una suma es multiplicar por cada sumando y sumar los resultados.",
-  "La igualdad vale en los dos sentidos: repartir el producto y volver a juntarlo.",
-];
-
-function apertura(ask: string): string {
-  switch (ask) {
-    case "cover":
-      return "Llevá las tiras al marco hasta cubrir las dos habitaciones.";
-    case "pick":
-      return "Tocá la ficha que mide el piso entero.";
-    case "explain":
-      return "Tres maneras de escribir el mismo cuadrado. Tocá las dos que pierden baldosas.";
-    case "wall":
-      return "Tocá la pared: el piso no cambia de tamaño y la escritura sí.";
-    case "tally":
-      return "Llevá la ficha de cada bloque a su columna del libro.";
-    case "expand":
-      return "Repartí el ancho: una ficha por cada sumando del paréntesis.";
-    case "square":
-      return "Un cuadrado de lado a más b. Tocá la ficha que dice cuánto mide.";
-    case "recompose":
-      return "Los dos sumandos comparten un ancho. Tocá cuál es.";
-    default:
-      return "Adentro del paréntesis hay un producto y no una suma. Tocá lo que mide.";
-  }
-}
-
-function acierto(ask: string): string {
-  switch (ask) {
-    case "pick":
-      return "Ese es el piso entero: un ancho y un largo compuesto.";
-    case "explain":
-      return "Esas dos pierden piezas: una deja dos rectángulos vacíos y la otra inventa una columna.";
-    case "square":
-      return "Cuatro piezas: el cuadrado de a, el de b y dos rectángulos iguales.";
-    case "recompose":
-      return "Ese es el ancho que las dos comparten. La pared vuelve a su lugar.";
-    case "reject":
-      return "Sobre un producto no hay pared que sacar: es un bloque solo.";
-    default:
-      return "Ese es.";
-  }
 }
 
 /** El juego ejecuta la respuesta del jugador en vez de calificarla. */
@@ -1173,31 +1538,9 @@ function reproche(option: DistOption, ask: string): string {
   // En `explain` lo que se toca son las escrituras que pierden baldosas, así
   // que la que no hay que tocar es justamente la que está bien: no tiene motivo
   // y no puede recibir un reproche sobre un error que no comete.
-  if (option.sound) return "Esa dice el piso entero: no pierde una sola baldosa. Buscá las otras.";
-  switch (option.lure) {
-    case "partial_distribution":
-      return "El ancho llegó a un sumando solo: el otro bloque queda sin cubrir.";
-    case "product_of_parts":
-      return "Los dos bloques se suman, no se multiplican: son dos pedazos del mismo piso.";
-    case "labels_merged":
-      return "Esas letras no son nombres que se junten: son lados de piezas distintas.";
-    case "square_of_parts":
-      return "Con esas dos piezas el cuadrado queda con dos rectángulos vacíos.";
-    case "sides_added":
-      return "Eso mide el contorno, no el piso.";
-    case "sign_kept":
-      return "Adentro había una resta: al repartir, el signo cambia.";
-    case "factor_dropped":
-      return ask === "recompose"
-        ? "El uno divide a todos y no comparte nada: no hay pared que poner."
-        : "Ese sumando llegó sin multiplicar: le falta el ancho.";
-    case "one_side_only":
-      return "Ese ancho divide a un sumando y al otro no, así que no lo comparten.";
-    case "factor_into_both":
-      return "El ancho se copió en los dos factores: el bloque queda del doble.";
-    default:
-      return "Adentro hay un producto, y un producto no tiene pared que sacar.";
-  }
+  if (option.sound) return m("lure.sound");
+  if (option.lure === "factor_dropped" && ask === "recompose") return m("lure.factor_dropped_recompose");
+  return m(`lure.${option.lure ?? "distributed_over_product"}`);
 }
 
 const styles = StyleSheet.create({
@@ -1207,15 +1550,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.space[2],
   },
-  back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
-  backLabel: { color: theme.color.inkFaint, fontSize: 14 },
+  area: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
+  hintSlot: { minHeight: 52, alignSelf: "stretch", justifyContent: "center" },
+  ringBand: { alignSelf: "stretch", alignItems: "center", paddingBottom: theme.space[2] },
   ring: {
+    maxWidth: "100%",
     flexDirection: "row",
     gap: theme.space[2],
     alignItems: "center",
     justifyContent: "center",
     flexWrap: "wrap",
-    maxWidth: 640,
   },
   chip: {
     minWidth: 78,
@@ -1231,20 +1575,30 @@ const styles = StyleSheet.create({
   chipLabel: { color: theme.color.ink, fontSize: 18, fontVariant: ["tabular-nums"] },
   blockChip: {
     position: "absolute",
-    minWidth: 60,
-    height: 34,
+    width: CHIP_W,
+    height: CHIP_H,
     paddingHorizontal: theme.space[1],
     borderRadius: theme.radius.token,
     ...chipFace,
     borderColor: theme.color.accent,
     alignItems: "center",
     justifyContent: "center",
+    userSelect: "none",
   },
-  blockChipLabel: { color: theme.color.ink, fontSize: 16, fontVariant: ["tabular-nums"] },
+  // El número deja pasar el dedo a la ficha: con la pantalla táctil, el
+  // arrastre que empezaba sobre el texto nunca llegaba al gesto y la ficha no
+  // se movía (en el escritorio sí). Las otras asas no tienen hijos por eso.
+  blockChipLabel: {
+    color: theme.color.ink,
+    fontSize: 17,
+    fontVariant: ["tabular-nums"],
+    pointerEvents: "none",
+  },
   definition: {
     color: theme.color.inkDim,
     fontSize: 12,
     maxWidth: 520,
     textAlign: "center",
+    paddingHorizontal: 64,
   },
 });
