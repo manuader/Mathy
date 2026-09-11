@@ -65,12 +65,14 @@ Todo `setTimeout(nextRound, …)` de la actividad pasa a `setTimeout(advance, �
 ## 4. El foco
 
 ```ts
+// La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+const shown = step ?? lesson?.hint;
 const focus = useMemo<Focus | null>(() => {
-  if (!step) return null;
+  if (!shown) return null;
   // Rectángulos y puntos en coordenadas del LIENZO, calculados de la geometría
   // de la escena y del estado de ESTA ronda: la fruta que conviene levantar, el
   // hueco de enfrente, las tarjetas.
-  switch (step.id) {
+  switch (shown.id) {
     case "look":
       return { rings: [rectDe(lo que hay que mirar)] };
     case "<hacer>":
@@ -78,7 +80,7 @@ const focus = useMemo<Focus | null>(() => {
     default:
       return { rings: [lo que explica el reveal] };
   }
-}, [step, geom, /* el estado que cambia el foco */]);
+}, [shown, geom, /* el estado que cambia el foco */]);
 ```
 
 - `rings` son rectángulos que laten en dorado; `drag` dibuja una luz que recorre
@@ -109,6 +111,34 @@ const sceneH = Math.max(300, Math.min(height * (lesson?.lesson ? 0.56 : 0.66), 5
 - Sin botón "‹ Niveles" propio: lo pone la barra del marco.
 - `Spotlight` va adentro de la vista del lienzo, después del `Canvas`: sus
   coordenadas son las del lienzo y no se lleva ningún toque (`pointerEvents: none`).
+
+## 6. Tomi y el sonido
+
+**Tomi no se programa en la actividad**: vive en el marco (`ui/HintBuddy.tsx`). La
+actividad le da dos cosas, sin saberlo:
+
+- **Los intentos.** Cada movimiento que se evalúa se anota con
+  `onEvent({ kind: "attempt", …, correct })`. App los cuenta, y dos seguidos con
+  `correct: false` hacen que Tomi ofrezca una pista. Una actividad que no anota
+  intentos deja a Tomi sin saber que el jugador está trabado.
+- **El foco.** La pista "Mirá acá" pone en `lesson.hint` el paso de la guía que
+  espera un gesto; la actividad lo señala con el mismo `focus` de la guía (sección 4).
+
+`onEvent` es estable y así tiene que seguir: un efecto de la actividad depende de
+él (el `sawLayer` al montar), y una función nueva por render colgó el juego en un
+bucle (trampa 30 de HANDOFF).
+
+**El sonido** se llama en el mismo lugar donde la actividad registra el movimiento:
+
+```ts
+import { play } from "../ui/sound.ts";
+play("drop", { pitch: hueco * 2 }); // la fila se llena y la nota sube
+play("join");                        // dos cosas coinciden
+// desde un worklet: runOnJS(play)("lift")
+```
+
+Un sonido por evento, con significado físico (N §6). Nunca un sonido para lo que
+no avanzó.
 
 ## Verificar en el navegador
 

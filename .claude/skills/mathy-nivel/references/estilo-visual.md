@@ -76,6 +76,27 @@ alrededor de lo que hay que mirar. Nunca un sacudón, nunca un sonido de error.
 Todo lo que se monta para el jugo se monta desde el principio con opacidad cero
 (modo retained, decisión 5): una chispa por hueco, no una chispa por evento.
 
+## El sonido: lo que haría el objeto
+
+| Sonido | Cuándo | Por qué ese |
+|---|---|---|
+| `drop` | algo cae en su lugar | madera; con `pitch` sube al llenar una fila: contar se escucha |
+| `fit` | una pieza o una respuesta encaja | clic y golpe |
+| `join` | dos cosas coinciden (pareja, balanza igual) | vidrio |
+| `settle` | la balanza u otra cosa pesada se asienta | golpe grave |
+| `lift` | se levanta algo del tablero | aire |
+| `keyIn` | la llave entra al llavero (lo pone el cierre) | metal |
+
+Nada suena cuando algo no avanzó, nada suena de fondo durante la actividad, y
+ningún significado depende sólo del sonido: el jugador lo puede apagar.
+
+## Lo que se mueve en el fondo
+
+Lo pone el marco (`ui/Ambient.tsx` dentro de `World`), no la escena: nubes y
+pájaros en el cielo, faroles, hojas, mariposas y engranajes en los costados, un
+barquito en una esquina de abajo. **El lienzo nunca agrega movimiento decorativo
+propio**: todo lo que se mueve adentro del tablero es matemática.
+
 ## El marco que ya está hecho (no se reimplementa)
 
 - `ui/World.tsx`: el paisaje del área (por `areaOf(node.id)`), el velo que oscurece
@@ -88,15 +109,15 @@ Todo lo que se monta para el jugo se monta desde el principio con opacidad cero
   (la ficha que se agarra o se elige, con canto abajo; se usa en todas las
   bandejas de fichas y en los botones de respuesta) y `toggleFace` (el interruptor
   de una herramienta, de vidrio). Una actividad no inventa su propia ficha.
-- `ui/Lumi.tsx`: Lumi por pose, con su imagen si existe y un dibujo de reemplazo si no.
+- `ui/Lumi.tsx` y `ui/Tomi.tsx`: las dos mascotas por pose, con su imagen si existe y un dibujo de reemplazo si no.
+- `ui/HintBuddy.tsx`: Tomi en el rincón con las pistas. `ui/sound.ts`: `play()` y el botón que lo apaga.
 
 Si una pieza de estas no alcanza para un nodo, se extiende con una prop aditiva y
 se vuelven a jugar los nodos que la usan; no se copia.
 
-## Lo que heredan las escenas viejas
+## Las once escenas
 
-Las diez escenas anteriores al rediseño (`TrackScene`, `ChestScene`,
-`BalanceScene`…) ya toman los colores nuevos por los tokens, pero todavía dibujan
-con trazos finos y sin jugo. Un agente que toca una de esas escenas para su nodo le
-aplica este estándar —volumen, color con trabajo, jugo en el evento— y vuelve a
-jugar los nodos que la comparten.
+Desde el 2026-09-10 las once escenas (`BowlScene` y las diez anteriores al rediseño)
+siguen este estándar: volumen, color con trabajo, jugo y sonido en el evento que
+enseñan. Un agente que toca una para su nodo lo mantiene y vuelve a jugar los nodos
+que la comparten (la tabla está en §3 de HANDOFF).

@@ -4,8 +4,8 @@ description: >-
   Cómo se construye un nodo o un nivel de Mathy para que se juegue igual que los
   demás: la lección (qué enseña, objetivo, llave), la guía interactiva con Lumi,
   las tarjetas de entrada y cierre, la chuleta que se llena con llaves, y el
-  estilo visual de juego (color con significado, objetos con volumen, jugo en
-  cada gesto, mundo por área). Usar SIEMPRE que se construya, rediseñe o revise
+  estilo visual de juego (color con significado, objetos con volumen, jugo y
+  sonido físico en cada gesto, mundo por área), y las pistas de Tomi. Usar SIEMPRE que se construya, rediseñe o revise
   un minijuego, un nodo de la espina, un nivel, una escena de `apps/mathy`, una
   guía o tutorial, una llave de la chuleta, o el arte del juego; también cuando
   un agente recibe el prompt de nodo de U3. No hace falta para cambios en
@@ -38,8 +38,10 @@ vidas, corazones, rachas, rankings, confeti, "+20", "¡Excelente!", la palabra
 
 El marco común (`ui/ActivityShell.tsx`) le da a **todos** los nodos, sin tocar su
 actividad: el paisaje del área detrás (por el prefijo del id), la barra de vidrio
-con "‹ Niveles", la chuleta y la calculadora, la tarjeta de entrada y la de
-cierre con "Siguiente nivel". El nodo pone cuatro cosas:
+con "‹ Niveles", la chuleta, el sonido y la calculadora, la tarjeta de entrada y la de
+cierre con "Siguiente nivel", lo que se mueve en los bordes del paisaje, y **Tomi**
+en el rincón, que ofrece una pista cuando el jugador está quieto o varios intentos
+seguidos no avanzaron. El nodo pone cuatro cosas:
 
 | Qué | Dónde | Detalle |
 |---|---|---|
@@ -113,10 +115,11 @@ como clave: que duela.
 | rebote al soltar | "llegó a un lugar" |
 | chispas en el objeto | el evento que el nivel enseña, una vez |
 | anillo ámbar que late | atención, sin decir "mal" |
+| sonido (`ui/sound.ts`) | lo que haría el objeto: `drop` madera (sube de nota al llenar), `fit` encaja, `join` coincide, `settle` se asienta. Nunca error ni fanfarria |
 
 Los objetos matemáticos son **vectores en Skia con volumen** (degradado, brillo,
-sombra), **nunca PNG** y **nunca con cara**: la única cara es la de Lumi, y el
-limón nunca es una fruta para contar. Todo color y medida sale de
+sombra), **nunca PNG** y **nunca con cara**: las únicas caras son las de Lumi y
+Tomi, y ni el limón ni el tomate son nunca una fruta para contar. Todo color y medida sale de
 `ui/theme.ts`. Detalle y recetas de código en
 [references/estilo-visual.md](references/estilo-visual.md).
 
@@ -142,7 +145,7 @@ Los paisajes de área y Lumi ya existen (`apps/mathy/assets/art/`, vía el
 manifiesto `src/art/manifest.ts`). Un nodo **no** necesita arte nuevo: su área ya
 tiene mundo. Si hace falta una pose o un mundo nuevo, se genera con
 `~/Desktop/projects/automatic-image-generation` (motor `chat-gpt`, proyectos
-`mathy-lumi` y `mathy-mundos`, reglas en sus `OBJETIVO.md`) y se integra con
+`mathy-lumi`, `mathy-tomi`, `mathy-mundos` y `mathy-ambiente`, reglas en sus `OBJETIVO.md`) y se integra con
 `tools/art/sync_art.py`. Nunca se importa un PNG directo desde un componente.
 
 ## Antes de entregar
@@ -152,6 +155,8 @@ tiene mundo. Si hace falta una pose o un mundo nuevo, se genera con
 - [ ] La actividad emite las señales de sus pasos, frena la ronda en `holds`, y
       calcula el foco de cada paso desde la geometría.
 - [ ] Nada corre antes de `play`; la actividad no tiene fondo propio ni botón "‹ Niveles".
-- [ ] La escena usa los tokens con su significado y tiene jugo en el evento que enseña.
+- [ ] La escena usa los tokens con su significado y tiene jugo y sonido físico en el evento que enseña.
+- [ ] Cada intento se anota con `onEvent({ kind: "attempt", correct })` (así Tomi sabe
+      cuándo ofrecer una pista) y el foco sigue a `step ?? lesson?.hint`.
 - [ ] Tests, dos `tsc` y el validador en verde; el recorrido completo mirado.
 - [ ] El reporte dice qué se verificó mirando y qué no.

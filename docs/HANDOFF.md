@@ -10,6 +10,8 @@
 > cierre, guía con Lumi, llaves en la chuleta, un mundo por área, estética nueva. El nodo 1
 > la tiene completa; los demás heredan el marco pero les falta su lección. Cómo se hace:
 > la skill `mathy-nivel` (`.claude/skills/mathy-nivel/`).
+> **Desde la noche**: Tomi ofrece pistas, el juego suena (sonido físico, sólo en web), el
+> fondo se mueve en los bordes y las diez escenas viejas tienen volumen, jugo y sonido.
 
 ## 0. Cómo se usa este documento
 
@@ -127,7 +129,23 @@ avisa gestos con `signal`, frena la ronda en los pasos `holds` y le pasa el foco
 `Spotlight`. El arte ilustrado entra sólo por `src/art/` (decisión 16). El procedimiento
 completo es la skill `mathy-nivel`.
 
+El marco también pone a **Tomi** en el rincón (`ui/HintBuddy.tsx`, decisión 18), el
+**sonido** (`ui/sound.ts`, decisión 19) y **lo que se mueve en el fondo** (`ui/Ambient.tsx`
+dentro de `World`, decisión 20). Tomi se entera de los intentos porque App pasa cada
+`attempt` a la lección (`attempts` → `misses`) y señala con el mismo foco que la guía
+(`lesson.hint`). La cara de las fichas es una sola: `chipFace` y `ChipBodies`.
+
 ## 4. Qué cambió, sesión por sesión
+
+### Sesión 2026-09-10 (noche) — que el juego sea muy estimulante
+Las diez escenas viejas pasaron al estándar de la skill (volumen, color con trabajo, jugo
+y sonido en el evento), con cuatro bugs de paso: la balanza que nunca festejaba, bytes NUL
+en `PipeScene`, menta a destiempo en las fracciones, una leyenda cortada. Se sumaron Tomi,
+el tomate que da pistas escalonadas; sonido físico sintetizado; sprites que se mueven sólo
+en la periferia; y un recorrido entre niveles con la llave que entra al llavero. Un cuelgue
+al empezar cualquier nivel (trampa 30) se introdujo y se arregló en la misma noche. Casi
+todo se verificó midiendo y no a ojo: el panel del navegador estuvo oculto. Detalle en
+[SESSION-2026-09-10-juego-estimulante.md](SESSION-2026-09-10-juego-estimulante.md).
 
 ### Sesión 2026-09-10 (tarde) — la capa de juego y el arte
 El dueño jugó y encontró que no se entendía cuándo se cumplía un nivel ni cómo seguir, y
@@ -231,6 +249,16 @@ de nodos, costura de i18n— y sobre él los nodos 1 a 5 de la espina. Detalle y
     con un personaje que Gemini, y escribe por CDP y sube referencias por su
     `input[type=file]`, así que no pide Accesibilidad ni la máquina quieta. `bg_found`
     salió de Gemini y quedó como referencia de los mundos.
+18. **Lumi enseña, Tomi ayuda, y no hablan a la vez.** Tomi calla mientras la guía está en
+    pantalla. Sus pistas van de a una y de lo concreto a lo general (dónde mirar, la llave
+    que sirve, la idea, probá), no cuestan nada ni se anotan como falla, y su tarjeta nunca
+    va sobre el tablero: ocupa el lugar del cartel de la guía.
+19. **El sonido se sintetiza y es físico** (N §6): lo que haría el objeto, nunca fanfarria
+    ni error, y ningún significado depende sólo de él. Sintetizado para no cargar archivos;
+    por eso hoy suena sólo en web.
+20. **Lo que se mueve en el fondo, se mueve en la periferia**, en carriles fijos, debajo del
+    velo y quieto con reducir movimiento. El lienzo no agrega movimiento decorativo: lo
+    que se mueve adentro del tablero es matemática.
 
 ## 6. Cómo verificar
 
@@ -420,6 +448,21 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
     0x0). Parecía un límite de uso; el motor ahora las baja con `fetch` desde la pestaña.
     Y su HTML trae en scripts frases como "You've reached your limit": los bloqueos se
     buscan en el texto visible. Detalle en el journal del generador.
+30. **`onEvent` tiene que ser estable.** Las actividades anotan desde efectos que
+    dependen de él (el `sawLayer` al montar). Cuando App pasó a darle una flecha
+    nueva en cada render, cada anotación rerenderizaba App, eso creaba otro
+    `onEvent`, el efecto volvía a correr y anotaba otra vez: el juego se colgaba al
+    tocar "Empezar", sin error de React, porque el bucle pasa por el guardado
+    asíncrono. Y como `mergeEvents` sólo descarta eventos idénticos y el tope es
+    5000, un bucle así puede recortar el progreso viejo. App lo arma con `useCallback`.
+31. **`pgrep -f` dentro de un bucle de espera se encuentra a sí mismo** si el patrón está en
+    la línea de comando del propio shell: la espera no termina nunca, y traba también a
+    otras sesiones que esperen lo mismo. Esperá por PID (`while kill -0 $PID`) o armá el
+    patrón para que no se matchee a sí mismo (`generate.p[y]`).
+32. **Una pestaña que tira errores en bucle cuelga Metro.** Metro arma un marco de código
+    por cada error que le reenvía el navegador; 53 000 `Aborted()` de CanvasKit lo dejaron
+    al 99 % de CPU. Síntoma: `curl localhost:8081` no contesta y `preview_logs` pesa
+    megas. Cerrar la pestaña, después reiniciar el servidor; al revés, se vuelve a colgar.
 
 ## 8. Qué falta
 
@@ -428,9 +471,13 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
   generador: el trabajo de la tarde del 2026-09-10 está commiteado ahí y en ningún otro lado.
 - **La lección de los nodos 2 a 21**, con la skill `mathy-nivel`. Hoy heredan el marco
   (mundo, barra, tarjeta de cierre) pero no tienen tarjeta de entrada, guía ni llaves.
-- **El reskin de las diez escenas viejas** al estándar de la skill (volumen, color con
-  trabajo, jugo en el evento). Urgente en `UrnScene`, `TilesScene` y `StretchScene`, que usan
-  `theme.color.bg` para pintar agujeros: sobre el paisaje se ven como parches.
+- **Mirar a ojo las diez escenas rehechas**, nodo por nodo (legibilidad sobre el paisaje,
+  superposiciones): los agentes las verificaron midiendo, con el panel oculto. Y escuchar
+  los sonidos: se contaron, no se oyeron.
+- **El sonido en el teléfono**: los mismos sonidos renderizados a archivos con `expo-audio`.
+- **El `Aborted()` de CanvasKit** en `arith.div.undo_mul` nivel 8 (trampa 32): no se pudo
+  reproducir. Si vuelve en una pestaña recién cargada, es un bug de escena.
+- Un `play` con demora en `ui/sound.ts` reemplazaría cinco ayudantes locales iguales.
 - **Jugar entero con el marco nuevo al menos un nodo de cada área**: sólo se miró el nodo 1.
 - **30 nodos de la espina sin construir**: 22 a 44 y los siete ascendidos (45–47, 51–54).
   La tabla de qué mecánica pide cada uno está en [U2](U-desarrollo/U2-plan-espina.md).
@@ -486,6 +533,7 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 |---|---|
 | **este** | punto de entrada: estado, reglas, arquitectura, decisiones, trampas |
 | [`.claude/skills/mathy-nivel/`](../.claude/skills/mathy-nivel/SKILL.md) | cómo se construye un nivel: lección, guía, llaves, estilo de juego. Obligatoria para todo nodo |
+| [`SESSION-2026-09-10-juego-estimulante.md`](SESSION-2026-09-10-juego-estimulante.md) | Tomi, el sonido, el fondo que se mueve y las diez escenas al estándar; los seis diagnósticos de la noche |
 | [`SESSION-2026-09-10-rediseno-juego.md`](SESSION-2026-09-10-rediseno-juego.md) | por qué el juego tiene capa de juego y este arte, y qué diagnósticos resultaron falsos |
 | [`U-desarrollo/U4-rediseno-juego.md`](U-desarrollo/U4-rediseno-juego.md) | el plan del rediseño: qué se conserva de N, qué cambia, imagen o código |
 | [`N-ux-ui.md`](N-ux-ui.md) | la estética: color con trabajo, jugo, Lumi (§12), el mundo y el arte (§13) |

@@ -493,6 +493,8 @@ La voz no es un extra: en niveles 0 a 2 es la única forma de dar una instrucci�
 
 **Sonido.** Pocos sonidos y todos con significado físico: la balanza que se asienta, la llave que entra o no entra, la baldosa que encaja, el agua del recipiente. No hay música de fondo en las actividades, no hay fanfarrias de acierto y no hay sonido de error. El mapa puede tener una capa ambiental suave que se apaga con el sonido del sistema.
 
+**Cómo suena hoy** (2026-09-10, `apps/mathy/src/ui/sound.ts`). Nueve sonidos sintetizados en el momento, cada uno lo que haría el objeto si fuera de verdad: `drop` (madera: algo cae en su lugar), `fit` (clic y golpe: una pieza encaja), `join` (vidrio: dos cosas coinciden), `keyIn` (metal: la llave entra al llavero), `settle` (golpe grave: la balanza se asienta), `lift` (aire: algo se levanta), `page` (papel: la guía da vuelta la hoja), `hint` (la lamparita de Tomi se enciende) y `tap` (un botón). **El sonido también explica:** `drop` sube de nota a medida que se llena una fila, como el agua en una botella, así que contar se escucha. El jugador lo apaga desde la barra de la actividad y el juego no pierde nada: ningún significado depende sólo del sonido. En web suena con WebAudio; en el teléfono todavía no (pendiente: los mismos sonidos renderizados a archivos).
+
 ---
 
 ## 7. Accesibilidad
@@ -566,9 +568,9 @@ Las imágenes de referencia que motivaron la revisión 2026-09-10 tenían corazo
 
 ---
 
-## 12. Lumi
+## 12. Lumi y Tomi
 
-Lumi es **un limón profe**: redondo, amarillo arriba y naranja abajo, con una hoja verde, birrete índigo con borla dorada, ojos grandes y brillantes, nariz naranja, cachetes rosados, bracitos y patitas cortas, y un puntero de madera. Contorno oscuro grueso y sombreado brillante: el registro de las mascotas de los juegos móviles que la gente juega sin que nadie se lo pida. Es **la única cara del juego**.
+Lumi es **un limón profe**: redondo, amarillo arriba y naranja abajo, con una hoja verde, birrete índigo con borla dorada, ojos grandes y brillantes, nariz naranja, cachetes rosados, bracitos y patitas cortas, y un puntero de madera. Contorno oscuro grueso y sombreado brillante: el registro de las mascotas de los juegos móviles que la gente juega sin que nadie se lo pida. Con Tomi (abajo), son **las únicas dos caras del juego**.
 
 > La primera versión (2026-09-10, mañana) era una luciérnaga índigo que llevaba la luz del mapa. El dueño la cambió el mismo día por el limón, a partir de sus imágenes de referencia: un personaje de fruta con birrete se lee al instante como "el que enseña", para un chico y para un adulto. La imagen definitiva la eligió el dueño (`automatic-image-generation/projects/mathy-lumi/output/lumi_hero.png`) y las demás poses se generan adjuntándola.
 
@@ -593,6 +595,28 @@ Lumi es **un limón profe**: redondo, amarillo arriba y naranja abajo, con una h
 
 Mientras una pose no tiene imagen generada, `ui/Lumi.tsx` la dibuja con vistas. El reemplazo es Lumi más simple, nunca un cuadrado gris.
 
+### Tomi, el compañero que da pistas
+
+Tomi es **un tomate** redondo y brillante con una corona de hojitas en estrella, del mismo registro que Lumi, y su objeto es **una lamparita**: apagada cuando espera, encendida cuando tiene una pista. Lo pidió el dueño el 2026-09-10, a partir de una de sus imágenes de referencia, para que el jugador que no sabe qué hacer tenga a quién preguntar sin salir del nivel.
+
+**Los dos no se pisan.** Lumi enseña (la guía, las tarjetas, las llaves); Tomi ayuda. Tomi vive en el rincón de abajo a la izquierda de la actividad (`ui/HintBuddy.tsx`) y **calla mientras la guía de Lumi está en pantalla**: dos voces a la vez son ninguna.
+
+**Cuándo aparece.** Se ofrece solo ("¿Te doy una pista?") cuando el jugador lleva 18 s sin tocar el tablero o cuando dos intentos seguidos no avanzaron; si nadie contesta, vuelve a su rincón. Tocarlo abre una pista en cualquier momento. Pedirla no cuesta nada ni se anota como falla (§10).
+
+**Qué dice, de a una y de menos a más:** (1) dónde mirar y qué gesto hacer, con el tablero señalado igual que en la guía; (2) la llave de la chuleta que sirve, si el nivel usa una anterior; (3) la idea que el nivel enseña; (4) que pruebe cualquier cosa, que acá nada se pierde. El objetivo no va primero: ya está en el cartel. La tarjeta de la pista aparece arriba, en el lugar del cartel de la guía, y nunca sobre el tablero.
+
+**La regla es la de Lumi:** el tomate nunca aparece como fruta para contar. Las manzanas del tablero también son rojas, pero no tienen cara ni corona de hojas en estrella.
+
+| Pose de Tomi | Momento |
+|---|---|
+| `think` | en el rincón, esperando |
+| `icon` | el botón cuando ofrece una pista |
+| `point` | la pista que señala el tablero o una llave |
+| `idea` | la pista que dice la idea |
+| `cheer`, `hero` | reservadas (festejo sin premio, presentación) |
+| `duo` | con Lumi, chocando los cinco: el mapa de conceptos |
+
+
 ## 13. El mundo, y el arte ilustrado
 
 Cada área del curriculum es un lugar, pintado detrás del lienzo: la huerta para contar, el río de las piedras para operar, el templo de las llaves para la incógnita, el taller de las máquinas para las ecuaciones y funciones, y así hasta el observatorio. Volver a un nodo es volver a su lugar; el paisaje cambia con el área y nunca con el nivel.
@@ -602,8 +626,11 @@ Cada área del curriculum es un lugar, pintado detrás del lienzo: la huerta par
 | Imagen generada | Vector en código |
 |---|---|
 | los paisajes de las áreas y el mapa del mundo | frutas, cuencos, tarjetas, marcas, puentes: todo objeto matemático |
-| las poses de Lumi | llaves, botones, carteles, sendero, partículas de luz |
+| las poses de Lumi y de Tomi | llaves, botones, carteles, sendero, partículas de luz |
+| lo que se mueve en la periferia del fondo (nubes, pájaros, faroles, mariposas, hojas, engranajes, un barquito, un globo) | |
 
 **Nada referencia un archivo directo.** La app pregunta a `apps/mathy/src/art/`, que contesta con la imagen si existe y con nada si no; el que pregunta dibuja su reemplazo. El manifiesto lo reescribe `tools/art/sync_art.py` con lo que hay en disco. Un juego sin ninguna imagen generada anda entero, con cielos de franjas y Lumi vectorial.
 
 **Cómo se genera.** Con la metodología de FisuEvolution, en el generador [`automatic-image-generation`](https://github.com/manuader/automatic-image-generation): un `.md` por imagen en `projects/mathy-lumi/` y `projects/mathy-mundos/`, el estilo primero, una imagen héroe que las demás adjuntan como referencia, prompts en ASCII puro, fondo blanco liso para lo que se recorta. Las reglas de composición de los paisajes son medibles y no negociables: el centro, del 25 % al 85 % de la altura y del 20 % al 80 % del ancho, es suelo oscuro y vacío; en el centro no hay rojo, menta ni ámbar vivo. Las dos héroes las aprueba una persona antes de generar el resto.
+
+**Lo que se mueve, se mueve en los bordes** (`ui/Ambient.tsx`, pedido del dueño 2026-09-10). El centro de la pantalla es donde el juego explica, y el ojo se va detrás de lo que se mueve. Cada actor tiene un carril y no sale de él: **el cielo** (cruzan nubes, pájaros, un globo), **los costados** (suben faroles, caen hojas, revolotean mariposas, giran engranajes asomados desde el borde) y **las esquinas de abajo** (se mece un barquito). Todo es lento (ningún ciclo baja de 14 s), va debajo del velo del mundo y se detiene con reducir movimiento (§2.5). Cada área tiene su elenco: mariposas y hojas en la huerta, hojas y el barquito en el río, faroles en el templo, engranajes y el globo en el taller. Las luciérnagas también viven en los costados. Los sprites salen del proyecto `mathy-ambiente` del generador; `sync_art.py` los recorta contra el color de fondo que traigan (blanco, negro o transparente) y un sprite que falta simplemente no aparece.
