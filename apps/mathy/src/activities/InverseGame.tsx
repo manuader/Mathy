@@ -15,7 +15,14 @@
  *   el mismo llavero con máquinas en vez de operaciones.
  * - `slope_walker` entra desde el nivel 5 con `WalkScene`, que traía el eje
  *   `diagonal` apagado y anotado como del nodo 21. Este nodo le agregó
- *   `sweepAxis`, también aditivo: la recta del test, acostada.
+ *   `sweepAxis`, también aditivo: la recta del test, acostada, que el jugador
+ *   baja con el dedo.
+ *
+ * Con lección, la guía de Lumi juega la primera ronda al lado del jugador: cada
+ * paso señala la bola, la palanca, la hoja o la fila de fichas de esta ronda, y
+ * el paso que explica frena la ronda hasta que el jugador dice "entendido". Los
+ * niveles que alternan preguntas guían la primera; la línea de abajo dice cuál
+ * toca en cada ronda.
  *
  * Esta actividad no dibuja nada y no calcula ninguna salida: elige qué escena
  * mira el jugador en cada ronda, le pasa su configuración y traduce el dedo en
@@ -36,13 +43,14 @@
  * entero y el gesto se puede subir cuando haya con qué probarlo.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
   runOnJS,
+  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -97,6 +105,8 @@ import {
   type Slot,
 } from "../scenes/ChestScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
@@ -173,9 +183,26 @@ export function InverseGame(props: InverseGameProps) {
   );
 }
 
-function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
+function Activity({ level, onLevelDone, onEvent }: InverseGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: la máquina no corre y la latencia no cuenta hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  const conLeccion = lesson?.lesson !== undefined;
+  const alterna = level.asks.length > 1;
+  /**
+   * Lo que dice la línea de abajo al empezar una ronda. Con lección, el cartel
+   * ya dice qué hacer; salvo en los niveles que alternan preguntas, donde el
+   * cartel es el mismo para las dos y la línea dice cuál toca.
+   */
+  const apertura = useCallback(
+    (a: string): string => (conLeccion && !alterna ? "" : t(`inv.ask.${a}`)),
+    [conLeccion, alterna],
+  );
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -199,7 +226,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
   const ask = problem.ask;
 
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: t(`inv.ask.${ask}`),
+    text: apertura(ask),
     tone: "dim",
   }));
 
@@ -207,7 +234,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
 
   const conHoja = ask === "fold" || ask === "swap" || ask === "exists" || ask === "cut";
   const soloHoja = ask === "fold" || ask === "swap";
-  const sceneH = Math.max(300, Math.min(height * (level.definition ? 0.5 : 0.6), 480));
+  // Con lección, el cartel de la guía ocupa arriba lo que el lienzo cede. En un
+  // teléfono, además, cede lo que ocupan la fila de botones y la definición de
+  // abajo: en 390 × 844 la tercera respuesta del último nivel quedaba cortada y
+  // la definición, entera fuera de la pantalla.
+  const estrecho = width < 600;
+  const conFilaAbajo = problem.options.length > 0 || ask === "order" || ask === "lever";
+  const alto =
+    (level.definition ? 0.5 : 0.6) -
+    (conLeccion ? 0.08 : 0) -
+    (estrecho && conFilaAbajo ? 0.04 : 0) -
+    (estrecho && level.definition ? 0.12 : 0);
+  const sceneH = Math.max(estrecho ? 240 : 280, Math.min(height * alto, 480));
   // Con hoja, el caño se queda con una banda arriba y la hoja con el resto; sin
   // hoja, el caño se queda con todo. Las dos escenas quedan montadas siempre:
   // la que no juega esta ronda se apaga, no se desmonta.
@@ -529,6 +567,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
   const walkerAt = useSharedValue(0);
   const walkerY = useSharedValue(0);
   /**
+   * La vuelta en el diagrama del cofre: la flecha que sube y cierra, la que
+   * arranca y se traba, y el objeto que vuelve. Antes estaban apagadas y el
+   * llavero de máquinas no contestaba nada sobre el diagrama: solo el mensaje.
+   */
+  const chestBack = useSharedValue(0);
+  const chestLeft = useSharedValue(0);
+  const chestOpen = useSharedValue(0);
+  /**
    * Un cero compartido. Las escenas piden agujas que este nodo no mueve, y una
    * sola apagada las cubre a todas sin montar diez valores muertos.
    */
@@ -573,10 +619,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
     setTried(null);
     setPicked(-1);
     setFolded(false);
-    setMessage({ text: t(`inv.ask.${problem.ask}`), tone: "dim" });
+    setMessage({ text: apertura(problem.ask), tone: "dim" });
 
     flow.value = 0;
     jam.value = 0;
+    chestBack.value = 0;
+    chestLeft.value = 0;
+    chestOpen.value = 0;
     unfold.value = level.onDemand ? 0 : 1;
     sweep.value = problem.window.y1;
     for (const s of [...machineSlots, ...traySlots]) {
@@ -603,31 +652,24 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
     walkAppear.value = withTiming(enHoja ? 1 : 0, { duration: theme.motion.base });
     chestAppear.value = withTiming(enCofre ? 1 : 0, { duration: theme.motion.base });
 
-    // La capa `real` se mira: la máquina corre sola en las dos posiciones, una
-    // detrás de la otra, y el jugador no toca nada hasta que terminó. En
-    // `intuition` la escena llega detenida con la bola cambiada frente a la boca
-    // de salida y la palanca ya girada, que es exactamente la lámina del
+    // En `intuition` la escena llega detenida con la bola cambiada frente a la
+    // boca de salida y la palanca ya girada, que es exactamente la lámina del
     // documento: se predice antes de ver.
-    if (problem.ask === "watch") {
-      flow.value = 0;
-      flow.value = withTiming(1, { duration: theme.motion.reveal });
-      timers.current.push(
-        setTimeout(() => {
-          setBack(true);
-          flow.value = 0;
-          flow.value = withTiming(1, { duration: theme.motion.reveal });
-        }, theme.motion.reveal + 400),
-      );
-    }
     if (problem.ask === "predict") setBack(true);
 
     // El latido de la demostración no es un adorno: es la única instrucción.
+    // Con guía, la luz de la guía es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    if (guided) {
+      demo.value = 0;
+    } else {
+      demo.value = withRepeat(
+        withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+        -1,
+        false,
+      );
+    }
     return () => {
       cancelAnimation(hint);
       cancelAnimation(demo);
@@ -637,11 +679,50 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem]);
 
+  // La capa `real` se mira: la máquina corre sola en las dos posiciones, una
+  // detrás de la otra, y el jugador no toca nada hasta que terminó. Pero recién
+  // cuando el nivel empieza: detrás de la tarjeta de entrada la máquina corría
+  // y terminaba sin que nadie la viera.
+  useEffect(() => {
+    if (!playing || problem.ask !== "watch") return;
+    flow.value = 0;
+    flow.value = withTiming(1, { duration: theme.motion.reveal });
+    const id = setTimeout(() => {
+      setBack(true);
+      flow.value = 0;
+      flow.value = withTiming(1, { duration: theme.motion.reveal });
+    }, theme.motion.reveal + 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problem, playing]);
+
   // La capa vista se registra al entrar y no al terminar: es lo que hace crecer
   // la chuleta, y el jugador ya la vio.
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_INVERSE_FUNCTION, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj de la latencia arranca cuando empieza el juego, no detrás de la
+  // tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
+  // La guía del nivel habla de la pregunta de su primera ronda. En las rondas
+  // de la otra, la pista de Tomi no tiene gesto que mostrar y salta el "mirá acá".
+  const prefRef = useRef(lesson?.preferHint);
+  prefRef.current = lesson?.preferHint;
+  useEffect(() => {
+    if (!alterna) return;
+    prefRef.current?.(problem.ask === level.asks[0] ? null : "");
+  }, [problem, alterna, level.asks]);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -682,6 +763,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
     setRound(r + 1);
   }, [level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (key: string) => {
       if (doneRef.current) return;
@@ -689,9 +790,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       setSolved(true);
       quiet();
       setMessage({ text: t(key), tone: "ok" });
-      luego(nextRound, 1800);
+      luego(advance, 1800);
     },
-    [luego, nextRound, quiet],
+    [luego, advance, quiet],
   );
 
   /** Ganar. Cierra la ronda ya, y recién después muestra el cartel. */
@@ -727,12 +828,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
     setBack(!alReves);
     setFed(null);
     flow.value = 0;
+    if (!alReves) say("lever");
     setMessage({
       text: t(alReves ? "inv.hint.leverForward" : "inv.hint.leverBack"),
       tone: "dim",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiet]);
+  }, [quiet, say]);
 
   /**
    * Meter una bola por la boca que está de entrada. Con la palanca derecha sale
@@ -770,16 +872,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       if (alReves) attempt(bien);
       if (alReves && bien) {
         setReturned(true);
+        say("returned");
         win("inv.done.lever", theme.motion.reveal);
         return;
       }
+      if (!alReves) say("fed");
       setMessage({
         text: t(alReves ? "inv.hint.notTheSame" : "inv.hint.pullTheLeverNow"),
         tone: alReves ? "warn" : "dim",
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, correr, quiet, win],
+    [attempt, correr, quiet, win, say],
   );
 
   // --- Las fichas de respuesta -----------------------------------------------
@@ -801,6 +905,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
 
       if (option.correct) {
         if (a === "watch" || a === "predict") correr();
+        say("picked");
         win(`inv.done.${a}`, a === "watch" || a === "predict" ? theme.motion.reveal : 0);
         return;
       }
@@ -813,7 +918,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       setMessage({ text: t(mensajeDeError(a, option)), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, correr, quiet, win],
+    [attempt, correr, quiet, win, say],
   );
 
   // --- El llavero de máquinas ------------------------------------------------
@@ -840,6 +945,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       const slot = keySlots[index];
       if (bien) {
         if (slot?.spin) slot.spin.value = withTiming(2 * Math.PI, { duration: theme.motion.morph });
+        // La vuelta sube y cierra el circuito, y el objeto vuelve a su lugar.
+        chestBack.value = withTiming(1, { duration: theme.motion.quick });
+        chestOpen.value = withTiming(1, { duration: theme.motion.morph });
+        say("picked");
         win("inv.done.ring");
         return;
       }
@@ -848,9 +957,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
         withTiming(-1, { duration: 140 }),
         withTiming(0, { duration: 120 }),
       );
+      // La flecha de vuelta arranca y no llega, y el objeto se asoma y vuelve.
+      chestLeft.value = withTiming(1, { duration: theme.motion.quick });
+      chestOpen.value = 0;
+      chestOpen.value = withTiming(1, { duration: theme.motion.morph });
       setMessage({ text: t(`inv.lure.${cand.lure ?? "default"}`), tone: "warn" });
       luego(() => {
         setTried(null);
+        chestLeft.value = withTiming(0, { duration: theme.motion.base });
+        chestOpen.value = 0;
         if (slot) {
           slot.dx.value = withTiming(0, { duration: theme.motion.base });
           slot.dy.value = withTiming(0, { duration: theme.motion.base });
@@ -858,7 +973,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       }, 1600);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, luego, quiet, win],
+    [attempt, luego, quiet, win, say],
   );
 
   /** Soltar una candidata sobre la flecha de vuelta. El blanco es generoso. */
@@ -872,6 +987,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
           slot.dx.value = withTiming(0, { duration: theme.motion.base });
           slot.dy.value = withTiming(0, { duration: theme.motion.base });
         }
+        // Un rechazo nunca es mudo: la máquina que vuelve dice adónde iba.
+        setMessage({ text: t("inv.msg.dropOnArrow"), tone: "dim" });
         return;
       }
       const home = cl.keys[index] ?? { x: 0, y: 0 };
@@ -901,13 +1018,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
         // La grilla se dobla y el rastro cae del otro lado, con los hilos
         // reflejados. El doblez es la consecuencia, no la pregunta.
         setFolded(true);
+        say("picked");
         win("inv.done.fold", theme.motion.morph);
         return;
       }
       setMessage({ text: t(`inv.lure.${curva.lure ?? "default"}`), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win],
+    [attempt, quiet, win, say],
   );
 
   /** Tocar la gota que es el par dado vuelta. */
@@ -922,14 +1040,29 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       const bien = gota.x === p.lit.y && gota.y === p.lit.x;
       attempt(bien);
       if (bien) {
+        say("picked");
         win("inv.done.swap");
         return;
       }
       setMessage({ text: t("inv.hint.otherDrop"), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win],
+    [attempt, quiet, win, say],
   );
+
+  /**
+   * La máquina plegada, pedida con un toque. Antes el nivel 7 la dejaba plegada
+   * sin ningún gesto que la desplegara, y la guía pedía tocar el tablero para
+   * nada. Mirar no es contestar: no cuenta como intento.
+   */
+  const desplegar = useCallback(() => {
+    const { solved: hecho } = vivo.current;
+    if (hecho || cerrado.current) return;
+    quiet();
+    unfold.value = withTiming(1, { duration: theme.motion.base });
+    setMessage({ text: t("inv.msg.ghost"), tone: "dim" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiet]);
 
   // --- Gestos ----------------------------------------------------------------
 
@@ -940,78 +1073,122 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
    */
   const geo = useSharedValue({
     activo: 0,
-    /** 1 la palanca del caño, 2 las curvas de la hoja, 3 las gotas marcadas. */
+    /**
+     * 1 la palanca del caño, 2 las curvas de la hoja, 3 las gotas marcadas, 4 la
+     * máquina plegada que se pide, 5 la recta que se baja sobre la hoja.
+     */
     modo: 0,
     desdeX: 0,
     desdeY: 0,
     boxes: [] as { x: number; y: number; w: number; h: number }[],
     puntos: [] as { x: number; y: number }[],
+    curvas: [] as { x: number; y: number }[][],
     radio: 24,
+    plegada: 0,
+    /** Dónde empieza la hoja en el lienzo, y su escala para la recta. */
+    hojaY: 0,
+    cy: 0,
+    uy: 1,
+    y0: -6,
+    y1: 6,
+    /** 1 si el dedo empezó sobre la hoja y está bajando la recta. */
+    barre: 0,
   });
 
   useEffect(() => {
     const carcasas = (pl.lanes[0]?.machines ?? [])
       .slice(0, Math.max(pipeConfig.lanes[0]?.machines.length ?? 0, 1))
       .map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h }));
+    const aLienzo = (p: InvPair): { x: number; y: number } => ({
+      x: wl.sheet.cx + p.x * wl.sheet.ux,
+      y: walkY + wl.sheet.cy - p.y * wl.sheet.uy,
+    });
 
-    const puntos: { x: number; y: number }[] = [];
-    if (ask === "fold" && !folded) {
-      // El blanco de una curva es su gota del medio: tocar una línea entera
-      // pediría una distancia punto a segmento, y con tres candidatas separadas
-      // el punto del medio alcanza y se ve dónde hay que tocar.
-      for (const c of problem.curves) {
-        const medio = c.points[Math.floor(c.points.length / 2)];
-        if (medio) {
-          puntos.push({
-            x: wl.sheet.cx + medio.x * wl.sheet.ux,
-            y: walkY + wl.sheet.cy - medio.y * wl.sheet.uy,
-          });
-        }
-      }
-    }
-    if (ask === "swap") {
-      for (const m of problem.marked) {
-        puntos.push({
-          x: wl.sheet.cx + m.x * wl.sheet.ux,
-          y: walkY + wl.sheet.cy - m.y * wl.sheet.uy,
-        });
-      }
-    }
+    // El blanco de una curva es la curva entera: se toca donde se la ve, y gana
+    // la más cercana al dedo. Con el punto del medio como blanco, tocar una
+    // curva lejos de su medio elegía otra.
+    const curvas = ask === "fold" && !folded ? problem.curves.map((c) => c.points.map(aLienzo)) : [];
+    const puntos = ask === "swap" ? problem.marked.map(aLienzo) : [];
 
     geo.value = {
       activo: solved ? 0 : 1,
-      modo: ask === "lever" || ask === "watch" ? 1 : ask === "fold" ? 2 : ask === "swap" ? 3 : 0,
+      modo:
+        ask === "lever" || ask === "watch" ? 1
+        : ask === "fold" ? 2
+        : ask === "swap" ? 3
+        : ask === "exists" || ask === "cut" ? 5
+        : level.onDemand ? 4
+        : 0,
       desdeX: 0,
       desdeY: 0,
       boxes: carcasas,
       puntos,
+      curvas,
       radio: Math.max(22, wl.touchR),
+      plegada: level.onDemand ? 1 : 0,
+      hojaY: walkY,
+      cy: wl.sheet.cy,
+      uy: wl.sheet.uy,
+      y0: problem.window.y0,
+      y1: problem.window.y1,
+      barre: 0,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pl, wl, walkY, ask, folded, solved, problem, pipeConfig.lanes]);
+  }, [pl, wl, walkY, ask, folded, solved, problem, pipeConfig.lanes, level.onDemand]);
 
-  const acciones = useRef({ pullLever, pickCurve, pickDrop });
-  acciones.current = { pullLever, pickCurve, pickDrop };
+  const acciones = useRef({ pullLever, pickCurve, pickDrop, desplegar });
+  acciones.current = { pullLever, pickCurve, pickDrop, desplegar };
   const alTirar = useCallback(() => acciones.current.pullLever(), []);
   const alTocarCurva = useCallback((i: number) => acciones.current.pickCurve(i), []);
   const alTocarGota = useCallback((i: number) => acciones.current.pickDrop(i), []);
+  const alDesplegar = useCallback(() => acciones.current.desplegar(), []);
 
   /**
    * El gesto del lienzo. Sin `minDistance(0)`: con cero se activa en el mismo
    * instante en que el dedo se apoya y le gana la carrera al asa que hay encima.
    * Se cierra en `onFinalize` con un umbral de toque, que es el patrón de los
-   * nodos 9 y 17.
+   * nodos 9 y 17. En la hoja del último nivel el arrastre baja la recta.
    */
   const pan = useMemo(
     () =>
       Gesture.Pan()
         .onBegin((e) => {
-          geo.value = { ...geo.value, desdeX: e.x, desdeY: e.y };
+          const g = geo.value;
+          geo.value = {
+            ...g,
+            desdeX: e.x,
+            desdeY: e.y,
+            barre: g.modo === 5 && g.activo === 1 && e.y >= g.hojaY ? 1 : 0,
+          };
+        })
+        .onChange((e) => {
+          const g = geo.value;
+          if (g.modo !== 5 || g.barre !== 1) return;
+          // La recta cae siempre en una altura entera: pasa justo por las gotas
+          // y se ve cuántas toca, sin puntería.
+          const h = Math.round((g.cy - (e.y - g.hojaY)) / Math.max(g.uy, 0.0001));
+          sweep.value = Math.max(g.y0, Math.min(g.y1, h));
         })
         .onFinalize((e) => {
           const g = geo.value;
           if (!g.activo || g.modo === 0) return;
-          if (Math.hypot(e.x - g.desdeX, e.y - g.desdeY) > TAP_SLOP) return;
+          const movido = Math.hypot(e.x - g.desdeX, e.y - g.desdeY);
+          if (g.modo === 5) {
+            if (movido > TAP_SLOP) return;
+            if (e.y < g.hojaY) {
+              if (g.plegada === 1) runOnJS(alDesplegar)();
+              return;
+            }
+            // Un toque sobre la hoja también lleva la recta ahí.
+            const h = Math.round((g.cy - (e.y - g.hojaY)) / Math.max(g.uy, 0.0001));
+            sweep.value = withTiming(Math.max(g.y0, Math.min(g.y1, h)), { duration: 160 });
+            return;
+          }
+          if (movido > TAP_SLOP) return;
+          if (g.modo === 4) {
+            runOnJS(alDesplegar)();
+            return;
+          }
           if (g.modo === 1) {
             for (const b of g.boxes) {
               if (e.x > b.x && e.x < b.x + b.w && e.y > b.y && e.y < b.y + b.h) {
@@ -1019,6 +1196,33 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
                 return;
               }
             }
+            return;
+          }
+          if (g.modo === 2) {
+            let mejor = -1;
+            let cerca = Infinity;
+            for (let c = 0; c < g.curvas.length; c++) {
+              const pts = g.curvas[c];
+              if (!pts) continue;
+              for (let i = 0; i < pts.length; i++) {
+                const a = pts[i];
+                const b = pts[i + 1] ?? a;
+                if (!a || !b) continue;
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const largo = dx * dx + dy * dy;
+                const u =
+                  largo > 0
+                    ? Math.max(0, Math.min(1, ((e.x - a.x) * dx + (e.y - a.y) * dy) / largo))
+                    : 0;
+                const d = Math.hypot(e.x - (a.x + u * dx), e.y - (a.y + u * dy));
+                if (d < cerca) {
+                  cerca = d;
+                  mejor = c;
+                }
+              }
+            }
+            if (mejor >= 0 && cerca <= g.radio * 1.6) runOnJS(alTocarCurva)(mejor);
             return;
           }
           let mejor = -1;
@@ -1033,8 +1237,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
             }
           }
           if (mejor < 0 || cerca > g.radio * 2.2) return;
-          if (g.modo === 2) runOnJS(alTocarCurva)(mejor);
-          else runOnJS(alTocarGota)(mejor);
+          runOnJS(alTocarGota)(mejor);
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -1050,7 +1253,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
       }
       const lane = pl.lanes[0];
       if (!lane) return;
-      if (Math.hypot(x - lane.mouth.x, y - lane.mouth.y) > 150) return;
+      if (Math.hypot(x - lane.mouth.x, y - lane.mouth.y) > 150) {
+        // Un rechazo nunca es mudo: la bola que vuelve dice adónde iba.
+        setMessage({ text: t("inv.msg.dropOnMouth"), tone: "dim" });
+        return;
+      }
       const { problem: p, back: alReves } = vivo.current;
       feed(alReves ? p.output : p.input);
     },
@@ -1071,10 +1278,107 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
   }, []);
   const alTocarLlave = useCallback((i: number) => accionesLlavero.current.tryCandidate(i), []);
 
-  // --- Pantalla --------------------------------------------------------------
+  // --- Qué señala la guía ----------------------------------------------------
 
   const conFichas = problem.options.length > 0;
   const conBandeja = (pipeConfig.trayItems ?? []).length > 0;
+  /** Hay una fila de fichas debajo del lienzo: las respuestas o las cadenas escritas. */
+  const conFila = conFichas || ask === "order";
+  /** En qué punto del gesto de la palanca está la ronda, para señalar lo que falta. */
+  const palanca: "feed" | "lever" | "back" = back ? "back" : fed === null ? "feed" : "lever";
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: la bola de
+   * la bandeja y la boca donde entra, la máquina con su palanca, la hoja con la
+   * diagonal, el renglón escrito. Sale de la misma geometría con que las
+   * escenas dibujan y se recalcula con cada movimiento. Las fichas y el botón
+   * viven debajo del lienzo y la guía los rodea allá, con su propia luz.
+   */
+  // La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const around = (p: Pt, w: number, h: number): Rect => ({ x: p.x - w / 2, y: p.y - h / 2, w, h });
+    const pad = (b: Rect, m: number): Rect => ({ x: b.x - m, y: b.y - m, w: b.w + 2 * m, h: b.h + 2 * m });
+    const solo = (rs: readonly (Rect | null | undefined)[]): Focus => ({
+      rings: rs.filter((r): r is Rect => r !== null && r !== undefined),
+    });
+
+    if (ask === "ring") {
+      const panel = cl.diagram?.panels[0];
+      const llavero = union(
+        cl.keys.slice(0, problem.ring.length).map((p) => around(p, cl.keyW + 14, cl.keyH + 14)),
+      );
+      const columna = panel
+        ? union([...panel.nodes.map((n) => around(n, 64, 44)), ...panel.up.map((n) => around(n, 70, 44))])
+        : null;
+      return solo([columna, llavero]);
+    }
+
+    if (conHoja) {
+      const s = wl.sheet;
+      const w = problem.window;
+      const hoja: Rect = {
+        x: s.cx + w.x0 * s.ux - 6,
+        y: walkY + s.cy - w.y1 * s.uy - 6,
+        w: (w.x1 - w.x0) * s.ux + 12,
+        h: (w.y1 - w.y0) * s.uy + 12,
+      };
+      return solo([hoja]);
+    }
+
+    const lane = pl.lanes[0];
+    if (!lane) return null;
+    const bola = pl.tokenR * 3.2;
+    const cajas = union(
+      lane.machines
+        .slice(0, Math.max(pipeConfig.lanes[0]?.machines.length ?? 0, 1))
+        .map((b) => pad(b, 6)),
+    );
+    const cano = union([...(cajas ? [cajas] : []), around(lane.mouth, 44, 44), around(lane.spout, bola, bola)]);
+    const salida = around(lane.spout, bola, bola);
+    const renglon = pipeConfig.formula ? around(pl.formula, Math.min(width - 24, 340), 44) : null;
+
+    if (ask === "lever") {
+      const bandeja = pl.tray[0];
+      const enBandeja = bandeja ? around(bandeja, pl.trayW + 12, pl.trayH + 12) : null;
+      if (id === "look") return solo([enBandeja, cajas]);
+      if (id === "reveal") return solo([salida]);
+      // Lo que falta del gesto, no el paso que toca: si el jugador se adelantó,
+      // la luz ya está en lo que sigue.
+      if (palanca === "lever") return solo([cajas]);
+      if (!bandeja) return solo([cano]);
+      return { rings: [enBandeja ?? cano ?? salida, around(lane.mouth, 48, 48)], drag: { from: bandeja, to: lane.mouth } };
+    }
+    if (id === "reveal") return solo([ask === "name" || ask === "identity" ? renglon : salida]);
+    if (ask === "name" || ask === "identity") return solo([cano, renglon]);
+    return solo([cano]);
+  }, [shown, ask, cl, problem, conHoja, wl, walkY, pl, pipeConfig, width, palanca]);
+
+  /**
+   * La fila de fichas y el botón de la palanca viven debajo del lienzo, y la
+   * guía los rodea con su propio marco dorado. No se miden: la medida llegaba
+   * por `onLayout`, que en web depende de que la página pinte, y sin ella la
+   * fila quedaba sin señalar justo en el paso que la pide.
+   */
+  const fichasEnFoco = shown?.id === "pick" && conFila;
+  const palancaEnFoco =
+    shown !== undefined && ask === "lever" && shown.id !== "look" && shown.id !== "reveal" && palanca === "lever";
+
+  // --- Pantalla --------------------------------------------------------------
+
+  const fichasTexto = ask === "exists" || ask === "cut";
+  const definicion = (
+    <>
+      {returned ? (
+        <Text style={[styles.definition, estrecho && styles.definitionNarrow]}>{t("inv.identity.said")}</Text>
+      ) : null}
+      {level.definition ? (
+        <Text style={[styles.definition, estrecho && styles.definitionNarrow]}>{t("inv.definition")}</Text>
+      ) : null}
+    </>
+  );
 
   return (
     <View style={styles.root}>
@@ -1084,7 +1388,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!conLeccion}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <View style={{ width, height: sceneH }}>
         {/* Un solo lienzo por pantalla: las tres escenas viven adentro y la que
@@ -1122,10 +1429,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
             level={chestLevel}
             layout={cl}
             pos={quieto}
-            open={quieto}
+            open={chestOpen}
             outArrow={chestAppear}
-            backArrow={quieto}
-            leftover={quieto}
+            backArrow={chestBack}
+            leftover={chestLeft}
             jam={jam}
             hint={hint}
             demo={demo}
@@ -1178,58 +1485,120 @@ function Activity({ level, onLevelDone, onExit, onEvent }: InverseGameProps) {
             onTap={alTocarLlave}
           />
         ))}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
 
+      {/* En un teléfono la definición va antes de las fichas: así las fichas,
+          angostas y centradas, quedan abajo y lejos del rincón de Tomi, y la
+          definición puede usar el ancho entero. */}
+      {estrecho ? definicion : null}
+
       {/* La palanca, escrita, para quien no encuentre la máquina con el dedo.
           Es el mismo movimiento que tocar la carcasa. */}
       {ask === "lever" && !solved ? (
-        <View style={styles.ring}>
-          <Pressable onPress={pullLever} style={styles.chip}>
-            <Text style={styles.chipLabel}>{t(back ? "inv.lever.forward" : "inv.lever.back")}</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      {conFichas ? (
-        <View style={styles.ring}>
-          {problem.options.map((option, i) => (
-            <Pressable
-              key={option.id}
-              disabled={solved}
-              onPress={() => pickOption(option, i)}
-              style={[styles.chip, solved && styles.chipDim, picked === i && styles.chipOn]}
-            >
-              <Text style={styles.chipLabel}>{etiqueta(ask, option, level.numerals)}</Text>
+        <Marco on={palancaEnFoco}>
+          <View style={styles.ring}>
+            <Pressable onPress={pullLever} style={[styles.chip, styles.chipTall]}>
+              <Text style={styles.chipLabel}>{t(back ? "inv.lever.forward" : "inv.lever.back")}</Text>
             </Pressable>
-          ))}
-        </View>
+          </View>
+        </Marco>
       ) : null}
 
-      {/* Las cadenas candidatas del nivel de dos pasos: se leen escritas, que es
-          lo que la capa simbólica pide. */}
-      {ask === "order" ? (
-        <View style={styles.ring}>
-          {problem.ring.map((cand, i) => (
-            <Pressable
-              key={cand.id}
-              disabled={solved}
-              onPress={() => tryCandidate(i)}
-              style={[styles.chip, styles.wide, solved && styles.chipDim]}
-            >
-              <Text style={styles.chipLabel}>
-                {composeText(invRuleOf(cand.machine))}
-              </Text>
-            </Pressable>
-          ))}
+      {conFila ? (
+        <Marco on={fichasEnFoco}>
+        <View style={[styles.ring, estrecho && styles.ringNarrow]}>
+          {conFichas
+            ? problem.options.map((option, i) => (
+                <Pressable
+                  key={option.id}
+                  disabled={solved}
+                  onPress={() => pickOption(option, i)}
+                  style={[
+                    styles.chip,
+                    fichasTexto ? styles.chipText : styles.chipTall,
+                    fichasTexto && estrecho && styles.chipTextNarrow,
+                    solved && styles.chipDim,
+                    picked === i && styles.chipOn,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.chipLabel,
+                      fichasTexto && styles.chipLabelText,
+                      fichasTexto && estrecho && styles.chipLabelNarrow,
+                    ]}
+                  >
+                    {etiqueta(ask, option, level.numerals)}
+                  </Text>
+                </Pressable>
+              ))
+            : // Las cadenas candidatas del nivel de dos pasos: se leen escritas,
+              // que es lo que la capa simbólica pide.
+              problem.ring.map((cand, i) => (
+                <Pressable
+                  key={cand.id}
+                  disabled={solved}
+                  onPress={() => tryCandidate(i)}
+                  style={[styles.chip, styles.chipTall, styles.wide, solved && styles.chipDim]}
+                >
+                  <Text style={styles.chipLabel}>{composeText(invRuleOf(cand.machine))}</Text>
+                </Pressable>
+              ))}
         </View>
+        </Marco>
       ) : null}
 
-      {returned ? <Text style={styles.definition}>{t("inv.identity.said")}</Text> : null}
-      {level.definition ? <Text style={styles.definition}>{t("inv.definition")}</Text> : null}
+      {estrecho ? null : definicion}
     </View>
   );
+}
+
+/**
+ * El marco dorado de la guía alrededor de una fila de botones: el mismo anillo
+ * que la guía dibuja sobre el lienzo, latiendo igual, pero puesto alrededor de
+ * la fila en vez de medido. El borde está siempre y solo se enciende: si
+ * apareciera, la fila saltaría de lugar justo cuando hay que tocarla.
+ */
+function Marco({ on, children }: { readonly on: boolean; readonly children: ReactNode }) {
+  const k = useSharedValue(0);
+  useEffect(() => {
+    if (!on) {
+      cancelAnimation(k);
+      k.value = withTiming(0, { duration: theme.motion.quick });
+      return;
+    }
+    k.value = 0.6;
+    k.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+    return () => cancelAnimation(k);
+  }, [on, k]);
+  const luz = useAnimatedStyle(() => ({ opacity: k.value }));
+  return (
+    <View style={styles.marco}>
+      <Animated.View style={[StyleSheet.absoluteFill, styles.marcoLuz, luz, { pointerEvents: "none" }]} />
+      {children}
+    </View>
+  );
+}
+
+/** El rectángulo que abraza a todos: para señalar una fila de piezas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
 /**
@@ -1480,8 +1849,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.space[2],
   },
-  back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
-  backLabel: { color: theme.color.inkFaint, fontSize: 14 },
   ring: {
     flexDirection: "row",
     gap: theme.space[3],
@@ -1490,19 +1857,45 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     paddingHorizontal: theme.space[3],
   },
+  // Sin alto fijo: una ficha con una frase adentro tiene que poder crecer, y en
+  // web un `height: undefined` posterior no pisa el alto de la base.
   chip: {
     minWidth: 92,
-    height: 58,
     paddingHorizontal: theme.space[3],
     borderRadius: theme.radius.token,
     ...chipFace,
     alignItems: "center",
     justifyContent: "center",
   },
+  // Las fichas con una frase adentro crecen hacia abajo en vez de cortarla: en
+  // un teléfono, "Solo las entradas de este lado del cero" no entra en una línea.
+  chipTall: { height: 58 },
+  chipText: { minHeight: 58, maxWidth: 320, paddingVertical: theme.space[2] },
   wide: { minWidth: 132 },
   chipOn: { borderColor: theme.color.accent },
   chipDim: { opacity: 0.35 },
   chipLabel: { color: theme.color.ink, fontSize: 18 },
+  chipLabelText: { fontSize: 16, textAlign: "center" },
+  // En un teléfono las tres respuestas escritas van una debajo de la otra: más
+  // bajas y con la letra un punto más chica, para que entren las tres.
+  // De a dos por fila: una debajo de la otra, la tercera terminaba debajo del
+  // borde y encima de Tomi. Una frase larga se parte en dos renglones.
+  chipTextNarrow: { minHeight: 40, maxWidth: 176, minWidth: 0, paddingVertical: 4 },
+  chipLabelNarrow: { fontSize: 14 },
+  ringNarrow: { gap: theme.space[2] },
+  // Y la definición deja libre el rincón de abajo a la izquierda, que es de Tomi.
+  definitionNarrow: { fontSize: 12 },
+  marco: { borderRadius: theme.radius.panel, padding: theme.space[1] },
+  marcoLuz: {
+    borderRadius: theme.radius.panel,
+    borderWidth: 2.5,
+    borderColor: theme.color.gold,
+    backgroundColor: "rgba(255, 209, 102, 0.07)",
+    shadowColor: theme.color.gold,
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+  },
   definition: {
     color: theme.color.inkDim,
     fontSize: 13,

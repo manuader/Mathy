@@ -16,6 +16,12 @@
  *    fabrica con el dedo, y nace del problema de nombrar la cadena sin
  *    evaluarla.
  *
+ * Con lección, la guía de Lumi juega la primera ronda al lado del jugador: cada
+ * paso señala las máquinas, el cajón o el carril de esta ronda, sacados de la
+ * misma geometría con que la escena los dibuja, y el paso que explica frena la
+ * ronda hasta que el jugador dice "entendido". Los niveles que alternan
+ * preguntas guían la primera; la línea de abajo dice cuál toca en cada ronda.
+ *
  * La superficie es `machine_pipe` y la dibuja `PipeScene`, la escena que el nodo
  * 9 escribió para los diez nodos que la usan. Este nodo le agregó tres cosas
  * aditivas —el lazo con su etiqueta, el valor intermedio escrito sobre el tramo,
@@ -57,8 +63,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import {
-  COMP_MACHINE_SLOTS,
-  COMP_TRAY_SLOTS,
   NODE_COMPOSITION,
   TOTAL_COMP_LEVELS,
   compEvaluatedPieces,
@@ -73,6 +77,7 @@ import {
   type CompMachine,
   type CompOption,
   type CompPiece,
+  type CompProblem,
 } from "@mathy/mechanics";
 import type { Event } from "@mathy/progress";
 import {
@@ -88,6 +93,8 @@ import {
   type PipeSlot,
 } from "../scenes/PipeScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
 import { theme } from "../ui/theme.ts";
@@ -95,6 +102,12 @@ import { chipFace } from "../ui/Kit.tsx";
 
 /** Cuánto se puede mover el dedo y que el gesto siga siendo un toque. */
 const TAP_SLOP = 14;
+
+/**
+ * Cuánto tienen que diferir dos bolas para que se distingan sin números, en la
+ * misma escala en que la escena las dibuja (1 es la más grande de la ronda).
+ */
+const LEGIBLE = 0.18;
 
 /**
  * El signo de cada operación. El menos es el U+2212 de la tipografía
@@ -134,6 +147,40 @@ function composeText(pieces: readonly CompPiece[]): string {
 /** El mismo texto pero sin aire alrededor de los signos, para los rótulos chicos. */
 const tight = (pieces: readonly CompPiece[]): string => composeText(pieces).replace(/ /g, "");
 
+/**
+ * Las bolas entre las que se elige, en los niveles sin números, se distinguen
+ * solo por el tamaño. Con 18, 16 y 15 en pantalla la diferencia era de un par de
+ * pixeles y la ronda se terminaba probando. El modelo arma la ronda y esta
+ * pantalla solo elige, entre semillas, una cuyas bolas se vean distintas: la
+ * cuenta y los señuelos siguen siendo los del modelo.
+ */
+function legible(p: CompProblem): boolean {
+  if (p.options.length < 2) return true;
+  // Y la bola tiene que salir cambiada: una cadena que devuelve lo que entró
+  // (6, menos 3, por 2) se lee sin números como que no pasó nada.
+  if ((p.ask === "watch" || p.ask === "swap") && (p.target === p.input || p.otherOutput === p.input)) {
+    return false;
+  }
+  const valores = [p.target, p.input, p.otherOutput, ...p.options.map((o) => o.value)].filter((v) =>
+    Number.isFinite(v),
+  );
+  const techo = Math.max(...valores.map((v) => Math.abs(v)), 1);
+  const tam = p.options
+    .map((o) => Math.max(0.24, Math.min(1, Math.abs(o.value) / techo)))
+    .sort((a, b) => a - b);
+  for (let i = 0; i + 1 < tam.length; i++) {
+    if ((tam[i + 1] as number) - (tam[i] as number) < LEGIBLE) return false;
+  }
+  return true;
+}
+
+function elegirRonda(level: CompLevel, seed: number, round: number): CompProblem {
+  let p = generateComposition(level, seed, round);
+  if (level.numerals) return p;
+  for (let k = 1; k < 40 && !legible(p); k++) p = generateComposition(level, seed + k * 7919, round);
+  return p;
+}
+
 export interface CompositionGameProps {
   readonly level: CompLevel;
   readonly levelsDone: number;
@@ -150,9 +197,26 @@ export function CompositionGame(props: CompositionGameProps) {
   );
 }
 
-function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps) {
+function Activity({ level, onLevelDone, onEvent }: CompositionGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: la cinta no corre y la latencia no cuenta hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  const conLeccion = lesson?.lesson !== undefined;
+  const alterna = level.asks.length > 1;
+  /**
+   * Lo que dice la línea de abajo al empezar una ronda. Con lección, el cartel
+   * ya dice qué hacer; salvo en los niveles que alternan preguntas, donde el
+   * cartel es el mismo para todas y la línea dice cuál toca.
+   */
+  const apertura = useCallback(
+    (a: string): string => (conLeccion && !alterna ? "" : t(`comp.ask.${a}`)),
+    [conLeccion, alterna],
+  );
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -174,17 +238,40 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
   const [picked, setPicked] = useState(-1);
 
   const problem = useMemo(
-    () => generateComposition(level, seedBase + round * 1000 + level.n, round),
+    () => elegirRonda(level, seedBase + round * 1000 + level.n, round),
     [level, round, seedBase],
   );
   const ask = problem.ask;
+  /**
+   * En la ronda de los dos carriles, cuál va arriba. El modelo sortea cuál de
+   * los dos órdenes es el bueno, pero la pantalla dibujaba siempre la cadena
+   * buena arriba, y el nivel se ganaba tocando siempre el de arriba. Ahora el
+   * lugar se alterna de una ronda de carriles a la siguiente, y la semilla
+   * decide con cuál arranca: hay que mirar las salidas. Se cuenta por vuelta de
+   * preguntas y no por ronda, porque en un nivel que alterna dos preguntas los
+   * carriles caen siempre en rondas de la misma paridad.
+   */
+  const invertida =
+    ask === "which" && (seedBase + Math.floor(round / Math.max(level.asks.length, 1))) % 2 === 1;
 
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: t(`comp.ask.${ask}`),
+    text: apertura(ask),
     tone: "dim",
   }));
 
-  const sceneH = Math.max(300, Math.min(height * 0.56, 460));
+  // Con lección, el cartel de la guía ocupa arriba lo que el lienzo cede; con
+  // letras y fichas escritas debajo, cede un poco más. En un teléfono, el nivel
+  // con definición cede todavía más: en 390 × 844 la definición terminaba debajo
+  // del borde de la pantalla y encima de Tomi.
+  const estrecho = width < 600;
+  const sceneH = Math.max(
+    estrecho ? 240 : 280,
+    Math.min(
+      height *
+        ((conLeccion ? (level.named ? 0.44 : 0.5) : 0.56) - (estrecho && level.definition ? 0.11 : 0)),
+      460,
+    ),
+  );
 
   // --- Lo que corre por el caño ----------------------------------------------
 
@@ -305,24 +392,28 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       inputLabel: level.numerals ? String(problem.input) : "",
     };
 
-    const laneB: PipeLane[] = dosCarriles
-      ? [
-          {
-            id: "l1",
-            machines: problem.other.map((m) => machineOf(m)),
-            input: item(problem.input),
-            stages: otra.stages.map((v) => item(v)),
-            output: item(Number.isFinite(otra.output) ? otra.output : problem.input),
-            target: objetivo,
-            glow: false,
-            branch: null,
-            lasso: "",
-            midLabel: "",
-            // La misma bola por los dos caminos, y el número lo dice.
-            inputLabel: level.numerals ? String(problem.input) : "",
-          },
-        ]
-      : [];
+    const laneB: PipeLane = {
+      id: "l1",
+      machines: problem.other.map((m) => machineOf(m)),
+      input: item(problem.input),
+      stages: otra.stages.map((v) => item(v)),
+      output: item(Number.isFinite(otra.output) ? otra.output : problem.input),
+      target: objetivo,
+      // En la ronda que pregunta cuál de los dos, los dos carriles están en
+      // juego: el que coincide es el que celebra, esté arriba o abajo.
+      glow: ask === "which" ? !solved : false,
+      branch: null,
+      lasso: "",
+      midLabel: "",
+      // La misma bola por los dos caminos, y el número lo dice.
+      inputLabel: level.numerals ? String(problem.input) : "",
+    };
+
+    const lanes: readonly PipeLane[] = !dosCarriles
+      ? [laneA]
+      : invertida
+        ? [{ ...laneB, id: "l0" }, { ...laneA, id: "l1" }]
+        : [laneA, laneB];
 
     // El renglón de notación cae debajo de los dos carriles, que es donde la
     // desigualdad tiene que estar: entre las dos salidas que la prueban.
@@ -336,7 +427,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
             : "";
 
     return {
-      lanes: [laneA, ...laneB],
+      lanes,
       // La piel del nivel, salvo cuando el gesto necesita el objeto. En
       // `function_notation` la escena ya se retiró y las máquinas dejan de tener
       // carcasa; lazarlas pide justamente rodear dos cajas, así que esa ronda se
@@ -367,6 +458,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
     dosCarriles,
     fed,
     intermedio,
+    invertida,
     item,
     lassoed,
     level.named,
@@ -407,8 +499,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
    * el callback del render en que se armó el gesto, así que lo leído del cierre
    * sería lo de la primera ronda para siempre.
    */
-  const vivo = useRef({ problem, ask, solved, placed, order, lettered });
-  vivo.current = { ...vivo.current, problem, ask, solved, placed, order, lettered };
+  const vivo = useRef({ problem, ask, solved, placed, order, lettered, invertida });
+  vivo.current = { ...vivo.current, problem, ask, solved, placed, order, lettered, invertida };
   const roundRef = useRef(round);
   roundRef.current = round;
 
@@ -438,7 +530,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
     setPicked(-1);
     setFed(false);
     setOrder(problem.chain.map((m) => m.id));
-    setMessage({ text: t(`comp.ask.${problem.ask}`), tone: "dim" });
+    setMessage({ text: apertura(problem.ask), tone: "dim" });
 
     flow.value = 0;
     jam.value = 0;
@@ -450,26 +542,40 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
     }
     appear.value = withTiming(1, { duration: theme.motion.base });
 
-    // Las rondas que se miran arrancan solas: en `real` el jugador todavía no
-    // tiene ningún gesto, y la cinta que corre **es** el enunciado.
-    if (problem.ask === "watch" || problem.ask === "swap" || problem.ask === "which" || problem.ask === "commutes") {
-      setFed(true);
-      flow.value = withTiming(1, { duration: theme.motion.reveal });
-    }
-
     // El latido de la demostración no es un adorno: es la única instrucción.
+    // Con guía, la luz de la guía es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    if (guided) {
+      demo.value = 0;
+    } else {
+      demo.value = withRepeat(
+        withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+        -1,
+        false,
+      );
+    }
     return () => {
       cancelAnimation(hint);
       cancelAnimation(demo);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem]);
+
+  // Las rondas que se miran arrancan solas: en `real` el jugador todavía no
+  // tiene ningún gesto, y la cinta que corre **es** el enunciado. Pero recién
+  // cuando el nivel empieza: detrás de la tarjeta de entrada la cinta corría y
+  // terminaba sin que nadie la viera.
+  useEffect(() => {
+    if (!playing) return;
+    const a = problem.ask;
+    if (a === "watch" || a === "swap" || a === "which" || a === "commutes") {
+      setFed(true);
+      flow.value = 0;
+      flow.value = withTiming(1, { duration: theme.motion.reveal });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problem, playing]);
 
   /** Una ficha ya enganchada sigue en el cajón, apagada y sin escuchar. */
   const yaPuesta = useCallback(
@@ -492,6 +598,28 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_COMPOSITION, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj de la latencia arranca cuando empieza el juego, no detrás de la
+  // tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
+  // La guía del nivel habla de la pregunta de su primera ronda. En las rondas
+  // de la otra, la pista de Tomi no tiene gesto que mostrar y salta el "mirá acá".
+  const prefRef = useRef(lesson?.preferHint);
+  prefRef.current = lesson?.preferHint;
+  useEffect(() => {
+    if (!alterna) return;
+    prefRef.current?.(problem.ask === level.asks[0] ? null : "");
+  }, [problem, alterna, level.asks]);
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
@@ -529,6 +657,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
     setRound(r + 1);
   }, [level.rounds, level.n, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (key: string) => {
       if (doneRef.current) return;
@@ -536,9 +684,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       setSolved(true);
       quiet();
       setMessage({ text: t(key), tone: "ok" });
-      setTimeout(nextRound, 2000);
+      setTimeout(advance, 2000);
     },
-    [nextRound, quiet],
+    [advance, quiet],
   );
 
   /** Ganar. Cierra la ronda ya, y recién después muestra el cartel. */
@@ -584,6 +732,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
         // el otro camino: la respuesta se comprueba, no se acepta.
         if (a === "swap") setSwapped(true);
         correr();
+        say("picked");
         win(`comp.done.${a}`, theme.motion.reveal);
         return;
       }
@@ -591,7 +740,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       setMessage({ text: t(`comp.lure.${opcion.lure ?? "default"}`), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win, correr, trabar],
+    [attempt, quiet, win, correr, trabar, say],
   );
 
   // --- Enganchar el tubo -----------------------------------------------------
@@ -617,15 +766,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       }
       const ahora = [...puestas, pieza];
       setPlaced(ahora);
+      say("placed");
       if (ahora.length >= p.solution.length) {
         correr();
+        say("solved");
         win("comp.done.connect", theme.motion.reveal);
         return;
       }
       setMessage({ text: t("comp.hint.nowTheOther"), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win, correr, trabar],
+    [attempt, quiet, win, correr, trabar, say],
   );
 
   // --- Cambiar el orden ------------------------------------------------------
@@ -657,13 +808,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       const bien = salida === p.target;
       attempt(bien);
       if (bien) {
+        say("solved");
         win("comp.done.order", theme.motion.reveal);
         return;
       }
       setMessage({ text: t("comp.hint.otherOrder"), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win],
+    [attempt, quiet, win, say],
   );
 
   // --- Nombrar y lazar -------------------------------------------------------
@@ -689,29 +841,33 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       }
       setLassoed(true);
       correr();
+      say("lassoed");
       win("comp.done.lasso", theme.motion.reveal);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win, correr],
+    [attempt, quiet, win, correr, say],
   );
 
   /** Tocar un carril: cuál de los dos órdenes saca la bola que se pide. */
   const pickLane = useCallback(
     (lane: number) => {
-      const { problem: p, solved: hecho } = vivo.current;
+      const { problem: p, solved: hecho, invertida: inv } = vivo.current;
       if (hecho || cerrado.current) return;
       quiet();
-      const salida = lane === 0 ? compRun(p.input, p.chain).output : compRun(p.input, p.other).output;
+      // El carril de la pantalla no es el del modelo cuando se dibujaron al revés.
+      const real = inv ? 1 - lane : lane;
+      const salida = real === 0 ? compRun(p.input, p.chain).output : compRun(p.input, p.other).output;
       const bien = salida === p.target;
       attempt(bien, bien ? undefined : compMisconceptionFor("same_either_way"));
       if (bien) {
+        say("picked");
         win("comp.done.which");
         return;
       }
       setMessage({ text: t("comp.hint.thatLaneGivesAnother"), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win],
+    [attempt, quiet, win, say],
   );
 
   // --- Las fichas escritas ---------------------------------------------------
@@ -741,13 +897,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
           unfold.value = withTiming(1, { duration: theme.motion.base });
           correr();
         }
+        say("picked");
         win(`comp.done.${a}`, a === "nest" || a === "reject" ? theme.motion.reveal : 0);
         return;
       }
       setMessage({ text: t(`comp.lure.${option.lure ?? "default"}`), tone: "warn" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win, correr, trabar],
+    [attempt, quiet, win, correr, trabar, say],
   );
 
   /** ¿El par da lo mismo en los dos órdenes? Con un ejemplo alcanza para decidir. */
@@ -759,6 +916,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       const bien = dijoQueSi === p.commutes;
       attempt(bien);
       if (bien) {
+        say("picked");
         win(p.commutes ? "comp.done.commutesYes" : "comp.done.commutesNo");
         return;
       }
@@ -768,7 +926,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [attempt, quiet, win],
+    [attempt, quiet, win, say],
   );
 
   /**
@@ -783,6 +941,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
     if (hecho || cerrado.current) return;
     quiet();
     unfold.value = withTiming(1, { duration: theme.motion.base });
+    setMessage({ text: t("comp.msg.ghost"), tone: "dim" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiet]);
 
@@ -935,11 +1094,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       if (a === "connect") {
         // Todo el caño es el blanco: lo que importa no es dónde cae sino cuál se
         // soltó, porque el orden lo decide la ranura vacía que sigue.
-        if (Math.abs(y - lane.y) > 130) return;
+        if (Math.abs(y - lane.y) > 130) {
+          // Un rechazo nunca es mudo: la pieza que vuelve dice adónde iba.
+          setMessage({ text: t("comp.msg.dropOnPipe"), tone: "dim" });
+          return;
+        }
         install(index);
         return;
       }
-      if (Math.hypot(x - lane.spout.x, y - lane.spout.y) > 160) return;
+      if (Math.hypot(x - lane.spout.x, y - lane.spout.y) > 160) {
+        setMessage({ text: t("comp.msg.dropOnSpout"), tone: "dim" });
+        return;
+      }
       pickBall(index);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -955,6 +1121,100 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
     },
     [install, pickBall],
   );
+
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: las
+   * máquinas, la bola que salió, el cajón, la ranura vacía, los carriles. Sale
+   * de la misma geometría con que la escena dibuja y se recalcula con cada
+   * movimiento, así que la luz siempre apunta a un gesto que todavía falta. En
+   * las elecciones señala la fila entera y nunca la respuesta.
+   */
+  // La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const around = (p: Pt, w: number, h: number): Rect => ({ x: p.x - w / 2, y: p.y - h / 2, w, h });
+    const pad = (b: Rect, m: number): Rect => ({ x: b.x - m, y: b.y - m, w: b.w + 2 * m, h: b.h + 2 * m });
+    const solo = (rs: readonly (Rect | null | undefined)[]): Focus => ({
+      rings: rs.filter((r): r is Rect => r !== null && r !== undefined),
+    });
+    const bola = pl.tokenR * 3.2;
+    const cuantas = (i: number): number =>
+      i === 0 ? Math.max(pipeConfig.lanes[0]?.machines.length ?? 0, pipeConfig.slots, 1)
+      : Math.max(pipeConfig.lanes[i]?.machines.length ?? 0, 1);
+    const maquinas = (i: number): Rect | null => {
+      const l = pl.lanes[i];
+      if (!l) return null;
+      return union(l.machines.slice(0, cuantas(i)).map((b) => pad(b, 6)));
+    };
+    const carril = (i: number): Rect | null => {
+      const l = pl.lanes[i];
+      if (!l) return null;
+      const m = maquinas(i);
+      return union([
+        ...(m ? [m] : []),
+        around(l.mouth, 40, 40),
+        around(l.spout, bola, bola),
+        ...(pipeConfig.lanes[i]?.target ? [around(l.target, bola, bola)] : []),
+      ]);
+    };
+    const cajon = union(
+      pl.tray
+        .slice(0, Math.max(pipeConfig.tray.length, (pipeConfig.trayItems ?? []).length))
+        .map((p) => around(p, pl.trayW + 10, pl.trayH + 10)),
+    );
+    const l0 = pl.lanes[0];
+    if (!l0) return null;
+    const salida = around(l0.spout, bola, bola);
+
+    if (id === "recall") return solo([carril(0), dosCarriles ? carril(1) : null]);
+
+    if (ask === "watch" || ask === "swap" || ask === "predict") {
+      if (id === "look") {
+        return solo([maquinas(0), ask === "predict" ? around(l0.counter, bola * 1.4, bola) : salida]);
+      }
+      if (id === "reveal") return solo([ask === "predict" ? around(l0.counter, bola * 1.4, bola) : salida]);
+      return solo([ask === "predict" ? maquinas(0) : salida, cajon]);
+    }
+
+    if (ask === "connect") {
+      const objetivo = around(l0.target, bola, bola);
+      if (id === "look") return solo([objetivo, cajon]);
+      if (id === "reveal") return solo([objetivo, salida]);
+      // La máquina que sirve y todavía está en el cajón, hasta la ranura vacía.
+      const falta = problem.solution.find((m) => !placed.some((x) => x.id === m.id));
+      const i = falta ? problem.tray.findIndex((m) => m.id === falta.id) : -1;
+      const desde = pl.tray[i];
+      const hueco = l0.machines[placed.length];
+      if (!desde || !hueco) return solo([cajon]);
+      const centro = { x: hueco.x + hueco.w / 2, y: hueco.y + hueco.h / 2 };
+      return {
+        rings: [around(desde, pl.trayW + 10, pl.trayH + 10), pad(hueco, 6)],
+        drag: { from: desde, to: centro },
+      };
+    }
+
+    if (ask === "which") {
+      const buena = invertida ? 1 : 0;
+      if (id === "reveal") return solo([carril(buena)]);
+      return solo([carril(0), carril(1)]);
+    }
+
+    if (ask === "lasso") {
+      if (id === "look") return solo([maquinas(0)]);
+      if (id === "reveal") return solo([pad(maquinas(0) ?? { x: 0, y: 0, w: 0, h: 0 }, 10)]);
+      // La caja que todavía no tiene letra: tocarla la nombra.
+      const i = problem.chain.findIndex((m) => !lettered.includes(m.id));
+      const caja = l0.machines[Math.max(0, i)];
+      return solo([caja ? pad(caja, 8) : maquinas(0)]);
+    }
+
+    // `order`, `chain3`, `nest`, `commutes`, `reject`: las cajas y la salida.
+    return solo([carril(0), dosCarriles ? carril(1) : null]);
+  }, [shown, pl, pipeConfig, ask, problem, placed, lettered, invertida, dosCarriles]);
 
   // --- Pantalla --------------------------------------------------------------
 
@@ -982,7 +1242,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!conLeccion}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       {reglas !== "" ? <Text style={styles.rules}>{reglas}</Text> : null}
 
@@ -1032,6 +1295,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
             />
           );
         })}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       {prompt !== "" ? <Text style={styles.prompt}>{prompt}</Text> : null}
@@ -1039,22 +1305,24 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
       <Hint text={message.text} tone={message.tone} />
 
       {conFichas ? (
-        <View style={styles.ring}>
+        <View style={[styles.ring, estrecho && styles.ringNarrow]}>
           {problem.options.map((option) => (
             <Pressable
               key={option.id}
               disabled={solved}
               onPress={() => pickOption(option)}
-              style={[styles.chip, solved && styles.chipDim]}
+              style={[styles.chip, estrecho && styles.chipNarrow, solved && styles.chipDim]}
             >
-              <Text style={styles.chipLabel}>{composeText(option.pieces)}</Text>
+              <Text style={[styles.chipLabel, estrecho && styles.chipLabelNarrow]}>
+                {composeText(option.pieces)}
+              </Text>
             </Pressable>
           ))}
         </View>
       ) : null}
 
       {ask === "commutes" ? (
-        <View style={styles.ring}>
+        <View style={[styles.ring, estrecho && styles.ringNarrow]}>
           <Pressable
             disabled={solved}
             onPress={() => pickCommutes(true)}
@@ -1072,9 +1340,27 @@ function Activity({ level, onLevelDone, onExit, onEvent }: CompositionGameProps)
         </View>
       ) : null}
 
-      {level.definition ? <Text style={styles.definition}>{t("comp.definition")}</Text> : null}
+      {level.definition ? (
+        <Text style={[styles.definition, estrecho && styles.definitionNarrow]}>{t("comp.definition")}</Text>
+      ) : null}
     </View>
   );
+}
+
+/** El rectángulo que abraza a todos: para señalar una fila de piezas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
 /**
@@ -1205,11 +1491,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.space[2],
   },
-  back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
-  backLabel: { color: theme.color.inkFaint, fontSize: 14 },
   rules: { color: theme.color.inkDim, fontSize: 15, letterSpacing: 1 },
   prompt: { color: theme.color.ink, fontSize: 26, letterSpacing: 1 },
-  ring: { flexDirection: "row", gap: theme.space[3], alignItems: "center", justifyContent: "center" },
+  ring: {
+    flexDirection: "row",
+    gap: theme.space[3],
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    paddingHorizontal: theme.space[3],
+  },
   chip: {
     minWidth: 92,
     height: 58,
@@ -1221,6 +1512,13 @@ const styles = StyleSheet.create({
   },
   chipDim: { opacity: 0.35 },
   chipLabel: { color: theme.color.ink, fontSize: 18 },
+  // En un teléfono las tres cadenas escritas entran en una sola fila: con la
+  // letra de siempre, la tercera bajaba a otra fila y empujaba todo afuera.
+  ringNarrow: { gap: theme.space[2], paddingHorizontal: theme.space[2] },
+  chipNarrow: { minWidth: 72, height: 48, paddingHorizontal: theme.space[2] },
+  chipLabelNarrow: { fontSize: 16 },
+  // Y la definición deja libre el rincón de abajo a la izquierda, que es de Tomi.
+  definitionNarrow: { fontSize: 12, paddingHorizontal: 64 },
   definition: {
     color: theme.color.inkDim,
     fontSize: 13,

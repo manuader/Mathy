@@ -6,6 +6,11 @@
  * la cerradura y el cofre contesta. Los mensajes de abajo son para el adulto que
  * mira; el juego funciona igual con la pantalla tapada hasta la mitad.
  *
+ * Con lección, la guía de Lumi reemplaza al punto fantasma en la primera ronda:
+ * cada paso señala la llave, la ranura o la flecha de esta ronda, sacadas de la
+ * misma geometría con que la escena las dibuja, y el paso que explica frena la
+ * ronda hasta que el jugador dice "entendido".
+ *
  * Cinco gestos y ninguno fino:
  *
  * - Soltar una llave sobre la cerradura, o tocarla. Las dos cosas prueban la
@@ -28,7 +33,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Canvas } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -51,6 +56,7 @@ import {
   keyOpens,
   keyRestores,
   keyUndoOrder,
+  type KeyAsk,
   type KeyCandidate,
   type KeyLevel,
   type KeyLoop,
@@ -68,8 +74,11 @@ import {
   type Slot,
 } from "../scenes/ChestScene.tsx";
 import { Header, Hint } from "../ui/Chrome.tsx";
+import { CoachBanner, Spotlight, type Focus, type Pt, type Rect } from "../ui/Coach.tsx";
+import { useLesson } from "../lessons/LessonContext.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
+import { play } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
 
 export interface OperationKeyGameProps {
@@ -88,9 +97,27 @@ export function OperationKeyGame(props: OperationKeyGameProps) {
   );
 }
 
-function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps) {
+/**
+ * Lo que dice la línea de abajo al empezar una ronda. Con lección, el cartel ya
+ * dice qué hacer y la línea queda para lo que pasó; salvo en el nivel que
+ * alterna preguntas, donde el cartel es el mismo para las dos y la línea dice
+ * cuál toca esta ronda.
+ */
+function aperturaDe(ask: KeyAsk, conLeccion: boolean, alterna: boolean): string {
+  return conLeccion && !alterna ? "" : t(`opkey.ask.${ask}`);
+}
+
+function Activity({ level, onLevelDone, onEvent }: OperationKeyGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
+  const lesson = useLesson();
+  // Detrás de la tarjeta de entrada la escena ya está montada, pero el nivel no
+  // empezó: la latencia no corre hasta `play`.
+  const playing = !lesson || lesson.phase === "play";
+  const step = lesson?.step;
+  const guided = (lesson?.lesson?.coach.length ?? 0) > 0;
+  const conLeccion = lesson?.lesson !== undefined;
+  const alterna = level.asks.length > 1;
   const [round, setRound] = useState(0);
   const [seedBase] = useState(() => Math.floor(Math.random() * 100000));
   const [solved, setSolved] = useState(false);
@@ -113,16 +140,20 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
   );
   const ask = problem.ask;
   const [message, setMessage] = useState<{ text: string; tone: "dim" | "ok" | "warn" }>(() => ({
-    text: openingHint(ask),
+    text: aperturaDe(ask, conLeccion, alterna),
     tone: "dim",
   }));
 
   // El último nivel deja el lienzo más chico: ahí la definición necesita el alto
   // y el cofre es uno solo. El lienzo no se desmonta —una pantalla tiene uno y
-  // montarlo entre rondas rompe el modo retained— pero cede lo que no usa.
+  // montarlo entre rondas rompe el modo retained— pero cede lo que no usa. Con
+  // lección, el cartel de la guía ocupa arriba lo que el lienzo cede.
+  // En un teléfono, la definición del último nivel necesita un poco más: en
+  // 390 × 844 terminaba debajo del borde y encima de Tomi.
+  const estrecho = width < 600;
   const sceneH = level.definition
-    ? Math.max(300, Math.min(height * 0.54, 460))
-    : Math.max(360, Math.min(height * 0.68, 580));
+    ? Math.max(estrecho ? 280 : 300, Math.min(height * ((conLeccion ? 0.5 : 0.54) - (estrecho ? 0.06 : 0)), 440))
+    : Math.max(340, Math.min(height * (conLeccion ? 0.56 : 0.68), 560));
 
   // --- Lo que ve la escena ---------------------------------------------------
 
@@ -296,7 +327,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
     // El mensaje de apertura sale del problema que acaba de nacer y no del que
     // se estaba jugando: un nivel que alterna preguntas cambia de gesto entre
     // una ronda y la siguiente.
-    setMessage({ text: openingHint(ask), tone: "dim" });
+    setMessage({ text: aperturaDe(ask, conLeccion, alterna), tone: "dim" });
     for (let i = 0; i < KEY_RING_SLOTS; i++) {
       const s = keys[i] as Slot;
       s.dx.value = 0;
@@ -312,11 +343,18 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
     }
     // El latido no es un adorno: es la única instrucción.
     hint.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-    demo.value = withRepeat(
-      withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
-      -1,
-      false,
-    );
+    // Con guía, la luz de la guía es la demostración: dos manos a la vez
+    // señalarían dos cosas distintas, y en las rondas siguientes la pista de
+    // Tomi señala lo mismo cuando hace falta.
+    if (guided) {
+      demo.value = 0;
+    } else {
+      demo.value = withRepeat(
+        withSequence(withTiming(1, { duration: 1400 }), withTiming(0, { duration: 1 })),
+        -1,
+        false,
+      );
+    }
     if (ask === "judge") {
       clock.value = 0;
       clock.value = withRepeat(
@@ -344,6 +382,28 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
   useEffect(() => {
     onEvent({ kind: "sawLayer", at: Date.now(), node: NODE_OPERATION_KEY, layer: level.layer });
   }, [level.layer, onEvent]);
+
+  // El reloj de la latencia arranca cuando empieza el juego, no detrás de la
+  // tarjeta de entrada.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [playing]);
+
+  // La guía avanza con lo que el jugador hace; la actividad solo avisa. Por
+  // referencia y no por dependencia: el callback de un gesto puede estar un
+  // render atrasado (trampa 8).
+  const signalRef = useRef(lesson?.signal);
+  signalRef.current = lesson?.signal;
+  const say = useCallback((id: string) => signalRef.current?.(id), []);
+
+  // En el nivel que alterna preguntas, la pista de Tomi habla del gesto de esta
+  // ronda: en la que se mira no hay nada que llevar, así que no señala nada.
+  const prefRef = useRef(lesson?.preferHint);
+  prefRef.current = lesson?.preferHint;
+  useEffect(() => {
+    if (!alterna) return;
+    prefRef.current?.(ask === "judge" ? "" : null);
+  }, [problem, ask, alterna]);
 
   /**
    * Un movimiento del jugador, contado para cada verbo que el nivel ejercita.
@@ -384,6 +444,26 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
     setRound((r) => r + 1);
   }, [round, level, onEvent, onLevelDone]);
 
+  /**
+   * Cerrar la ronda, salvo que la guía esté explicando lo que acaba de pasar:
+   * entonces queda pendiente y se cierra cuando el jugador dice "entendido".
+   */
+  const holding = useRef(false);
+  holding.current = step?.holds === true;
+  const pending = useRef(false);
+  const advance = useCallback(() => {
+    if (holding.current) {
+      pending.current = true;
+      return;
+    }
+    nextRound();
+  }, [nextRound]);
+  useEffect(() => {
+    if (step?.holds === true || !pending.current) return;
+    pending.current = false;
+    nextRound();
+  }, [step, nextRound]);
+
   const succeed = useCallback(
     (text: string) => {
       if (doneRef.current) return;
@@ -392,9 +472,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       quiet();
       cancelAnimation(clock);
       setMessage({ text, tone: "ok" });
-      setTimeout(nextRound, 1700);
+      setTimeout(advance, 1700);
     },
-    [nextRound, quiet, clock],
+    [advance, quiet, clock],
   );
 
   /** La llave vuelve al llavero: el jugador cierra el cofre y prueba desde ahí. */
@@ -444,10 +524,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
         leftover.value = withTiming(1, { duration: theme.motion.quick });
         setReveal(KEY_INVERSE[target.action.op]);
         setMessage({
-          text:
-            cand.loop !== null
-              ? "Ese cofre todavía está adentro del otro. Empezá por la última acción."
-              : "Esa llave no abre este cofre. Mirá qué forma tiene la cerradura.",
+          text: t(cand.loop !== null ? "opkey.msg.lastFirst" : "opkey.msg.shape"),
           tone: "warn",
         });
         setTimeout(() => {
@@ -473,7 +550,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
         backArrow.value = withTiming(1, { duration: theme.motion.quick });
         open.value = withTiming(hechos / total, { duration: theme.motion.morph });
         setMessage({
-          text: "El cofre abrió, pero lo que salió no encaja en la silueta.",
+          text: t(ask === "assemble" ? "opkey.msg.noFitNumber" : "opkey.msg.noFit"),
           tone: "warn",
         });
         setTimeout(() => {
@@ -498,13 +575,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       const s = index >= 0 ? keys[index] : undefined;
       if (s?.spin) s.spin.value = withTiming(2 * Math.PI, { duration: theme.motion.morph });
       if (hechos >= total) {
-        succeed("La llave giró entera y el objeto volvió a encajar en la silueta.");
+        say("restored");
+        // Sin cofre no hay hueco donde encajar: en las flechas, lo que se ve es
+        // la vuelta que llega al número de arriba.
+        succeed(t(level.skin === "chest" ? "opkey.msg.restored" : "opkey.msg.circuit"));
         return;
       }
-      setMessage({ text: "Ese quedó como estaba. Ahora el de arriba.", tone: "dim" });
+      say("first");
+      setMessage({ text: t("opkey.msg.oneMore"), tone: "dim" });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [target, solved, missed, problem.loops.length, undone.length, ask, quiet, attempt, succeed, devolver],
+    [target, solved, missed, problem.loops.length, undone.length, ask, quiet, attempt, succeed, devolver, say],
   );
 
   /** Soltar una llave sobre la cerradura. El blanco es generoso a propósito. */
@@ -517,6 +598,31 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       if (Math.hypot(x - destino.x, y - destino.y) > 96) {
         slot.dx.value = withTiming(0, { duration: theme.motion.base });
         slot.dy.value = withTiming(0, { duration: theme.motion.base });
+        // En una cadena, soltar la llave junto a la otra flecha que sube es
+        // querer deshacer primero la acción de arriba. No es puntería: es el
+        // orden, y la línea lo dice así en vez de mandarla al costado derecho,
+        // que es justo donde el jugador la soltó.
+        const panel = layout.diagram?.panels[0];
+        const aca = target ? problem.loops.findIndex((l) => l.id === target.id) : -1;
+        const otra =
+          ask === "chain" && panel
+            ? panel.up.findIndex(
+                (u, j) =>
+                  j !== aca &&
+                  !undone.includes(problem.loops[j]?.id ?? "") &&
+                  Math.hypot(x - u.x, y - u.y) <= 96,
+              )
+            : -1;
+        if (otra >= 0) {
+          attempt(false);
+          setMessage({ text: t("opkey.msg.bottomFirst"), tone: "warn" });
+          return;
+        }
+        // Un rechazo nunca es mudo: la llave que vuelve dice adónde tenía que ir.
+        setMessage({
+          text: t(level.skin === "chest" ? "opkey.msg.dropOnLock" : "opkey.msg.dropOnArrow"),
+          tone: "dim",
+        });
         return;
       }
       const home = layout.keys[index] ?? { x: 0, y: 0 };
@@ -525,7 +631,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       tryKey(cand, index);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [problem.keys, problem.loops, layout, solved, target, tryKey],
+    [problem.keys, problem.loops, layout, solved, target, tryKey, level.skin, ask, undone, attempt],
   );
 
   /**
@@ -557,13 +663,20 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       const c = count ?? slotCount;
       if (op !== null) setSlotOp(op);
       if (count !== null) setSlotCount(count);
+      // La ficha entra en su ranura con un clic, sea cual sea: el veredicto
+      // llega cuando la llave está entera.
+      play("fit");
+      // La guía espera la operación que entra, no cualquiera: con otra, la
+      // llave se va a trabar y el paso de la operación tiene que seguir ahí.
+      const loop = problem.loops[0];
+      if (op !== null && loop && op === KEY_INVERSE[loop.action.op]) say("op");
       if (o === null || c === null) {
-        setMessage({ text: "Falta la otra mitad de la llave.", tone: "dim" });
+        setMessage({ text: t("opkey.msg.half"), tone: "dim" });
         return;
       }
       tryKey({ id: "armada", op: o, value: c, loop: null }, -1);
     },
-    [solved, missed, slotOp, slotCount, quiet, tryKey],
+    [solved, missed, slotOp, slotCount, quiet, tryKey, problem.loops, say],
   );
 
   const pickOp = useCallback(
@@ -592,10 +705,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       const ok = row === problem.liar;
       attempt(ok, keyMisconceptionForTrial(problem.liar, row));
       if (ok) {
-        succeed("Esa llave ni siquiera entró: el cofre no se movió.");
+        succeed(t("opkey.msg.liar"));
         return;
       }
-      setMessage({ text: "Esa devolvió el objeto y encajó. Mirá la otra.", tone: "warn" });
+      setMessage({ text: t("opkey.msg.notLiar"), tone: "warn" });
     },
     [solved, problem.liar, attempt, succeed, quiet],
   );
@@ -612,11 +725,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
       attempt(a.correct);
       if (a.correct) {
         open.value = withTiming(1, { duration: theme.motion.base });
-        succeed(
-          a.uninvertible
-            ? "Esa acción no tiene llave, y marcarla es la respuesta."
-            : "Esa es la que deshace: el cofre volvió a como estaba.",
-        );
+        succeed(t(a.uninvertible ? "opkey.msg.noKeyRight" : "opkey.msg.undone"));
         return;
       }
       const s = keys[index];
@@ -628,9 +737,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
         );
       }
       setMessage({
-        text: a.uninvertible
-          ? "Esta cerradura sí tiene llave. Buscala en el llavero."
-          : "Esa no devuelve el cofre a como estaba.",
+        text: t(a.uninvertible ? "opkey.msg.hasKey" : "opkey.msg.otherAction"),
         tone: "warn",
       });
     },
@@ -714,6 +821,100 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
   const conLlavero = ask !== "judge";
   const llaves = vivos(ask, problem.keys.length, problem.ops.length, problem.actions.length);
 
+  // --- Qué señala la guía ----------------------------------------------------
+
+  /**
+   * Cada paso de la guía señala algo real del tablero de esta ronda: la llave
+   * que conviene llevar y adónde, la ranura que falta, la ficha con el número,
+   * el hueco donde el objeto vuelve a encajar. Sale de la misma geometría con
+   * que la escena dibuja y se recalcula con cada movimiento, así que la luz
+   * siempre apunta a un gesto que todavía falta.
+   */
+  // La pista de Tomi reusa los pasos de la guía: señala lo mismo, pero no frena la ronda.
+  const shown = step ?? lesson?.hint;
+  const focus = useMemo<Focus | null>(() => {
+    if (!shown) return null;
+    const id = shown.id;
+    const around = (p: Pt, w: number, h: number): Rect => ({ x: p.x - w / 2, y: p.y - h / 2, w, h });
+    const pad = (b: Rect, m: number): Rect => ({ x: b.x - m, y: b.y - m, w: b.w + 2 * m, h: b.h + 2 * m });
+    const solo = (rs: readonly (Rect | null | undefined)[]): Focus => ({
+      rings: rs.filter((r): r is Rect => r !== null && r !== undefined),
+    });
+    const llave = (i: number): Rect | null => {
+      const p = layout.keys[i];
+      return p ? around(p, layout.keyW + 14, layout.keyH + 14) : null;
+    };
+    const llavero = union(
+      Array.from({ length: Math.min(llaves, KEY_RING_SLOTS) }, (_, i) => llave(i)).filter(
+        (r): r is Rect => r !== null,
+      ),
+    );
+
+    // Las cerraduras que no son aritméticas: el cartel del cofre y las acciones.
+    if (ask === "arbitrary") {
+      return solo([{ x: layout.lock.x - 60, y: layout.lock.y - 84, w: 120, h: 170 }, llavero]);
+    }
+
+    const d = layout.diagram;
+    const panel = d?.panels[0];
+    if (!d || !panel) return null;
+    const cofre = level.skin === "chest";
+    const columna = (i: number): Rect | null => {
+      const p = d.panels[i];
+      if (!p) return null;
+      return union([
+        ...p.nodes.map((n) => around(n, 64, 44)),
+        ...p.down.map((n) => around({ x: n.x - 16, y: n.y }, 64, 40)),
+        ...p.up.map((n) => around({ x: n.x + 16, y: n.y }, 64, 40)),
+      ]);
+    };
+    const hueco = cofre ? around(panel.hole, 40, 36) : around(panel.nodes[0] ?? panel.hole, 70, 48);
+    const tablero = cofre ? pad(panel.chest, 8) : columna(0);
+
+    if (ask === "judge") {
+      if (id === "reveal") return solo([columna(problem.liar)]);
+      return solo(d.panels.map((_, i) => columna(i)));
+    }
+    if (id === "look") return solo(cofre ? [tablero, hueco] : [tablero]);
+    if (id === "reveal") return solo([hueco]);
+    if (id === "recall") return solo([tablero, llavero]);
+
+    if (ask === "assemble") {
+      const loop = problem.loops[0];
+      if (!loop) return solo([tablero]);
+      const buenaOp = KEY_INVERSE[loop.action.op];
+      const ranura = (p: Pt): Rect => around(p, d.slotW + 14, d.slotH + 14);
+      // Mientras la ranura de la operación no tenga la que entra, la luz está
+      // ahí; recién después pasa al número. Así la guía y la pista siguen lo
+      // que el jugador hizo y no el orden de los pasos.
+      if (slotOp !== buenaOp) {
+        const i = problem.ops.indexOf(buenaOp);
+        const desde = layout.keys[i];
+        return desde
+          ? { rings: [llave(i) ?? ranura(d.opSlot), ranura(d.opSlot)], drag: { from: desde, to: d.opSlot } }
+          : solo([llavero, ranura(d.opSlot)]);
+      }
+      const j = problem.tiles.indexOf(loop.action.value);
+      const ficha = layout.tiles[j];
+      return ficha
+        ? {
+            rings: [around(ficha, layout.tileW + 12, layout.tileH + 12), ranura(d.countSlot)],
+            drag: { from: ficha, to: d.countSlot },
+          }
+        : solo([ranura(d.countSlot)]);
+    }
+
+    // Llevar la llave: la que deshace el lazo que toca, hasta donde entra.
+    const i = problem.keys.findIndex((k) => target !== undefined && k.loop === target.id);
+    const desde = layout.keys[i];
+    const hasta = dropSpot(layout, problem.loops, target);
+    if (!desde) return solo([llavero, around(hasta, 60, 60)]);
+    return {
+      rings: [llave(i) ?? around(desde, 60, 60), around(hasta, 60, 60)],
+      drag: { from: desde, to: hasta },
+    };
+  }, [shown, layout, ask, level.skin, problem, target, slotOp, llaves]);
+
   return (
     <View style={styles.root}>
 
@@ -722,7 +923,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
         subtitle={t(level.titleKey)}
         round={round}
         rounds={level.rounds}
+        showDots={!conLeccion}
       />
+
+      <CoachBanner round={round} rounds={level.rounds} />
 
       <View style={{ width, height: sceneH }}>
         <Canvas style={{ width, height: sceneH }}>
@@ -757,57 +961,78 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OperationKeyGameProps
           <Animated.View style={StyleSheet.absoluteFill} />
         </GestureDetector>
 
-        {/* Las asas invisibles sobre las llaves dibujadas. */}
-        {conLlavero
-          ? Array.from({ length: KEY_RING_SLOTS }, (_, i) => (
-              <Handle
-                key={`k${i}`}
-                index={i}
-                slot={keys[i] as Slot}
-                spot={layout.keys[i] ?? { x: 0, y: 0 }}
-                w={layout.keyW}
-                h={layout.keyH}
-                enabled={i < llaves && !solved}
-                // La llave se lleva a la cerradura donde hay una cerradura que
-                // abrir; la ficha de una ranura y la acción de una cerradura
-                // cualquiera se tocan.
-                drag={ask === "fit" || ask === "arrows" || ask === "chain"}
-                onDrop={alSoltarLlave}
-                onTap={
-                  ask === "assemble" ? alTocarOperacion
-                  : ask === "arbitrary" ? alElegirAccion
-                  : alTocarLlave
-                }
-              />
-            ))
-          : null}
+        {/* Las asas invisibles sobre las llaves dibujadas. Siempre montadas:
+            en el nivel 4 la ronda de mirar no tiene llavero, y desmontarlas ahí
+            dejaba al detector de la ronda siguiente sin enganchar; la llave no
+            se podía llevar más y el nivel no se terminaba. Lo que decide si el
+            dedo llega es `enabled`. */}
+        {Array.from({ length: KEY_RING_SLOTS }, (_, i) => (
+          <Handle
+            key={`k${i}`}
+            index={i}
+            slot={keys[i] as Slot}
+            spot={layout.keys[i] ?? { x: 0, y: 0 }}
+            w={layout.keyW}
+            h={layout.keyH}
+            enabled={conLlavero && i < llaves && !solved}
+            // La llave se lleva a la cerradura donde hay una cerradura que
+            // abrir; la ficha de una ranura y la acción de una cerradura
+            // cualquiera se tocan.
+            drag={ask === "fit" || ask === "arrows" || ask === "chain"}
+            onDrop={alSoltarLlave}
+            onTap={
+              ask === "assemble" ? alTocarOperacion
+              : ask === "arbitrary" ? alElegirAccion
+              : alTocarLlave
+            }
+          />
+        ))}
 
-        {/* Las fichas numéricas de la otra ranura. */}
-        {ask === "assemble"
-          ? Array.from({ length: KEY_TILE_SLOTS }, (_, i) => (
-              <Handle
-                key={`t${i}`}
-                index={i}
-                slot={tiles[i] as Slot}
-                spot={layout.tiles[i] ?? { x: 0, y: 0 }}
-                w={layout.tileW}
-                h={layout.tileH}
-                enabled={i < problem.tiles.length && !solved}
-                drag={false}
-                onDrop={noop3}
-                onTap={alTocarNumero}
-              />
-            ))
-          : null}
+        {/* Las fichas numéricas de la otra ranura, montadas por la misma razón. */}
+        {Array.from({ length: KEY_TILE_SLOTS }, (_, i) => (
+          <Handle
+            key={`t${i}`}
+            index={i}
+            slot={tiles[i] as Slot}
+            spot={layout.tiles[i] ?? { x: 0, y: 0 }}
+            w={layout.tileW}
+            h={layout.tileH}
+            enabled={ask === "assemble" && i < problem.tiles.length && !solved}
+            drag={false}
+            onDrop={noop3}
+            onTap={alTocarNumero}
+          />
+        ))}
+
+        {/* La luz de la guía, encima de todo y sin llevarse ningún toque. */}
+        <Spotlight focus={focus} />
       </View>
 
       <Hint text={message.text} tone={message.tone} />
-      {level.definition ? <Text style={styles.definition}>{t("key.definition")}</Text> : null}
+      {level.definition ? (
+        <Text style={[styles.definition, estrecho && styles.definitionNarrow]}>{t("key.definition")}</Text>
+      ) : null}
     </View>
   );
 }
 
 const noop3 = (): void => {};
+
+/** El rectángulo que abraza a todos: para señalar una fila de piezas con un solo anillo. */
+function union(rs: readonly Rect[]): Rect | null {
+  if (rs.length === 0) return null;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rs) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
 
 /** Cuántas piezas cuelga el llavero en cada pregunta. */
 function vivos(ask: string, keys: number, ops: number, actions: number): number {
@@ -868,6 +1093,13 @@ function Handle({
         // del lienzo no se puede medir con `onLayout`, que en web devuelve el
         // origen del padre y deja el hit test corrido por el encabezado.
         runOnJS(onDrop)(index, spot.x + e.translationX, spot.y + e.translationY);
+      })
+      // Si otro gesto le gana la carrera a mitad del arrastre, `onEnd` no llega
+      // y la llave quedaba en el aire: sin veredicto, vuelve sola al llavero.
+      .onFinalize((_e, success) => {
+        if (success) return;
+        slot.dx.value = withTiming(0, { duration: theme.motion.base });
+        slot.dy.value = withTiming(0, { duration: theme.motion.base });
       });
     const tap = Gesture.Tap()
       .maxDistance(20)
@@ -917,21 +1149,6 @@ function useKeySlot(): Slot {
   return useMemo(() => ({ dx, dy, alive, spin }), [dx, dy, alive, spin]);
 }
 
-function openingHint(ask: string): string {
-  switch (ask) {
-    case "assemble":
-      return "Armá la llave: elegí la operación y el número que devuelven el objeto.";
-    case "judge":
-      return "Una de las dos llaves no abre. Tocá esa vuelta.";
-    case "chain":
-      return "Dos acciones, una adentro de la otra. Empezá por la última.";
-    case "arbitrary":
-      return "Tocá lo que deshace la cerradura, o el candado tachado si no hay nada.";
-    default:
-      return "Llevá al candado la llave que devuelve el objeto como estaba.";
-  }
-}
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -939,8 +1156,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.space[2],
   },
-  back: { position: "absolute", top: 48, left: 20, zIndex: 2 },
-  backLabel: { color: theme.color.inkFaint, fontSize: 14 },
   definition: {
     color: theme.color.inkDim,
     fontSize: 13,
@@ -948,4 +1163,6 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     paddingHorizontal: theme.space[3],
   },
+  // En un teléfono, la definición deja libre el rincón de abajo a la izquierda, que es de Tomi.
+  definitionNarrow: { fontSize: 12, paddingHorizontal: 64 },
 });

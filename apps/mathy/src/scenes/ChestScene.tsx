@@ -1315,11 +1315,21 @@ function buildGem(r: number): SkPath {
  * niveles que llegan tan arriba ya escriben el número.
  */
 function addDots(target: SkPath, count: number, cx: number, cy: number, paso: number): void {
-  const puntos = Math.min(Math.max(count, 0), 9);
-  let x = cx - ((puntos - 1) * paso) / 2;
-  for (let i = 0; i < puntos; i++) {
-    target.addCircle(x, cy, Math.max(1.6, paso * 0.24));
-    x += paso;
+  // En filas de cinco, como un cuadro de diez: 7 se lee "cinco y dos" sin
+  // contar de a uno. Antes los puntitos se cortaban en nueve y las fichas 9, 10,
+  // 11 y 12 del nivel 3 del llavero eran el mismo dibujo; ahora llegan a quince,
+  // que es más de lo que ningún nivel sin numerales pide.
+  const puntos = Math.min(Math.max(count, 0), 15);
+  const filas = Math.ceil(puntos / 5);
+  // Todas las filas arrancan del mismo borde: la fila corta se lee como lo que
+  // falta para completar la de arriba.
+  const x0 = cx - ((Math.min(puntos, 5) - 1) * paso) / 2;
+  for (let f = 0; f < filas; f++) {
+    const y = cy + (f - (filas - 1) / 2) * paso;
+    const enFila = Math.min(5, puntos - f * 5);
+    for (let i = 0; i < enFila; i++) {
+      target.addCircle(x0 + i * paso, y, Math.max(1.6, paso * 0.24));
+    }
   }
 }
 
@@ -1441,8 +1451,23 @@ function WalkerFigure({
  * se juega sin leer, y porque lo que se evalúa acá es la estructura: una acción
  * y la única acción que devuelve al estado anterior.
  */
-function buildAction(kind: string, value: number, cx: number, cy: number, s: number): SkPath {
+function buildAction(kind: string, value: number, cx: number, cy0: number, s: number): SkPath {
   const p = Skia.Path.Make();
+  // Girar, el sombrero y el color también tienen tamaño (cuántas veces, cuántos
+  // sombreros), y el tamaño se dibuja con marcas igual que en avanzar y
+  // retroceder. Sin ellas, la acción que deshace y la de la misma clase con otro
+  // tamaño eran el mismo dibujo, y el nivel 8 del nodo 6 se terminaba probando.
+  // Con marcas, el símbolo sube un poco para dejarles lugar abajo.
+  const conMarcas = value > 0 && (kind === "turn" || kind === "hat" || kind === "color");
+  const cy = conMarcas ? cy0 - s * 0.2 : cy0;
+  if (conMarcas) {
+    const paso = s * 0.34;
+    for (let i = 0; i < value; i++) {
+      const x = cx + (i - (value - 1) / 2) * paso;
+      p.moveTo(x, cy0 + s * 0.6);
+      p.lineTo(x, cy0 + s * 0.9);
+    }
+  }
   if (kind === "forward" || kind === "back") {
     const dir = kind === "forward" ? 1 : -1;
     arrow(p, cx - dir * s * 0.7, cx + dir * s * 0.7, cy, s * 0.34);
