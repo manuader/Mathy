@@ -38,16 +38,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Canvas, Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
+import { BlurMask, Canvas, Group, LinearGradient, Path, Skia, vec, type SkPath } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
   runOnJS,
+  useDerivedValue,
   useSharedValue,
   withRepeat,
   withSequence,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { play } from "../ui/sound.ts";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
 import {
@@ -75,7 +78,7 @@ import {
 import type { Event } from "@mathy/progress";
 import {
   LedgerScene,
-  colorOfKind,
+  lookOfKind,
   ledgerLayout,
   type LedgerConfig,
   type LedgerKind,
@@ -101,8 +104,41 @@ const FRUITS: readonly LedgerKind[] = [
 
 const numeral = (v: number): string => (v < 0 ? `−${-v}` : String(v));
 
-/** El color de una fruta. El mismo que le da el cartel, para que sea la misma. */
-const colorDeFruta = (i: number): string => colorOfKind(FRUITS[i], i);
+/** Las partes de las frutas de una clase sobre un plato, cada una en un solo trazo. */
+interface FruitParts {
+  readonly body: SkPath;
+  readonly shine: SkPath;
+  readonly stem: SkPath;
+  readonly shadow: SkPath;
+}
+
+/**
+ * Las frutas de una clase sobre el plato de la balanza, con el volumen que les
+ * da el cartel (`lookOfKind`): la misma manzana en los dos lugares.
+ */
+function FruitBodies({
+  parts,
+  kind,
+  y0,
+  y1,
+}: {
+  readonly parts: FruitParts;
+  readonly kind: number;
+  readonly y0: number;
+  readonly y1: number;
+}) {
+  const look = lookOfKind(FRUITS[kind], kind);
+  return (
+    <>
+      <Path path={parts.shadow} color="rgba(0, 0, 0, 0.28)" />
+      <Path path={parts.body}>
+        <LinearGradient start={vec(0, y0)} end={vec(0, y1)} colors={[look.light, look.base, look.dark]} />
+      </Path>
+      <Path path={parts.stem} color="#6b4423" />
+      <Path path={parts.shine} color="rgba(255, 255, 255, 0.5)" />
+    </>
+  );
+}
 
 /** Una cadena de glifos del atlas, centrada. El mismo atlas que las ecuaciones. */
 function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: number): void {
@@ -262,51 +298,115 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
 
   // --- Lo que la actividad dibuja por su cuenta ------------------------------
 
+  // Lo que el jugador tiene en la mano (la ficha, el factor o el asa de un
+  // renglón) no se queda en la bandeja con un borde: se levanta. Por eso cada
+  // bandeja deja afuera la pieza tomada, y la pieza tomada se dibuja aparte,
+  // más grande y más arriba, con su sombra en el piso.
+  const chipTaken = chip;
+  const factorTaken = factor;
+  const gripTaken = heldRow;
+
   const trayGeom = useMemo(() => {
     const cuerpo = Skia.Path.Make();
     const digitos = Skia.Path.Make();
     problem.chips.forEach((v, i) => {
       const s = chipSpots[i];
-      if (!s) return;
+      if (!s || i === chipTaken) return;
       cuerpo.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - 22, s.y - 17, 44, 34), 6, 6));
       addGlyphs(digitos, numeral(v), s.x, s.y, 20);
     });
     return { cuerpo, digitos };
-  }, [problem.chips, chipSpots]);
+  }, [problem.chips, chipSpots, chipTaken]);
 
   const factorGeom = useMemo(() => {
     const cuerpo = Skia.Path.Make();
     const digitos = Skia.Path.Make();
     problem.factors.forEach((v, i) => {
       const s = factorSpots[i];
-      if (!s) return;
+      if (!s || i === factorTaken) return;
       cuerpo.addCircle(s.x, s.y, 17);
       addGlyphs(digitos, `×${v}`, s.x, s.y, 16);
     });
     return { cuerpo, digitos };
-  }, [problem.factors, factorSpots]);
+  }, [problem.factors, factorSpots, factorTaken]);
 
+  /**
+   * El asa de cada renglón: una perilla de verdad, con su canto, y tres rayas
+   * para el dedo. Un anillo fino sobre el paisaje no se leía como algo que se
+   * agarra.
+   */
   const gripGeom = useMemo(() => {
-    const p = Skia.Path.Make();
+    const cuerpo = Skia.Path.Make();
+    const rayas = Skia.Path.Make();
     for (let i = 0; i < rows.length; i++) {
       const s = rowGrips[i];
-      if (!s) continue;
-      p.addCircle(s.x, s.y, 11);
+      if (!s || i === gripTaken) continue;
+      cuerpo.addCircle(s.x, s.y, 12);
+      for (const dy of [-4, 0, 4]) {
+        rayas.moveTo(s.x - 4.5, s.y + dy);
+        rayas.lineTo(s.x + 4.5, s.y + dy);
+      }
     }
-    return p;
-  }, [rows.length, rowGrips]);
+    return { cuerpo, rayas };
+  }, [rows.length, rowGrips, gripTaken]);
 
-  /** El halo de lo que el jugador tiene en la mano: la ficha o el renglón. */
-  const pickedGeom = useMemo(() => {
-    const p = Skia.Path.Make();
-    const s = chip >= 0 ? chipSpots[chip] : undefined;
-    if (s) p.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - 26, s.y - 21, 52, 42), 8, 8));
-    const f = factor >= 0 ? factorSpots[factor] : undefined;
-    if (f) p.addCircle(f.x, f.y, 21);
-    const g = heldRow >= 0 ? rowGrips[heldRow] : undefined;
-    if (g) p.addCircle(g.x, g.y, 16);
-    return p;
-  }, [chip, factor, heldRow, chipSpots, factorSpots, rowGrips]);
+  /** La pieza que está en la mano, con su centro: de ahí crece al levantarse. */
+  const takenGeom = useMemo(() => {
+    const cuerpo = Skia.Path.Make();
+    const digitos = Skia.Path.Make();
+    const rayas = Skia.Path.Make();
+    const sombra = Skia.Path.Make();
+    let centro: LedgerSpot = { x: 0, y: 0 };
+    const s = chipTaken >= 0 ? chipSpots[chipTaken] : undefined;
+    const v = chipTaken >= 0 ? problem.chips[chipTaken] : undefined;
+    if (s && v !== undefined) {
+      cuerpo.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - 22, s.y - 17, 44, 34), 6, 6));
+      addGlyphs(digitos, numeral(v), s.x, s.y, 20);
+      sombra.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - 20, s.y + 8, 40, 14), 7, 7));
+      centro = s;
+    }
+    const f = factorTaken >= 0 ? factorSpots[factorTaken] : undefined;
+    const fv = factorTaken >= 0 ? problem.factors[factorTaken] : undefined;
+    if (f && fv !== undefined) {
+      cuerpo.addCircle(f.x, f.y, 17);
+      addGlyphs(digitos, `×${fv}`, f.x, f.y, 16);
+      sombra.addOval(Skia.XYWHRect(f.x - 15, f.y + 8, 30, 12));
+      centro = f;
+    }
+    const g = gripTaken >= 0 ? rowGrips[gripTaken] : undefined;
+    if (g) {
+      cuerpo.addCircle(g.x, g.y, 12);
+      for (const dy of [-4, 0, 4]) {
+        rayas.moveTo(g.x - 4.5, g.y + dy);
+        rayas.lineTo(g.x + 4.5, g.y + dy);
+      }
+      sombra.addOval(Skia.XYWHRect(g.x - 11, g.y + 6, 22, 10));
+      centro = g;
+    }
+    return { cuerpo, digitos, rayas, sombra, centro };
+  }, [chipTaken, factorTaken, gripTaken, chipSpots, factorSpots, rowGrips, problem.chips, problem.factors]);
+
+  /** Cuánto está levantada la pieza en la mano: crece un 15 % y sube, con el resorte de levantar. */
+  const alza = useSharedValue(0);
+  useEffect(() => {
+    alza.value = 0;
+    if (chipTaken < 0 && factorTaken < 0 && gripTaken < 0) return;
+    alza.value = withSpring(1, theme.spring.lift);
+    play("lift");
+  }, [chipTaken, factorTaken, gripTaken, alza]);
+  const tcx = takenGeom.centro.x;
+  const tcy = takenGeom.centro.y;
+  const takenT = useDerivedValue(
+    () => [
+      { translateX: tcx },
+      { translateY: tcy - 6 * alza.value },
+      { scale: 1 + 0.15 * alza.value },
+      { translateX: -tcx },
+      { translateY: -tcy },
+    ],
+    [tcx, tcy],
+  );
+  const takenShadowO = useDerivedValue(() => 0.55 * alza.value);
 
   // --- La balanza fantasma ---------------------------------------------------
 
@@ -356,25 +456,44 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
   const overlayGeom = useMemo(() => {
     const bl = balanceLayout(balanceW, balanceH);
     const pie = boxFootprint(bl, level.layer === "concrete" ? "concrete" : "visual");
-    const izquierda = FRUITS.map(() => Skia.Path.Make());
-    const derecha = FRUITS.map(() => Skia.Path.Make());
+    // Cada fruta es la misma del cartel, con su volumen: cuerpo con luz arriba,
+    // brillo, el tallo de la manzana y su sombra sobre el plato. Un círculo
+    // plano del mismo color se leía como una ficha, no como la fruta.
+    const hacer = (): FruitParts[] =>
+      FRUITS.map(() => ({
+        body: Skia.Path.Make(),
+        shine: Skia.Path.Make(),
+        stem: Skia.Path.Make(),
+        shadow: Skia.Path.Make(),
+      }));
+    const izquierda = hacer();
+    const derecha = hacer();
+    const r = 8;
+    const cy = pie.yBase - 11;
     let xi = -pie.w / 2;
     let xd = -pie.w / 2;
     for (const abierta of platos.abiertas) {
       const destino = abierta.lado > 0 ? izquierda : derecha;
       const p = destino[abierta.fruit];
       if (!p) continue;
+      const pera = FRUITS[abierta.fruit]?.shape === "pear";
       for (let i = 0; i < abierta.count; i++) {
-        if (abierta.lado > 0) {
-          p.addCircle(xi + 9, pie.yBase - 11, 8);
-          xi += 20;
+        const cx = (abierta.lado > 0 ? xi : xd) + 9;
+        if (pera) {
+          p.body.addOval(Skia.XYWHRect(cx - r * 0.85, cy - r * 0.2, r * 1.7, r * 1.5));
+          p.body.addOval(Skia.XYWHRect(cx - r * 0.55, cy - r * 1.1, r * 1.1, r * 1.1));
+          p.shine.addOval(Skia.XYWHRect(cx - r * 0.36, cy - r * 0.82, r * 0.32, r * 0.22));
         } else {
-          p.addCircle(xd + 9, pie.yBase - 11, 8);
-          xd += 20;
+          p.body.addCircle(cx, cy + r * 0.1, r * 0.95);
+          p.shine.addOval(Skia.XYWHRect(cx - r * 0.62, cy - r * 0.5, r * 0.5, r * 0.32));
+          p.stem.addRRect(Skia.RRectXY(Skia.XYWHRect(cx - r * 0.1, cy - r * 1.4, r * 0.2, r * 0.6), 1, 1));
         }
+        p.shadow.addOval(Skia.XYWHRect(cx - r * 0.8, cy + r * 0.84, r * 1.6, r * 0.34));
+        if (abierta.lado > 0) xi += 20;
+        else xd += 20;
       }
     }
-    return { izquierda, derecha };
+    return { izquierda, derecha, y0: cy - r * 1.2, y1: cy + r };
   }, [platos, balanceW, balanceH, level.layer]);
 
   // --- El plano --------------------------------------------------------------
@@ -950,13 +1069,25 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
             appear={appear}
           />
 
-          {/* El mostrador de fichas y la bandeja de factores. */}
-          <Path path={pickedGeom} color={theme.color.accent} style="stroke" strokeWidth={2} />
+          {/* El mostrador de fichas, la bandeja de factores y las asas. */}
           <ChipBodies path={trayGeom.cuerpo} />
           <Path path={trayGeom.digitos} color={theme.color.ink} />
           <ChipBodies path={factorGeom.cuerpo} />
           <Path path={factorGeom.digitos} color={theme.color.inkDim} />
-          <Path path={gripGeom} color={theme.color.inkFaint} style="stroke" strokeWidth={2} />
+          <ChipBodies path={gripGeom.cuerpo} />
+          <Path path={gripGeom.rayas} color={theme.color.inkDim} style="stroke" strokeWidth={1.8} strokeCap="round" />
+
+          {/* Lo que está en la mano: levantado, más grande, con su sombra abajo. */}
+          <Group opacity={takenShadowO}>
+            <Path path={takenGeom.sombra} color="rgba(0, 0, 0, 0.8)">
+              <BlurMask blur={6} style="normal" />
+            </Path>
+          </Group>
+          <Group transform={takenT}>
+            <ChipBodies path={takenGeom.cuerpo} />
+            <Path path={takenGeom.digitos} color={theme.color.ink} />
+            <Path path={takenGeom.rayas} color={theme.color.ink} style="stroke" strokeWidth={1.8} strokeCap="round" />
+          </Group>
 
           {/* La balanza fantasma: la fila dicha como balanza acostada. */}
           {level.balance !== "hidden" ? (
@@ -976,15 +1107,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SystemsGameProps) {
                 brooch={false}
                 overlayLeft={
                   <>
-                    {overlayGeom.izquierda.map((path, k) => (
-                      <Path key={`fi${k}`} path={path} color={colorDeFruta(k)} />
+                    {overlayGeom.izquierda.map((parts, k) => (
+                      <FruitBodies key={`fi${k}`} parts={parts} kind={k} y0={overlayGeom.y0} y1={overlayGeom.y1} />
                     ))}
                   </>
                 }
                 overlayRight={
                   <>
-                    {overlayGeom.derecha.map((path, k) => (
-                      <Path key={`fd${k}`} path={path} color={colorDeFruta(k)} />
+                    {overlayGeom.derecha.map((parts, k) => (
+                      <FruitBodies key={`fd${k}`} parts={parts} kind={k} y0={overlayGeom.y0} y1={overlayGeom.y1} />
                     ))}
                   </>
                 }

@@ -30,7 +30,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Canvas, Group, Path, Skia } from "@shopify/react-native-skia";
+import { Canvas, Group, Path, RadialGradient, Skia, vec } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
@@ -720,11 +720,20 @@ function Activity({ level, onLevelDone, onExit, onEvent }: GraphPictureGameProps
 
   const conGota = problem.ask === "place" && !solved;
 
+  /**
+   * La gota del borde es la misma gota que el caminante deja en la hoja: una
+   * pieza con volumen, luz arriba a la izquierda, brillo y sombra. Un disco
+   * plano del acento se leía como un botón.
+   */
   const inkGeom = useMemo(() => {
-    const p = Skia.Path.Make();
-    if (!conGota) return p;
-    p.addCircle(inkSpot.x, inkSpot.y, 11);
-    return p;
+    const body = Skia.Path.Make();
+    const shine = Skia.Path.Make();
+    const shadow = Skia.Path.Make();
+    if (!conGota) return { body, shine, shadow };
+    body.addCircle(inkSpot.x, inkSpot.y, 11);
+    shine.addOval(Skia.XYWHRect(inkSpot.x - 7, inkSpot.y - 7.5, 6, 4));
+    shadow.addOval(Skia.XYWHRect(inkSpot.x - 10, inkSpot.y + 8, 20, 6));
+    return { body, shine, shadow };
   }, [conGota, inkSpot]);
 
   /**
@@ -825,7 +834,17 @@ function Activity({ level, onLevelDone, onExit, onEvent }: GraphPictureGameProps
           {/* El mostrador de pares, la gota del borde y lo que se pregunta. */}
           <ChipBodies path={pairGeom.cuerpo} />
           <Path path={pairGeom.texto} color={theme.color.ink} />
-          <Path path={inkGeom} color={theme.color.accent} />
+          <Path path={inkGeom.shadow} color="rgba(0, 0, 0, 0.35)" />
+          <Path path={inkGeom.body}>
+            <RadialGradient
+              c={vec(inkSpot.x - 3.5, inkSpot.y - 4)}
+              r={18}
+              colors={["#b8e2ff", theme.color.accent, "#1f7fcf"]}
+            />
+          </Path>
+          <Path path={inkGeom.shine} color="rgba(255, 255, 255, 0.6)" />
+          {/* Lo que se pregunta cae sobre el paisaje: un borde oscuro lo despega. */}
+          <Path path={askedGeom} color="rgba(9, 17, 29, 0.9)" style="stroke" strokeWidth={3} strokeJoin="round" />
           <Path path={askedGeom} color={theme.color.ink} />
         </Canvas>
 

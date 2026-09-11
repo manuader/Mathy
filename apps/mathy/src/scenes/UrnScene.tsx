@@ -44,16 +44,53 @@
  *    la llave, la base de las columnas y los pips del dado son un trazo cada uno.
  * 3. Nada vuelve al hilo de JavaScript por cuadro: la posición de una pieza se
  *    deriva de `drawn`, que es un `SharedValue`, y el toque solo lo incrementa.
+ *
+ * El estilo es el del nodo 1 (`BowlScene`): el frasco es de vidrio, las piezas
+ * son cuerpos con luz arriba a la izquierda y color de equipo, y cada cosa que
+ * pasa responde en el objeto que la causó. La pieza que sale crece y se asienta
+ * con un rebote; la llave del total brilla una vez al llegar; y el evento que
+ * la escena enseña —lo que salió, contado contra el todo, es un número— es la
+ * ficha que aparece con halo menta y chispas, una sola vez. Los resortes los
+ * arrancan reacciones sobre los mismos `SharedValue`, en el hilo de la interfaz.
  */
 
 import { useMemo } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
-import { useDerivedValue, type SharedValue } from "react-native-reanimated";
+import {
+  BlurMask,
+  Group,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
+  type SkPath,
+} from "@shopify/react-native-skia";
+import {
+  runOnJS,
+  useAnimatedReaction,
+  useDerivedValue,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
+import { play, type Sfx } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
 
-const STROKE = 1.5;
+/**
+ * La escala de la columna que se llena: cada pieza que cae suena un escalón más
+ * arriba que la de abajo, como el agua que sube en una botella. Pentatónica.
+ */
+const FILL = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24] as const;
+const fillPitch = (i: number): number => FILL[Math.max(0, Math.min(i, FILL.length - 1))] as number;
+
+/** Suena un efecto. Desde un worklet se llama con `runOnJS`; sin audio, no suena. */
+function sfx(name: Sfx, pitch = 0): void {
+  play(name, { pitch });
+}
+
 /** Pieza máxima: más grande, un frasco de doce no entra en una columna. */
 const MAX_PIECE = 15;
 
@@ -133,14 +170,41 @@ export interface UrnLayout {
 }
 
 /**
- * Los colores de las piezas. El resaltado es el acento del sistema; los demás
- * salen de la misma paleta y nunca de un arcoíris: [N] no admite estética
- * infantil, y dos colores que se distinguen alcanzan para contar.
+ * Los colores de las piezas. El color de una pieza dice una sola cosa: a qué
+ * grupo del frasco pertenece. Por eso son los tres colores de equipo del juego
+ * y nunca `ok` ni `warn`, que en todo Mathy dicen "coincide" y "mirá acá": una
+ * bola ámbar se leería como una bola que pide que la miren. El cuarto grupo,
+ * si lo hay, es piedra sin color. Cada uno trae su luz y su sombra, porque la
+ * pieza es un objeto con volumen y no un círculo plano.
  */
-const KINDS = [theme.color.accent, theme.color.warn, theme.color.ok, theme.color.inkDim] as const;
+interface Look {
+  readonly light: string;
+  readonly base: string;
+  readonly dark: string;
+}
 
-export const urnColorOf = (kind: number): string =>
-  KINDS[kind % KINDS.length] ?? theme.color.inkDim;
+const KINDS: readonly Look[] = [
+  { light: "#b8e2ff", base: theme.color.accent, dark: "#1f7fcf" },
+  { light: "#ffd0da", base: theme.color.coral, dark: "#d2465f" },
+  { light: "#e2d6ff", base: theme.color.violet, dark: "#7456d6" },
+  { light: "#d3dfec", base: "#8fa2b8", dark: "#526277" },
+];
+
+const lookOf = (kind: number): Look => KINDS[kind % KINDS.length] as Look;
+
+export const urnColorOf = (kind: number): string => lookOf(kind).base;
+
+/** El vidrio del frasco: se ve el paisaje a través, pero el frasco se lee como cosa. */
+const GLASS = {
+  back: "rgba(9, 17, 29, 0.55)",
+  edge: "rgba(255, 255, 255, 0.13)",
+  mid: "rgba(255, 255, 255, 0.03)",
+  rim: "rgba(255, 255, 255, 0.30)",
+  streak: "rgba(255, 255, 255, 0.16)",
+} as const;
+
+/** El dado es un objeto de hueso claro con pips hundidos. */
+const BONE = { light: "#ffffff", base: "#dfe6ef", dark: "#8f9db0", pip: "#1b304c" } as const;
 
 /**
  * En qué orden salen las piezas. No se sortea: se alterna por color, para que
@@ -336,13 +400,47 @@ function bracePath(jar: UrnJarLayout, y: number, piece: number): SkPath {
   return p;
 }
 
-/** El pie de cada columna: la línea sobre la que se apila el conteo. */
+/**
+ * El pie de cada columna: un estante de vidrio sobre el que se apila el conteo.
+ * Todos los estantes de un frasco son un solo trazo.
+ */
 function columnBase(jar: UrnJarLayout, piece: number): SkPath {
   const p = Skia.Path.Make();
   for (const c of jar.columns) {
-    p.moveTo(c.x - piece * 1.2, c.y);
-    p.lineTo(c.x + piece * 1.2, c.y);
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(c.x - piece * 1.35, c.y - 1, piece * 2.7, 6), 3, 3));
   }
+  return p;
+}
+
+/**
+ * El brillo del vidrio: una franja fina adentro del lado izquierdo, que es de
+ * donde viene la luz en todo el juego.
+ */
+function glassStreak(box: Box, source: UrnSource): SkPath {
+  const p = Skia.Path.Make();
+  if (source === "die") return p;
+  p.addRRect(
+    Skia.RRectXY(
+      Skia.XYWHRect(box.x + box.w * 0.08, box.y + box.h * 0.36, box.w * 0.06, box.h * 0.5),
+      box.w * 0.03,
+      box.w * 0.03,
+    ),
+  );
+  return p;
+}
+
+/** La sombra del frasco sobre el suelo. */
+function jarShadow(box: Box): SkPath {
+  const p = Skia.Path.Make();
+  p.addOval(Skia.XYWHRect(box.x + box.w * 0.05, box.y + box.h - 5, box.w * 0.9, 12));
+  return p;
+}
+
+/** El cartón oscuro detrás de la ficha: se lee igual sobre cualquier paisaje. */
+function chipCard(spot: { x: number; y: number; size: number }): SkPath {
+  const p = Skia.Path.Make();
+  const s = spot.size;
+  p.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - s * 1.25, spot.y - s * 1.45, s * 2.5, s * 2.9), 12, 12));
   return p;
 }
 
@@ -354,17 +452,20 @@ function chipPath(
   spot: { x: number; y: number; size: number },
   value: { num: number; den: number },
   mode: UrnChip,
-): { bar: SkPath; ink: SkPath } {
+): { bar: SkPath; num: SkPath; den: SkPath } {
   const bar = Skia.Path.Make();
-  const ink = Skia.Path.Make();
+  // Arriba y abajo van separados porque no dicen lo mismo: arriba cuenta las
+  // piezas del color nombrado, abajo el frasco entero.
+  const num = Skia.Path.Make();
+  const den = Skia.Path.Make();
   const s = spot.size;
   const w = Math.max(s * 1.5, s * 0.5 * String(value.den).length + s);
   bar.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2, spot.y - 1.5, w, 3), 2, 2));
   if (mode === "numerals") {
-    addGlyphs(ink, String(value.num), spot.x, spot.y - s * 0.72, s);
-    addGlyphs(ink, String(value.den), spot.x, spot.y + s * 0.72, s);
+    addGlyphs(num, String(value.num), spot.x, spot.y - s * 0.72, s);
+    addGlyphs(den, String(value.den), spot.x, spot.y + s * 0.72, s);
   } else if (mode === "dots") {
-    const dots = (count: number, cy: number): void => {
+    const dots = (ink: SkPath, count: number, cy: number): void => {
       const r = Math.min(s * 0.13, 5);
       const paso = r * 2.9;
       const filas = count <= 4 ? 1 : 2;
@@ -380,10 +481,10 @@ function chipPath(
         );
       }
     };
-    dots(value.num, spot.y - s * 0.72);
-    dots(value.den, spot.y + s * 0.72);
+    dots(num, value.num, spot.y - s * 0.72);
+    dots(den, value.den, spot.y + s * 0.72);
   }
-  return { bar, ink };
+  return { bar, num, den };
 }
 
 // --- Componente --------------------------------------------------------------
@@ -427,6 +528,8 @@ export function UrnScene({
     () =>
       layout.jars.map((jar, u) => ({
         source: sourcePath(jar.box, config.source),
+        streak: glassStreak(jar.box, config.source),
+        shadow: jarShadow(jar.box),
         base: columnBase(jar, layout.piece),
         brace: bracePath(jar, layout.braceY, layout.piece),
         order: drawOrder(config.urns[u]?.composition ?? []),
@@ -438,19 +541,15 @@ export function UrnScene({
     () => (config.chipValue ? chipPath(layout.chip, config.chipValue, config.chip) : null),
     [layout.chip, config.chipValue, config.chip],
   );
+  const chipBack = useMemo(() => chipCard(layout.chip), [layout.chip]);
+  // El número de arriba cuenta las piezas del color que la ficha nombra, así
+  // que se escribe con ese color; el de abajo es el frasco entero, y va en tinta.
+  const chipLook = lookOf(config.highlighted);
 
   // De `tally_bars` en adelante la pieza que salió deja de ser una bola y pasa
   // a ser una marca de conteo: es la misma cantidad, escrita más corto.
   const marca = config.skin !== "physical_draws";
-  const pieceGeom = useMemo(() => {
-    const p = Skia.Path.Make();
-    const r = layout.piece;
-    if (config.shape === "figure") p.addRect(Skia.XYWHRect(-r, -r, r * 2, r * 2));
-    else p.addCircle(0, 0, r);
-    const mark = Skia.Path.Make();
-    mark.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 1.1, -r * 0.4, r * 2.2, r * 0.8), 2, 2));
-    return { ball: p, mark };
-  }, [layout.piece, config.shape]);
+  const pieceGeom = useMemo(() => piecePartsOf(layout.piece, config.shape), [layout.piece, config.shape]);
 
   const hand = useMemo(() => {
     const dot = Skia.Path.Make();
@@ -471,6 +570,56 @@ export function UrnScene({
   }, [handFrom, handTo]);
   const handO = useDerivedValue(() => hint.value * 0.5 * Math.sin(demo.value * Math.PI));
 
+  // La llave del total brilla una vez mientras llega: el frasco se vació y lo
+  // que abarca es el todo. Sale de la misma animación de `brace`, así que una
+  // ronda nueva, que la pone de golpe, no la hace brillar.
+  const braceGlow = useDerivedValue(() => {
+    const b = Math.max(0, Math.min(1, brace.value));
+    return 4 * b * (1 - b);
+  });
+
+  // --- El evento: la proporción quedó nombrada -------------------------------
+  //
+  // Es lo que el frasco enseña: lo que salió, contado contra el todo, es un
+  // número. Cuando la ficha aparece de a poco (la trae un gesto, no una ronda
+  // nueva), llega con un rebote, la rodea un halo menta y suelta chispas una
+  // sola vez. Todo corre en el hilo de la interfaz.
+  const chipPop = useSharedValue(0);
+  const chipBurst = useSharedValue(1);
+  // El valor anterior vive acá y no en el `previous` de la reacción: la ficha
+  // sube en el mismo gesto que cambia el estado de la actividad, la reacción se
+  // vuelve a registrar, y su primera llamada no trae valor anterior.
+  const lastChip = useSharedValue(1);
+  useAnimatedReaction(
+    () => chip.value,
+    (now) => {
+      const prev = lastChip.value;
+      lastChip.value = now;
+      if (prev <= 0.001 && now > 0.001 && now < 0.6) {
+        chipPop.value = 1;
+        chipPop.value = withSpring(0, theme.spring.settle);
+        chipBurst.value = 0;
+        chipBurst.value = withTiming(1, { duration: 720 });
+        // Lo que salió, contado contra el todo, es la ficha: vidrio.
+        runOnJS(sfx)("join", 0);
+      }
+    },
+  );
+  const cx = layout.chip.x;
+  const cy = layout.chip.y;
+  const chipT = useDerivedValue(
+    () => [
+      { translateX: cx },
+      { translateY: cy },
+      { scale: 1 + 0.25 * chipPop.value },
+      { translateX: -cx },
+      { translateY: -cy },
+    ],
+    [cx, cy],
+  );
+  const chipHalo = useDerivedValue(() => (chipBurst.value < 1 ? 1 - chipBurst.value : 0));
+  const sparkR = layout.chip.size * 1.4;
+
   return (
     <Group opacity={appear}>
       {layout.jars.map((jar, u) => {
@@ -484,23 +633,37 @@ export function UrnScene({
             <JarBody
               body={geom.source.body}
               pips={geom.source.pips}
+              streak={geom.streak}
+              shadow={geom.shadow}
+              box={jar.box}
+              die={config.source === "die"}
               glow={resalta}
               chosen={elegido}
               hint={hint}
             />
-            <Path
-              path={geom.base}
-              color={theme.color.inkFaint}
-              style="stroke"
-              strokeWidth={STROKE}
-            />
+            <Path path={geom.base} color="rgba(255, 255, 255, 0.06)" />
+            <Path path={geom.base} color="rgba(255, 255, 255, 0.16)" style="stroke" strokeWidth={1} />
             {config.brace ? (
               <Group opacity={brace}>
+                <Group opacity={braceGlow}>
+                  <Path
+                    path={geom.brace}
+                    color={theme.color.ink}
+                    style="stroke"
+                    strokeWidth={7}
+                    strokeCap="round"
+                    strokeJoin="round"
+                  >
+                    <BlurMask blur={5} style="normal" />
+                  </Path>
+                </Group>
                 <Path
                   path={geom.brace}
                   color={theme.color.inkDim}
                   style="stroke"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
+                  strokeCap="round"
+                  strokeJoin="round"
                 />
               </Group>
             ) : null}
@@ -512,13 +675,16 @@ export function UrnScene({
               return (
                 <Piece
                   key={i}
-                  ball={pieceGeom.ball}
-                  mark={pieceGeom.mark}
+                  parts={pieceGeom}
                   asMark={marca}
                   from={jar.inside[i] ?? { x: 0, y: 0 }}
                   to={jar.stack[i] ?? { x: 0, y: 0 }}
                   at={(extra ? jar.count : 0) + (salida < 0 ? i : salida)}
-                  color={urnColorOf(kind)}
+                  look={lookOf(kind)}
+                  level={Math.round(
+                    ((jar.columns[0]?.y ?? 0) - layout.piece - (jar.stack[i]?.y ?? 0)) /
+                      (layout.piece * 2.4),
+                  )}
                   dim={kind !== config.highlighted}
                   extra={extra}
                   drawn={sv}
@@ -532,10 +698,33 @@ export function UrnScene({
 
       {chipGeom ? (
         <Group opacity={chip}>
-          <Path path={chipGeom.bar} color={theme.color.accent} />
-          <Path path={chipGeom.ink} color={theme.color.ink} />
+          <Group transform={chipT}>
+            {/* Cartón oscuro debajo: la ficha se lee igual sobre cualquier paisaje. */}
+            <Path path={chipBack} color="rgba(9, 17, 29, 0.9)" />
+            <Path path={chipBack} color="rgba(255, 255, 255, 0.12)" style="stroke" strokeWidth={1} />
+            <Group opacity={chipHalo}>
+              <Path path={chipBack} color={theme.color.ok} style="stroke" strokeWidth={6}>
+                <BlurMask blur={6} style="normal" />
+              </Path>
+              <Path path={chipBack} color={theme.color.ok} style="stroke" strokeWidth={2} />
+            </Group>
+            <Path path={chipGeom.bar} color={theme.color.inkDim} />
+            <Path path={chipGeom.num} color={chipLook.base} />
+            <Path path={chipGeom.den} color={theme.color.ink} />
+          </Group>
         </Group>
       ) : null}
+      {SPARKS.map((angle, i) => (
+        <Spark
+          key={`chispa${i}`}
+          x={cx}
+          y={cy}
+          reach={sparkR}
+          angle={angle}
+          gold={i % 2 === 1}
+          burst={chipBurst}
+        />
+      ))}
 
       {config.drawable ? (
         <Group transform={handT} opacity={handO}>
@@ -546,31 +735,107 @@ export function UrnScene({
   );
 }
 
-/** El frasco o el dado. Late mientras reclama que lo toquen. */
+/** Las partes de una pieza, centradas en el origen. Se arman una vez por tamaño. */
+interface PieceParts {
+  readonly body: SkPath;
+  readonly shine: SkPath;
+  readonly shadow: SkPath;
+  readonly mark: SkPath;
+  readonly markShine: SkPath;
+  readonly r: number;
+}
+
+function piecePartsOf(r: number, shape: UrnShape): PieceParts {
+  const body = Skia.Path.Make();
+  const shine = Skia.Path.Make();
+  if (shape === "figure") {
+    body.addRRect(Skia.RRectXY(Skia.XYWHRect(-r, -r, r * 2, r * 2), r * 0.28, r * 0.28));
+    shine.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.7, -r * 0.76, r * 0.9, r * 0.3), r * 0.15, r * 0.15));
+  } else {
+    body.addCircle(0, 0, r);
+    shine.addOval(Skia.XYWHRect(-r * 0.62, -r * 0.64, r * 0.62, r * 0.4));
+  }
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-r * 0.8, r * 0.72, r * 1.6, r * 0.46));
+  const mark = Skia.Path.Make();
+  mark.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 1.1, -r * 0.4, r * 2.2, r * 0.8), 2, 2));
+  const markShine = Skia.Path.Make();
+  markShine.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.95, -r * 0.3, r * 1.9, r * 0.16), 1, 1));
+  return { body, shine, shadow, mark, markShine, r };
+}
+
+/**
+ * El frasco o el dado. El frasco es de vidrio: un fondo oscuro translúcido para
+ * que se lea como cosa sobre cualquier paisaje, la luz del vidrio en los bordes
+ * y un brillo a la izquierda. Mientras reclama que lo toquen, el borde late.
+ */
 function JarBody({
   body,
   pips,
+  streak,
+  shadow,
+  box,
+  die,
   glow,
   chosen,
   hint,
 }: {
   readonly body: SkPath;
   readonly pips: SkPath;
+  readonly streak: SkPath;
+  readonly shadow: SkPath;
+  readonly box: Box;
+  readonly die: boolean;
   readonly glow: boolean;
   readonly chosen: boolean;
   readonly hint: SharedValue<number>;
 }) {
-  const o = useDerivedValue(() => (glow ? 0.55 + 0.45 * hint.value : 1));
+  // El que el jugador eligió queda con el borde encendido y quieto; el que pide
+  // que lo toquen late. Ninguno de los dos es "coincide", así que no es menta.
+  const rimO = useDerivedValue(
+    () => (chosen ? 1 : glow ? 0.45 + 0.55 * hint.value : 0.6),
+    [glow, chosen],
+  );
+  const rim = chosen ? theme.color.ink : GLASS.rim;
+  if (die) {
+    const lado = Math.min(box.w, box.h);
+    const x = box.x + (box.w - lado) / 2;
+    return (
+      <Group>
+        <Path path={shadow} color="rgba(0, 0, 0, 0.35)">
+          <BlurMask blur={5} style="normal" />
+        </Path>
+        <Path path={body}>
+          <RadialGradient
+            c={vec(x + lado * 0.3, box.y + lado * 0.25)}
+            r={lado * 1.1}
+            colors={[BONE.light, BONE.base, BONE.dark]}
+          />
+        </Path>
+        <Path path={pips} color={BONE.pip} />
+        <Group opacity={rimO}>
+          <Path path={body} color={rim} style="stroke" strokeWidth={2} />
+        </Group>
+      </Group>
+    );
+  }
   return (
-    <Group opacity={o}>
-      <Path path={body} color={theme.color.surface} />
-      <Path
-        path={body}
-        color={chosen ? theme.color.ok : theme.color.inkFaint}
-        style="stroke"
-        strokeWidth={2}
-      />
-      <Path path={pips} color={theme.color.inkDim} />
+    <Group>
+      <Path path={shadow} color="rgba(0, 0, 0, 0.35)">
+        <BlurMask blur={5} style="normal" />
+      </Path>
+      <Path path={body} color={GLASS.back} />
+      <Path path={body}>
+        <LinearGradient
+          start={vec(box.x, 0)}
+          end={vec(box.x + box.w, 0)}
+          colors={[GLASS.edge, GLASS.mid, GLASS.mid, GLASS.edge]}
+        />
+      </Path>
+      <Path path={streak} color={GLASS.streak} />
+      <Group opacity={rimO}>
+        <Path path={body} color={rim} style="stroke" strokeWidth={2} strokeJoin="round" />
+      </Group>
     </Group>
   );
 }
@@ -579,28 +844,33 @@ function JarBody({
  * Una pieza. Su lugar se deriva de cuántas salieron: mientras no le toca está
  * adentro, y cuando le toca viaja a su lugar en la columna. Nunca se monta ni
  * se desmonta, así que sacar veinte bolas no cuesta más que sacar dos.
+ *
+ * Al salir crece como algo que se levanta y se asienta con un rebote al llegar
+ * a la columna: el resorte lo arranca el propio conteo en el hilo de la
+ * interfaz, así que no hay nada que avisar desde JavaScript.
  */
 function Piece({
-  ball,
-  mark,
+  parts,
   asMark,
   from,
   to,
   at,
-  color,
+  level,
+  look,
   dim,
   extra,
   drawn,
   refill,
 }: {
-  readonly ball: SkPath;
-  readonly mark: SkPath;
+  readonly parts: PieceParts;
   readonly asMark: boolean;
   readonly from: Spot;
   readonly to: Spot;
   /** En qué número de extracción sale esta pieza. */
   readonly at: number;
-  readonly color: string;
+  /** A qué altura de su columna cae, desde abajo: sube la nota al llenarla. */
+  readonly level: number;
+  readonly look: Look;
   /** No es el color que la ficha nombra: se ve, pero no reclama. */
   readonly dim: boolean;
   /** Es del relleno: no existe hasta que el frasco se vuelve a llenar. */
@@ -608,24 +878,101 @@ function Piece({
   readonly drawn: SharedValue<number>;
   readonly refill: SharedValue<number>;
 }) {
+  const pop = useSharedValue(0);
+  const last = useSharedValue(1e9);
+  useAnimatedReaction(
+    () => drawn.value,
+    (now) => {
+      // Sale ahora: el conteo cruzó su número de a poco. Una ronda nueva lo
+      // pone en cero de golpe y hacia abajo, y ahí no rebota nada.
+      const prev = last.value;
+      last.value = now;
+      if (prev <= at && now > at && now - prev < 0.999) {
+        pop.value = 1;
+        pop.value = withSpring(0, theme.spring.settle);
+        // Cae en su columna: madera, más aguda cuanto más alta queda la pila.
+        runOnJS(sfx)("drop", fillPitch(level));
+      }
+    },
+    [at, level],
+  );
   const transform = useDerivedValue(() => {
     const raw = Math.max(0, Math.min(1, drawn.value - at));
     const t = raw * raw * (3 - 2 * raw);
     return [
       { translateX: from.x + (to.x - from.x) * t },
       { translateY: from.y + (to.y - from.y) * t },
+      { scale: 1 + 0.3 * pop.value },
     ];
   }, [from, to, at]);
   const o = useDerivedValue(() => (extra ? refill.value : 1));
+  const r = parts.r;
   return (
     <Group transform={transform} opacity={o}>
-      <Path path={asMark ? mark : ball} color={color} opacity={dim ? 0.45 : 1} />
-      <Path
-        path={asMark ? mark : ball}
-        color={theme.color.bg}
-        style="stroke"
-        strokeWidth={STROKE}
-      />
+      {asMark ? null : <Path path={parts.shadow} color="rgba(0, 0, 0, 0.28)" />}
+      <Group opacity={dim ? 0.45 : 1}>
+        {asMark ? (
+          <Path path={parts.mark}>
+            <LinearGradient
+              start={vec(0, -r * 0.4)}
+              end={vec(0, r * 0.4)}
+              colors={[look.light, look.base, look.dark]}
+            />
+          </Path>
+        ) : (
+          <Path path={parts.body}>
+            <RadialGradient
+              c={vec(-r * 0.35, -r * 0.45)}
+              r={r * 1.7}
+              colors={[look.light, look.base, look.dark]}
+            />
+          </Path>
+        )}
+        <Path path={asMark ? parts.markShine : parts.shine} color="rgba(255, 255, 255, 0.45)" />
+      </Group>
+    </Group>
+  );
+}
+
+const SPARKS = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => (i * Math.PI) / 4 + Math.PI / 8);
+
+/**
+ * Una chispa del evento, como las del puente del nodo 1: sale del objeto que la
+ * causó, se abre y se apaga en ~700 ms. Está montada siempre, con opacidad cero
+ * hasta que `burst` corre de 0 a 1.
+ */
+function Spark({
+  x,
+  y,
+  reach,
+  angle,
+  gold,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly reach: number;
+  readonly angle: number;
+  readonly gold: boolean;
+  readonly burst: SharedValue<number>;
+}) {
+  const dot = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 3);
+    return p;
+  }, []);
+  const t = useDerivedValue(() => {
+    const d = reach + 30 * burst.value;
+    return [
+      { translateX: x + Math.cos(angle) * d },
+      { translateY: y + Math.sin(angle) * d },
+      { scale: 1 - 0.7 * burst.value },
+    ];
+  }, [x, y, reach, angle]);
+  const o = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group transform={t} opacity={o}>
+      <Path path={dot} color={gold ? theme.color.gold : theme.color.ok} />
     </Group>
   );
 }

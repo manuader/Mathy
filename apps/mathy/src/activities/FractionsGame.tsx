@@ -69,7 +69,6 @@ import type { Event } from "@mathy/progress";
 import {
   TilesScene,
   tilesLayout,
-  type Box,
   type RowSlot,
   type TilesConfig,
   type TilesWhole,

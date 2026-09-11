@@ -56,15 +56,106 @@
  * un nodo que todavía no cruzó— sale exactamente la numeración de siempre. Lo
  * que hace legítimo el lado izquierdo es que la separación entre casillas no
  * cambia al cruzar: el soporte se dibuja con un solo paso para todas.
+ *
+ * El estilo de juego (N §2.2 y la skill `mathy-nivel`) llega sin tocar nada de
+ * lo anterior: las piedras, el caminante, la rueda, las fichas y las monedas
+ * tienen volumen (degradado con la luz arriba a la izquierda, brillo, sombra en
+ * el piso); lo que tiene que leerse va sobre vidrio oscuro; y el color dice una
+ * sola cosa por vez:
+ *
+ * - `accent` y `coral` son los dos equipos. En la recta con signo, el lado
+ *   positivo y el negativo: la bandera del caminante, las ventanas y el garaje,
+ *   las monedas y los vales, los dientes del tope. Sin signo, `accent` es lo que
+ *   el caminante hizo: los tramos y los dientes que la ficha fija.
+ * - `ok` es "coincide": la bandera de llegada, el viaje entero, el hueco lleno.
+ * - `warn` es "mirá acá": lo que late pidiendo el gesto, lo que miente.
+ *
+ * El evento que la escena enseña es **caer justo en la bandera**: el diente y el
+ * paso son lo mismo, así que girar lo justo deja al caminante parado ahí. Cuando
+ * pasa, la bandera y el caminante saltan una vez y la piedra suelta chispas. Se
+ * detecta en el hilo de la interfaz, de la posición y no del estado del nodo, y
+ * pide que el caminante se quede quieto un momento: pasar de largo girando no
+ * es llegar.
  */
 
-import { useMemo } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
-import { useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  BlurMask,
+  Group,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
+  type SkPath,
+} from "@shopify/react-native-skia";
+import {
+  cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
+  useDerivedValue,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  type DerivedValue,
+  type SharedValue,
+} from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
 import { TEETH_PER_TURN } from "@mathy/mechanics";
+import { play, type Sfx } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
+import { chipTone } from "../ui/Kit.tsx";
+
+// --- Materiales --------------------------------------------------------------
+
+/** Una paleta de objeto: la luz arriba a la izquierda, el cuerpo y la sombra. */
+interface Look {
+  readonly light: string;
+  readonly base: string;
+  readonly dark: string;
+}
+
+/** La piedra del río: gris, sin ningún color que el juego use para significar. */
+const STONE: Look = { light: "#c9d4e1", base: "#7f90a5", dark: "#3d4a5b" };
+/**
+ * El caminante y el ascensor: porcelana. No es de ningún equipo —el equipo es de
+ * lo que hace, no de quién lo hace— y así su bandera puede tomar el del lado.
+ */
+const PORCELAIN: Look = { light: "#ffffff", base: "#e2e8f0", dark: "#8d9cb1" };
+/**
+ * La madera de la rueda: nogal, más oscuro que los cuencos del nodo 1. Una rueda
+ * naranja se leía como el ámbar de "mirá acá", y el anillo que sí lo dice late
+ * justo encima. Los dientes son hueso claro: son lo que se cuenta.
+ */
+const WOOD = { light: "#9c6c47", base: "#6b4428", dark: "#382113", tooth: "#dccbb4" } as const;
+/** El agua entre las piedras. */
+const WATER = { top: "#1f4b68", low: "#0d2132" } as const;
+/** Los dos equipos con volumen: el lado positivo y el negativo. */
+const TEAM_POS: Look = { light: "#c2e6ff", base: theme.color.accent, dark: "#1f7fcf" };
+const TEAM_NEG: Look = { light: "#ffd6de", base: theme.color.coral, dark: "#d2465f" };
+/** La bandera de llegada: menta, porque llegar justo es que el viaje coincida. */
+const OK_LOOK: Look = { light: "#b4f7dc", base: theme.color.ok, dark: "#18a472" };
+
+/** Vidrio sobre el paisaje; oscuro debajo de lo que tiene que leerse. */
+const GLASS = "rgba(255, 255, 255, 0.05)";
+const GLASS_LINE = "rgba(255, 255, 255, 0.12)";
+const UNDER = "rgba(9, 17, 29, 0.9)";
+/** El hueco donde falta algo: un pozo, no un parche. */
+const WELL = "rgba(0, 0, 0, 0.32)";
+const SHADOW = "rgba(0, 0, 0, 0.34)";
+const SHINE = "rgba(255, 255, 255, 0.5)";
+/** El trazo claro de la recta: tinta, un poco transparente para no gritar. */
+const LINE_INK = "rgba(244, 247, 251, 0.88)";
+
+/** Cuánto dura el estallido del evento: se abre y se apaga. */
+const BURST_MS = 720;
+/**
+ * Cuánto tiene que quedarse el caminante en la bandera para que cuente como
+ * llegada. Girando, pasa por cada piedra en ~160 ms: con esto, pasar de largo no
+ * dispara nada y soltar ahí sí.
+ */
+const ARRIVE_DWELL = 300;
 
 const STROKE = 1.5;
 /** Cuánto gira la manivela por casilla. La vuelta entera es la unidad. */
@@ -865,15 +956,34 @@ function addNumber(
 
 // --- Geometría ---------------------------------------------------------------
 
+/** Dos puntos entre los que corre un degradado. */
+interface Span {
+  readonly x0: number;
+  readonly y0: number;
+  readonly x1: number;
+  readonly y1: number;
+}
+
 interface RailGeom {
   readonly band: SkPath;
+  /** El agua corre a lo ancho de la banda: la luz entra por arriba o por la izquierda. */
+  readonly bandLight: Span;
   readonly stones: SkPath;
+  /** Todas las piedras de una pista comparten la luz: están en la misma fila. */
+  readonly stoneLight: Span;
+  readonly stoneShine: SkPath;
+  readonly stoneShadow: SkPath;
   readonly cards: SkPath;
   readonly numerals: SkPath;
   readonly holes: SkPath;
   readonly zeroDot: SkPath;
-  readonly flag: SkPath;
+  readonly flagPole: SkPath;
+  readonly flagCloth: SkPath;
+  /** Del mástil a la punta del paño: por ahí corre la luz de la tela. */
+  readonly clothLight: Span;
   readonly flagStone: SkPath;
+  /** La casilla de la bandera, o `null`: de ahí salen las chispas de la llegada. */
+  readonly flagSpot: Spot | null;
 }
 
 /**
@@ -927,7 +1037,20 @@ function buildRail(
     );
   }
 
+  // La luz del agua: de arriba abajo en la pista acostada, de izquierda a
+  // derecha en la parada. La banda es una sola forma, así que un degradado basta.
+  const bandLight: Span = vertical
+    ? { x0: rail.to.x - m.band.half, y0: 0, x1: rail.to.x + m.band.half, y1: 0 }
+    : { x0: 0, y0: rail.from.y - m.band.half, x1: 0, y1: rail.from.y + m.band.half };
+  // Las piedras de una pista están en la misma fila (o la misma columna), así que
+  // un degradado único les da a todas la misma luz y siguen siendo un solo trazo.
+  const stoneLight: Span = vertical
+    ? { x0: rail.to.x - l.stoneRx, y0: 0, x1: rail.to.x + l.stoneRx, y1: 0 }
+    : { x0: 0, y0: rail.from.y - l.stoneRy, x1: 0, y1: rail.from.y + l.stoneRy };
+
   const stones = Skia.Path.Make();
+  const stoneShine = Skia.Path.Make();
+  const stoneShadow = Skia.Path.Make();
   const holes = Skia.Path.Make();
   const cards = Skia.Path.Make();
   const numerals = Skia.Path.Make();
@@ -946,9 +1069,13 @@ function buildRail(
         stones.lineTo(stone.x, stone.y + h);
       }
     } else {
-      stones.addOval(
-        Skia.XYWHRect(stone.x - l.stoneRx, stone.y - l.stoneRy, l.stoneRx * 2, l.stoneRy * 2),
-      );
+      const rx = l.stoneRx;
+      const ry = l.stoneRy;
+      stones.addOval(Skia.XYWHRect(stone.x - rx, stone.y - ry, rx * 2, ry * 2));
+      // El brillo arriba a la izquierda y la sombra corrida hacia abajo: la
+      // piedra asoma del agua en vez de estar pintada encima.
+      stoneShine.addOval(Skia.XYWHRect(stone.x - rx * 0.62, stone.y - ry * 0.72, rx * 0.62, ry * 0.5));
+      stoneShadow.addOval(Skia.XYWHRect(stone.x - rx * 0.92, stone.y - ry * 0.35, rx * 1.84, ry * 1.7));
     }
 
     if (s.numerals === "none" || i < s.numeralFrom || i % l.numeralEvery !== 0) continue;
@@ -973,16 +1100,28 @@ function buildRail(
   const cero = rail.stones[zero];
   if (s.zeroDot && cero) zeroDot.addCircle(cero.x, cero.y, 7);
 
-  const flag = Skia.Path.Make();
+  // La bandera en dos piezas: el mástil es un trazo y el paño una tela llena, que
+  // sobre el paisaje se lee de lejos; un contorno fino se perdía.
+  const flagPole = Skia.Path.Make();
+  const flagCloth = Skia.Path.Make();
   const flagStone = Skia.Path.Make();
+  let clothLight: Span = { x0: 0, y0: 0, x1: 1, y1: 1 };
   const target = s.flag === null ? undefined : rail.stones[s.flag.at];
   if (s.flag && target) {
     const side = s.flag.side ?? 1;
     const f = m.flag;
-    flag.moveTo(target.x, target.y - f.base);
-    flag.lineTo(target.x, target.y - f.top);
-    flag.lineTo(target.x + f.span * side, target.y - (f.top - f.drop));
-    flag.lineTo(target.x, target.y - (f.top - 2 * f.drop));
+    flagPole.moveTo(target.x, target.y - f.base);
+    flagPole.lineTo(target.x, target.y - f.top);
+    flagCloth.moveTo(target.x, target.y - f.top);
+    flagCloth.lineTo(target.x + f.span * side, target.y - (f.top - f.drop));
+    flagCloth.lineTo(target.x, target.y - (f.top - 2 * f.drop));
+    flagCloth.close();
+    clothLight = {
+      x0: target.x,
+      y0: target.y - f.top,
+      x1: target.x + f.span * side,
+      y1: target.y - (f.top - 2 * f.drop),
+    };
     if (s.flag.halo !== false) {
       flagStone.addOval(
         Skia.XYWHRect(
@@ -994,25 +1133,70 @@ function buildRail(
       );
     }
   }
-  return { band, stones, cards, numerals, holes, zeroDot, flag, flagStone };
+  return {
+    band,
+    bandLight,
+    stones,
+    stoneLight,
+    stoneShine,
+    stoneShadow,
+    cards,
+    numerals,
+    holes,
+    zeroDot,
+    flagPole,
+    flagCloth,
+    clothLight,
+    flagStone,
+    flagSpot: s.flag && target ? target : null,
+  };
 }
 
-/** La rueda dentada. Los dientes son todos iguales: eso es el invariante. */
-function buildCrank(r: number): { body: SkPath; teeth: SkPath; handle: SkPath } {
-  const body = Skia.Path.Make();
-  body.addCircle(0, 0, r * 0.62);
-  body.addCircle(0, 0, 4);
+/** Las piezas de la rueda. Las que giran son los dientes y el rayo; el resto, no. */
+interface CrankGeom {
+  readonly wheel: SkPath;
+  readonly shine: SkPath;
+  readonly shadow: SkPath;
+  readonly hub: SkPath;
+  readonly teeth: SkPath;
+  readonly spoke: SkPath;
+  /** La perilla, centrada en el origen: se traslada por el borde y no gira. */
+  readonly knob: SkPath;
+  readonly knobShine: SkPath;
+  /** El anillo de "girá acá" alrededor de la perilla. */
+  readonly knobRing: SkPath;
+}
+
+/**
+ * La rueda dentada, de madera. Los dientes son todos iguales: eso es el
+ * invariante. El disco no gira —es redondo, girarlo no se vería— y por eso su luz
+ * se queda arriba a la izquierda aunque los dientes den vueltas.
+ */
+function buildCrank(r: number): CrankGeom {
+  const wheel = Skia.Path.Make();
+  wheel.addCircle(0, 0, r * 0.62);
+  const shine = Skia.Path.Make();
+  shine.addOval(Skia.XYWHRect(-r * 0.42, -r * 0.48, r * 0.36, r * 0.2));
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-r * 0.8, r * 0.62, r * 1.6, r * 0.34));
+  const hub = Skia.Path.Make();
+  hub.addCircle(0, 0, 5);
   const teeth = Skia.Path.Make();
   for (let i = 0; i < TEETH_PER_TURN; i++) {
     const a = i * TOOTH_ANGLE - Math.PI / 2;
     teeth.moveTo(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62);
     teeth.lineTo(Math.cos(a) * r * 0.86, Math.sin(a) * r * 0.86);
   }
-  const handle = Skia.Path.Make();
-  handle.moveTo(0, 0);
-  handle.lineTo(0, -r * 0.62);
-  handle.addCircle(0, -r * 0.62, 8);
-  return { body, teeth, handle };
+  const spoke = Skia.Path.Make();
+  spoke.moveTo(0, 0);
+  spoke.lineTo(0, -r * 0.62);
+  const knob = Skia.Path.Make();
+  knob.addCircle(0, 0, 8);
+  const knobShine = Skia.Path.Make();
+  knobShine.addOval(Skia.XYWHRect(-5, -5.5, 4.5, 3));
+  const knobRing = Skia.Path.Make();
+  knobRing.addCircle(0, 0, 13);
+  return { wheel, shine, shadow, hub, teeth, spoke, knob, knobShine, knobRing };
 }
 
 /**
@@ -1032,33 +1216,53 @@ function buildStop(r: number, teeth: number, reach: number): SkPath {
   return p;
 }
 
+/** Las partes del caminante, todas con el pie en el origen. */
+interface WalkerGeom {
+  readonly legs: SkPath;
+  readonly arms: SkPath;
+  readonly torso: SkPath;
+  readonly head: SkPath;
+  readonly shine: SkPath;
+  readonly flag: SkPath;
+  /** La sombra en el piso: la mueve aparte quien mueve al caminante, porque no salta. */
+  readonly shadow: SkPath;
+}
+
 /**
- * El caminante: unos pocos trazos, sin cara y sin texto. Sirve para cualquier
- * idioma. La bandera es un triángulo que apunta hacia donde mira, y en la capa
- * simbólica es el trazo del signo antes de acostarse.
+ * El caminante: un muñeco de porcelana, sin cara y sin texto. Sirve para
+ * cualquier idioma. La bandera es un triángulo que apunta hacia donde mira, y en
+ * la capa simbólica es el trazo del signo antes de acostarse.
  */
-function buildWalker(arms: boolean): { body: SkPath; head: SkPath; flag: SkPath } {
-  const body = Skia.Path.Make();
-  body.moveTo(0, -8);
-  body.lineTo(0, -22);
-  body.moveTo(-7, -2);
-  body.lineTo(0, -10);
-  body.lineTo(7, -2);
-  // Los brazos en alto. El caminante que lleva bandera no los tiene: la
+function buildWalker(arms: boolean): WalkerGeom {
+  const legs = Skia.Path.Make();
+  legs.moveTo(-2.5, -11);
+  legs.lineTo(-6, -2);
+  legs.moveTo(2.5, -11);
+  legs.lineTo(6, -2);
+  // Los brazos abiertos. El caminante que lleva bandera no los tiene: la
   // bandera sale de ese hombro y los dos trazos se leerían como uno solo.
+  const armsPath = Skia.Path.Make();
   if (arms) {
-    body.moveTo(-7, -18);
-    body.lineTo(0, -20);
-    body.lineTo(7, -16);
+    armsPath.moveTo(-6, -19.5);
+    armsPath.lineTo(-11, -15.5);
+    armsPath.moveTo(6, -19.5);
+    armsPath.lineTo(11, -15.5);
   }
+  const torso = Skia.Path.Make();
+  torso.addRRect(Skia.RRectXY(Skia.XYWHRect(-6.5, -23.5, 13, 15), 6.5, 6.5));
   const head = Skia.Path.Make();
-  head.addCircle(0, -28, 6);
+  head.addCircle(0, -30.5, 6.5);
+  const shine = Skia.Path.Make();
+  shine.addOval(Skia.XYWHRect(-4.4, -35, 3.8, 2.6));
+  shine.addRRect(Skia.RRectXY(Skia.XYWHRect(-4.6, -21.5, 2.2, 6.5), 1.1, 1.1));
   const flag = Skia.Path.Make();
-  flag.moveTo(0, -22);
-  flag.lineTo(16, -18);
-  flag.lineTo(0, -14);
+  flag.moveTo(5, -22);
+  flag.lineTo(20, -18);
+  flag.lineTo(5, -14);
   flag.close();
-  return { body, head, flag };
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-10, -3, 20, 6));
+  return { legs, arms: armsPath, torso, head, shine, flag, shadow };
 }
 
 /**
@@ -1100,25 +1304,29 @@ function buildArrow(rail: Rail, from: number, to: number, lift: number): SkPath 
   return p;
 }
 
-/** Una fila del libro: una marca por paso y el numeral del tramo al costado. */
+/**
+ * Una fila del libro: una marca por paso y el numeral del tramo al costado. Las
+ * marcas y el numeral van a trazos distintos: las marcas son del tramo (y se
+ * pintan con su equipo) y el numeral es tinta.
+ */
 function buildLedgerRow(
   l: TrackLayout,
   index: number,
   value: number,
   numerals: boolean,
   isTotal: boolean,
-): SkPath {
-  const p = Skia.Path.Make();
+  ticks: SkPath,
+  ink: SkPath,
+): void {
   const y = l.ledger.y + l.ledger.rowH * (index + 0.5) + (isTotal ? 6 : 0);
   const left = l.ledger.x + 12;
   const marks = Math.min(value, 12);
   for (let i = 0; i < marks; i++) {
     const x = left + i * 8;
-    p.moveTo(x, y - 6);
-    p.lineTo(x, y + 6);
+    ticks.moveTo(x, y - 6);
+    ticks.lineTo(x, y + 6);
   }
-  addNumber(p, value, l.ledger.x + l.ledger.w - 20, y, 16, numerals);
-  return p;
+  addNumber(ink, value, l.ledger.x + l.ledger.w - 20, y, 16, numerals);
 }
 
 /**
@@ -1176,16 +1384,32 @@ function buildCar(w: number, h: number): SkPath {
   return p;
 }
 
-/** Una moneda es un disco lleno; un vale, un rectángulo hueco. */
-function tokenPath(value: number, r: number): SkPath {
-  const p = Skia.Path.Make();
+/** Una moneda o un vale, con su brillo, centrados en el origen. */
+interface TokenGeom {
+  readonly body: SkPath;
+  readonly shine: SkPath;
+  readonly size: number;
+}
+
+/**
+ * Una moneda es un disco lleno; un vale, un rectángulo hueco. El brillo de la
+ * moneda es el de un objeto con volumen; el del vale, el filo de adentro del
+ * marco, que es lo que lo hace leerse hueco.
+ */
+function tokenPath(value: number, r: number): TokenGeom {
+  const body = Skia.Path.Make();
+  const shine = Skia.Path.Make();
   const size = r * (0.6 + 0.2 * Math.min(3, Math.abs(value)));
   if (value >= 0) {
-    p.addCircle(0, 0, size);
-    return p;
+    body.addCircle(0, 0, size);
+    shine.addOval(Skia.XYWHRect(-size * 0.62, -size * 0.66, size * 0.6, size * 0.36));
+    return { body, shine, size };
   }
-  p.addRRect(Skia.RRectXY(Skia.XYWHRect(-size, -size * 0.7, size * 2, size * 1.4), 3, 3));
-  return p;
+  body.addRRect(Skia.RRectXY(Skia.XYWHRect(-size, -size * 0.7, size * 2, size * 1.4), 3, 3));
+  shine.addRRect(
+    Skia.RRectXY(Skia.XYWHRect(-size + 3.5, -size * 0.7 + 3.5, size * 2 - 7, size * 1.4 - 7), 2, 2),
+  );
+  return { body, shine, size };
 }
 
 /** Dónde descansa una moneda o un vale ya puesto en su columna. */
@@ -1250,6 +1474,171 @@ function ghostT01(t: number): number {
   "worklet";
   const c = Math.max(0, Math.min(1, t));
   return c * c * (3 - 2 * c);
+}
+
+// --- Jugo ----------------------------------------------------------------------
+
+/**
+ * La llegada a la bandera, detectada en el hilo de la interfaz. Devuelve el valor
+ * del estallido: 1 quieto, y de 0 a 1 una vez cada vez que el caminante queda
+ * parado justo en la bandera.
+ *
+ * "Parado" pide `ARRIVE_DWELL` ms en la piedra, con el caminante apoyado: al
+ * girar la manivela pasa por cada piedra y sigue, y pasar no es llegar. Nada de
+ * esto vuelve al hilo de JavaScript: las dos reacciones viven en el de la
+ * interfaz y solo escriben valores compartidos.
+ */
+function useArrival(
+  pos: SharedValue<number>,
+  lift: SharedValue<number>,
+  at: number,
+  enabled: boolean,
+): SharedValue<number> {
+  const burst = useSharedValue(1);
+  const dwell = useSharedValue(0);
+  useAnimatedReaction(
+    () => enabled && at >= 0 && Math.abs(pos.value - at) < 0.02 && lift.value < 0.05,
+    (on, prev) => {
+      if (on === prev) return;
+      cancelAnimation(dwell);
+      dwell.value = 0;
+      if (on) dwell.value = withTiming(1, { duration: ARRIVE_DWELL });
+    },
+    [enabled, at],
+  );
+  useAnimatedReaction(
+    () => dwell.value >= 1,
+    (done, prev) => {
+      if (!done || prev !== false) return;
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: BURST_MS });
+      // Vidrio: el caminante y la bandera coinciden.
+      runOnJS(play)("join");
+    },
+  );
+  return burst;
+}
+
+/**
+ * Un estallido que dispara el estado de la ronda (el hueco que se llenó, el neto
+ * que llegó): cuando `on` pasa de falso a verdadero, una sola vez.
+ */
+function useBurstWhen(on: boolean, sfx: Sfx): SharedValue<number> {
+  const burst = useSharedValue(1);
+  const antes = useRef(on);
+  useEffect(() => {
+    if (on && !antes.current) {
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: BURST_MS });
+      play(sfx);
+    }
+    antes.current = on;
+  }, [on, burst, sfx]);
+  return burst;
+}
+
+/** Un estallido cada vez que una cuenta crece: una ficha más clavada, uno más. */
+function useBurstOnGrow(n: number, sfx: Sfx): SharedValue<number> {
+  const burst = useSharedValue(1);
+  const antes = useRef(n);
+  useEffect(() => {
+    if (n > antes.current) {
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: BURST_MS });
+      play(sfx);
+    }
+    antes.current = n;
+  }, [n, burst, sfx]);
+  return burst;
+}
+
+/** Solo el sonido, cuando una cuenta crece: un par más que se anuló. */
+function useSoundOnGrow(n: number, sfx: Sfx): void {
+  const antes = useRef(n);
+  useEffect(() => {
+    if (n > antes.current) play(sfx);
+    antes.current = n;
+  }, [n, sfx]);
+}
+
+const SPARKS = [0, 1, 2, 3, 4, 5].map((i) => (i * Math.PI) / 3 + Math.PI / 6);
+
+/**
+ * El estallido del evento que la escena enseña: un halo menta que se abre y seis
+ * chispas menta y oro que se alejan y se apagan, una sola vez, en el lugar que lo
+ * causó. Es el mismo del puente del nodo 1 (`BowlScene`): todo se deriva de un
+ * valor que va de 0 a 1, y en 1 no se ve nada. Está siempre montado.
+ */
+function Burst({
+  x,
+  y,
+  r,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly r: number;
+  readonly burst: SharedValue<number>;
+}) {
+  const ring = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, r);
+    return p;
+  }, [r]);
+  const haloT = useDerivedValue(
+    () => [{ translateX: x }, { translateY: y }, { scale: 0.75 + 0.75 * burst.value }],
+    [x, y],
+  );
+  const haloO = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group>
+      <Group transform={haloT} opacity={haloO}>
+        <Path path={ring} color={theme.color.ok} style="stroke" strokeWidth={9}>
+          <BlurMask blur={6} style="normal" />
+        </Path>
+        <Path path={ring} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+      </Group>
+      {SPARKS.map((angle, i) => (
+        <Spark key={i} x={x} y={y} angle={angle} reach={r} gold={i % 2 === 1} burst={burst} />
+      ))}
+    </Group>
+  );
+}
+
+function Spark({
+  x,
+  y,
+  angle,
+  reach,
+  gold,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly angle: number;
+  readonly reach: number;
+  readonly gold: boolean;
+  readonly burst: SharedValue<number>;
+}) {
+  const dot = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 3.2);
+    return p;
+  }, []);
+  const t = useDerivedValue(() => {
+    const d = reach * 0.5 + reach * 1.5 * burst.value;
+    return [
+      { translateX: x + Math.cos(angle) * d },
+      { translateY: y + Math.sin(angle) * d },
+      { scale: 1 - 0.7 * burst.value },
+    ];
+  }, [x, y, angle, reach]);
+  const o = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group transform={t} opacity={o}>
+      <Path path={dot} color={gold ? theme.color.gold : theme.color.ok} />
+    </Group>
+  );
 }
 
 // --- Componente --------------------------------------------------------------
@@ -1369,6 +1758,41 @@ export function TrackScene(props: TrackSceneProps) {
   const explaining = props.explaining ?? false;
   const ghost = props.ghost ?? null;
 
+  // El evento que la escena enseña: el caminante queda parado justo en la
+  // bandera. Mientras se comparan dos animaciones no hay nada que celebrar.
+  const flagAt = s.flag?.at ?? -1;
+  const arrive = useArrival(props.pos, lift, flagAt, s.flag !== null && s.showRail && !explaining);
+  // Los otros momentos en que algo coincide, cada uno con su respuesta, una vez:
+  // el viaje entero que aparece, el hueco del renglón o la caja que se llenan,
+  // el neto que llega al pedido y la ficha que se clava en su piedra.
+  const wholeBurst = useBurstWhen(s.arrows && legs.length > 1, "join");
+  const wholeGlow = useDerivedValue(() => (wholeBurst.value < 1 ? 1 - wholeBurst.value : 0));
+  const slotBurst = useBurstWhen(s.line !== null && answered >= 0, "fit");
+  const boxBurst = useBurstWhen(s.box && answered >= 0, "fit");
+  const netMatch = s.board !== null && (props.net ?? 0) === s.board.target;
+  const netBurst = useBurstWhen(netMatch, "join");
+  const gapBurst = useBurstOnGrow(filled.length, "fit");
+  // Una moneda y un vale que se anulan son dos cosas que coinciden: vidrio.
+  useSoundOnGrow((props.cancelled ?? []).filter(Boolean).length, "join");
+  // Contar se escucha: cada casilla que el caminante pisa suena a madera, más
+  // aguda cuanto más lejos del cero y más grave del otro lado. Cruza a
+  // JavaScript una vez por casilla; un salto de más de una en un cuadro es un
+  // cambio de ronda y no suena, y el caminante en el aire no pisa nada.
+  const pasos = s.walker && s.showRail && !explaining;
+  useAnimatedReaction(
+    () => (pasos && lift.value < 0.05 ? Math.round(props.pos.value) : null),
+    (casilla, antes) => {
+      if (casilla === null || antes === null || antes === undefined) return;
+      if (Math.abs(casilla - antes) !== 1) return;
+      runOnJS(play)("drop", { pitch: Math.max(-12, Math.min(12, casilla - zero)) });
+    },
+    [pasos, zero],
+  );
+  const lastFilled = filled[filled.length - 1] ?? -1;
+  const gapStone = lastFilled >= 0 ? l.rail.stones[lastFilled] : undefined;
+  // La tarjeta que se mira con un toque se levanta un poco, además de aparecer.
+  const peekT = useDerivedValue(() => [{ translateY: -8 * tapLift.value }]);
+
   const railGeoms = useMemo(
     () => l.rails.map((r) => buildRail(config, s, l, r, filled, zero)),
     [config, s, l, filled, zero],
@@ -1430,25 +1854,26 @@ export function TrackScene(props: TrackSceneProps) {
 
   const ledger = useMemo(() => {
     const box = Skia.Path.Make();
-    const rows = Skia.Path.Make();
+    const ticks = Skia.Path.Make();
+    const totalTicks = Skia.Path.Make();
+    const ink = Skia.Path.Make();
     const rule = Skia.Path.Make();
-    if (!s.ledger) return { box, rows, rule };
+    if (!s.ledger) return { box, ticks, totalTicks, ink, rule };
     box.addRRect(
       Skia.RRectXY(Skia.XYWHRect(l.ledger.x, l.ledger.y, l.ledger.w, l.ledger.h), 8, 8),
     );
     const numerals = s.drawer?.numerals ?? true;
     legs.forEach((leg, i) => {
-      if (i < LEDGER_ROWS - 1) rows.addPath(buildLedgerRow(l, i, leg.value, numerals, false));
+      if (i < LEDGER_ROWS - 1) buildLedgerRow(l, i, leg.value, numerals, false, ticks, ink);
     });
     if (legs.length > 1) {
       const y = l.ledger.y + l.ledger.rowH * (LEDGER_ROWS - 1) + 2;
       rule.moveTo(l.ledger.x + 10, y);
       rule.lineTo(l.ledger.x + l.ledger.w - 10, y);
-      rows.addPath(
-        buildLedgerRow(l, LEDGER_ROWS - 1, legs.reduce((a, b) => a + b.value, 0), numerals, true),
-      );
+      const total = legs.reduce((a, b) => a + b.value, 0);
+      buildLedgerRow(l, LEDGER_ROWS - 1, total, numerals, true, totalTicks, ink);
     }
-    return { box, rows, rule };
+    return { box, ticks, totalTicks, ink, rule };
   }, [s.ledger, s.drawer, l, legs]);
 
   const row = useMemo(() => {
@@ -1547,8 +1972,9 @@ export function TrackScene(props: TrackSceneProps) {
     const origin = Skia.Path.Make();
     const arrow = Skia.Path.Make();
     const steps = Skia.Path.Make();
+    const plate = Skia.Path.Make();
     const dr = s.drawings;
-    if (!dr) return { shapes, origin, arrow, steps };
+    if (!dr) return { shapes, origin, arrow, steps, plate };
     l.drawings.forEach((spot, i) => {
       const d = drawingPath(i, l.drawingR);
       d.transform([1, 0, spot.x, 0, 1, spot.y, 0, 0, 1]);
@@ -1568,7 +1994,10 @@ export function TrackScene(props: TrackSceneProps) {
     for (let i = 0; i < dr.steps; i++) {
       steps.addCircle(cx + (i - (dr.steps - 1) / 2) * 18, cy + 26, 5);
     }
-    return { shapes, origin, arrow, steps };
+    // La ficha de dirección es una ficha: la misma cara que las del cajón.
+    const half = Math.max(40, (dr.steps * 18) / 2 + 14);
+    plate.addRRect(Skia.RRectXY(Skia.XYWHRect(cx - half, cy - 18, half * 2, 58), 12, 12));
+    return { shapes, origin, arrow, steps, plate };
   }, [s.drawings, l]);
 
   const tappedPath = useMemo(() => {
@@ -1580,10 +2009,20 @@ export function TrackScene(props: TrackSceneProps) {
 
   // El giro de la manivela es la posición del caminante: un solo hecho. Lo único
   // que se le suma es el tope sin dientes, que gira sin llevar a nadie.
-  const crankT = useDerivedValue(() => [
-    { rotate: (props.pos.value + spin.value) * TOOTH_ANGLE + jam.value * 0.06 },
-  ]);
-  const crankGlow = useDerivedValue(() => 0.3 + 0.7 * props.hint.value);
+  const crankA = useDerivedValue(
+    () => (props.pos.value + spin.value) * TOOTH_ANGLE + jam.value * 0.06,
+  );
+  const crankT = useDerivedValue(() => [{ rotate: crankA.value }]);
+  // La perilla no gira sobre sí misma: se traslada por el borde con el mismo
+  // ángulo, y así la luz le sigue entrando por arriba a la izquierda.
+  const knobR = l.crank.r * 0.62;
+  const knobT = useDerivedValue(() => {
+    const a = crankA.value - Math.PI / 2;
+    return [{ translateX: Math.cos(a) * knobR }, { translateY: Math.sin(a) * knobR }];
+  }, [knobR]);
+  // Los dientes que fija la ficha son del equipo del tramo: hacia adelante
+  // `accent`, hacia atrás `coral`.
+  const stopTone = stop < 0 ? TEAM_NEG.base : TEAM_POS.base;
   const looseT = useDerivedValue(() => [{ translateX: arrowDx.value }]);
 
   // El ascensor cuelga del mismo eje: su piso es la casilla del caminante, y esa
@@ -1672,17 +2111,30 @@ export function TrackScene(props: TrackSceneProps) {
               outline={s.m.stoneOutline}
               flagPulse={s.flag?.pulse === true}
               hint={props.hint}
+              burst={i === 0 ? arrive : oneSV}
             />
             {/* La fila elegida al comparar: la que miente se marca, la otra se
                 afirma. */}
             {explain?.kind === "walks" ? (
-              <Path
-                path={(railGeoms[i] as RailGeom).band}
-                color={i === explain.liar ? theme.color.warn : theme.color.ok}
-                style="stroke"
-                strokeWidth={3}
-                opacity={picked === i ? 1 : 0}
-              />
+              <Group opacity={picked === i ? 1 : 0}>
+                <Path
+                  path={(railGeoms[i] as RailGeom).band}
+                  color={i === explain.liar ? theme.color.warn : theme.color.ok}
+                  style="stroke"
+                  strokeWidth={9}
+                  strokeCap="round"
+                  opacity={0.4}
+                >
+                  <BlurMask blur={5} style="normal" />
+                </Path>
+                <Path
+                  path={(railGeoms[i] as RailGeom).band}
+                  color={i === explain.liar ? theme.color.warn : theme.color.ok}
+                  style="stroke"
+                  strokeWidth={3}
+                  strokeCap="round"
+                />
+              </Group>
             ) : null}
             {/* El caminante está siempre montado: que se vea o no es una
                 decisión de la ronda, y desmontarlo cambiaría el árbol. */}
@@ -1696,27 +2148,81 @@ export function TrackScene(props: TrackSceneProps) {
               walk={walks[i] ?? null}
               flag={s.facing}
               visible={s.walker}
+              burst={i === 0 ? arrive : oneSV}
+              sounds={i === 0}
             />
           </Group>
         ))}
-        <Path path={marks.trail} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
-        <Path path={marks.whole} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
-        <Group transform={looseT}>
-          <Path path={loose} color={theme.color.accent} style="stroke" strokeWidth={2.5} />
-        </Group>
+        {/* La llegada: la piedra de la bandera suelta chispas, una vez. */}
+        <Burst
+          x={railGeoms[0]?.flagSpot?.x ?? 0}
+          y={railGeoms[0]?.flagSpot?.y ?? 0}
+          r={Math.max(16, l.stoneRx * 1.05)}
+          burst={arrive}
+        />
+        {/* La estela: por dónde pasó el pie sin pisar. */}
         <Path
-          path={marks.arrows}
-          color={theme.color.accent}
+          path={marks.trail}
+          color="rgba(244, 247, 251, 0.5)"
           style="stroke"
           strokeWidth={2.5}
-          opacity={0.45}
+          strokeCap="round"
+        />
+        {/* Los tramos son lo que el caminante hizo: `accent`. Llevan el borde
+            oscuro de todo lo que tiene que leerse sobre el paisaje. */}
+        <Group opacity={0.6}>
+          <Path path={marks.arrows} color={UNDER} style="stroke" strokeWidth={7} strokeCap="round" strokeJoin="round" />
+          <Path
+            path={marks.arrows}
+            color={theme.color.accent}
+            style="stroke"
+            strokeWidth={3.5}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+        </Group>
+        <Group transform={looseT}>
+          <Path path={loose} color={UNDER} style="stroke" strokeWidth={7} strokeCap="round" strokeJoin="round" />
+          <Path
+            path={loose}
+            color={theme.color.accent}
+            style="stroke"
+            strokeWidth={3.5}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+        </Group>
+        {/* El viaje entero: menta, porque es lo mismo que los tramos juntos.
+            Cuando aparece se enciende una vez: es lo que el nodo de la suma
+            enseña. */}
+        <Path path={marks.whole} color={UNDER} style="stroke" strokeWidth={7} strokeCap="round" strokeJoin="round" />
+        <Group opacity={wholeGlow}>
+          <Path path={marks.whole} color={theme.color.ok} style="stroke" strokeWidth={13} strokeCap="round">
+            <BlurMask blur={7} style="normal" />
+          </Path>
+        </Group>
+        <Path
+          path={marks.whole}
+          color={theme.color.ok}
+          style="stroke"
+          strokeWidth={3.5}
+          strokeCap="round"
+          strokeJoin="round"
         />
       </Group>
 
+      {/* La ficha que se clavó en su hueco: la tarjeta suelta chispas, una vez. */}
+      <Burst
+        x={(gapStone?.x ?? 0) + l.cardDx}
+        y={(gapStone?.y ?? 0) + l.cardDy}
+        r={Math.max(18, l.cardW * 0.62)}
+        burst={gapBurst}
+      />
+
       {/* La tarjeta que se levanta para mirar el numeral sin caminar. */}
-      <Group opacity={tapLift}>
-        <Path path={peek.card} color={theme.color.surfaceHigh} />
-        <Path path={peek.card} color={theme.color.accent} style="stroke" strokeWidth={STROKE} />
+      <Group opacity={tapLift} transform={peekT}>
+        <Path path={peek.card} color={UNDER} />
+        <Path path={peek.card} color="rgba(255, 255, 255, 0.3)" style="stroke" strokeWidth={STROKE} />
         <Path path={peek.digits} color={theme.color.ink} />
       </Group>
 
@@ -1732,6 +2238,7 @@ export function TrackScene(props: TrackSceneProps) {
                 outline={s.m.stoneOutline}
                 flagPulse={s.flag?.pulse === true}
                 hint={props.hint}
+                burst={oneSV}
               />
               <ArrivalRow
                 rail={rail}
@@ -1767,21 +2274,37 @@ export function TrackScene(props: TrackSceneProps) {
       {/* El renglón. */}
       {s.line ? (
         <Group opacity={explaining ? 0 : 1}>
-          <Path path={row.boxes} color={theme.color.surfaceHigh} />
-          <Path path={row.boxes} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={row.slot} color={theme.color.accent} style="stroke" strokeWidth={2} />
+          <Path path={row.boxes} color={UNDER} />
+          <Path path={row.boxes} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+          {/* El hueco es un pozo que late en ámbar mientras falta. */}
+          <Path path={row.slot} color={WELL} />
+          <Path path={row.slot} color={GLASS_LINE} style="stroke" strokeWidth={STROKE} />
+          <Group opacity={answered >= 0 ? 0 : props.hint}>
+            <Path path={row.slot} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+          </Group>
           <Path path={row.signs} color={theme.color.ink} />
           <Path path={filledSlot} color={theme.color.ok} />
+          <Burst x={l.slot?.x ?? 0} y={l.slot?.y ?? 0} r={26} burst={slotBurst} />
         </Group>
       ) : null}
 
       {/* El libro de cuentas: una fila por tramo y el total abajo. */}
       {s.ledger ? (
         <Group opacity={explaining ? 0 : 1}>
-          <Path path={ledger.box} color={theme.color.surface} />
-          <Path path={ledger.box} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={ledger.rule} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={ledger.rows} color={theme.color.ink} style="stroke" strokeWidth={2} />
+          <Path path={ledger.box} color={UNDER} />
+          <Path path={ledger.box} color={GLASS_LINE} style="stroke" strokeWidth={STROKE} />
+          <Path
+            path={ledger.rule}
+            color="rgba(255, 255, 255, 0.35)"
+            style="stroke"
+            strokeWidth={STROKE}
+            strokeCap="round"
+          />
+          {/* Cada tramo con el color de las flechas; el total, menta como el
+              viaje entero: son la misma cuenta dicha en dos lugares. */}
+          <Path path={ledger.ticks} color={theme.color.accent} style="stroke" strokeWidth={3} strokeCap="round" />
+          <Path path={ledger.totalTicks} color={theme.color.ok} style="stroke" strokeWidth={3} strokeCap="round" />
+          <Path path={ledger.ink} color={theme.color.ink} />
         </Group>
       ) : null}
 
@@ -1789,17 +2312,35 @@ export function TrackScene(props: TrackSceneProps) {
           analogía se retira sin desaparecer. */}
       {s.building ? (
         <Group opacity={edificioO}>
-          <Path path={shaft.walls} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={shaft.windows} color={theme.color.inkFaint} />
-          <Path path={shaft.garage} color={theme.color.warn} style="stroke" strokeWidth={2} />
-          <Path path={shaft.numerals} color={theme.color.inkDim} />
-          <Path path={shaft.mark} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+          {/* El corte es de vidrio: se ve el paisaje detrás y los pisos se
+              cuentan igual. */}
+          <Path path={shaft.walls} color={GLASS} />
+          <Path path={shaft.walls} color={GLASS_LINE} style="stroke" strokeWidth={STROKE} />
+          {/* Arriba de la calle, ventanas del equipo positivo; abajo, la luz del
+              garaje, del negativo. Se distinguen por la forma y además por el
+              equipo, y ninguno de los dos es rojo: abajo no es "mal". */}
+          <Path path={shaft.windows} color={TEAM_POS.base} opacity={0.8} />
+          <Path path={shaft.garage} color={TEAM_NEG.base} style="stroke" strokeWidth={3} strokeCap="round" />
+          <Path path={shaft.numerals} color={UNDER} style="stroke" strokeWidth={3} strokeJoin="round" />
+          <Path path={shaft.numerals} color={theme.color.ink} />
+          <Path path={shaft.mark} color={theme.color.warn} style="stroke" strokeWidth={3} strokeCap="round" />
           <Group transform={streetT}>
-            <Path path={shaft.street} color={theme.color.ok} style="stroke" strokeWidth={3} />
+            {/* La calle es el cero: tinta clara y gruesa, de ningún equipo. */}
+            <Path path={shaft.street} color={UNDER} style="stroke" strokeWidth={8} strokeCap="round" />
+            <Path path={shaft.street} color={theme.color.ink} style="stroke" strokeWidth={4} strokeCap="round" />
           </Group>
           {s.building.car ? (
             <Group transform={carT}>
-              <Path path={car} color={theme.color.accent} style="stroke" strokeWidth={2} />
+              {/* El ascensor es de la misma porcelana que el caminante: cuelgan
+                  del mismo eje y son la misma cosa. */}
+              <Path path={car}>
+                <LinearGradient
+                  start={vec(0, -l.shaft.floorH * 0.4)}
+                  end={vec(0, l.shaft.floorH * 0.4)}
+                  colors={[PORCELAIN.light, PORCELAIN.base, PORCELAIN.dark]}
+                />
+              </Path>
+              <Path path={car} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1} />
             </Group>
           ) : null}
           <FloorMarks layout={l} floors={s.building.marks} hint={props.hint} />
@@ -1810,14 +2351,15 @@ export function TrackScene(props: TrackSceneProps) {
           ascensor lo sigue. */}
       {s.board ? (
         <Group>
-          <Path path={board.box} color={theme.color.surface} />
-          <Path path={board.box} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={board.split} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+          <Path path={board.box} color={GLASS} />
+          <Path path={board.box} color={GLASS_LINE} style="stroke" strokeWidth={STROKE} />
+          <Path path={board.split} color={GLASS_LINE} style="stroke" strokeWidth={2} strokeCap="round" />
+          <Path path={board.target} color={UNDER} style="stroke" strokeWidth={3.5} strokeJoin="round" />
           <Path path={board.target} color={theme.color.warn} />
-          <Path
-            path={board.net}
-            color={(props.net ?? 0) === s.board.target ? theme.color.ok : theme.color.ink}
-          />
+          <Path path={board.net} color={UNDER} style="stroke" strokeWidth={3.5} strokeJoin="round" />
+          <Path path={board.net} color={netMatch ? theme.color.ok : theme.color.ink} />
+          {/* El neto llegó al pedido: lo que quedó sin pareja es la respuesta. */}
+          <Burst x={l.board.x} y={l.board.y + l.board.h + 24} r={24} burst={netBurst} />
           {tokenGeom.map((p, i) => (
             <TokenItem
               key={`tok${i}`}
@@ -1833,28 +2375,69 @@ export function TrackScene(props: TrackSceneProps) {
 
       {/* La caja marcada: adonde va la ficha que contesta. */}
       {s.box ? (
-        <Path
-          path={boxPath}
-          color={answered >= 0 ? theme.color.ok : theme.color.accent}
-          style="stroke"
-          strokeWidth={2}
-        />
+        <Group>
+          <Path path={boxPath} color={WELL} />
+          <Path
+            path={boxPath}
+            color={answered >= 0 ? theme.color.ok : "rgba(255, 255, 255, 0.3)"}
+            style="stroke"
+            strokeWidth={answered >= 0 ? 3 : 2}
+          />
+          <Burst x={l.box.x} y={l.box.y} r={Math.max(24, l.boxW * 0.45)} burst={boxBurst} />
+        </Group>
       ) : null}
 
       {/* Las paradas escritas, para cuando el edificio está apagado. */}
       <Group>
-        <Path path={stops.boxes} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+        <Path path={stops.boxes} color={UNDER} />
+        <Path path={stops.boxes} color={GLASS_LINE} style="stroke" strokeWidth={STROKE} />
         <Path path={stops.ink} color={theme.color.ink} />
       </Group>
 
       {/* La fila de dibujos con su origen marcado y la ficha de dirección. */}
       {s.drawings ? (
         <Group>
-          <Path path={rowGeom.shapes} color={theme.color.inkDim} />
-          <Path path={rowGeom.origin} color={theme.color.accent} style="stroke" strokeWidth={2.5} />
-          <Path path={rowGeom.arrow} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
-          <Path path={rowGeom.steps} color={theme.color.warn} />
-          <Path path={tappedPath} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+          {/* Los dibujos son cosas cualquiera, de porcelana: no son de ningún
+              equipo ni tienen número. */}
+          <Group transform={[{ translateY: 3 }]}>
+            <Path path={rowGeom.shapes} color={SHADOW}>
+              <BlurMask blur={3} style="normal" />
+            </Path>
+          </Group>
+          <Path path={rowGeom.shapes}>
+            <LinearGradient
+              start={vec(0, (l.drawings[0]?.y ?? 0) - l.drawingR * 0.65)}
+              end={vec(0, (l.drawings[0]?.y ?? 0) + l.drawingR * 0.65)}
+              colors={[PORCELAIN.light, PORCELAIN.base, PORCELAIN.dark]}
+            />
+          </Path>
+          {/* El origen: un anillo claro, "desde acá". */}
+          <Path path={rowGeom.origin} color={UNDER} style="stroke" strokeWidth={6} />
+          <Path path={rowGeom.origin} color={theme.color.ink} style="stroke" strokeWidth={3} />
+          <Group transform={[{ translateY: 3 }]}>
+            <Path path={rowGeom.plate} color={chipTone.edge} />
+          </Group>
+          <Path path={rowGeom.plate}>
+            <LinearGradient
+              start={vec(0, l.height * 0.3 - 18)}
+              end={vec(0, l.height * 0.3 + 40)}
+              colors={[chipTone.top, chipTone.face, chipTone.low]}
+            />
+          </Path>
+          <Path path={rowGeom.plate} color={chipTone.rimTop} style="stroke" strokeWidth={1} />
+          {/* La flecha y sus pasos son el desplazamiento: del equipo de lo que se
+              hace, como los tramos. */}
+          <Path
+            path={rowGeom.arrow}
+            color={theme.color.accent}
+            style="stroke"
+            strokeWidth={3.5}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+          <Path path={rowGeom.steps} color={theme.color.accent} />
+          {/* El dibujo tocado se marca sin juzgarlo: el aviso de abajo dice qué pasó. */}
+          <Path path={tappedPath} color={theme.color.ink} style="stroke" strokeWidth={2.5} />
         </Group>
       ) : null}
 
@@ -1864,15 +2447,63 @@ export function TrackScene(props: TrackSceneProps) {
           transform={[{ translateX: l.crank.x }, { translateY: l.crank.y }]}
           opacity={s.line ? 0 : jugable}
         >
-          <Path path={crank.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+          <Path path={crank.shadow} color={SHADOW}>
+            <BlurMask blur={5} style="normal" />
+          </Path>
           <Group transform={crankT}>
+            <Path path={crank.teeth} color={WOOD.dark} style="stroke" strokeWidth={6.5} strokeCap="round" />
+            <Path path={crank.teeth} color={WOOD.tooth} style="stroke" strokeWidth={3.5} strokeCap="round" />
             {/* Los dientes del tope giran con la rueda: arrancan en la manija,
-                que es donde el caminante está parado ahora. */}
-            <Path path={stopGeom} color={theme.color.warn} style="stroke" strokeWidth={s.m.stopWidth} />
-            <Path path={crank.teeth} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
-            <Group opacity={crankGlow}>
-              <Path path={crank.handle} color={theme.color.accent} style="stroke" strokeWidth={2.5} />
+                que es donde el caminante está parado ahora. Encendidos, con luz
+                propia: son el largo del tirón. */}
+            <Path
+              path={stopGeom}
+              color={stopTone}
+              style="stroke"
+              strokeWidth={s.m.stopWidth + 5}
+              strokeCap="round"
+              opacity={0.45}
+            >
+              <BlurMask blur={4} style="normal" />
+            </Path>
+            <Path
+              path={stopGeom}
+              color={stopTone}
+              style="stroke"
+              strokeWidth={s.m.stopWidth + 1.5}
+              strokeCap="round"
+            />
+          </Group>
+          <Path path={crank.wheel}>
+            <RadialGradient
+              c={vec(-l.crank.r * 0.22, -l.crank.r * 0.28)}
+              r={l.crank.r * 0.95}
+              colors={[WOOD.light, WOOD.base, WOOD.dark]}
+            />
+          </Path>
+          <Path path={crank.wheel} color="rgba(0, 0, 0, 0.28)" style="stroke" strokeWidth={1.5} />
+          <Path path={crank.shine} color="rgba(255, 255, 255, 0.3)" />
+          <Group transform={crankT}>
+            <Path path={crank.spoke} color={WOOD.dark} style="stroke" strokeWidth={5} strokeCap="round" />
+          </Group>
+          <Path path={crank.hub} color={WOOD.dark} />
+          <Group transform={knobT}>
+            {/* "Girá acá": el anillo ámbar late con la demostración y se apaga
+                cuando el jugador ya giró. */}
+            <Group opacity={props.hint}>
+              <Path path={crank.knobRing} color={theme.color.warn} style="stroke" strokeWidth={7} opacity={0.4}>
+                <BlurMask blur={4} style="normal" />
+              </Path>
+              <Path path={crank.knobRing} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
             </Group>
+            <Path path={crank.knob}>
+              <RadialGradient
+                c={vec(-2.5, -3)}
+                r={11}
+                colors={[PORCELAIN.light, PORCELAIN.base, PORCELAIN.dark]}
+              />
+            </Path>
+            <Path path={crank.knobShine} color={SHINE} />
           </Group>
         </Group>
       ) : null}
@@ -1886,58 +2517,120 @@ export function TrackScene(props: TrackSceneProps) {
       </Group>
 
       <Group transform={ghostT} opacity={ghostO}>
-        <Path path={ghostDot} color={theme.color.ink} style="stroke" strokeWidth={2} />
+        <Path path={ghostDot} color="rgba(244, 247, 251, 0.18)" />
+        <Path path={ghostDot} color={theme.color.ink} style="stroke" strokeWidth={2.5} />
       </Group>
     </Group>
   );
 }
 
-/** El soporte dibujado: agua, casillas, tarjetas, huecos y bandera. */
+/**
+ * El soporte dibujado: agua, casillas, tarjetas, huecos y bandera.
+ *
+ * Las piedras asoman del agua con volumen; la recta aplanada es un trazo claro y
+ * grueso con un borde oscuro, que se lee sobre cualquier parte del paisaje. Los
+ * numerales llevan el mismo borde oscuro por la misma razón.
+ */
 function RailView({
   geom,
   mark,
   outline,
   flagPulse,
   hint,
+  burst,
 }: {
   readonly geom: RailGeom;
   readonly mark: boolean;
   readonly outline: boolean;
   readonly flagPulse: boolean;
   readonly hint: SharedValue<number>;
+  /** El estallido de la llegada, de 0 a 1; en 1 no pasa nada. */
+  readonly burst: SharedValue<number>;
 }) {
   const haloO = useDerivedValue(() => 0.45 + 0.55 * hint.value);
-  const flagO = useDerivedValue(() => (flagPulse ? 0.5 + 0.5 * hint.value : 1), [flagPulse]);
+  const flagO = useDerivedValue(() => (flagPulse ? 0.55 + 0.45 * hint.value : 1), [flagPulse]);
+  const fx = geom.flagSpot?.x ?? 0;
+  const fy = geom.flagSpot?.y ?? 0;
+  // La bandera salta una vez desde su pie cuando el caminante cae justo ahí: es
+  // la respuesta del lugar al que se llegó.
+  const flagT = useDerivedValue(() => {
+    const k = burst.value < 1 ? (1 - burst.value) * (1 - burst.value) : 0;
+    return [
+      { translateX: fx },
+      { translateY: fy },
+      { scale: 1 + 0.32 * k },
+      { translateX: -fx },
+      { translateY: -fy },
+    ];
+  }, [fx, fy]);
+  const bl = geom.bandLight;
+  const sl = geom.stoneLight;
+  const cl = geom.clothLight;
   return (
     <>
-      <Path
-        path={geom.band}
-        color={mark ? theme.color.inkDim : "#16324a"}
-        style={mark ? "stroke" : "fill"}
-        strokeWidth={2}
-      />
-      <Path
-        path={geom.stones}
-        color={mark ? theme.color.inkDim : "#3a4a5c"}
-        style={mark ? "stroke" : "fill"}
-        strokeWidth={2}
-      />
-      {outline && !mark ? (
-        <Path path={geom.stones} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
-      ) : null}
-      <Path path={geom.cards} color={theme.color.surface} />
-      <Path path={geom.cards} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      {mark ? (
+        <>
+          {/* Primero los dos bordes oscuros y después los dos trazos claros:
+              así la marca cruza la recta sin cortarla. */}
+          <Path path={geom.band} color={UNDER} style="stroke" strokeWidth={8} strokeCap="round" />
+          <Path path={geom.stones} color={UNDER} style="stroke" strokeWidth={8} strokeCap="round" />
+          <Path path={geom.band} color={LINE_INK} style="stroke" strokeWidth={3.5} strokeCap="round" />
+          <Path path={geom.stones} color={LINE_INK} style="stroke" strokeWidth={3.5} strokeCap="round" />
+        </>
+      ) : (
+        <>
+          <Path path={geom.band}>
+            <LinearGradient
+              start={vec(bl.x0, bl.y0)}
+              end={vec(bl.x1, bl.y1)}
+              colors={[WATER.top, WATER.low]}
+            />
+          </Path>
+          <Path path={geom.band} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+          <Path path={geom.stoneShadow} color={SHADOW}>
+            <BlurMask blur={3} style="normal" />
+          </Path>
+          <Path path={geom.stones}>
+            <LinearGradient
+              start={vec(sl.x0, sl.y0)}
+              end={vec(sl.x1, sl.y1)}
+              colors={[STONE.light, STONE.base, STONE.dark]}
+            />
+          </Path>
+          <Path path={geom.stoneShine} color="rgba(255, 255, 255, 0.4)" />
+          {outline ? (
+            <Path path={geom.stones} color="rgba(255, 255, 255, 0.22)" style="stroke" strokeWidth={1.2} />
+          ) : null}
+        </>
+      )}
+      <Path path={geom.cards} color={UNDER} />
+      <Path path={geom.cards} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+      <Path path={geom.numerals} color={UNDER} style="stroke" strokeWidth={3.5} strokeJoin="round" />
       <Path path={geom.numerals} color={theme.color.ink} />
+      <Path path={geom.zeroDot} color={UNDER} style="stroke" strokeWidth={3} />
       <Path path={geom.zeroDot} color={theme.color.ink} />
+      {/* El hueco es un pozo, y late en ámbar: "mirá acá, falta esto". */}
+      <Path path={geom.holes} color={WELL} />
+      <Path path={geom.holes} color={GLASS_LINE} style="stroke" strokeWidth={STROKE} />
       <Group opacity={hint}>
-        <Path path={geom.holes} color={theme.color.accent} style="stroke" strokeWidth={2} />
+        <Path path={geom.holes} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
       </Group>
-      <Path path={geom.holes} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
       <Group opacity={haloO}>
-        <Path path={geom.flagStone} color={theme.color.ok} style="stroke" strokeWidth={2} />
+        <Path path={geom.flagStone} color={theme.color.ok} style="stroke" strokeWidth={7} opacity={0.45}>
+          <BlurMask blur={5} style="normal" />
+        </Path>
+        <Path path={geom.flagStone} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
       </Group>
-      <Group opacity={flagO}>
-        <Path path={geom.flag} color={theme.color.ok} style="stroke" strokeWidth={2} />
+      <Group opacity={flagO} transform={flagT}>
+        <Path path={geom.flagPole} color={UNDER} style="stroke" strokeWidth={5} strokeCap="round" />
+        <Path path={geom.flagPole} color={PORCELAIN.base} style="stroke" strokeWidth={2.5} strokeCap="round" />
+        <Path path={geom.flagCloth}>
+          <LinearGradient
+            start={vec(cl.x0, cl.y0)}
+            end={vec(cl.x1, cl.y1)}
+            colors={[OK_LOOK.light, OK_LOOK.base, OK_LOOK.dark]}
+          />
+        </Path>
       </Group>
     </>
   );
@@ -1957,8 +2650,10 @@ function Walker({
   walk,
   flag,
   visible,
+  burst,
+  sounds = false,
 }: {
-  readonly walker: { body: SkPath; head: SkPath; flag: SkPath };
+  readonly walker: WalkerGeom;
   readonly rail: Rail;
   readonly pos: SharedValue<number>;
   readonly lift: SharedValue<number>;
@@ -1968,20 +2663,48 @@ function Walker({
   readonly walk: readonly number[] | null;
   readonly flag: boolean;
   readonly visible: boolean;
+  /** El estallido de la llegada: el caminante que la causó salta con la bandera. */
+  readonly burst: SharedValue<number>;
+  /** Suena al levantarlo y al apoyarlo. Solo uno por escena: comparten el gesto. */
+  readonly sounds?: boolean;
 }) {
   const ox = rail.origin.x;
   const oy = rail.origin.y;
   const dx = rail.dx;
   const dy = rail.dy;
+  const acostado = dy === 0;
   const guiado = walk !== null && walk.length > 1;
   const steps = useMemo(() => (walk ?? []).slice(), [walk]);
 
-  const transform = useDerivedValue(() => {
+  /**
+   * El rebote al apoyarlo: cuando el dedo lo suelta, baja a su piedra y rebota
+   * una vez. Se detecta en el hilo de la interfaz, del mismo valor que lo levanta.
+   */
+  const land = useSharedValue(0);
+  useAnimatedReaction(
+    () => lift.value > 0.08,
+    (up, was) => {
+      if (was === null || up === was) return;
+      if (up) {
+        if (sounds) runOnJS(play)("lift");
+        return;
+      }
+      land.value = 1;
+      land.value = withSpring(0, theme.spring.settle);
+      if (sounds) runOnJS(play)("drop");
+    },
+    [sounds],
+  );
+
+  /** Dónde pisa, cuánto se despegó del piso y cuánto se hundió. */
+  const place = useDerivedValue(() => {
     if (!guiado) {
-      return [
-        { translateX: ox + dx * pos.value },
-        { translateY: oy + dy * pos.value - 34 * lift.value },
-      ];
+      const p = pos.value;
+      // Entre dos piedras el pie va por el aire: cada diente es un salto de
+      // piedra a piedra, y nunca un deslizamiento por el agua.
+      const f = p - Math.floor(p);
+      const hop = acostado ? Math.sin(f * Math.PI) * HOP * (1 - lift.value) : 0;
+      return { x: ox + dx * p, y: oy + dy * p, up: hop + 34 * lift.value, sink: 0 };
     }
     const t = Math.min(0.9999, Math.max(0, clock.value)) * (steps.length - 1);
     const i = Math.floor(t);
@@ -1994,27 +2717,87 @@ function Walker({
     // Caer entre dos casillas es hundirse: el agua no sostiene a nadie.
     const off = Math.abs(u - Math.round(u));
     const sink = Math.min(1, off * 4) * 11 * (1 - Math.sin(f * Math.PI));
-    return [{ translateX: ox + dx * u }, { translateY: oy + dy * u - hop + sink }];
-  }, [guiado, steps, ox, oy, dx, dy]);
+    return { x: ox + dx * u, y: oy + dy * u, up: hop - sink, sink };
+  }, [guiado, steps, ox, oy, dx, dy, acostado]);
 
-  const flagT = useDerivedValue(() => [{ scaleX: facing.value }]);
+  // Levantado crece un 30 %: "lo tenés vos". Al apoyarlo rebota, y al caer justo
+  // en la bandera salta una vez con ella.
+  const figureT = useDerivedValue(() => {
+    const p = place.value;
+    const b = burst.value < 1 ? (1 - burst.value) * (1 - burst.value) : 0;
+    const k = (1 + 0.3 * lift.value) * (1 + 0.22 * land.value) * (1 + 0.22 * b);
+    return [{ translateX: p.x }, { translateY: p.y - p.up }, { scale: k }];
+  });
+  // La sombra se queda en el piso y se achica cuando el caminante se despega.
+  const shadowT = useDerivedValue(() => {
+    const p = place.value;
+    return [
+      { translateX: p.x },
+      { translateY: p.y },
+      { scale: Math.max(0.45, 1 - Math.max(0, p.up) / 60) },
+    ];
+  });
+  const shadowO = useDerivedValue(
+    () => (visible ? Math.max(0, 1 - place.value.sink / 6) : 0),
+    [visible],
+  );
 
   return (
-    <Group transform={transform} opacity={visible ? 1 : 0}>
-      <Path
-        path={walker.body}
-        color={theme.color.accent}
-        style="stroke"
-        strokeWidth={2.5}
-        strokeCap="round"
-      />
-      <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
+    <Group>
+      <Group transform={shadowT} opacity={shadowO}>
+        <Path path={walker.shadow} color={SHADOW}>
+          <BlurMask blur={2.5} style="normal" />
+        </Path>
+      </Group>
+      <Group transform={figureT} opacity={visible ? 1 : 0}>
+        <WalkerFigure walker={walker} facing={facing} flag={flag} />
+      </Group>
+    </Group>
+  );
+}
+
+/**
+ * El caminante dibujado, con el pie en el origen: piernas, cuerpo y cabeza de
+ * porcelana con la luz arriba a la izquierda. Si lleva bandera, la bandera toma
+ * el equipo del lado hacia el que mira: `accent` hacia adelante, `coral` hacia
+ * atrás. Es lo único del caminante que tiene color, y dice exactamente lo que el
+ * nodo de los negativos enseña: la dirección.
+ */
+function WalkerFigure({
+  walker,
+  facing,
+  flag,
+}: {
+  readonly walker: WalkerGeom;
+  readonly facing: DerivedValue<number>;
+  readonly flag: boolean;
+}) {
+  const flagT = useDerivedValue(() => [{ scaleX: facing.value }]);
+  const haciaAdelante = useDerivedValue(() => (facing.value >= 0 ? 1 : 0));
+  const haciaAtras = useDerivedValue(() => (facing.value < 0 ? 1 : 0));
+  const tones = [PORCELAIN.light, PORCELAIN.base, PORCELAIN.dark];
+  return (
+    <>
+      <Path path={walker.legs} color={PORCELAIN.dark} style="stroke" strokeWidth={4.5} strokeCap="round" />
+      <Path path={walker.torso}>
+        <RadialGradient c={vec(-2.5, -20)} r={14} colors={tones} />
+      </Path>
+      <Path path={walker.arms} color="#c6d0dd" style="stroke" strokeWidth={3.5} strokeCap="round" />
+      <Path path={walker.head}>
+        <RadialGradient c={vec(-2.5, -33)} r={10} colors={tones} />
+      </Path>
+      <Path path={walker.shine} color={SHINE} />
       {flag ? (
         <Group transform={flagT}>
-          <Path path={walker.flag} color={theme.color.warn} />
+          <Group opacity={haciaAdelante}>
+            <Path path={walker.flag} color={TEAM_POS.base} />
+          </Group>
+          <Group opacity={haciaAtras}>
+            <Path path={walker.flag} color={TEAM_NEG.base} />
+          </Group>
         </Group>
       ) : null}
-    </Group>
+    </>
   );
 }
 
@@ -2038,16 +2821,19 @@ function ArrivalRow({
   readonly clock: SharedValue<number>;
   readonly miente: boolean;
   readonly elegida: boolean;
-  readonly walker: { body: SkPath; head: SkPath; flag: SkPath };
+  readonly walker: WalkerGeom;
 }) {
+  // La ficha de llegada es una ficha como las del cajón: la misma cara neutra.
   const chip = useMemo(() => {
-    const p = Skia.Path.Make();
+    const box = Skia.Path.Make();
+    const ink = Skia.Path.Make();
     const s = rail.stones[to];
-    if (!s) return p;
-    p.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - 20, s.y - 76, 40, 40), 8, 8));
-    addGlyphs(p, String(to), s.x, s.y - 56, 20);
-    return p;
+    if (!s) return { box, ink, top: 0 };
+    box.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - 20, s.y - 76, 40, 40), 8, 8));
+    addGlyphs(ink, String(to), s.x, s.y - 56, 20);
+    return { box, ink, top: s.y - 76 };
   }, [rail, to]);
+  const derecho = useSharedValue(1);
 
   // La ficha de la que miente entra antes de que el caminante se mueva; la de la
   // honesta, cuando el viaje ya terminó.
@@ -2074,20 +2860,38 @@ function ArrivalRow({
     return p;
   }, [rail]);
 
+  // La elegida se marca como en los recorridos: ámbar la que miente ("mirá acá"),
+  // menta la que cuenta bien.
+  const marca = miente ? theme.color.warn : theme.color.ok;
+
   return (
     <>
-      <Path path={chip} color={theme.color.warn} style="stroke" strokeWidth={2} opacity={chipO} />
-      <Group transform={transform}>
-        <Path
-          path={walker.body}
-          color={theme.color.accent}
-          style="stroke"
-          strokeWidth={2.5}
-          strokeCap="round"
-        />
-        <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      <Group opacity={chipO}>
+        <Group transform={[{ translateY: 3 }]}>
+          <Path path={chip.box} color={chipTone.edge} />
+        </Group>
+        <Path path={chip.box}>
+          <LinearGradient
+            start={vec(0, chip.top)}
+            end={vec(0, chip.top + 40)}
+            colors={[chipTone.top, chipTone.face, chipTone.low]}
+          />
+        </Path>
+        <Path path={chip.box} color={chipTone.rimTop} style="stroke" strokeWidth={1} />
+        <Path path={chip.ink} color={theme.color.ink} />
       </Group>
-      <Path path={halo} color={theme.color.accent} style="stroke" strokeWidth={3} opacity={dim} />
+      <Group transform={transform}>
+        <Path path={walker.shadow} color={SHADOW}>
+          <BlurMask blur={2.5} style="normal" />
+        </Path>
+        <WalkerFigure walker={walker} facing={derecho} flag={false} />
+      </Group>
+      <Group opacity={dim}>
+        <Path path={halo} color={marca} style="stroke" strokeWidth={9} strokeCap="round" opacity={0.4}>
+          <BlurMask blur={5} style="normal" />
+        </Path>
+        <Path path={halo} color={marca} style="stroke" strokeWidth={4} strokeCap="round" />
+      </Group>
     </>
   );
 }
@@ -2110,7 +2914,7 @@ function DoubleTurn({
   readonly y: number;
   readonly cx: number;
   readonly step: number;
-  readonly walker: { body: SkPath; head: SkPath; flag: SkPath };
+  readonly walker: WalkerGeom;
   readonly clock: SharedValue<number>;
   readonly miente: boolean;
   readonly elegida: boolean;
@@ -2134,7 +2938,7 @@ function DoubleTurn({
 
   // Tres tiempos: gira, gira otra vez, camina. Lo único que separa las dos
   // animaciones es hacia dónde mira el caminante en el tercero.
-  const mira = useDerivedValue(() => {
+  const mira = useDerivedValue((): number => {
     const c = Math.max(0, Math.min(1, clock.value));
     if (c < 0.28) return 1;
     if (c < 0.52) return -1;
@@ -2149,29 +2953,30 @@ function DoubleTurn({
     () => [{ translateX: cx + step * 2.6 * avance.value * mira.value }, { translateY: y }],
     [cx, step, y],
   );
-  const flagT = useDerivedValue(() => [{ scaleX: mira.value }]);
   const halo = useDerivedValue(() => (elegida ? 1 : 0), [elegida]);
   const o = useDerivedValue(() => (visible ? 1 : 0), [visible]);
+  // Como en las otras comparaciones: ámbar la que miente, menta la honesta.
+  const marca = miente ? theme.color.warn : theme.color.ok;
 
   return (
     <Group opacity={o}>
-      <Path path={line} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
+      <Path path={line} color={UNDER} style="stroke" strokeWidth={8} strokeCap="round" />
+      <Path path={line} color={LINE_INK} style="stroke" strokeWidth={3.5} strokeCap="round" />
+      <Path path={zeroDot} color={UNDER} style="stroke" strokeWidth={3} />
       <Path path={zeroDot} color={theme.color.ink} />
       <Group transform={transform}>
-        <Path
-          path={walker.body}
-          color={theme.color.accent}
-          style="stroke"
-          strokeWidth={2.5}
-          strokeCap="round"
-        />
-        <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
-        <Group transform={flagT}>
-          <Path path={walker.flag} color={theme.color.warn} />
-        </Group>
+        <Path path={walker.shadow} color={SHADOW}>
+          <BlurMask blur={2.5} style="normal" />
+        </Path>
+        {/* La bandera toma el equipo del lado al que mira: es lo único que
+            cambia entre las dos animaciones, y ahora además se ve en el color. */}
+        <WalkerFigure walker={walker} facing={mira} flag />
       </Group>
       <Group opacity={halo}>
-        <Path path={line} color={theme.color.accent} style="stroke" strokeWidth={3} />
+        <Path path={line} color={marca} style="stroke" strokeWidth={9} strokeCap="round" opacity={0.35}>
+          <BlurMask blur={5} style="normal" />
+        </Path>
+        <Path path={line} color={marca} style="stroke" strokeWidth={3} strokeCap="round" />
       </Group>
     </Group>
   );
@@ -2202,9 +3007,10 @@ function FloorMarks({
     return p;
   }, [l, floors]);
   const pulse = useDerivedValue(() => 0.5 + 0.5 * hint.value);
+  // Late en ámbar: "mirá acá, de estos pisos se habla".
   return (
     <Group opacity={pulse}>
-      <Path path={path} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      <Path path={path} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeJoin="round" />
     </Group>
   );
 }
@@ -2224,17 +3030,76 @@ function ChipItem({
   const dx = view?.dx ?? zero;
   const dy = view?.dy ?? zero;
   const alive = view?.alive ?? zero;
+  const carried = useCarried(dx, dy, alive);
   const transform = useDerivedValue(
-    () => [{ translateX: geom.spot.x + dx.value }, { translateY: geom.spot.y + dy.value }],
+    () => [
+      { translateX: geom.spot.x + dx.value },
+      { translateY: geom.spot.y + dy.value },
+      { scale: carried.value },
+    ],
     [geom.spot],
   );
+  // La misma cara que `chipFace` y `ChipBodies`: canto oscuro abajo, luz arriba,
+  // borde de vidrio. Una ficha es algo que se levanta, no un contorno.
+  const b = useMemo(() => geom.box.getBounds(), [geom.box]);
   return (
     <Group transform={transform} opacity={alive}>
-      <Path path={geom.box} color={theme.color.surfaceHigh} />
-      <Path path={geom.box} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      <Group transform={[{ translateY: 6 }]}>
+        <Path path={geom.box} color={SHADOW}>
+          <BlurMask blur={6} style="normal" />
+        </Path>
+      </Group>
+      <Group transform={[{ translateY: 3 }]}>
+        <Path path={geom.box} color={chipTone.edge} />
+      </Group>
+      <Path path={geom.box}>
+        <LinearGradient
+          start={vec(0, b.y)}
+          end={vec(0, b.y + Math.max(1, b.height))}
+          colors={[chipTone.top, chipTone.face, chipTone.low]}
+        />
+      </Path>
+      <Path path={geom.box} color={chipTone.rimTop} style="stroke" strokeWidth={1} />
       <Path path={geom.ink} color={theme.color.ink} />
     </Group>
   );
+}
+
+/**
+ * Lo que el dedo lleva crece un 30 %, y al volver a su lugar rebota una vez. La
+ * escena no sabe cuándo se agarró algo, pero sabe cuánto se alejó de su casa: se
+ * lee del mismo desplazamiento que la mueve, en el hilo de la interfaz.
+ */
+function useCarried(
+  dx: SharedValue<number>,
+  dy: SharedValue<number>,
+  alive: SharedValue<number>,
+): DerivedValue<number> {
+  const pop = useSharedValue(0);
+  const lejos = useSharedValue(0);
+  useAnimatedReaction(
+    () => Math.hypot(dx.value, dy.value),
+    (d) => {
+      if (d > 16) {
+        // Aire, una vez por levantada. Lo que ya se usó no suena.
+        if (lejos.value === 0 && alive.value > 0.5) runOnJS(play)("lift");
+        lejos.value = 1;
+        return;
+      }
+      if (d < 1 && lejos.value === 1) {
+        lejos.value = 0;
+        pop.value = 1;
+        pop.value = withSpring(0, theme.spring.settle);
+        if (alive.value > 0.5) runOnJS(play)("drop");
+      }
+    },
+  );
+  return useDerivedValue(() => {
+    const d = Math.hypot(dx.value, dy.value);
+    // Un temblor de pocos píxeles no es levantar: no la agranda.
+    const k = Math.max(0, Math.min(1, (d - 10) / 14));
+    return (1 + 0.3 * k) * (1 + 0.18 * pop.value);
+  });
 }
 
 /**
@@ -2249,7 +3114,7 @@ function TokenItem({
   view,
   cancelled,
 }: {
-  readonly path: SkPath;
+  readonly path: TokenGeom;
   readonly spot: Spot;
   readonly value: number;
   readonly view: DragView | undefined;
@@ -2259,22 +3124,47 @@ function TokenItem({
   const dx = view?.dx ?? zero;
   const dy = view?.dy ?? zero;
   const alive = view?.alive ?? zero;
+  const carried = useCarried(dx, dy, alive);
   const transform = useDerivedValue(
-    () => [{ translateX: spot.x + dx.value }, { translateY: spot.y + dy.value }],
+    () => [
+      { translateX: spot.x + dx.value },
+      { translateY: spot.y + dy.value },
+      { scale: carried.value },
+    ],
     [spot],
   );
   const o = useDerivedValue(
     () => (cancelled ? 0.18 * alive.value : alive.value),
     [cancelled],
   );
+  const size = path.size;
+  // La moneda es del equipo positivo y el vale del negativo. Ninguno de los dos
+  // es rojo: lo negativo no es un error, es el otro lado.
   return (
     <Group transform={transform} opacity={o}>
-      <Path
-        path={path}
-        color={value >= 0 ? theme.color.accent : theme.color.warn}
-        style={value >= 0 ? "fill" : "stroke"}
-        strokeWidth={2}
-      />
+      <Group transform={[{ translateY: 4 }]}>
+        <Path path={path.body} color={SHADOW}>
+          <BlurMask blur={4} style="normal" />
+        </Path>
+      </Group>
+      {value >= 0 ? (
+        <>
+          <Path path={path.body}>
+            <RadialGradient
+              c={vec(-size * 0.35, -size * 0.4)}
+              r={size * 1.7}
+              colors={[TEAM_POS.light, TEAM_POS.base, TEAM_POS.dark]}
+            />
+          </Path>
+          <Path path={path.shine} color={SHINE} />
+        </>
+      ) : (
+        <>
+          <Path path={path.body} color={TEAM_NEG.base} opacity={0.22} />
+          <Path path={path.body} color={TEAM_NEG.base} style="stroke" strokeWidth={3.5} strokeJoin="round" />
+          <Path path={path.shine} color={TEAM_NEG.light} style="stroke" strokeWidth={1} opacity={0.7} />
+        </>
+      )}
     </Group>
   );
 }

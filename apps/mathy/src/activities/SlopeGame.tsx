@@ -907,10 +907,15 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SlopeGameProps) {
             />
           </Group>
 
-          <Path path={sliders.via} color={theme.color.line} style="stroke" strokeWidth={3} />
-          <Path path={sliders.perilla} color={theme.color.accent} />
+          {/* Los deslizadores: un riel hundido que se lee sobre cualquier
+              paisaje, y la perilla es una ficha que se agarra, con su canto. */}
+          <Path path={sliders.via} color="rgba(9, 17, 29, 0.9)" style="stroke" strokeWidth={9} strokeCap="round" />
+          <Path path={sliders.via} color={theme.color.inkDim} style="stroke" strokeWidth={3} strokeCap="round" opacity={0.75} />
+          <ChipBodies path={sliders.perilla} />
           <ChipBodies path={chipGeom.cuerpo} />
           <Path path={chipGeom.texto} color={theme.color.ink} />
+          {/* Lo que se pregunta cae sobre el paisaje: un borde oscuro lo despega. */}
+          <Path path={askedGeom} color="rgba(9, 17, 29, 0.9)" style="stroke" strokeWidth={3} strokeJoin="round" />
           <Path path={askedGeom} color={theme.color.ink} />
         </Canvas>
 

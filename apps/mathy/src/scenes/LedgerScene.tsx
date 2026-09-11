@@ -21,43 +21,129 @@
  *
  * 1. Modo retained. El árbol se arma con el máximo de objetos que el nivel
  *    admite y no cambia: lo que todavía no está en juego está montado con
- *    opacidad cero.
+ *    opacidad cero, incluidas las chispas de cada fila.
  * 2. Lo que se repite y no se anima de a uno va en un solo `SkPath`: los
- *    renglones del libro, los conteos, las aristas del árbol y el mostrador son
- *    un trazo cada uno. Solo los objetos, que se mueven sueltos, tienen
- *    componente.
+ *    renglones del libro, los conteos, las aristas del árbol y los objetos de
+ *    una fila son un trazo cada uno. El volumen se le da al trazo entero —un
+ *    degradado, un trazo de brillos, uno de sombras—, no a cada objeto. Solo
+ *    los objetos del mostrador, que se mueven sueltos, tienen componente.
  * 3. Nada vuelve al hilo de JavaScript por cuadro: la posición de un objeto se
  *    deriva de su destino más el desplazamiento del dedo, los dos en valores
  *    compartidos. El destino cambia cuando el jugador suelta, no por cuadro.
  *
+ * El color tiene tres trabajos. Cada clase de objeto tiene el suyo, porque
+ * separar clases es el nivel: el cajón cerrado es siempre del azul de equipo
+ * de la incógnita, y las frutas tienen el color de lo que son. La menta dice
+ * "coincide" (la fila entró, el renglón quedó cierto) y el ámbar "mirá acá" (la
+ * fila devolvió algo, el renglón se inclinó, las marcas no son la misma). Lo
+ * que espera un gesto —la fila vacía, la hoja sin cajón, el tramo sin ficha—
+ * es un hueco punteado blanco que late: invita, no califica.
+ *
  * Nada de texto: los conteos y las letras son contornos del atlas de glifos.
  */
 
-import { useEffect, useMemo, useRef } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { BlurMask, Group, LinearGradient, Path, RadialGradient, Skia, vec, type SkPath } from "@shopify/react-native-skia";
 import {
+  runOnJS,
+  useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
 import { theme } from "../ui/theme.ts";
+import { chipTone } from "../ui/Kit.tsx";
+import { ChipBodies } from "../ui/ChipBodies.tsx";
+import { play, type Sfx } from "../ui/sound.ts";
+import {
+  BOX_LOOK,
+  EventSparks,
+  REVEAL_LOOK,
+  STEEL_LOOK,
+  WEIGHT_LOOK,
+  type VolumeLook,
+} from "./BalanceScene.tsx";
 
-const STROKE = 1.5;
+/** Cuánto tarda un objeto soltado en llegar a su fila: ahí rebota y ahí salen las chispas. */
+const LANDING_MS = 170;
+/** Cuánto duran las chispas y el halo de un evento. */
+const BURST_MS = 720;
 
 /**
- * El color de una clase. El cajón cerrado es siempre el mismo, porque es la
- * incógnita y tiene que reconocerse de un vistazo en cualquier nivel; las
- * clases abiertas se reparten los otros tres.
+ * La escala de la fila que se llena: cada objeto que entra suena un escalón más
+ * arriba, como el agua que sube en una botella. Pentatónica, para que cualquier
+ * tramo suene a una subida y no a un error.
  */
-const KIND_COLORS = [theme.color.inkDim, theme.color.ok, theme.color.ink] as const;
+const FILL = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24] as const;
+const fillPitch = (i: number): number => FILL[Math.max(0, Math.min(i, FILL.length - 1))] as number;
 
+/**
+ * Suena un efecto cuando pasa lo que lo causa: con `delay`, cuando el objeto
+ * soltado termina de viajar. Se llama desde JavaScript o, desde un worklet, con
+ * `runOnJS`. Nada de acá puede romper el juego: sin audio, no suena.
+ */
+function sfx(name: Sfx, pitch = 0, delay = 0): void {
+  if (delay <= 0) play(name, { pitch });
+  else setTimeout(() => play(name, { pitch }), delay);
+}
+
+// --- Materiales --------------------------------------------------------------
+
+/**
+ * El color de lo que es. Las frutas lo conservan porque qué se cuenta es parte
+ * del nivel: una manzana tiene que verse manzana en cualquier fila. No hay
+ * frutas verdes ni amarillas: el verde es "coincide" y el amarillo es "lo
+ * aprendido", y una pera verde competiría con los dos. La pera es crema.
+ */
+const APPLE: VolumeLook = { light: "#ffb8c0", base: "#ff5f73", dark: "#b8293f" };
+const GRAPE: VolumeLook = { light: "#dccfff", base: "#9b7dff", dark: "#5438c4" };
+const PEAR: VolumeLook = { light: "#fff7e3", base: "#e3d4a8", dark: "#94845a" };
+
+const SHAPE_LOOK: Readonly<Record<string, VolumeLook>> = {
+  apple: APPLE,
+  grape: GRAPE,
+  pear: PEAR,
+  // La baldosa unidad es una pesa de piso: neutra, como las de la balanza.
+  tile_unit: WEIGHT_LOOK,
+};
+
+/** Las clases abiertas que no son una fruta conocida se reparten estos tres. */
+const OPEN_LOOKS: readonly VolumeLook[] = [APPLE, GRAPE, PEAR];
+
+/** El ámbar con volumen, para la barra de un renglón que dejó de ser cierto. */
+const WARN_LOOK: VolumeLook = { light: "#ffe2ad", base: theme.color.warn, dark: "#c47a10" };
+
+/** La madera de los cofres del árbol: la misma de los cuencos del nodo 1. */
+const WOOD: VolumeLook = { light: "#d9965a", base: "#a8652f", dark: "#5e3417" };
+
+const SHINE = "rgba(255, 255, 255, 0.5)";
+const SHADOW = "rgba(0, 0, 0, 0.28)";
+const STEM = "#6b4423";
+/** Las marcas de las tapas: tinta oscura sobre el azul, que se lee sin forzar. */
+const MARK_INK = "rgba(6, 24, 44, 0.85)";
+/** El hueco que espera un gesto. */
+const SLOT_LINE = "rgba(255, 255, 255, 0.6)";
+
+/**
+ * El volumen de una clase. El cajón cerrado es siempre el mismo, porque es la
+ * incógnita y tiene que reconocerse de un vistazo en cualquier nivel; es también
+ * la caja de la balanza, y por eso comparte su material.
+ */
+export const lookOfKind = (kind: LedgerKind | undefined, index: number): VolumeLook => {
+  if (kind?.closed === true) return BOX_LOOK;
+  const propio = kind ? SHAPE_LOOK[kind.shape] : undefined;
+  return propio ?? (OPEN_LOOKS[Math.abs(index) % OPEN_LOOKS.length] as VolumeLook);
+};
+
+/** El color plano de una clase: el cuerpo de su volumen. */
 export const colorOfKind = (kind: LedgerKind | undefined, index: number): string =>
-  kind?.closed === true
-    ? theme.color.accent
-    : ((KIND_COLORS[index % KIND_COLORS.length] ?? theme.color.inkDim) as string);
+  lookOfKind(kind, index).base;
 
 // --- Lo que la escena necesita saber -----------------------------------------
 
@@ -396,10 +482,11 @@ function addGlyphs(target: SkPath, text: string, cx: number, cy: number, size: n
 // --- Formas ------------------------------------------------------------------
 
 /**
- * La piel del objeto. Un solo trazo por objeto: el presupuesto manda. Las tres
- * primeras son fruta, `crate` es el cajón cerrado y las últimas son las figuras
- * inventadas del último nivel, que no se parecen a nada que el jugador conozca
- * y por eso solo se pueden agrupar por identidad.
+ * El cuerpo del objeto, para rellenar con su volumen. Las tres primeras son
+ * fruta, `crate` es el cajón cerrado y las últimas son las figuras inventadas
+ * del último nivel, que no se parecen a nada que el jugador conozca y por eso
+ * solo se pueden agrupar por identidad. Los detalles que no son cuerpo (el
+ * tallo, la tapa, la marca) van en otros trazos, porque llevan otro color.
  */
 function shapePath(shape: string, r: number): SkPath {
   const p = Skia.Path.Make();
@@ -422,8 +509,6 @@ function shapePath(shape: string, r: number): SkPath {
   }
   if (shape === "crate") {
     p.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 1.1, -r * 0.95, r * 2.2, r * 1.9), 3, 3));
-    p.moveTo(-r * 1.1, -r * 0.45);
-    p.lineTo(r * 1.1, -r * 0.45);
     return p;
   }
   if (shape === "pear") {
@@ -445,8 +530,10 @@ function shapePath(shape: string, r: number): SkPath {
     return p;
   }
   if (shape === "ring") {
-    p.addCircle(0, 0, r);
-    p.addCircle(0, 0, r * 0.45);
+    // El agujero va en sentido contrario, así el relleno lo respeta: con los
+    // dos círculos en el mismo sentido, el anillo se rellenaba como un disco.
+    p.addOval(Skia.XYWHRect(-r, -r, r * 2, r * 2));
+    p.addOval(Skia.XYWHRect(-r * 0.45, -r * 0.45, r * 0.9, r * 0.9), true);
     return p;
   }
   if (shape === "star") {
@@ -462,9 +549,37 @@ function shapePath(shape: string, r: number): SkPath {
   }
   // La manzana, que es la que abre el nodo.
   p.addCircle(0, r * 0.1, r * 0.92);
-  p.addRRect(
-    Skia.RRectXY(Skia.XYWHRect(-r * 0.1, -r * 1.4, r * 0.2, r * 0.6), r * 0.1, r * 0.1),
-  );
+  return p;
+}
+
+/** El brillo arriba a la izquierda, puesto sobre el cuerpo de cada forma. */
+function shinePath(shape: string, r: number): SkPath {
+  const p = Skia.Path.Make();
+  const oval = (x: number, y: number, w: number, h: number): void => {
+    p.addOval(Skia.XYWHRect(x * r, y * r, w * r, h * r));
+  };
+  const tira = (x: number, y: number, w: number, h: number): void => {
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(x * r, y * r, w * r, h * r), 1, 1));
+  };
+  if (shape === "tile_unit") tira(-0.45, -0.48, 0.6, 0.14);
+  else if (shape === "tile_strip") tira(-0.28, -1.15, 0.14, 1.3);
+  else if (shape === "tile_square") tira(-0.95, -0.95, 1.2, 0.16);
+  else if (shape === "crate") tira(-0.92, -0.32, 1.1, 0.16);
+  else if (shape === "wedge") oval(-0.32, -0.25, 0.3, 0.22);
+  else if (shape === "ring") oval(-0.78, -0.62, 0.36, 0.22);
+  else if (shape === "star") oval(-0.28, -0.4, 0.3, 0.2);
+  else if (shape === "grape") oval(-0.3, -0.78, 0.3, 0.2);
+  else if (shape === "pear") oval(-0.36, -0.82, 0.32, 0.22);
+  else oval(-0.62, -0.5, 0.5, 0.32);
+  return p;
+}
+
+/** El tallo de la manzana, en su madera. Las demás formas no tienen. */
+function stemPath(shape: string, r: number): SkPath {
+  const p = Skia.Path.Make();
+  if (shape === "apple") {
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 0.1, -r * 1.4, r * 0.2, r * 0.6), r * 0.1, r * 0.1));
+  }
   return p;
 }
 
@@ -493,6 +608,23 @@ function markPath(mark: number, r: number): SkPath {
   return p;
 }
 
+/** Lo que se traza en tinta sobre el cuerpo: la línea de la tapa del cajón y su marca. */
+function detailPath(kind: LedgerKind, r: number): SkPath {
+  const p = Skia.Path.Make();
+  if (kind.shape === "crate") {
+    p.moveTo(-r * 1.1, -r * 0.45);
+    p.lineTo(r * 1.1, -r * 0.45);
+  }
+  // La marca va en cada tapa y no solo en la cabecera: lo que hace que dos
+  // cajones sean el mismo objeto es la marca, y tiene que verse.
+  if (kind.closed && kind.mark >= 0) {
+    const m = markPath(kind.mark, r);
+    m.transform([1, 0, 0, 0, 1, r * 0.25, 0, 0, 1]);
+    p.addPath(m);
+  }
+  return p;
+}
+
 /** Un rectángulo de borde punteado, dibujado a mano: la caja de largo desconocido. */
 function dashedRect(target: SkPath, x: number, y: number, w: number, h: number, dash: number): void {
   const lado = (x0: number, y0: number, x1: number, y1: number): void => {
@@ -509,6 +641,78 @@ function dashedRect(target: SkPath, x: number, y: number, w: number, h: number, 
   lado(x + w, y, x + w, y + h);
   lado(x + w, y + h, x, y + h);
   lado(x, y + h, x, y);
+}
+
+/**
+ * Las partes con que se dibuja un grupo de objetos de una misma clase, cada una
+ * en un solo trazo: el cuerpo lleva el degradado de la clase, y el resto (el
+ * brillo, la tinta de las tapas, el tallo, la sombra en el piso) va aparte
+ * porque lleva otro color. `veil` y `dash` son el segmento de largo desconocido
+ * de la barra: un velo del color de la clase con el borde punteado.
+ */
+interface ObjParts {
+  readonly body: SkPath;
+  readonly shine: SkPath;
+  readonly detail: SkPath;
+  readonly stem: SkPath;
+  readonly shadow: SkPath;
+  readonly veil: SkPath;
+  readonly dash: SkPath;
+}
+
+const emptyParts = (): ObjParts => ({
+  body: Skia.Path.Make(),
+  shine: Skia.Path.Make(),
+  detail: Skia.Path.Make(),
+  stem: Skia.Path.Make(),
+  shadow: Skia.Path.Make(),
+  veil: Skia.Path.Make(),
+  dash: Skia.Path.Make(),
+});
+
+/** Agrega un objeto entero, centrado en `(cx, cy)`, a las partes de su grupo. */
+function addObject(parts: ObjParts, kind: LedgerKind, r: number, cx: number, cy: number): void {
+  const m = [1, 0, cx, 0, 1, cy, 0, 0, 1];
+  const poner = (target: SkPath, src: SkPath): void => {
+    src.transform(m);
+    target.addPath(src);
+  };
+  poner(parts.body, shapePath(kind.shape, r));
+  poner(parts.shine, shinePath(kind.shape, r));
+  poner(parts.stem, stemPath(kind.shape, r));
+  poner(parts.detail, detailPath(kind, r));
+  parts.shadow.addOval(Skia.XYWHRect(cx - r * 0.8, cy + r * 0.84, r * 1.6, r * 0.34));
+}
+
+/**
+ * Un grupo de objetos con volumen: sombra, cuerpo con el degradado de su clase
+ * (luz arriba), tallo, brillo y la tinta de las tapas. Siete dibujos, sean dos
+ * objetos o veinte.
+ */
+function ObjectBodies({
+  parts,
+  look,
+  y0,
+  y1,
+}: {
+  readonly parts: ObjParts;
+  readonly look: VolumeLook;
+  readonly y0: number;
+  readonly y1: number;
+}) {
+  return (
+    <>
+      <Path path={parts.shadow} color={SHADOW} />
+      <Path path={parts.veil} color={look.base} opacity={0.2} />
+      <Path path={parts.body}>
+        <LinearGradient start={vec(0, y0)} end={vec(0, Math.max(y0 + 1, y1))} colors={[look.light, look.base, look.dark]} />
+      </Path>
+      <Path path={parts.stem} color={STEM} />
+      <Path path={parts.shine} color={SHINE} />
+      <Path path={parts.detail} color={MARK_INK} style="stroke" strokeWidth={1.8} strokeCap="round" strokeJoin="round" />
+      <Path path={parts.dash} color={look.base} style="stroke" strokeWidth={2} strokeCap="round" />
+    </>
+  );
 }
 
 /**
@@ -539,11 +743,36 @@ function bookPath(l: LedgerLayout, rows: number): SkPath {
   return p;
 }
 
-/** El mostrador donde esperan los objetos sueltos. */
+/**
+ * La hoja del libro: vidrio oscuro debajo de los renglones, para que los
+ * conteos y las letras se lean igual sobre cualquier parte del paisaje. Deja
+ * lugar a la izquierda para la cabecera de cada fila, o para la llave.
+ */
+function sheetPath(l: LedgerLayout, rows: number, conCabecera: boolean): SkPath {
+  const p = Skia.Path.Make();
+  const primera = l.rows[0];
+  const ultima = l.rows[Math.max(0, rows - 1)];
+  if (!primera || !ultima || rows <= 0) return p;
+  const margen = conCabecera ? 46 : 26;
+  p.addRRect(
+    Skia.RRectXY(
+      Skia.XYWHRect(
+        primera.x - margen,
+        primera.y - 8,
+        primera.w + margen + 8,
+        ultima.y + ultima.h - primera.y + 16,
+      ),
+      16,
+      16,
+    ),
+  );
+  return p;
+}
+
+/** El mostrador donde esperan los objetos sueltos: una bandeja de vidrio. */
 function trayPath(l: LedgerLayout): SkPath {
   const p = Skia.Path.Make();
-  p.moveTo(l.tray.x, l.tray.y + l.tray.h);
-  p.lineTo(l.tray.x + l.tray.w, l.tray.y + l.tray.h);
+  p.addRRect(Skia.RRectXY(Skia.XYWHRect(l.tray.x, l.tray.y, l.tray.w, l.tray.h), 20, 20));
   return p;
 }
 
@@ -597,7 +826,12 @@ export interface LedgerSceneProps {
   readonly places: readonly LedgerPlace[];
   /** Sube de a uno por ronda: le dice a la escena que no interpole el salto. */
   readonly round: number;
-  /** El objeto que el jugador acaba de soltar: va a su destino sin interpolar. */
+  /**
+   * El objeto que el jugador acaba de soltar. La escena ya no lo necesita para
+   * que no viaje desde el mostrador —el soltar se detecta en el hilo de
+   * animación, donde el dedo lo dejó—, pero queda en la forma para no romper a
+   * quien lo pasa.
+   */
   readonly snap: number;
   /** Índice del objeto que el dedo lleva, o -1. */
   readonly dragIdx: SharedValue<number>;
@@ -614,7 +848,7 @@ export interface LedgerSceneProps {
   readonly replay: SharedValue<number>;
   /** Las dos filas que la repetición junta, o -1. */
   readonly replayRows: readonly [number, number];
-  /** La fila que devolvió algo recién, para el rebote. O -1. */
+  /** La fila que devolvió algo recién. O -1. */
   readonly bounced: number;
   readonly appear: SharedValue<number>;
 }
@@ -622,12 +856,31 @@ export interface LedgerSceneProps {
 export function LedgerScene(props: LedgerSceneProps) {
   const { config, layout: l } = props;
   const book = useMemo(() => bookPath(l, config.rows), [l, config.rows]);
+  const sheet = useMemo(
+    () => sheetPath(l, config.rows, !config.segments),
+    [l, config.rows, config.segments],
+  );
   const tray = useMemo(() => trayPath(l), [l]);
   const hand = useMemo(handPath, []);
   const brace = useMemo(
     () => (config.brace ? bracePath(l, config.rows) : Skia.Path.Make()),
     [config.brace, config.rows, l],
   );
+
+  // La ficha que entra bajo su fruta hace clic una vez, aunque su valor aparezca
+  // en todas las filas donde está esa fruta: se cuentan las frutas que ya tienen
+  // valor en el cartel entero, no las fichas de cada renglón.
+  const conocidas = useMemo(() => {
+    const s = new Set<number>();
+    for (const fila of config.segments ?? []) for (const seg of fila) if (seg.value !== null) s.add(seg.kind);
+    return s.size;
+  }, [config.segments]);
+  const vistas = useRef({ conocidas, round: props.round });
+  useEffect(() => {
+    const antes = vistas.current;
+    vistas.current = { conocidas, round: props.round };
+    if (antes.round === props.round && conocidas > antes.conocidas) sfx("fit");
+  }, [conocidas, props.round]);
 
   const demoO = useDerivedValue(() => props.demo.value * (1 - Math.min(1, props.replay.value)));
   const demoT = useDerivedValue(() => {
@@ -647,15 +900,37 @@ export function LedgerScene(props: LedgerSceneProps) {
 
   return (
     <Group opacity={props.appear}>
-      <Path path={book} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+      {/* La hoja de vidrio oscuro y sus renglones. */}
+      <Path path={sheet} color="rgba(9, 17, 29, 0.62)" />
+      <Path path={sheet} color="rgba(255, 255, 255, 0.12)" style="stroke" strokeWidth={1} />
+      <Path path={book} color="rgba(255, 255, 255, 0.10)" style="stroke" strokeWidth={1} />
       {config.counter === false ? null : (
-        <Path path={tray} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+        <>
+          <Path path={tray} color="rgba(255, 255, 255, 0.05)" />
+          <Path path={tray} color="rgba(255, 255, 255, 0.12)" style="stroke" strokeWidth={1} />
+        </>
       )}
-      <Path path={brace} color={theme.color.accent} style="stroke" strokeWidth={2} strokeCap="round" />
+      {/* La llave es notación, no equipo: tinta, como el resto de los signos. */}
+      <Path
+        path={brace}
+        color={theme.color.ink}
+        style="stroke"
+        strokeWidth={2.5}
+        strokeCap="round"
+        strokeJoin="round"
+      />
 
       {l.rows.map((box, i) =>
         config.segments ? (
-          <SegmentRow key={`row${i}`} index={i} box={box} layout={l} config={config} pulse={props.pulse} />
+          <SegmentRow
+            key={`row${i}`}
+            index={i}
+            box={box}
+            layout={l}
+            config={config}
+            round={props.round}
+            pulse={props.pulse}
+          />
         ) : (
           <RowView
             key={`row${i}`}
@@ -665,6 +940,7 @@ export function LedgerScene(props: LedgerSceneProps) {
             config={config}
             owner={config.owner[i] ?? -1}
             count={config.counts[i] ?? 0}
+            round={props.round}
             bounced={props.bounced === i}
             pulse={props.pulse}
             replay={props.replay}
@@ -674,7 +950,7 @@ export function LedgerScene(props: LedgerSceneProps) {
       )}
 
       {config.tree.length > 0 ? (
-        <TreeView config={config} layout={l} pulse={props.pulse} />
+        <TreeView config={config} layout={l} round={props.round} pulse={props.pulse} />
       ) : null}
 
       {props.places.map((place, i) => (
@@ -687,7 +963,6 @@ export function LedgerScene(props: LedgerSceneProps) {
           skin={config.skin}
           place={place}
           round={props.round}
-          instant={props.snap === i}
           dragIdx={props.dragIdx}
           dragX={props.dragX}
           dragY={props.dragY}
@@ -695,7 +970,8 @@ export function LedgerScene(props: LedgerSceneProps) {
       ))}
 
       <Group opacity={demoO} transform={demoT}>
-        <Path path={hand} color={theme.color.ink} style="stroke" strokeWidth={2} />
+        <Path path={hand} color="rgba(244, 247, 251, 0.12)" />
+        <Path path={hand} color={theme.color.ink} style="stroke" strokeWidth={2.5} />
       </Group>
     </Group>
   );
@@ -708,7 +984,9 @@ export function LedgerScene(props: LedgerSceneProps) {
  * `symbolic` es la ficha con el coeficiente adelante.
  *
  * Los objetos que ya están en la fila no son componentes: los dibuja la fila en
- * un solo trazo. Los que se mueven son los del mostrador, y esos sí lo son.
+ * un solo trazo. Los que llegaron recién van en un segundo trazo, que aparece
+ * cuando el objeto soltado termina de viajar y rebota una vez: es el momento en
+ * que la fila lo aceptó, y por eso ahí salen las chispas.
  */
 function RowView({
   index,
@@ -717,6 +995,7 @@ function RowView({
   config,
   owner,
   count,
+  round,
   bounced,
   pulse,
   replay,
@@ -728,6 +1007,7 @@ function RowView({
   readonly config: LedgerConfig;
   readonly owner: number;
   readonly count: number;
+  readonly round: number;
   readonly bounced: boolean;
   readonly pulse: SharedValue<number>;
   readonly replay: SharedValue<number>;
@@ -735,59 +1015,79 @@ function RowView({
 }) {
   const kind = owner >= 0 ? config.kinds[owner] : undefined;
   const visible = index < config.rows;
+  const look = lookOfKind(kind, owner);
+  const cy = box.y + box.h / 2;
+  const objetos = config.skin === "objects";
+  const barH = Math.min(16, box.h * 0.5);
+  const x0 = box.x + frente(config.skin, kind);
 
-  const cuerpo = useMemo(() => {
-    const p = Skia.Path.Make();
-    if (!kind) return p;
-    const cy = box.y + box.h / 2;
-    const x0 = box.x + frente(config.skin, kind);
-    if (config.skin === "objects") {
-      // Los objetos anotados, uno por casilla. La fila los dibuja de una sola
-      // vez: no se animan de a uno, así que no son componentes.
-      for (let i = 0; i < count; i++) {
-        const cx = x0 + (i + 0.5) * l.slotW;
-        const s = shapePath(kind.shape, l.unit);
-        s.transform([1, 0, cx, 0, 1, cy, 0, 0, 1]);
-        p.addPath(s);
-        // La marca va en cada tapa y no solo en la cabecera: lo que hace que
-        // dos cajones sean el mismo objeto es la marca, y tiene que verse.
-        if (kind.closed && kind.mark >= 0) {
-          const m = markPath(kind.mark, l.unit);
-          m.transform([1, 0, cx, 0, 1, cy + l.unit * 0.25, 0, 0, 1]);
-          p.addPath(m);
+  /**
+   * Desde qué objeto la fila tiene recién llegados. Es estado y no una
+   * referencia: un render que llega por otra razón a mitad del rebote tiene
+   * que partir la fila igual, o el recién llegado aparecería de golpe. Mientras
+   * el efecto no lo anotó, lo que pasa del último conteo visto es nuevo.
+   */
+  const [llegada, setLlegada] = useState({ desde: count, hasta: count, round });
+  const misma = llegada.round === round;
+  const desde = !misma
+    ? count
+    : llegada.hasta === count
+      ? Math.min(llegada.desde, count)
+      : count > llegada.hasta
+        ? llegada.hasta
+        : count;
+
+  const partes = useMemo(() => {
+    const viejos = emptyParts();
+    const nuevos = emptyParts();
+    if (!kind) return { viejos, nuevos };
+    for (let i = 0; i < count; i++) {
+      const target = i < desde ? viejos : nuevos;
+      if (objetos) {
+        // Los objetos anotados, uno por casilla. La fila los dibuja de una sola
+        // vez: no se animan de a uno, así que no son componentes.
+        addObject(target, kind, l.unit, x0 + (i + 0.5) * l.slotW, cy);
+        continue;
+      }
+      // La barra segmentada: un segmento por objeto, y el cajón con el borde
+      // punteado y el largo sin fijar.
+      const x = x0 + i * (l.slotW - 3);
+      const w = l.slotW - 7;
+      const rect = Skia.RRectXY(Skia.XYWHRect(x, cy - barH / 2, w, barH), 3, 3);
+      if (kind.closed) {
+        target.veil.addRRect(rect);
+        dashedRect(target.dash, x, cy - barH / 2, w, barH, 3.4);
+      } else {
+        target.body.addRRect(rect);
+        if (barH >= 6) {
+          target.shine.addRRect(
+            Skia.RRectXY(Skia.XYWHRect(x + 2, cy - barH / 2 + 1.5, w * 0.55, Math.max(1, barH * 0.18)), 1, 1),
+          );
         }
       }
-      return p;
     }
-    // La barra segmentada: un segmento por objeto, y el cajón con el borde
-    // punteado y el largo sin fijar.
-    const h = Math.min(16, box.h * 0.5);
-    for (let i = 0; i < count; i++) {
-      const x = x0 + i * (l.slotW - 3);
-      if (kind.closed) {
-        dashedRect(p, x, cy - h / 2, l.slotW - 7, h, 3.4);
-      } else {
-        p.addRRect(Skia.RRectXY(Skia.XYWHRect(x, cy - h / 2, l.slotW - 7, h), 3, 3));
-      }
-    }
-    return p;
-  }, [kind, count, box, l.unit, l.slotW, config.skin]);
+    return { viejos, nuevos };
+  }, [kind, count, desde, objetos, x0, cy, barH, l.unit, l.slotW]);
+
+  /** Dónde cae lo que llegó: el centro de los recién llegados. */
+  const llegaX = objetos
+    ? x0 + ((desde + count) / 2) * l.slotW
+    : x0 + ((desde + count - 1) / 2) * (l.slotW - 3) + (l.slotW - 7) / 2;
+  const bandaY0 = objetos ? cy - l.unit * 1.45 : cy - barH / 2;
+  const bandaY1 = objetos ? cy + l.unit : cy + barH / 2;
 
   /**
    * El conteo. En `concrete` cierra la fila; desde `visual` pasa adelante, que
    * es el paso `tally` de la mecánica y lo que después se lee como coeficiente.
+   * Adelante quiere decir adentro de la fila, no encima de la cabecera.
    */
+  const conteoX = objetos ? box.x + box.w - 18 : box.x + 16;
   const conteo = useMemo(() => {
     const p = Skia.Path.Make();
     if (!kind || count <= 0) return p;
-    const cy = box.y + box.h / 2;
-    // En `concrete` el conteo cierra la fila; desde `visual` pasa adelante, que
-    // es el paso `tally` y lo que después se lee como coeficiente. Adelante
-    // quiere decir adentro de la fila, no encima de la cabecera.
-    const x = config.skin === "objects" ? box.x + box.w - 18 : box.x + 16;
-    addGlyphs(p, String(count), x, cy, 20);
+    addGlyphs(p, String(count), conteoX, cy, 20);
     return p;
-  }, [kind, count, box, config.skin]);
+  }, [kind, count, conteoX, cy]);
 
   /**
    * La letra. Llega como morph de la marca y por eso queda pegada al conteo:
@@ -797,27 +1097,28 @@ function RowView({
   const letra = useMemo(() => {
     const p = Skia.Path.Make();
     if (!kind || config.skin !== "chips") return p;
-    const cy = box.y + box.h / 2;
     if (kind.closed && kind.letter) addGlyphs(p, kind.letter, box.x + 38, cy, 22);
     return p;
-  }, [kind, box, config.skin]);
+  }, [kind, box, cy, config.skin]);
 
   /** La cabecera de la fila: qué clase la ocupa, dibujada y no escrita. */
+  const badgeX = box.x - 26;
+  const badgeR = l.unit * 1.15;
   const badge = useMemo(() => {
+    const parts = emptyParts();
+    if (kind) addObject(parts, kind, badgeR, badgeX, cy);
+    return parts;
+  }, [kind, badgeR, badgeX, cy]);
+  /** El contorno de la cabecera, para la repetición: forma y marca en ámbar. */
+  const badgeLinea = useMemo(() => {
     const p = Skia.Path.Make();
     if (!kind) return p;
-    const cy = box.y + box.h / 2;
-    const cx = box.x - 26;
-    const s = shapePath(kind.shape, l.unit * 1.15);
-    s.transform([1, 0, cx, 0, 1, cy, 0, 0, 1]);
+    const s = shapePath(kind.shape, badgeR);
+    s.addPath(detailPath(kind, badgeR));
+    s.transform([1, 0, badgeX, 0, 1, cy, 0, 0, 1]);
     p.addPath(s);
-    if (kind.closed && kind.mark >= 0) {
-      const m = markPath(kind.mark, l.unit * 1.15);
-      m.transform([1, 0, cx, 0, 1, cy + l.unit * 0.28, 0, 0, 1]);
-      p.addPath(m);
-    }
     return p;
-  }, [kind, box, l.unit]);
+  }, [kind, badgeR, badgeX, cy]);
 
   /**
    * Lo que el hilo de animación necesita saber de la fila, en valores
@@ -836,7 +1137,7 @@ function RowView({
   }, [replayRows, index, rumbo]);
 
   /** La fila vacía late: es la única que dice "abrí acá" y no lo dice con letras. */
-  const vacia = useDerivedValue(() => (dueno.value < 0 ? 0.2 + 0.35 * pulse.value : 0));
+  const vacia = useDerivedValue(() => (dueno.value < 0 ? 0.25 + 0.5 * pulse.value : 0));
 
   // La repetición junta las dos filas y las separa: el error se ve, no se lee.
   const alto = box.h * 0.42;
@@ -846,53 +1147,112 @@ function RowView({
   const marcaO = useDerivedValue(() => (rumbo.value === 0 ? 0 : replay.value));
   const letraO = useDerivedValue(() => (rumbo.value === 0 ? 1 : 1 - replay.value));
 
-  const rebote = useSharedValue(0);
+  /**
+   * El recién llegado: invisible mientras el objeto soltado viaja, y cuando
+   * llega aparece un poco grande y se asienta con un rebote. El conteo rebota
+   * con él, porque es el conteo el que acaba de cambiar, y las chispas salen de
+   * donde cayó. Todo una vez por llegada. Es un efecto de diseño y no de
+   * cuadro: se dispara cuando el conteo sube, en la misma ronda.
+   */
+  const llega = useSharedValue(1);
+  const pop = useSharedValue(0);
+  const chispas = useSharedValue(1);
+  useLayoutEffect(() => {
+    if (llegada.hasta === count && llegada.round === round) return;
+    const nuevos = llegada.round === round && count > llegada.hasta;
+    setLlegada({ desde: nuevos ? llegada.hasta : count, hasta: count, round });
+    if (!nuevos) {
+      llega.value = 1;
+      return;
+    }
+    llega.value = 0;
+    llega.value = withDelay(LANDING_MS, withTiming(1, { duration: 70 }));
+    pop.value = withDelay(
+      LANDING_MS,
+      withSequence(withTiming(1, { duration: 0 }), withSpring(0, theme.spring.settle)),
+    );
+    chispas.value = withDelay(
+      LANDING_MS,
+      withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: BURST_MS })),
+    );
+    // Madera, cuando llega: y cada objeto de la fila suena un escalón más arriba,
+    // así la fila que se llena se oye subir.
+    sfx("drop", fillPitch(count - 1), LANDING_MS);
+  }, [count, round, llegada, llega, pop, chispas]);
+  const popT = useDerivedValue(
+    () => [
+      { translateX: llegaX },
+      { translateY: cy },
+      { scale: 1 + 0.22 * pop.value },
+      { translateX: -llegaX },
+      { translateY: -cy },
+    ],
+    [llegaX, cy],
+  );
+  const conteoT = useDerivedValue(
+    () => [
+      { translateX: conteoX },
+      { translateY: cy },
+      { scale: 1 + 0.3 * pop.value },
+      { translateX: -conteoX },
+      { translateY: -cy },
+    ],
+    [conteoX, cy],
+  );
+
+  /**
+   * La fila que devuelve algo no se sacude: se le enciende el borde en ámbar,
+   * una vez, mientras el objeto vuelve al mostrador. Mirá acá, sin decir mal.
+   */
+  const aviso = useSharedValue(0);
   useEffect(() => {
     if (!bounced) return;
-    rebote.value = withTiming(1, { duration: 110 }, () => {
-      rebote.value = withTiming(0, { duration: 220 });
-    });
-  }, [bounced, rebote]);
-  const reboteT = useDerivedValue(() => [{ translateX: rebote.value * 7 }]);
+    aviso.value = withSequence(withTiming(1, { duration: 110 }), withTiming(0, { duration: 560 }));
+  }, [bounced, aviso]);
 
   const marco = useMemo(() => {
     const p = Skia.Path.Make();
     p.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, box.h), 6, 6));
     return p;
   }, [box]);
+  const huecoFila = useMemo(() => {
+    const p = Skia.Path.Make();
+    dashedRect(p, box.x + 2, box.y + 2, box.w - 4, box.h - 4, 4);
+    return p;
+  }, [box]);
+
+  // Desde `symbolic` la caja cede su lugar al nombre: la cabecera del cajón se
+  // retira y queda la letra. Vuelve sola en la repetición del error, que es
+  // cuando hace falta ver que las marcas no son la misma.
+  const conCabecera = !(config.skin === "chips" && kind?.shape === "crate");
 
   if (!visible) return null;
 
   return (
     <Group transform={t}>
       <Group opacity={vacia}>
-        <Path path={marco} color={theme.color.accent} style="stroke" strokeWidth={1.5} />
+        <Path path={huecoFila} color={SLOT_LINE} style="stroke" strokeWidth={1.6} strokeCap="round" />
       </Group>
-      <Group transform={reboteT}>
-        <Group opacity={letraO}>
-          <Path
-            path={cuerpo}
-            color={colorOfKind(kind, owner)}
-            style={kind?.closed ? "stroke" : "fill"}
-            strokeWidth={1.6}
-          />
-          <Path path={letra} color={theme.color.accent} />
+      <Group opacity={aviso}>
+        <Path path={marco} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+      </Group>
+      <Group opacity={letraO}>
+        <ObjectBodies parts={partes.viejos} look={look} y0={bandaY0} y1={bandaY1} />
+        <Group opacity={llega} transform={popT}>
+          <ObjectBodies parts={partes.nuevos} look={look} y0={bandaY0} y1={bandaY1} />
         </Group>
-        <Group opacity={marcaO}>
-          <Path path={badge} color={theme.color.warn} style="stroke" strokeWidth={2} />
-        </Group>
-        {/* Desde `symbolic` la caja cede su lugar al nombre: la cabecera del
-            cajón se retira y queda la letra. Vuelve sola en la repetición del
-            error, que es cuando hace falta ver que las marcas no son la misma. */}
-        <Path
-          path={badge}
-          color={colorOfKind(kind, owner)}
-          style="stroke"
-          strokeWidth={1.6}
-          opacity={config.skin === "chips" && kind?.shape === "crate" ? 0 : 1}
-        />
+        <Path path={letra} color={theme.color.accent} />
+      </Group>
+      <Group opacity={marcaO}>
+        <Path path={badgeLinea} color={theme.color.warn} style="stroke" strokeWidth={2} />
+      </Group>
+      <Group opacity={conCabecera ? 1 : 0}>
+        <ObjectBodies parts={badge} look={look} y0={cy - badgeR * 1.45} y1={cy + badgeR} />
+      </Group>
+      <Group transform={conteoT}>
         <Path path={conteo} color={theme.color.ink} />
       </Group>
+      <EventSparks x={llegaX} y={cy} burst={chispas} />
     </Group>
   );
 }
@@ -905,7 +1265,9 @@ function RowView({
  * exactamente cuando la fila deja de ser cierta. Por eso el ángulo viene del
  * modelo y no de un cartel de error, y por eso el **color** cambia sin esperar
  * un cuadro: con el panel del navegador oculto la rotación se congela, y una
- * fila que se rompió tiene que poder verse igual.
+ * fila que se rompió tiene que poder verse igual. Cuando el renglón queda
+ * cerrado y cierto, la barra se enciende en menta y suelta sus chispas: es el
+ * momento en que las dos cuentas coinciden, que es lo que el nivel enseña.
  *
  * La fila se dibuja de una sola vez en unos pocos trazos, como manda el
  * presupuesto: los objetos de un tramo no se animan de a uno, así que no son
@@ -916,12 +1278,14 @@ function SegmentRow({
   box,
   layout: l,
   config,
+  round,
   pulse,
 }: {
   readonly index: number;
   readonly box: LedgerBox;
   readonly layout: LedgerLayout;
   readonly config: LedgerConfig;
+  readonly round: number;
   readonly pulse: SharedValue<number>;
 }) {
   const segments = config.segments?.[index] ?? [];
@@ -930,33 +1294,35 @@ function SegmentRow({
   const cells = l.cells[index] ?? [];
   const beam = l.beams[index] ?? { x: box.x + box.w * 0.7, y: box.y + box.h / 2 };
   const totalSpot = l.totals[index] ?? { x: box.x + box.w - 26, y: box.y + box.h / 2 };
+  const cy = box.y + box.h / 2;
   // Una fila que se quedó sin tramos sigue en el cartel: dice que cero pesa
   // cero, que es cierto y es lo que queda cuando una fruta ya se reemplazó.
   const visible = index < config.rows;
   // Una fruta sin ficha deja la fila abierta: no está mal, todavía no dice nada.
   const abierta = segments.some((s) => s.value === null);
+  const objetos = config.skin === "objects";
 
   /**
-   * Los tramos, un trazo por clase. Se separan por clase y no por tramo porque
-   * lo que los distingue es el color, y una manzana tiene que verse igual esté
-   * en la fila que esté: es el invariante silencioso dicho en el dibujo.
+   * Los tramos, un grupo de trazos por clase. Se separan por clase y no por
+   * tramo porque lo que los distingue es el color, y una manzana tiene que
+   * verse igual esté en la fila que esté: es el invariante silencioso dicho en
+   * el dibujo.
    */
   const cuerpos = useMemo(() => {
     const maxCount = Math.max(1, ...segments.map((s) => Math.abs(s.count)));
-    const porClase = config.kinds.map(() => Skia.Path.Make());
+    const porClase = config.kinds.map(() => emptyParts());
+    const glifos = config.kinds.map(() => Skia.Path.Make());
     segments.forEach((seg, j) => {
       const spot = cells[j];
       const kind = config.kinds[seg.kind];
-      const p = porClase[seg.kind];
-      if (!spot || !kind || !p) return;
+      const parts = porClase[seg.kind];
+      const g = glifos[seg.kind];
+      if (!spot || !kind || !parts || !g) return;
       const n = Math.abs(seg.count);
       if (config.skin === "objects") {
         const paso = Math.min(l.cellW / (n + 0.6), l.unit * 2.4);
         for (let i = 0; i < n; i++) {
-          const cx = spot.x + (i - (n - 1) / 2) * paso;
-          const s = shapePath(kind.shape, l.unit);
-          s.transform([1, 0, cx, 0, 1, spot.y - 4, 0, 0, 1]);
-          p.addPath(s);
+          addObject(parts, kind, l.unit, spot.x + (i - (n - 1) / 2) * paso, spot.y - 4);
         }
         return;
       }
@@ -964,14 +1330,15 @@ function SegmentRow({
         // La tira: el largo cuenta las frutas, que es la pila aplanada del
         // morph de `concrete` a `visual`.
         const w = (l.cellW * 0.82 * n) / maxCount;
-        p.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2, spot.y - 12, w, 16), 3, 3));
+        parts.body.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2, spot.y - 12, w, 16), 3, 3));
+        parts.shine.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2 + 3, spot.y - 10.5, w * 0.5, 2.6), 1, 1));
         return;
       }
       // La ficha: el coeficiente pegado a la letra. El uno no se escribe, que es
       // la convención que el renglón estrena.
-      addGlyphs(p, `${n === 1 ? "" : String(n)}${kind.letter || "x"}`, spot.x, spot.y, 22);
+      addGlyphs(g, `${n === 1 ? "" : String(n)}${kind.letter || "x"}`, spot.x, spot.y, 22);
     });
-    return porClase;
+    return { porClase, glifos };
   }, [segments, cells, config.kinds, config.skin, l.cellW, l.unit]);
 
   /** Los signos entre los tramos: el más y el menos, dibujados del atlas. */
@@ -990,17 +1357,22 @@ function SegmentRow({
     return p;
   }, [segments, cells, l.cellW]);
 
-  /** La ficha numérica que el jugador dejó bajo cada fruta. */
+  /**
+   * La ficha numérica que el jugador dejó bajo cada fruta: la misma ficha
+   * neutra de las bandejas, con el valor en tinta. El color con trabajo queda
+   * para la barra.
+   */
   const fichas = useMemo(() => {
-    const p = Skia.Path.Make();
+    const cuerpo = Skia.Path.Make();
+    const valores = Skia.Path.Make();
     segments.forEach((seg, j) => {
       const spot = cells[j];
       if (!spot || seg.value === null) return;
       const y = spot.y + 19;
-      p.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - 15, y - 10, 30, 20), 4, 4));
-      addGlyphs(p, numeral(seg.value), spot.x, y, 15);
+      cuerpo.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - 15, y - 10, 30, 20), 5, 5));
+      addGlyphs(valores, numeral(seg.value), spot.x, y, 15);
     });
-    return p;
+    return { cuerpo, valores };
   }, [segments, cells]);
 
   /** El tramo que todavía espera ficha late: es el único que dice "acá". */
@@ -1022,10 +1394,25 @@ function SegmentRow({
       addGlyphs(p, "=", 0, 0, 26);
       return p;
     }
+    p.addRRect(Skia.RRectXY(Skia.XYWHRect(-17, -2.8, 34, 5.6), 2.8, 2.8));
+    return p;
+  }, [config.skin]);
+  /** El fiel de la balanza acostada: no se inclina, es donde se apoya la barra. */
+  const fiel = useMemo(() => {
+    const p = Skia.Path.Make();
+    if (config.skin === "chips") return p;
+    p.moveTo(0, 3);
+    p.lineTo(5.5, 11);
+    p.lineTo(-5.5, 11);
+    p.close();
+    return p;
+  }, [config.skin]);
+  const brillo = useMemo(() => {
+    const p = Skia.Path.Make();
     p.moveTo(-15, 0);
     p.lineTo(15, 0);
     return p;
-  }, [config.skin]);
+  }, []);
 
   const totalPath = useMemo(() => {
     const p = Skia.Path.Make();
@@ -1037,43 +1424,94 @@ function SegmentRow({
   /**
    * La inclinación viaja en un valor compartido y no en el cierre del render:
    * un worklet se queda con el cierre en que se armó, que es la trampa que ya
-   * pagaron los nodos 1 y 3.
+   * pagaron los nodos 1 y 3. Llega con un resorte, así se asienta como una
+   * balanza; el ángulo final es el del modelo.
    */
   const angulo = useSharedValue(0);
   useEffect(() => {
-    angulo.value = withTiming(tilt * LEDGER_BEAM_TILT, { duration: theme.motion.base });
+    angulo.value = withSpring(tilt * LEDGER_BEAM_TILT, theme.spring.settle);
   }, [tilt, angulo]);
   const barraT = useDerivedValue(() => [{ rotate: angulo.value }]);
-  const late = useDerivedValue(() => 0.25 + 0.5 * pulse.value);
+  const late = useDerivedValue(() => 0.3 + 0.55 * pulse.value);
+
+  /**
+   * El estado del renglón: abierto, inclinado o cierto. Cuando pasa a cierto en
+   * la misma ronda, la barra suelta su halo menta y sus chispas, una vez.
+   */
+  const estado = abierta ? 0 : tilt !== 0 ? 1 : 2;
+  /** Cuántas fichas ya tiene el renglón: una más es una ficha que encajó. */
+  const puestas = segments.reduce((s, seg) => s + (seg.value === null ? 0 : 1), 0);
+  const inclinada = useSharedValue(estado === 1 ? 1 : 0);
+  const cierra = useSharedValue(1);
+  const visto = useRef({ estado, round, puestas });
+  useEffect(() => {
+    inclinada.value = estado === 1 ? 1 : 0;
+    const antes = visto.current;
+    visto.current = { estado, round, puestas };
+    if (antes.round !== round) return;
+    // Si lo que cerró el renglón fue una ficha que entró, su clic suena primero
+    // (lo toca la escena, una sola vez para todo el cartel) y el vidrio después.
+    const encajo = puestas > antes.puestas;
+    if (antes.estado === estado || estado !== 2) return;
+    cierra.value = 0;
+    cierra.value = withTiming(1, { duration: BURST_MS });
+    // Y si con eso el renglón quedó cierto, las dos cuentas coinciden: vidrio.
+    sfx("join", 0, encajo ? 120 : 0);
+  }, [estado, round, puestas, inclinada, cierra]);
+  // Inclinada, la barra late en ámbar: mirá acá. Nunca un sacudón.
+  const avisoO = useDerivedValue(() => inclinada.value * (0.25 + 0.4 * pulse.value));
+  const cierraO = useDerivedValue(() => (cierra.value < 1 ? 0.2 + 0.8 * (1 - cierra.value) : 0));
 
   if (!visible) return null;
 
-  const color = abierta
-    ? theme.color.inkDim
-    : tilt !== 0
-      ? theme.color.warn
-      : theme.color.ok;
+  const tono = estado === 0 ? STEEL_LOOK : estado === 1 ? WARN_LOOK : REVEAL_LOOK;
+  const bandaY0 = objetos ? cy - 4 - l.unit * 1.45 : cy - 12;
+  const bandaY1 = objetos ? cy - 4 + l.unit : cy + 4;
 
   return (
     <Group>
-      {cuerpos.map((path, k) => (
-        <Path key={`k${k}`} path={path} color={colorOfKind(config.kinds[k], k)} />
+      {cuerpos.porClase.map((parts, k) => (
+        <ObjectBodies
+          key={`k${k}`}
+          parts={parts}
+          look={lookOfKind(config.kinds[k], k)}
+          y0={bandaY0}
+          y1={bandaY1}
+        />
+      ))}
+      {cuerpos.glifos.map((path, k) => (
+        <Path key={`g${k}`} path={path} color={colorOfKind(config.kinds[k], k)} />
       ))}
       <Path path={signos} color={theme.color.inkDim} />
-      <Path path={fichas} color={theme.color.accent} style="stroke" strokeWidth={1.6} />
+      <ChipBodies path={fichas.cuerpo} />
+      <Path path={fichas.valores} color={theme.color.ink} />
       <Group opacity={late}>
-        <Path path={hueco} color={theme.color.accent} style="stroke" strokeWidth={1.6} />
+        <Path path={hueco} color={SLOT_LINE} style="stroke" strokeWidth={1.6} strokeCap="round" />
       </Group>
       <Group transform={[{ translateX: beam.x }, { translateY: beam.y }]}>
+        <Path path={fiel}>
+          <LinearGradient start={vec(0, 3)} end={vec(0, 11)} colors={[STEEL_LOOK.light, STEEL_LOOK.base, STEEL_LOOK.dark]} />
+        </Path>
         <Group transform={barraT}>
-          <Path
-            path={barra}
-            color={color}
-            style={config.skin === "chips" ? "fill" : "stroke"}
-            strokeWidth={2.5}
-            strokeCap="round"
-          />
+          <Group opacity={avisoO}>
+            <Path path={brillo} color={theme.color.warn} style="stroke" strokeWidth={12} strokeCap="round">
+              <BlurMask blur={6} style="normal" />
+            </Path>
+          </Group>
+          <Group opacity={cierraO}>
+            <Path path={brillo} color={theme.color.ok} style="stroke" strokeWidth={16} strokeCap="round">
+              <BlurMask blur={8} style="normal" />
+            </Path>
+          </Group>
+          {config.skin === "chips" ? (
+            <Path path={barra} color={tono.base} />
+          ) : (
+            <Path path={barra}>
+              <LinearGradient start={vec(0, -2.8)} end={vec(0, 2.8)} colors={[tono.light, tono.base, tono.dark]} />
+            </Path>
+          )}
         </Group>
+        <EventSparks x={0} y={0} burst={cierra} />
       </Group>
       <Path path={totalPath} color={theme.color.ink} />
     </Group>
@@ -1088,10 +1526,12 @@ function SegmentRow({
 function TreeView({
   config,
   layout: l,
+  round,
   pulse,
 }: {
   readonly config: LedgerConfig;
   readonly layout: LedgerLayout;
+  readonly round: number;
   readonly pulse: SharedValue<number>;
 }) {
   const r = l.nodeR;
@@ -1108,69 +1548,135 @@ function TreeView({
     return p;
   }, [config.tree, l.nodes, r]);
 
+  /**
+   * Las ramas son discos de vidrio con su operación; las hojas conocidas, cofres
+   * de madera con su número. El número va en tinta con un borde oscuro, para
+   * que se lea sobre la madera.
+   */
   const cuerpos = useMemo(() => {
-    const p = Skia.Path.Make();
+    const discos = Skia.Path.Make();
+    const cofres = Skia.Path.Make();
+    const brillos = Skia.Path.Make();
+    const glifos = Skia.Path.Make();
     for (let i = 0; i < config.tree.length; i++) {
       const n = config.tree[i] as LedgerTreeNode;
       const s = l.nodes[i];
       if (!s) continue;
       if (n.op !== null) {
-        p.addCircle(s.x, s.y, r * 0.78);
-        addGlyphs(p, n.op === "×" ? "×" : "+", s.x, s.y, r * 1.05);
+        discos.addCircle(s.x, s.y, r * 0.78);
+        addGlyphs(glifos, n.op === "×" ? "×" : "+", s.x, s.y, r * 1.05);
         continue;
       }
       if (n.unknown) continue;
       // Una hoja conocida es un cofre chico con su número: el distractor del
       // diseño no es un número al azar, es una hoja que ya tiene valor.
-      p.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - r, s.y - r * 0.8, r * 2, r * 1.6), 4, 4));
-      addGlyphs(p, String(n.value ?? 0), s.x, s.y, r * 1.05);
+      cofres.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - r, s.y - r * 0.8, r * 2, r * 1.6), 4, 4));
+      brillos.addRRect(Skia.RRectXY(Skia.XYWHRect(s.x - r + 3, s.y - r * 0.8 + 2.5, r * 0.9, 2.4), 1, 1));
+      addGlyphs(glifos, String(n.value ?? 0), s.x, s.y, r * 1.05);
     }
-    return p;
+    return { discos, cofres, brillos, glifos };
   }, [config.tree, l.nodes, r]);
+
+  const hojaI = config.tree.findIndex((n) => n.unknown);
+  const hoja = hojaI >= 0 ? l.nodes[hojaI] : undefined;
 
   /** La hoja vacía: borde punteado mientras late, cajón cerrado cuando se llena. */
   const hueco = useMemo(() => {
     const p = Skia.Path.Make();
-    const i = config.tree.findIndex((n) => n.unknown);
-    const s = i >= 0 ? l.nodes[i] : undefined;
-    if (!s) return p;
-    dashedRect(p, s.x - r, s.y - r * 0.8, r * 2, r * 1.6, 3.4);
+    if (!hoja) return p;
+    dashedRect(p, hoja.x - r, hoja.y - r * 0.8, r * 2, r * 1.6, 3.4);
     return p;
-  }, [config.tree, l.nodes, r]);
+  }, [hoja, r]);
 
+  const kind = config.leaf >= 0 ? config.kinds[config.leaf] : undefined;
   const lleno = useMemo(() => {
+    const parts = emptyParts();
+    if (hoja && kind) addObject(parts, kind, r * 0.8, hoja.x, hoja.y);
+    return parts;
+  }, [hoja, kind, r]);
+  const halo = useMemo(() => {
     const p = Skia.Path.Make();
-    const i = config.tree.findIndex((n) => n.unknown);
-    const s = i >= 0 ? l.nodes[i] : undefined;
-    const kind = config.leaf >= 0 ? config.kinds[config.leaf] : undefined;
-    if (!s || !kind) return p;
-    const forma = shapePath(kind.shape, r * 0.8);
-    forma.transform([1, 0, s.x, 0, 1, s.y, 0, 0, 1]);
-    p.addPath(forma);
-    if (kind.mark >= 0) {
-      const m = markPath(kind.mark, r * 0.8);
-      m.transform([1, 0, s.x, 0, 1, s.y + r * 0.2, 0, 0, 1]);
-      p.addPath(m);
-    }
+    if (hoja) p.addCircle(hoja.x, hoja.y, r * 1.5);
     return p;
-  }, [config.tree, config.kinds, config.leaf, l.nodes, r]);
+  }, [hoja, r]);
 
   // La hoja llena deja de latir. La decisión viaja en un valor compartido y no
   // en el cierre del render, que es donde se pierde.
   const llena = useSharedValue(config.leaf >= 0 ? 1 : 0);
-  useEffect(() => {
-    llena.value = config.leaf >= 0 ? 1 : 0;
-  }, [config.leaf, llena]);
+  /**
+   * El árbol que se completa es el evento de esta pregunta: el cajón aparece
+   * cuando el objeto soltado llega a la hoja, rebota una vez, y la hoja suelta
+   * su halo y sus chispas. Solo si se llenó en esta ronda.
+   */
+  const aparece = useSharedValue(config.leaf >= 0 ? 1 : 0);
+  const pop = useSharedValue(0);
+  const chispas = useSharedValue(1);
+  const visto = useRef({ leaf: config.leaf, round });
+  useLayoutEffect(() => {
+    const antes = visto.current;
+    visto.current = { leaf: config.leaf, round };
+    const lleno = config.leaf >= 0;
+    llena.value = lleno ? 1 : 0;
+    if (!lleno || antes.round !== round || antes.leaf >= 0) {
+      aparece.value = lleno ? 1 : 0;
+      return;
+    }
+    aparece.value = 0;
+    aparece.value = withDelay(LANDING_MS, withTiming(1, { duration: 70 }));
+    pop.value = withDelay(
+      LANDING_MS,
+      withSequence(withTiming(1, { duration: 0 }), withSpring(0, theme.spring.settle)),
+    );
+    chispas.value = withDelay(
+      LANDING_MS,
+      withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: BURST_MS })),
+    );
+    // El cajón entra en la hoja que le faltaba al árbol: encaja.
+    sfx("fit", 0, LANDING_MS);
+  }, [config.leaf, round, llena, aparece, pop, chispas]);
   const late = useDerivedValue(() => (llena.value > 0 ? 0 : 0.35 + 0.65 * pulse.value));
+  const hx = hoja?.x ?? 0;
+  const hy = hoja?.y ?? 0;
+  const popT = useDerivedValue(
+    () => [
+      { translateX: hx },
+      { translateY: hy },
+      { scale: 1 + 0.22 * pop.value },
+      { translateX: -hx },
+      { translateY: -hy },
+    ],
+    [hx, hy],
+  );
+  const haloO = useDerivedValue(() => (chispas.value < 1 ? 0.8 * (1 - chispas.value) : 0));
+  const look = lookOfKind(kind, config.leaf);
 
   return (
     <Group>
-      <Path path={aristas} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      <Path path={cuerpos} color={theme.color.inkDim} style="stroke" strokeWidth={1.6} />
+      <Path path={aristas} color="rgba(255, 255, 255, 0.24)" style="stroke" strokeWidth={2.5} strokeCap="round" />
+      <Path path={cuerpos.discos} color="rgba(9, 17, 29, 0.85)" />
+      <Path path={cuerpos.discos} color="rgba(255, 255, 255, 0.24)" style="stroke" strokeWidth={1.5} />
+      <Path path={cuerpos.cofres}>
+        <LinearGradient
+          start={vec(0, (l.nodes[0]?.y ?? 0) - r)}
+          end={vec(0, (l.nodes[0]?.y ?? 0) + l.height * 0.5 + r)}
+          colors={[WOOD.light, WOOD.base, WOOD.dark]}
+        />
+      </Path>
+      <Path path={cuerpos.brillos} color="rgba(255, 255, 255, 0.35)" />
+      <Path path={cuerpos.glifos} color="rgba(9, 17, 29, 0.6)" style="stroke" strokeWidth={2.5} strokeJoin="round" />
+      <Path path={cuerpos.glifos} color={theme.color.ink} />
       <Group opacity={late}>
-        <Path path={hueco} color={theme.color.accent} style="stroke" strokeWidth={2} />
+        <Path path={hueco} color={SLOT_LINE} style="stroke" strokeWidth={2} strokeCap="round" />
       </Group>
-      <Path path={lleno} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      <Group opacity={haloO}>
+        <Path path={halo} color={theme.color.ok}>
+          <BlurMask blur={10} style="normal" />
+        </Path>
+      </Group>
+      <Group opacity={aparece} transform={popT}>
+        <ObjectBodies parts={lleno} look={look} y0={hy - r * 0.8 * 1.45} y1={hy + r * 0.8} />
+      </Group>
+      <EventSparks x={hx} y={hy} burst={chispas} />
     </Group>
   );
 }
@@ -1179,6 +1685,12 @@ function TreeView({
  * Un objeto suelto. Su destino cambia solo cuando el jugador suelta; mientras
  * el dedo se mueve, la posición sale del valor compartido y nada vuelve al hilo
  * de JavaScript.
+ *
+ * El jugo del gesto vive acá, en el hilo de animación: al levantarlo crece un
+ * 30 %; al soltarlo sale de donde lo dejó el dedo —no de su casa— y viaja con un
+ * resorte que rebota una vez al llegar. Si la fila lo acepta, el destino cambia
+ * a mitad del viaje y el resorte lo lleva ahí; si lo devuelve, vuelve solo al
+ * mostrador.
  */
 function TokenView({
   index,
@@ -1188,7 +1700,6 @@ function TokenView({
   skin,
   place,
   round,
-  instant,
   dragIdx,
   dragX,
   dragY,
@@ -1200,57 +1711,90 @@ function TokenView({
   readonly skin: LedgerSkin;
   readonly place: LedgerPlace;
   readonly round: number;
-  readonly instant: boolean;
   readonly dragIdx: SharedValue<number>;
   readonly dragX: SharedValue<number>;
   readonly dragY: SharedValue<number>;
 }) {
-  const path = useMemo(() => {
-    const p = Skia.Path.Make();
-    if (!kind) return p;
-    // Desde `symbolic` el cajón suelto ya es su ficha: la letra ocupó el lugar
-    // del dibujo, que es la analogía retirándose. Una figura inventada no: esa
-    // se sigue viendo y lo que recibe nombre es la fila, no el objeto.
-    if (skin === "chips" && kind.closed && kind.letter && kind.shape === "crate") {
-      addGlyphs(p, kind.letter, 0, 0, l.unit * 2.4);
-      return p;
-    }
-    p.addPath(shapePath(kind.shape, l.unit));
-    if (kind.closed && kind.mark >= 0) {
-      const m = markPath(kind.mark, l.unit);
-      m.transform([1, 0, 0, 0, 1, l.unit * 0.25, 0, 0, 1]);
-      p.addPath(m);
-    }
-    return p;
-  }, [kind, l.unit, skin]);
-
-  // El contorno de un glifo se rellena; un cajón cerrado se traza. La fruta se
-  // rellena, que es lo que la distingue de la caja sin decir una palabra.
+  const r = l.unit;
+  // Desde `symbolic` el cajón suelto ya es su ficha: la letra ocupó el lugar
+  // del dibujo, que es la analogía retirándose. Una figura inventada no: esa
+  // se sigue viendo y lo que recibe nombre es la fila, no el objeto.
   const esLetra =
     skin === "chips" && kind?.closed === true && kind.letter !== "" && kind.shape === "crate";
-  const relleno = esLetra || kind?.closed !== true;
+
+  const partes = useMemo(() => {
+    const p = emptyParts();
+    if (kind && !esLetra) addObject(p, kind, r, 0, 0);
+    return p;
+  }, [kind, r, esLetra]);
+  const ficha = useMemo(() => {
+    const cuerpo = Skia.Path.Make();
+    const letra = Skia.Path.Make();
+    if (kind && esLetra) {
+      cuerpo.addRRect(Skia.RRectXY(Skia.XYWHRect(-r * 1.35, -r * 1.35, r * 2.7, r * 2.7), 9, 9));
+      addGlyphs(letra, kind.letter, 0, 0, r * 2.4);
+    }
+    return { cuerpo, letra };
+  }, [kind, r, esLetra]);
+  const look = lookOfKind(kind, kindIndex);
+
   const ax = useSharedValue(place.x);
   const ay = useSharedValue(place.y);
   const ao = useSharedValue(place.on ? 1 : 0);
+  /** Hacia dónde va, en el hilo de animación: lo lee el soltar. */
+  const destX = useSharedValue(place.x);
+  const destY = useSharedValue(place.y);
+  /** Cuánto está levantado: 0 en reposo, 1 en el dedo. */
+  const lift = useSharedValue(0);
   const rondaPrevia = useRef(round);
 
   useEffect(() => {
+    destX.value = place.x;
+    destY.value = place.y;
     // Al cambiar de ronda el objeto no viaja: aparece donde va. Interpolar un
     // salto entre dos problemas distintos se vería como una cosa que se escapa.
-    const salto = rondaPrevia.current !== round || instant;
-    rondaPrevia.current = round;
-    const d = { duration: theme.motion.base };
-    ax.value = salto ? place.x : withTiming(place.x, d);
-    ay.value = salto ? place.y : withTiming(place.y, d);
-    ao.value = salto ? (place.on ? 1 : 0) : withTiming(place.on ? 1 : 0, d);
-  }, [place.x, place.y, place.on, round, instant, ax, ay, ao]);
+    if (rondaPrevia.current !== round) {
+      rondaPrevia.current = round;
+      ax.value = place.x;
+      ay.value = place.y;
+      ao.value = place.on ? 1 : 0;
+      return;
+    }
+    ax.value = withSpring(place.x, theme.spring.settle);
+    ay.value = withSpring(place.y, theme.spring.settle);
+    // Lo que se va a una fila, al plato o a la hoja se apaga cuando llega: ahí
+    // lo toma el dibujo de su destino, que rebota en ese mismo momento.
+    ao.value = place.on
+      ? withTiming(1, { duration: theme.motion.base })
+      : withDelay(LANDING_MS - 40, withTiming(0, { duration: 110 }));
+  }, [place.x, place.y, place.on, round, ax, ay, ao, destX, destY]);
+
+  // El dedo lo agarra y lo suelta en el hilo de animación, y es ahí donde se
+  // sabe dónde lo dejó: cuando la actividad se entera, el dedo ya se fue.
+  useAnimatedReaction(
+    () => dragIdx.value === index,
+    (ahora, antes) => {
+      if (antes === null || ahora === antes) return;
+      if (ahora) {
+        lift.value = withSpring(1, theme.spring.lift);
+        runOnJS(sfx)("lift", 0, 0);
+        return;
+      }
+      ax.value = ax.value + dragX.value;
+      ay.value = ay.value + dragY.value;
+      ax.value = withSpring(destX.value, theme.spring.settle);
+      ay.value = withSpring(destY.value, theme.spring.settle);
+      lift.value = withSpring(0, theme.spring.settle);
+    },
+    [index],
+  );
 
   const transform = useDerivedValue(() => {
     const llevado = dragIdx.value === index;
     return [
       { translateX: ax.value + (llevado ? dragX.value : 0) },
       { translateY: ay.value + (llevado ? dragY.value : 0) },
-      { scale: llevado ? 1.35 : 1 },
+      { scale: 1 + 0.3 * lift.value },
     ];
   }, [index]);
 
@@ -1258,12 +1802,39 @@ function TokenView({
 
   return (
     <Group transform={transform} opacity={ao}>
-      <Path
-        path={path}
-        color={colorOfKind(kind, kindIndex)}
-        style={relleno ? "fill" : "stroke"}
-        strokeWidth={1.8}
-      />
+      {esLetra ? (
+        <>
+          <Group transform={[{ translateY: 3 }]}>
+            <Path path={ficha.cuerpo} color={chipTone.edge} />
+          </Group>
+          <Path path={ficha.cuerpo}>
+            <LinearGradient
+              start={vec(0, -r * 1.35)}
+              end={vec(0, r * 1.35)}
+              colors={[chipTone.top, chipTone.face, chipTone.low]}
+            />
+          </Path>
+          <Path path={ficha.cuerpo} color={chipTone.rimTop} style="stroke" strokeWidth={1} />
+          <Path path={ficha.letra} color={theme.color.accent} />
+        </>
+      ) : (
+        <>
+          <Path path={partes.shadow} color={SHADOW} />
+          <Path path={partes.body}>
+            <RadialGradient c={vec(-r * 0.35, -r * 0.45)} r={r * 1.8} colors={[look.light, look.base, look.dark]} />
+          </Path>
+          <Path path={partes.stem} color={STEM} />
+          <Path path={partes.shine} color={SHINE} />
+          <Path
+            path={partes.detail}
+            color={MARK_INK}
+            style="stroke"
+            strokeWidth={1.8}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+        </>
+      )}
     </Group>
   );
 }

@@ -99,15 +99,76 @@
  * de glifos, y el `−` es el U+2212 y no un guion de ASCII.
  */
 
-import { useMemo } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
-import { useDerivedValue, type SharedValue } from "react-native-reanimated";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  BlurMask,
+  Group,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
+  type SkPath,
+} from "@shopify/react-native-skia";
+import {
+  cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
+  useDerivedValue,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
 import { gpHeightAt, gpJoins, gpPoints, gpTo, type GpCurve, type GpPoint, type GpTrace } from "@mathy/mechanics";
+import { chipTone } from "../ui/Kit.tsx";
+import { play, type Sfx } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
 
 const STROKE = 1.5;
+
+/**
+ * La nota de una gota es su altura: una gota más alta suena más aguda. Así el
+ * rastro que el caminante escribe también se oye subir y bajar, que es lo que
+ * la hoja dibuja. Dos semitonos por unidad, con techo para que no chille.
+ */
+const heightPitch = (y: number): number => Math.max(-12, Math.min(16, Math.round(y * 2)));
+
+/** Suena un efecto. Desde un worklet se llama con `runOnJS`; sin audio, no suena. */
+function sfx(name: Sfx, pitch = 0): void {
+  play(name, { pitch });
+}
+/**
+ * Lo que va debajo de lo que tiene que leerse, para que se lea sobre cualquier
+ * paisaje: el contorno de los glifos y de los trazos que cruzan la hoja.
+ */
+const SHADE = "rgba(9, 17, 29, 0.9)";
+/** El vidrio oscuro de la hoja: deja ver el mundo, pero lo aparta de la cuadrícula. */
+const SHADE_SOFT = "rgba(9, 17, 29, 0.72)";
+const GLASS = "rgba(255, 255, 255, 0.05)";
+const GLASS_LINE = "rgba(255, 255, 255, 0.12)";
+const GRID_LINE = "rgba(255, 255, 255, 0.08)";
+/** El radio de una gota del rastro. El blanco de toque es otro y lo da el layout. */
+const DROP_R = 5.5;
+
+/** Una paleta de volumen: la luz arriba a la izquierda, el cuerpo y la sombra. */
+interface Look {
+  readonly light: string;
+  readonly base: string;
+  readonly dark: string;
+}
+/** El rastro principal lleva el equipo del acento, con la misma luz que en el nodo 1. */
+const TRACE: Look = { light: "#b8e2ff", base: theme.color.accent, dark: "#1f7fcf" };
+/** El rastro apagado: el otro, que se distingue por el par y no por el color. */
+const DIM: Look = { light: "#e4ebf4", base: theme.color.inkDim, dark: "#58697f" };
+/** El caminante es de su propio material, claro y neutro: no pertenece a ningún equipo. */
+const WALKER: Look = { light: "#ffffff", base: "#d6e0ec", dark: theme.color.inkFaint };
+
 /** Rastros montados siempre, para que el árbol de la escena no cambie. */
 export const WALK_TRACE_SLOTS = 2;
 /** Curvas candidatas montadas siempre: las tres continuaciones del nivel 2. */
@@ -329,7 +390,11 @@ export function walkLayout(config: WalkConfig, width: number, height: number): W
   const sheetW = conTerreno ? util - groundW : util;
   const sheetX = width - PAD - sheetW;
 
-  const alto = Math.max(120, height - 2 * PAD);
+  // La leyenda se escribe debajo de la ventana: con leyenda, la hoja deja lugar
+  // abajo, o el renglón se corta contra el borde del lienzo cuando no hay nada
+  // debajo de la escena.
+  const abajo = config.legend !== "" ? PAD + 22 : PAD;
+  const alto = Math.max(120, height - PAD - abajo);
   // Con la cuadrícula cuadrada las dos unidades miden lo mismo y la ventana se
   // centra en lo que sobra; si no, cada eje se estira hasta llenar su lado.
   const cruda = { ux: sheetW / anchoU, uy: alto / altoU };
@@ -549,10 +614,19 @@ function buildQuadrants(w: WalkWindow, p: WalkPlane): readonly SkPath[] {
   ];
 }
 
+/** Un rastro dibujado: la línea, las gotas y el brillo de las gotas. */
+interface TraceGeom {
+  readonly line: SkPath;
+  readonly drops: SkPath;
+  /** El brillo de cada gota, arriba a la izquierda: todas en un solo trazo. */
+  readonly shine: SkPath;
+}
+
 /** La línea de un rastro y sus gotas, cada cosa en un trazo. */
-function buildTrace(trace: GpTrace, p: WalkPlane, k = 1): { line: SkPath; drops: SkPath } {
+function buildTrace(trace: GpTrace, p: WalkPlane, k = 1): TraceGeom {
   const line = Skia.Path.Make();
   const drops = Skia.Path.Make();
+  const shine = Skia.Path.Make();
   for (let x = trace.from; x < gpTo(trace); x++) {
     if (!gpJoins(trace, x)) continue;
     const a = gpHeightAt(trace, x);
@@ -562,9 +636,12 @@ function buildTrace(trace: GpTrace, p: WalkPlane, k = 1): { line: SkPath; drops:
     line.lineTo(walkPx(p, (x + 1) * k), walkPy(p, b));
   }
   for (const punto of gpPoints(trace)) {
-    drops.addCircle(walkPx(p, punto.x * k), walkPy(p, punto.y), 4.5);
+    const x = walkPx(p, punto.x * k);
+    const y = walkPy(p, punto.y);
+    drops.addCircle(x, y, DROP_R);
+    shine.addCircle(x - DROP_R * 0.32, y - DROP_R * 0.36, DROP_R * 0.34);
   }
-  return { line, drops };
+  return { line, drops, shine };
 }
 
 /** Una curva cualquiera, con su cierre si se cierra. */
@@ -592,9 +669,12 @@ function buildGround(
   terrain: GpTrace,
   w: WalkWindow,
   p: WalkPlane,
-): { body: SkPath; sea: SkPath } {
+): { body: SkPath; sea: SkPath; ridge: SkPath; top: number; foot: number } {
   const body = Skia.Path.Make();
   const sea = Skia.Path.Make();
+  // El borde de arriba, solo: donde pisa el caminante. Lleva la luz, y por eso
+  // va aparte del cuerpo, que también tiene lados y pie.
+  const ridge = Skia.Path.Make();
   const pie = walkPy(p, w.y0);
   let abierto = false;
   for (let x = terrain.from; x <= gpTo(terrain); x++) {
@@ -610,7 +690,10 @@ function buildGround(
     }
     if (!abierto) {
       body.moveTo(walkPx(p, x), pie);
+      ridge.moveTo(walkPx(p, x), walkPy(p, y));
       abierto = true;
+    } else {
+      ridge.lineTo(walkPx(p, x), walkPy(p, y));
     }
     body.lineTo(walkPx(p, x), walkPy(p, y));
     if (!gpJoins(terrain, x) && x < gpTo(terrain)) {
@@ -625,7 +708,7 @@ function buildGround(
   }
   sea.moveTo(walkPx(p, w.x0), walkPy(p, 0));
   sea.lineTo(walkPx(p, w.x1), walkPy(p, 0));
-  return { body, sea };
+  return { body, sea, ridge, top: walkPy(p, w.y1), foot: pie };
 }
 
 /**
@@ -636,23 +719,40 @@ function buildGround(
  * si la subida es la que corresponde**, y cuando el nodo la fuerza el escalón
  * queda flotando con su sombra abajo. Que se despegue no es un error dibujado:
  * es la consecuencia visible de la que habla el documento del nodo 19.
+ *
+ * Además del trazo devuelve la cuña rellena (el mismo triángulo, para que el
+ * escalón sea una pieza y no un contorno sobre el paisaje), la esquina que quedó
+ * en el aire como trazo propio —late en ámbar, porque es lo que hay que bajar— y
+ * dónde está la esquina de arriba, que es de donde salen las chispas cuando el
+ * escalón vuelve a apoyar.
  */
-function buildStep(
-  config: WalkConfig,
-  p: WalkPlane,
-  s: WalkStep | null,
-  k: number,
-): { body: SkPath; shadow: SkPath; marks: SkPath; text: SkPath } {
+interface StepGeom {
+  readonly body: SkPath;
+  readonly fill: SkPath;
+  readonly shadow: SkPath;
+  readonly corner: SkPath;
+  readonly marks: SkPath;
+  readonly text: SkPath;
+  /** La esquina de arriba, en píxeles del lienzo; `null` sin escalón. */
+  readonly top: { readonly x: number; readonly y: number } | null;
+  /** La esquina de arriba está sobre el rastro. Sin escalón, vale `true`. */
+  readonly apoya: boolean;
+}
+
+function buildStep(config: WalkConfig, p: WalkPlane, s: WalkStep | null, k: number): StepGeom {
   const body = Skia.Path.Make();
+  const fill = Skia.Path.Make();
   const shadow = Skia.Path.Make();
+  const corner = Skia.Path.Make();
   const marks = Skia.Path.Make();
   const text = Skia.Path.Make();
+  const vacio: StepGeom = { body, fill, shadow, corner, marks, text, top: null, apoya: true };
   const trace = config.traces[config.mainTrace];
-  if (!s || !trace) return { body, shadow, marks, text };
+  if (!s || !trace) return vacio;
 
   const y0 = gpHeightAt(trace, s.from);
   const debido = gpHeightAt(trace, s.from + s.run);
-  if (y0 === null || debido === null) return { body, shadow, marks, text };
+  if (y0 === null || debido === null) return vacio;
   const subida = s.rise ?? debido - y0;
   const apoya = Math.abs(subida - (debido - y0)) < 1e-9;
 
@@ -668,12 +768,19 @@ function buildStep(
   };
   ele(body, by);
   // La hipotenusa cierra el triángulo salvo en la etapa de la escalera, donde
-  // el escalón es un escalón y no un triángulo.
-  if (config.skin !== "staircase") body.lineTo(ax, ay);
+  // el escalón es un escalón y no un triángulo. Por la misma razón la cuña
+  // rellena existe solo cuando hay triángulo: rellenar una ele la cerraría sola.
+  if (config.skin !== "staircase") {
+    body.lineTo(ax, ay);
+    fill.moveTo(ax, ay);
+    fill.lineTo(bx, ay);
+    fill.lineTo(bx, by);
+    fill.close();
+  }
   if (!apoya) {
     ele(shadow, walkPy(p, debido));
     // Y la esquina que quedó en el aire, marcada: es lo que hay que bajar.
-    shadow.addCircle(bx, by, 5);
+    corner.addCircle(bx, by, 9);
   }
 
   if (config.stepMarks) {
@@ -704,22 +811,62 @@ function buildStep(
     // apoya cerca del cero.
     if (t.label !== "") addGlyphs(text, t.label, bx + 18, by - 16, 20);
   }
-  return { body, shadow, marks, text };
+  return { body, fill, shadow, corner, marks, text, top: { x: bx, y: by }, apoya };
 }
 
-/** El muñeco: dos círculos y dos piernas, dibujado sobre su propio origen. */
-function buildWalker(r: number): SkPath {
-  const p = Skia.Path.Make();
-  p.addCircle(0, -r * 2.1, r * 0.62);
-  p.moveTo(0, -r * 1.5);
-  p.lineTo(0, -r * 0.6);
-  p.moveTo(-r * 0.5, -r * 1.2);
-  p.lineTo(r * 0.5, -r * 1.2);
-  p.moveTo(0, -r * 0.6);
-  p.lineTo(-r * 0.45, 0);
-  p.moveTo(0, -r * 0.6);
-  p.lineTo(r * 0.45, 0);
-  return p;
+/** Las partes del caminante, todas sobre su propio origen: sus pies. */
+interface WalkerParts {
+  readonly head: SkPath;
+  readonly torso: SkPath;
+  /** Brazos y piernas: un solo trazo grueso. */
+  readonly limbs: SkPath;
+  readonly shine: SkPath;
+  readonly shadow: SkPath;
+}
+
+/**
+ * El caminante: cabeza y torso con volumen, brazos y piernas de trazo grueso, y
+ * su sombra en el piso. Antes era un muñeco de palitos de trazo fino, que sobre
+ * el paisaje se perdía. Sin cara, nunca: la única cara del juego es la de Lumi.
+ */
+function walkerParts(r: number): WalkerParts {
+  const head = Skia.Path.Make();
+  head.addCircle(0, -r * 2.1, r * 0.62);
+  const torso = Skia.Path.Make();
+  torso.addRRect(
+    Skia.RRectXY(Skia.XYWHRect(-r * 0.36, -r * 1.55, r * 0.72, r * 1.05), r * 0.36, r * 0.36),
+  );
+  const limbs = Skia.Path.Make();
+  limbs.moveTo(-r * 0.62, -r * 1.22);
+  limbs.lineTo(r * 0.62, -r * 1.22);
+  limbs.moveTo(-r * 0.14, -r * 0.62);
+  limbs.lineTo(-r * 0.45, 0);
+  limbs.moveTo(r * 0.14, -r * 0.62);
+  limbs.lineTo(r * 0.45, 0);
+  const shine = Skia.Path.Make();
+  shine.addOval(Skia.XYWHRect(-r * 0.44, -r * 2.52, r * 0.42, r * 0.26));
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-r * 0.85, -r * 0.16, r * 1.7, r * 0.34));
+  return { head, torso, limbs, shine, shadow };
+}
+
+/**
+ * La hoja: un vidrio oscuro debajo de la cuadrícula. Sobre el paisaje una
+ * cuadrícula de trazo fino se perdía y los numerales dejaban de leerse; con el
+ * vidrio debajo, la hoja se lee igual sobre cualquier mundo. Es una superficie y
+ * no un objeto: no lleva sombra ni brillo. El margen alcanza para los numerales
+ * de las dos reglas, que caen afuera de la ventana cuando el cero queda en el
+ * borde.
+ */
+function buildPanel(config: WalkConfig, p: WalkPlane): SkPath {
+  const path = Skia.Path.Make();
+  const w = config.window;
+  const x0 = walkPx(p, w.x0) - 24;
+  const x1 = walkPx(p, w.x1) + 16;
+  const y0 = walkPy(p, w.y1) - 16;
+  const y1 = walkPy(p, w.y0) + 22;
+  path.addRRect(Skia.RRectXY(Skia.XYWHRect(x0, y0, x1 - x0, y1 - y0), 16, 16));
+  return path;
 }
 
 // --- Componente --------------------------------------------------------------
@@ -747,12 +894,42 @@ export interface WalkSceneProps {
  * cada una tiene que distinguirse de las otras dos **y del rastro**: el acento
  * es el color del rastro y una candidata de ese color se leería como su
  * continuación verdadera antes de que el jugador decida.
+ *
+ * Son equipos (coral, violeta) y tinta, no `ok` ni `warn`: una candidata menta
+ * se leía como "la que coincide" y una ámbar como "la que está mal" antes de
+ * elegir, que es justo lo que la ronda pregunta.
  */
 export const WALK_OPTION_COLORS: readonly string[] = [
-  theme.color.warn,
-  theme.color.ok,
+  theme.color.coral,
+  theme.color.violet,
   theme.color.ink,
 ];
+
+/**
+ * Cuánta luz lleva cada región, en el orden de `buildQuadrants`: arriba a la
+ * derecha, arriba a la izquierda, abajo a la izquierda, abajo a la derecha.
+ * La luz dice cuántas coordenadas son negativas —ninguna, una o las dos— y así
+ * el signo del par se lee sin contar marcas y sin gastar dos colores que en el
+ * juego significan otra cosa.
+ */
+const QUAD_LIGHT: readonly number[] = [0.07, 0.03, 0, 0.03];
+
+/** Lo que la escena recuerda de la configuración anterior, para ver qué pasó. */
+interface Previo {
+  readonly clave: string;
+  readonly gotas: ReadonlySet<string>;
+  readonly ink: boolean;
+  readonly label: boolean;
+  readonly line: boolean;
+  readonly count: number;
+  readonly lit: string;
+  readonly escalon: boolean;
+  readonly from: number | null;
+  readonly apoya: boolean;
+}
+
+/** El rastro entero como texto: si cambia, cambió la ronda y no el estado. */
+const claveDe = (t: GpTrace): string => `${t.from}|${t.heights.join(",")}`;
 
 export function WalkScene({
   config,
@@ -781,6 +958,10 @@ export function WalkScene({
   const quadrants = useMemo(
     () => (config.quadrants && conHoja ? buildQuadrants(config.window, sheet) : []),
     [config.quadrants, conHoja, config.window, sheet],
+  );
+  const panel = useMemo(
+    () => (conHoja ? buildPanel(config, sheet) : Skia.Path.Make()),
+    [conHoja, config, sheet],
   );
 
   const stretch = config.stretch ?? 1;
@@ -887,7 +1068,7 @@ export function WalkScene({
    * salvo cuando el nodo la fuerza: ahí el escalón se despega y la sombra
    * muestra dónde tendría que apoyar.
    *
-   * Devuelve cuatro trazos y no uno porque cada uno se pinta distinto: el
+   * Devuelve varios trazos y no uno porque cada uno se pinta distinto: el
    * cuerpo lleva el color de la cuesta, la sombra va apagada, las marcas se
    * cuentan y los números se leen. Juntos serían un solo color.
    */
@@ -927,13 +1108,161 @@ export function WalkScene({
     return path;
   }, [config.stairs, config.traces, config.mainTrace, config.stretch, sheet]);
 
+  // --- El latido de lo que pide atención --------------------------------------
+
+  // Las gotas entre las que hay que elegir y la esquina que quedó en el aire
+  // laten en ámbar: "mirá acá", sin decir "mal". El latido es de la escena y no
+  // de la demostración, porque `hint` se apaga cuando el jugador ya jugó y lo
+  // que pide atención la sigue pidiendo.
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    pulse.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+    return () => cancelAnimation(pulse);
+  }, [pulse]);
+  const attentionO = useDerivedValue(() => 0.4 + 0.6 * pulse.value);
+
+  // --- El evento que la escena enseña ----------------------------------------
+
+  /**
+   * Una sola respuesta montada para toda la escena, que se mueve a donde pasó
+   * el evento: una gota que el caminante acaba de escribir, el par que se
+   * acaba de nombrar, el escalón que volvió a apoyar. Montada desde el principio
+   * con opacidad cero, como pide el modo retained.
+   */
+  const burst = useSharedValue(1);
+  const bx = useSharedValue(0);
+  const by = useSharedValue(0);
+  /** El destello de cada rastro: cuando se dibuja entero o cuando aparece. */
+  const flash0 = useSharedValue(1);
+  const flash1 = useSharedValue(1);
+  const flashes = useMemo(() => [flash0, flash1], [flash0, flash1]);
+  const previo = useRef<Previo | null>(null);
+
+  useEffect(() => {
+    const k = config.stretch ?? 1;
+    const main = config.traces[config.mainTrace];
+    const puntos = main ? gpPoints(main) : [];
+    const ahora: Previo = {
+      clave: main ? claveDe(main) : "",
+      gotas: new Set(puntos.map((q) => `${q.x}:${q.y}`)),
+      ink: config.ink,
+      label: config.label,
+      line: config.line,
+      count: config.traces.length,
+      lit: config.lit ? `${config.lit.x}:${config.lit.y}` : "",
+      escalon: config.step !== null,
+      from: config.step?.from ?? null,
+      apoya: step.apoya,
+    };
+    const antes = previo.current;
+    previo.current = ahora;
+    if (!antes) return;
+
+    const chispas = (x: number, y: number): void => {
+      bx.value = x;
+      by.value = y;
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: 720 });
+    };
+    const destello = (i: number): void => {
+      const f = flashes[i];
+      if (!f) return;
+      f.value = 0;
+      f.value = withTiming(1, { duration: 720 });
+    };
+
+    // 1. El caminante llegó a una posición y la hoja escribió su gota. Solo si
+    // la hoja creció —las gotas de antes siguen ahí y hay una o dos nuevas—: una
+    // ronda nueva reemplaza la hoja entera y eso no es un evento, es otra hoja.
+    if (antes.ink && main) {
+      let siguen = true;
+      for (const g of antes.gotas) {
+        if (!ahora.gotas.has(g)) {
+          siguen = false;
+          break;
+        }
+      }
+      const nuevas = puntos.filter((q) => !antes.gotas.has(`${q.x}:${q.y}`));
+      if (siguen && nuevas.length >= 1 && nuevas.length <= 3) {
+        // Si el dedo cruzó dos posiciones de golpe, la chispa va en la que está
+        // más cerca del caminante: es la que acaba de caer.
+        const donde = at.value;
+        let gota = nuevas[0] as GpPoint;
+        for (const q of nuevas) if (Math.abs(q.x - donde) < Math.abs(gota.x - donde)) gota = q;
+        chispas(walkPx(sheet, gota.x * k), walkPy(sheet, gota.y));
+        // La gota cae en la hoja: madera, con la nota de su altura.
+        sfx("drop", heightPitch(gota.y));
+      }
+    }
+
+    const mismaHoja = antes.clave === ahora.clave;
+
+    // 2. El par se escribió sobre la gota encendida: la ronda que pedía leerlo
+    // se resolvió. La chispa sale de la gota que se nombró.
+    if (mismaHoja && !antes.label && ahora.label && config.lit && antes.lit === ahora.lit) {
+      chispas(walkPx(sheet, config.lit.x), walkPy(sheet, config.lit.y));
+      // El par y la gota son lo mismo: vidrio.
+      sfx("join");
+    }
+
+    // 3. La línea que une las gotas apareció: el rastro se dibujó entero.
+    if (mismaHoja && !antes.line && ahora.line) {
+      destello(config.mainTrace);
+      sfx("join");
+    }
+
+    // 4. Apareció un rastro más sobre la misma hoja: el reflejado del nodo 21.
+    if (mismaHoja && ahora.count > antes.count) {
+      sfx("join");
+      for (let i = antes.count; i < ahora.count; i++) destello(i);
+    }
+
+    // 5. El escalón que flotaba volvió a apoyar en el mismo lugar: la subida es
+    // otra vez la que corresponde, que es lo que el nodo 19 enseña.
+    if (
+      mismaHoja &&
+      antes.escalon &&
+      !antes.apoya &&
+      ahora.apoya &&
+      antes.from === ahora.from &&
+      step.top
+    ) {
+      chispas(step.top.x, step.top.y);
+      // El escalón vuelve a apoyar en el rastro: encaja.
+      sfx("fit");
+    }
+  }, [config, sheet, step, flashes, burst, bx, by, at]);
+
   // --- Lo que se mueve -------------------------------------------------------
 
-  const walkerGeom = useMemo(() => buildWalker(Math.min(sheet.ux * 0.5, 13)), [sheet.ux]);
+  const walkerR = Math.min(sheet.ux * 0.5, 13);
+  const walker = useMemo(() => walkerParts(walkerR), [walkerR]);
   const plano = config.walker === "ground" && layout.ground ? layout.ground : sheet;
+
+  /**
+   * El caminante crece mientras se mueve y rebota una vez cuando se queda
+   * quieto: "lo tenés vos" y "llegó a un lugar". La escena no sabe si lo lleva
+   * el dedo, pero sabe si se movió, y lo mira en el hilo de la interfaz: cada
+   * cambio de posición vuelve a levantarlo, y cuando deja de cambiar se asienta
+   * con el resorte de caer.
+   */
+  const lift = useSharedValue(0);
+  useAnimatedReaction(
+    () => at.value,
+    (cur, prev) => {
+      if (prev === null || cur === prev) return;
+      // El primer paso lo levanta: aire, una vez por arrastre.
+      if (lift.value < 0.05) runOnJS(sfx)("lift", 0);
+      lift.value = withSequence(
+        withTiming(1, { duration: 90 }),
+        withDelay(160, withSpring(0, theme.spring.settle)),
+      );
+    },
+  );
   const walkerT = useDerivedValue(() => [
     { translateX: plano.cx + at.value * plano.ux },
     { translateY: plano.cy - height.value * plano.uy },
+    { scale: 1 + 0.3 * lift.value },
   ]);
   const walkerO = useDerivedValue(() => {
     if (config.walker === "none") return 0;
@@ -950,9 +1279,11 @@ export function WalkScene({
     { translateY: sheet.cy - height.value * sheet.uy },
   ]);
   const inkGeom = useMemo(() => {
-    const p = Skia.Path.Make();
-    p.addCircle(0, 0, 6);
-    return p;
+    const body = Skia.Path.Make();
+    body.addCircle(0, 0, 6.5);
+    const shine = Skia.Path.Make();
+    shine.addCircle(-2.1, -2.4, 2.1);
+    return { body, shine };
   }, []);
   const inkO = useDerivedValue(() => (config.ink ? 1 : 0), [config.ink]);
 
@@ -1007,112 +1338,394 @@ export function WalkScene({
 
   return (
     <Group opacity={appear}>
-      {/* Las cuatro regiones, teñidas apenas. */}
+      {/* La hoja: vidrio oscuro debajo de lo que se lee. */}
+      <Path path={panel} color={SHADE_SOFT} />
+      <Path path={panel} color={GLASS} />
+      <Path path={panel} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+
+      {/* Las cuatro regiones, con más luz cuantas menos coordenadas negativas. */}
       {quadrants.map((path, i) => (
-        <Path
-          key={`q${i}`}
-          path={path}
-          color={i === 0 || i === 2 ? theme.color.accent : theme.color.warn}
-          opacity={i === 0 ? 0.07 : 0.04}
-        />
+        <Path key={`q${i}`} path={path} color="#ffffff" opacity={QUAD_LIGHT[i] ?? 0} />
       ))}
 
-      <Path path={grid.grid} color={theme.color.line} style="stroke" strokeWidth={0.6} opacity={0.55} />
-      <Path path={guides} color={theme.color.inkFaint} style="stroke" strokeWidth={1.5} />
-      <Path path={grid.axes} color={theme.color.inkDim} style="stroke" strokeWidth={STROKE} />
-      <Path path={grid.ticks} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
-      <Path path={axisText} color={theme.color.inkDim} />
+      <Path path={grid.grid} color={GRID_LINE} style="stroke" strokeWidth={1} />
+      <Path path={guides} color={theme.color.inkDim} style="stroke" strokeWidth={2} strokeCap="round" opacity={0.75} />
+      <Path path={grid.axes} color={theme.color.inkDim} style="stroke" strokeWidth={2} strokeCap="round" />
+      <Path path={grid.ticks} color={theme.color.inkDim} style="stroke" strokeWidth={STROKE} strokeCap="round" />
+      <Legible path={axisText} color={theme.color.inkDim} />
 
-      {/* El terreno, con su línea del nivel del mar. */}
+      {/* El terreno, con su línea del nivel del mar. Es suelo y no una línea:
+          piedra con la luz arriba y el borde claro donde pisa el caminante. El
+          nivel del mar es el mismo cero que la regla de la hoja, y por eso va
+          con la tinta de la regla y no con un color de equipo. */}
       {ground ? (
         <Group opacity={terrenoO}>
-          <Path path={ground.body} color={theme.color.surfaceHigh} />
-          <Path path={ground.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={ground.sea} color={theme.color.accent} style="stroke" strokeWidth={STROKE} opacity={0.6} />
+          <Path path={ground.body}>
+            <LinearGradient
+              start={vec(0, ground.top)}
+              end={vec(0, ground.foot)}
+              colors={[chipTone.top, chipTone.face, chipTone.low]}
+            />
+          </Path>
+          <Path
+            path={ground.ridge}
+            color={chipTone.rimTop}
+            style="stroke"
+            strokeWidth={2.5}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+          <Path path={ground.sea} color={theme.color.inkDim} style="stroke" strokeWidth={STROKE} opacity={0.8} />
         </Group>
       ) : null}
 
       {/* Los rastros. El principal lleva el color; el otro queda apagado, que es
           lo que obliga a usar el par para decir cuál es cuál. */}
-      {Array.from({ length: WALK_TRACE_SLOTS }, (_, i) => {
-        const geom = traces[i];
-        const principal = i === config.mainTrace;
-        return (
-          <Group key={`t${i}`} opacity={geom ? 1 : 0}>
-            {config.line ? (
-              <Path
-                path={geom ? geom.line : marked}
-                color={principal ? theme.color.accent : theme.color.inkDim}
-                style="stroke"
-                strokeWidth={principal ? 2.5 : 2}
-                strokeCap="round"
-                opacity={geom ? 1 : 0}
-              />
-            ) : null}
-            {config.drops && geom ? (
-              <Path path={geom.drops} color={principal ? theme.color.accent : theme.color.inkDim} />
-            ) : null}
-          </Group>
-        );
-      })}
+      {Array.from({ length: WALK_TRACE_SLOTS }, (_, i) => (
+        <TraceView
+          key={`t${i}`}
+          geom={traces[i]}
+          principal={i === config.mainTrace}
+          line={config.line}
+          drops={config.drops}
+          flash={flashes[i] ?? flash0}
+        />
+      ))}
 
       {/* La curva que hay que juzgar. */}
-      <Path path={curve} color={theme.color.ink} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      <Path path={curve} color={SHADE} style="stroke" strokeWidth={7} strokeCap="round" strokeJoin="round" opacity={0.6} />
+      <Path path={curve} color={theme.color.ink} style="stroke" strokeWidth={3.5} strokeCap="round" strokeJoin="round" />
 
       {/* Las curvas candidatas, cada una con su color: se eligen tocando. */}
-      {Array.from({ length: WALK_OPTION_SLOTS }, (_, i) => {
-        const path = options[i];
-        return (
-          <Path
-            key={`o${i}`}
-            path={path ?? curve}
-            color={WALK_OPTION_COLORS[i] ?? theme.color.ink}
-            style="stroke"
-            strokeWidth={picked === i ? 4 : 2.5}
-            strokeCap="round"
-            opacity={path ? (picked < 0 || picked === i ? 1 : 0.3) : 0}
-          />
-        );
-      })}
+      {Array.from({ length: WALK_OPTION_SLOTS }, (_, i) => (
+        <OptionCurve
+          key={`o${i}`}
+          path={options[i]}
+          color={WALK_OPTION_COLORS[i] ?? theme.color.ink}
+          index={i}
+          picked={picked}
+        />
+      ))}
 
-      {/* Las gotas marcadas entre las que hay que elegir. */}
-      <Path path={marked} color={theme.color.warn} style="stroke" strokeWidth={2} />
+      {/* Las gotas marcadas entre las que hay que elegir: laten, piden que las miren. */}
+      <Group opacity={attentionO}>
+        <Path path={marked} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+      </Group>
 
       {/* La gota encendida, sus hilos y el par escrito. */}
-      <Path path={litGeom} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
-      <Path path={threads.path} color={theme.color.warn} style="stroke" strokeWidth={1.5} />
-      <Path path={threads.marcas} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
-      <Path path={pairLabel} color={theme.color.ink} />
-      <Path path={legend} color={theme.color.inkDim} />
+      <Path path={litGeom} color={theme.color.ok} style="stroke" strokeWidth={8} opacity={0.35}>
+        <BlurMask blur={5} style="normal" />
+      </Path>
+      <Path path={litGeom} color={theme.color.ok} style="stroke" strokeWidth={3} />
+      <Path path={threads.path} color={SHADE} style="stroke" strokeWidth={4.5} strokeCap="round" opacity={0.6} />
+      <Path path={threads.path} color={theme.color.warn} style="stroke" strokeWidth={2} strokeCap="round" />
+      <Path path={threads.marcas} color={theme.color.warn} style="stroke" strokeWidth={3} strokeCap="round" />
+      <Legible path={pairLabel} color={theme.color.ink} />
+      <Legible path={legend} color={theme.color.inkDim} />
 
       {/* La escalera de escalones iguales: la cuesta, dicha en todo el recorrido. */}
-      <Path path={stairs} color={pasoColor} style="stroke" strokeWidth={1.5} opacity={0.5} />
+      <Path
+        path={stairs}
+        color={pasoColor}
+        style="stroke"
+        strokeWidth={2.5}
+        strokeCap="round"
+        strokeJoin="round"
+        opacity={0.55}
+      />
 
       {/* El segundo escalón, apagado: el que se superpone para ver que encajan. */}
-      <Path path={ghostStep.body} color={pasoColor} style="stroke" strokeWidth={2} opacity={0.35} />
+      <Path
+        path={ghostStep.body}
+        color={pasoColor}
+        style="stroke"
+        strokeWidth={3}
+        strokeCap="round"
+        strokeJoin="round"
+        opacity={0.4}
+      />
 
-      {/* El escalón: subida y avance. El color codifica la cuesta. */}
-      <Path path={step.shadow} color={theme.color.inkFaint} style="stroke" strokeWidth={1.5} />
-      <Path path={step.body} color={pasoColor} style="stroke" strokeWidth={3} strokeCap="round" />
-      <Path path={step.marks} color={pasoColor} style="stroke" strokeWidth={1.5} />
-      <Path path={step.text} color={theme.color.ink} />
+      {/* El escalón: subida y avance. El color codifica la cuesta. La cuña
+          rellena y el halo lo despegan del paisaje; el trazo sigue siendo lo
+          que se mide. */}
+      <Path path={step.fill} color={pasoColor} opacity={0.16} />
+      <Path path={step.body} color={pasoColor} style="stroke" strokeWidth={11} strokeCap="round" strokeJoin="round" opacity={0.3}>
+        <BlurMask blur={6} style="normal" />
+      </Path>
+      <Path path={step.shadow} color={theme.color.inkDim} style="stroke" strokeWidth={2} strokeCap="round" opacity={0.6} />
+      <Path path={step.body} color={SHADE} style="stroke" strokeWidth={7} strokeCap="round" strokeJoin="round" opacity={0.5} />
+      <Path path={step.body} color={pasoColor} style="stroke" strokeWidth={4} strokeCap="round" strokeJoin="round" />
+      <Path path={step.marks} color={pasoColor} style="stroke" strokeWidth={2} strokeCap="round" />
+      <Group opacity={attentionO}>
+        <Path path={step.corner} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+      </Group>
+      <Legible path={step.text} color={theme.color.ink} />
 
       {/* La recta vertical del test. */}
       <Group transform={sweepT} opacity={sweepO}>
-        <Path path={sweepGeom} color={theme.color.warn} style="stroke" strokeWidth={2} />
+        <Path path={sweepGeom} color={theme.color.warn} style="stroke" strokeWidth={10} strokeCap="round" opacity={0.3}>
+          <BlurMask blur={6} style="normal" />
+        </Path>
+        <Path path={sweepGeom} color={theme.color.warn} style="stroke" strokeWidth={3} strokeCap="round" />
       </Group>
 
       {/* La gota que está cayendo y el caminante que la deja. */}
       <Group transform={inkT} opacity={inkO}>
-        <Path path={inkGeom} color={theme.color.accent} />
+        <Path path={inkGeom.body}>
+          <RadialGradient c={vec(-2.2, -2.6)} r={11} colors={[TRACE.light, TRACE.base, TRACE.dark]} />
+        </Path>
+        <Path path={inkGeom.shine} color="rgba(255, 255, 255, 0.6)" />
       </Group>
       <Group transform={walkerT} opacity={walkerO}>
-        <Path path={walkerGeom} color={theme.color.ink} style="stroke" strokeWidth={2} strokeCap="round" />
+        <Path path={walker.shadow} color="rgba(0, 0, 0, 0.35)">
+          <BlurMask blur={3} style="normal" />
+        </Path>
+        <Path
+          path={walker.limbs}
+          color={WALKER.dark}
+          style="stroke"
+          strokeWidth={walkerR * 0.3}
+          strokeCap="round"
+        />
+        <Path path={walker.torso}>
+          <RadialGradient
+            c={vec(-walkerR * 0.3, -walkerR * 1.5)}
+            r={walkerR * 1.4}
+            colors={[WALKER.light, WALKER.base, WALKER.dark]}
+          />
+        </Path>
+        <Path path={walker.head}>
+          <RadialGradient
+            c={vec(-walkerR * 0.25, -walkerR * 2.35)}
+            r={walkerR * 1.0}
+            colors={[WALKER.light, WALKER.base, WALKER.dark]}
+          />
+        </Path>
+        <Path path={walker.shine} color="rgba(255, 255, 255, 0.7)" />
       </Group>
 
+      <Burst burst={burst} x={bx} y={by} r={9} />
+
       <Group transform={handT} opacity={handO}>
-        <Path path={handGeom} color={theme.color.ink} style="stroke" strokeWidth={2} />
+        <Path path={handGeom} color="rgba(255, 255, 255, 0.16)" />
+        <Path path={handGeom} color={theme.color.ink} style="stroke" strokeWidth={2.5} />
       </Group>
+    </Group>
+  );
+}
+
+/**
+ * Glifos que se leen sobre cualquier fondo: un contorno oscuro debajo y la tinta
+ * encima. Los numerales de las reglas caen a veces fuera del vidrio de la hoja,
+ * y la leyenda siempre, así que no alcanza con el vidrio.
+ */
+function Legible({ path, color }: { readonly path: SkPath; readonly color: string }) {
+  return (
+    <>
+      <Path path={path} color={SHADE} style="stroke" strokeWidth={3} strokeJoin="round" />
+      <Path path={path} color={color} />
+    </>
+  );
+}
+
+/**
+ * Un rastro: la línea con su halo y sus gotas con volumen. Montado siempre; sin
+ * rastro que dibujar queda con opacidad cero.
+ *
+ * Las gotas de un rastro van en un solo trazo, así que el volumen se hace con
+ * tres pasadas del mismo trazo —sombra corrida, cuerpo, brillo— y no con un
+ * degradado por gota: cuesta lo mismo con tres gotas que con treinta.
+ */
+function TraceView({
+  geom,
+  principal,
+  line,
+  drops,
+  flash,
+}: {
+  readonly geom: TraceGeom | undefined;
+  readonly principal: boolean;
+  readonly line: boolean;
+  readonly drops: boolean;
+  readonly flash: SharedValue<number>;
+}) {
+  const empty = useMemo(() => Skia.Path.Make(), []);
+  const look = principal ? TRACE : DIM;
+  // El principal lleva siempre un halo tenue que lo despega del paisaje; el
+  // destello lo enciende entero una vez, cuando el rastro termina de dibujarse.
+  const reposo = principal ? 0.35 : 0;
+  const haloO = useDerivedValue(
+    () => reposo + (flash.value < 1 ? (1 - flash.value) * (1 - reposo) : 0),
+    [reposo],
+  );
+  const l = geom && line ? geom.line : empty;
+  const d = geom && drops ? geom.drops : empty;
+  const s = geom && drops ? geom.shine : empty;
+  return (
+    <Group opacity={geom ? 1 : 0}>
+      <Group opacity={haloO}>
+        <Path path={l} color={look.base} style="stroke" strokeWidth={11} strokeCap="round" strokeJoin="round">
+          <BlurMask blur={6} style="normal" />
+        </Path>
+      </Group>
+      <Path
+        path={l}
+        color={SHADE}
+        style="stroke"
+        strokeWidth={principal ? 6.5 : 5.5}
+        strokeCap="round"
+        strokeJoin="round"
+        opacity={0.5}
+      />
+      <Path
+        path={l}
+        color={look.base}
+        style="stroke"
+        strokeWidth={principal ? 3.5 : 2.5}
+        strokeCap="round"
+        strokeJoin="round"
+      />
+      <Group transform={[{ translateY: 1.6 }]}>
+        <Path path={d} color="rgba(0, 0, 0, 0.4)" />
+      </Group>
+      <Path path={d} color={look.base} />
+      <Path path={d} color={look.dark} style="stroke" strokeWidth={1.2} />
+      <Path path={s} color="rgba(255, 255, 255, 0.6)" />
+    </Group>
+  );
+}
+
+/**
+ * Una curva candidata. Al elegirla engorda y su halo se enciende una vez con su
+ * propio color: dice "esta elegiste", no "esta es la buena". La escena no sabe
+ * cuál es la buena, y un destello menta lo diría antes que la actividad.
+ */
+function OptionCurve({
+  path,
+  color,
+  index,
+  picked,
+}: {
+  readonly path: SkPath | undefined;
+  readonly color: string;
+  readonly index: number;
+  readonly picked: number;
+}) {
+  const empty = useMemo(() => Skia.Path.Make(), []);
+  const flash = useSharedValue(1);
+  const antes = useRef(picked);
+  useEffect(() => {
+    const prev = antes.current;
+    antes.current = picked;
+    if (picked !== index || prev === index || !path) return;
+    flash.value = 0;
+    flash.value = withTiming(1, { duration: 720 });
+  }, [picked, index, path, flash]);
+  const haloO = useDerivedValue(() => (flash.value < 1 ? 0.9 * (1 - flash.value) : 0));
+  const p = path ?? empty;
+  const elegida = picked === index;
+  const o = path ? (picked < 0 || elegida ? 1 : 0.3) : 0;
+  return (
+    <Group opacity={o}>
+      <Group opacity={haloO}>
+        <Path path={p} color={color} style="stroke" strokeWidth={14} strokeCap="round" strokeJoin="round">
+          <BlurMask blur={7} style="normal" />
+        </Path>
+      </Group>
+      <Path
+        path={p}
+        color={SHADE}
+        style="stroke"
+        strokeWidth={elegida ? 8.5 : 7}
+        strokeCap="round"
+        strokeJoin="round"
+        opacity={0.6}
+      />
+      <Path
+        path={p}
+        color={color}
+        style="stroke"
+        strokeWidth={elegida ? 4.5 : 3}
+        strokeCap="round"
+        strokeJoin="round"
+      />
+    </Group>
+  );
+}
+
+const SPARKS = [0, 1, 2, 3, 4, 5].map((i) => (i * Math.PI) / 3 + Math.PI / 6);
+
+/**
+ * El jugo del evento: un halo menta que se enciende y se apaga, un anillo que se
+ * abre y seis chispas menta y oro que salen del lugar y se apagan en ~700 ms. Es
+ * el patrón de `Bridge` y `Spark` del nodo 1: todo deriva de `burst`, que va de
+ * 0 a 1 una sola vez por evento. En 1 no se ve nada.
+ */
+function Burst({
+  burst,
+  x,
+  y,
+  r,
+}: {
+  readonly burst: SharedValue<number>;
+  readonly x: SharedValue<number>;
+  readonly y: SharedValue<number>;
+  readonly r: number;
+}) {
+  const ring = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, r);
+    return p;
+  }, [r]);
+  const t = useDerivedValue(() => [{ translateX: x.value }, { translateY: y.value }]);
+  const ringT = useDerivedValue(() => [{ scale: 1 + 1.4 * burst.value }]);
+  const ringO = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  const haloO = useDerivedValue(() => (burst.value < 1 ? 0.8 * (1 - burst.value) : 0));
+  return (
+    <Group transform={t}>
+      <Group opacity={haloO}>
+        <Path path={ring} color={theme.color.ok}>
+          <BlurMask blur={8} style="normal" />
+        </Path>
+      </Group>
+      <Group transform={ringT} opacity={ringO}>
+        <Path path={ring} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+      </Group>
+      {SPARKS.map((angle, i) => (
+        <Spark key={i} angle={angle} from={r} gold={i % 2 === 1} burst={burst} />
+      ))}
+    </Group>
+  );
+}
+
+function Spark({
+  angle,
+  from,
+  gold,
+  burst,
+}: {
+  readonly angle: number;
+  readonly from: number;
+  readonly gold: boolean;
+  readonly burst: SharedValue<number>;
+}) {
+  const dot = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 3);
+    return p;
+  }, []);
+  const t = useDerivedValue(() => {
+    const d = from + 34 * burst.value;
+    return [
+      { translateX: Math.cos(angle) * d },
+      { translateY: Math.sin(angle) * d },
+      { scale: 1 - 0.7 * burst.value },
+    ];
+  }, [angle, from]);
+  const o = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group transform={t} opacity={o}>
+      <Path path={dot} color={gold ? theme.color.gold : theme.color.ok} />
     </Group>
   );
 }

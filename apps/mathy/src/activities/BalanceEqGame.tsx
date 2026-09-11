@@ -37,7 +37,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Canvas, Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
+import { BlurMask, Canvas, Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
@@ -48,6 +48,7 @@ import Animated, {
   withDelay,
   withRepeat,
   withSequence,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
@@ -77,13 +78,18 @@ import {
 import type { Event } from "@mathy/progress";
 import {
   BalanceScene,
+  BOX_LOOK,
   MAX_TILT,
+  WEIGHT_LOOK,
+  WeightBodies,
+  addShine,
   balanceLayout,
   boxFootprint,
   type BalanceContents,
   type BalanceLayout,
   type BalanceStyle,
 } from "../scenes/BalanceScene.tsx";
+import { play } from "../ui/sound.ts";
 import { Header, Hint } from "../ui/Chrome.tsx";
 import { ActivityShell, useActivityViewport } from "../ui/ActivityShell.tsx";
 import { t } from "../i18n.ts";
@@ -771,6 +777,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
             // Una balanza que afirma no lleva ningún signo adentro de un plato:
             // el único signo del nodo es el `=`, y va entre los dos.
             brooch={false}
+            // Las pesas las dibuja el nodo, así que la escena no las ve cambiar:
+            // se lo dice esta firma, y la barra que se endereza después de
+            // cargar o sacar suelta su halo y su golpe.
+            loads={`${state.left.join(",")}|${state.right.join(",")}|${state.actedLeft.join(",")}|${state.actedRight.join(",")}`}
             overlayLeft={
               <PanOverlay
                 spots={spots.left}
@@ -784,6 +794,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
                 haloR={Math.max(l.panW * 0.6, 66)}
                 haloY={fp.yBase - fp.h / 2}
                 takenIdx={takenKey?.startsWith("0:") ? Number(takenKey.slice(2)) : -1}
+                round={round}
+                lastMove={before}
                 dragX={dragX}
                 dragY={dragY}
               />
@@ -801,6 +813,8 @@ function Activity({ level, onLevelDone, onExit, onEvent }: BalanceEqGameProps) {
                 haloR={Math.max(l.panW * 0.6, 66)}
                 haloY={fp.yBase - fp.h / 2}
                 takenIdx={takenKey?.startsWith("1:") ? Number(takenKey.slice(2)) : -1}
+                round={round}
+                lastMove={before}
                 dragX={dragX}
                 dragY={dragY}
               />
@@ -954,6 +968,8 @@ function PanOverlay({
   haloR,
   haloY,
   takenIdx,
+  round,
+  lastMove,
   dragX,
   dragY,
 }: {
@@ -967,6 +983,14 @@ function PanOverlay({
   readonly halo: ReturnType<typeof useSharedValue<number>> | null;
   /** Cuál de estos objetos sigue al dedo, o -1. */
   readonly takenIdx: number;
+  /** La ronda: un plato que cambia de ronda trae otro montón, y eso no es una llegada. */
+  readonly round: number;
+  /**
+   * El estado de antes del último movimiento: cambia con cada movimiento del
+   * jugador y vuelve a `null` cuando la ronda se rearma. Solo un movimiento
+   * puede traer una pesa que rebote al llegar.
+   */
+  readonly lastMove: object | null;
   readonly haloR: number;
   readonly haloY: number;
   readonly dragX: ReturnType<typeof useSharedValue<number>>;
@@ -975,26 +999,120 @@ function PanOverlay({
   const vueltas = acted.filter((a) => a === "turn").length;
   const pintado = acted.includes("paint");
 
-  /** El montón que se queda quieto y la que el dedo levantó, en dos trazos. */
+  /**
+   * La pesa que acaba de llegar a este plato: el plato tiene una más y todas las
+   * de antes siguen. Es la que rebota al caer; una ronda nueva trae otro montón
+   * y no cuenta como llegada.
+   */
+  const previas = useRef<{
+    readonly round: number;
+    readonly move: object | null;
+    readonly values: readonly number[];
+  }>({ round, move: lastMove, values: spots.map((s) => s.value) });
+  const llegada = useMemo(() => {
+    if (previas.current.round !== round) return -1;
+    if (lastMove === null || previas.current.move === lastMove) return -1;
+    const antes = previas.current.values;
+    const ahora = spots.map((s) => s.value);
+    if (ahora.length !== antes.length + 1) return -1;
+    const resto = [...antes];
+    let extra = -1;
+    ahora.forEach((v, i) => {
+      const j = resto.indexOf(v);
+      if (j >= 0) resto.splice(j, 1);
+      else extra = i;
+    });
+    return resto.length === 0 ? extra : -1;
+  }, [spots, round, lastMove]);
+  useEffect(() => {
+    previas.current = { round, move: lastMove, values: spots.map((s) => s.value) };
+  }, [spots, round, lastMove]);
+
+  /**
+   * Levantar crece un 30 %; soltar la devuelve desde donde la dejó el dedo (el
+   * arrastre vuelve a cero solo, y la pesa viaja con él) y rebota al llegar.
+   */
+  const alzada = useSharedValue(0);
+  const [vuelta, setVuelta] = useState(-1);
+  const tomadaAntes = useRef(takenIdx);
+  useEffect(() => {
+    const antes = tomadaAntes.current;
+    tomadaAntes.current = takenIdx;
+    if (takenIdx >= 0) {
+      setVuelta(-1);
+      alzada.value = withSpring(1, theme.spring.lift);
+      play("lift");
+      return;
+    }
+    alzada.value = withSpring(0, theme.spring.settle);
+    if (antes < 0) return;
+    setVuelta(antes);
+    const t = setTimeout(() => setVuelta(-1), theme.motion.base + 60);
+    return () => clearTimeout(t);
+  }, [takenIdx, alzada]);
+  // Si la pesa se fue al otro plato, este ya no la tiene: nada que devolver.
+  useEffect(() => {
+    setVuelta(-1);
+  }, [spots]);
+
+  /** El rebote de la que llegó, y su "toc": la nota sube con lo que hay en el plato. */
+  const pop = useSharedValue(0);
+  useEffect(() => {
+    if (llegada < 0) return;
+    pop.value = 1;
+    pop.value = withSpring(0, theme.spring.settle);
+    play("drop", { pitch: Math.min(12, spots.length) });
+  }, [llegada, spots, pop]);
+
+  /**
+   * Tres montones en tres trazos: las que se quedan quietas, la que el dedo
+   * lleva (o vuelve) y la que acaba de llegar. Cada uno con su brillo y sus
+   * números, así el volumen cuesta lo mismo con dos pesas que con doce.
+   */
   const cuerpos = useMemo(() => {
     const quietas = Skia.Path.Make();
     const tomada = Skia.Path.Make();
+    const nueva = Skia.Path.Make();
+    const brillo = Skia.Path.Make();
+    const brilloTomada = Skia.Path.Make();
+    const brilloNueva = Skia.Path.Make();
     const etiquetas = Skia.Path.Make();
     const etiquetaTomada = Skia.Path.Make();
+    const etiquetaNueva = Skia.Path.Make();
+    let centroTomada = { x: 0, y: 0 };
+    let centroNueva = { x: 0, y: 0 };
     spots.forEach((s, i) => {
-      const suya = i === takenIdx;
-      drawSpot(suya ? tomada : quietas, s, skin, figuras, vueltas);
+      const suya = i === takenIdx || (takenIdx < 0 && i === vuelta);
+      const recien = !suya && i === llegada;
+      if (suya) centroTomada = { x: s.x, y: s.y };
+      if (recien) centroNueva = { x: s.x, y: s.y };
+      drawSpot(suya ? tomada : recien ? nueva : quietas, s, skin, figuras, vueltas);
+      if (skin !== "chips") {
+        addShine(suya ? brilloTomada : recien ? brilloNueva : brillo, s.x - s.w / 2, s.y - s.h / 2, s.w, s.h);
+      }
       if (figuras || skin === "bars") return;
       addGlyphs(
-        suya ? etiquetaTomada : etiquetas,
+        suya ? etiquetaTomada : recien ? etiquetaNueva : etiquetas,
         String(s.value),
         s.x,
         s.y,
         skin === "chips" ? 15 : 13,
       );
     });
-    return { quietas, tomada, etiquetas, etiquetaTomada };
-  }, [spots, skin, figuras, vueltas, takenIdx]);
+    return {
+      quietas,
+      tomada,
+      nueva,
+      brillo,
+      brilloTomada,
+      brilloNueva,
+      etiquetas,
+      etiquetaTomada,
+      etiquetaNueva,
+      centroTomada,
+      centroNueva,
+    };
+  }, [spots, skin, figuras, vueltas, takenIdx, vuelta, llegada]);
 
   const fantasma = useMemo(() => {
     const p = Skia.Path.Make();
@@ -1022,14 +1140,37 @@ function PanOverlay({
     return p;
   }, [haloR, haloY]);
 
-  const latidoO = useDerivedValue(() => 0.2 + 0.55 * pulse.value);
+  const latidoO = useDerivedValue(() => 0.25 + 0.6 * pulse.value);
   const haloO = useDerivedValue(() => (halo ? halo.value : 0), [halo]);
-  const tomadaT = useDerivedValue(() => [
-    { translateX: dragX.value },
-    { translateY: dragY.value },
-  ]);
+  const ct = cuerpos.centroTomada;
+  const cn = cuerpos.centroNueva;
+  const tomadaT = useDerivedValue(
+    () => [
+      { translateX: dragX.value + ct.x },
+      { translateY: dragY.value + ct.y },
+      { scale: 1 + 0.3 * alzada.value },
+      { translateX: -ct.x },
+      { translateY: -ct.y },
+    ],
+    [ct.x, ct.y],
+  );
+  const nuevaT = useDerivedValue(
+    () => [
+      { translateX: cn.x },
+      { translateY: cn.y },
+      { scale: 1 + 0.22 * pop.value },
+      { translateX: -cn.x },
+      { translateY: -cn.y },
+    ],
+    [cn.x, cn.y],
+  );
 
-  const color = pintado ? theme.color.accent : theme.color.inkDim;
+  // Una figura pintada toma el color de lo que se le hizo; una pesa es peltre,
+  // de nadie. Sobre el peltre claro el número se graba en tinta oscura.
+  const look = figuras && pintado ? BOX_LOOK : WEIGHT_LOOK;
+  const tinta = skin === "chips" ? theme.color.ink : ENGRAVED_INK;
+  const cuerpo = (path: SkPath, brillo: SkPath) =>
+    skin === "chips" ? <ChipBodies path={path} /> : <WeightBodies path={path} shine={brillo} look={look} />;
 
   return (
     <>
@@ -1038,18 +1179,29 @@ function PanOverlay({
       <Group opacity={haloO}>
         <Path path={haloPath} color={theme.color.warn} style="stroke" strokeWidth={2} />
       </Group>
+      {/* La demostración es la guía: dorada. */}
       <Group opacity={latidoO}>
-        <Path path={latido} color={theme.color.accent} style="stroke" strokeWidth={2} />
+        <Path path={latido} color={theme.color.gold} style="stroke" strokeWidth={6} opacity={0.45}>
+          <BlurMask blur={4} style="normal" />
+        </Path>
+        <Path path={latido} color={theme.color.gold} style="stroke" strokeWidth={2} />
       </Group>
-      <Path path={cuerpos.quietas} color={color} style="stroke" strokeWidth={1.8} />
-      <Path path={cuerpos.etiquetas} color={theme.color.ink} />
+      {cuerpo(cuerpos.quietas, cuerpos.brillo)}
+      <Path path={cuerpos.etiquetas} color={tinta} />
+      <Group transform={nuevaT}>
+        {cuerpo(cuerpos.nueva, cuerpos.brilloNueva)}
+        <Path path={cuerpos.etiquetaNueva} color={tinta} />
+      </Group>
       <Group transform={tomadaT}>
-        <Path path={cuerpos.tomada} color={theme.color.accent} style="stroke" strokeWidth={2} />
-        <Path path={cuerpos.etiquetaTomada} color={theme.color.ink} />
+        {cuerpo(cuerpos.tomada, cuerpos.brilloTomada)}
+        <Path path={cuerpos.etiquetaTomada} color={tinta} />
       </Group>
     </>
   );
 }
+
+/** La tinta de un número grabado en una pesa de peltre: sobre metal claro, oscura. */
+const ENGRAVED_INK = "#1a2433";
 
 /**
  * Dónde va cada objeto adentro de un plato, con el eje del grupo del plato como

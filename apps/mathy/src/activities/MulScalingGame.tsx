@@ -46,7 +46,6 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-  type SharedValue,
 } from "react-native-reanimated";
 import {
   MUL_OPTION_SLOTS,

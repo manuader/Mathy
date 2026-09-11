@@ -27,15 +27,293 @@
  * la vuelta es de un tirón, así que entre dos tirones el trazo no cambia.
  *
  * Nada de texto: los numerales y el `−` son contornos del atlas de glifos.
+ *
+ * El estilo es el del nodo 1 (`BowlScene.tsx`): los objetos tienen cuerpo. El
+ * cofre es de madera con degradado, sombra en el piso y una placa de metal
+ * donde se leen los dientes de la cerradura; las llaves son de acero sobre la
+ * ficha neutra de las bandejas (`ChipBodies`); la manivela es una rueda de
+ * metal. El color tiene trabajo y nada más: el caminante y su vuelta son del
+ * equipo (`accent`), lo que coincide es menta (`ok`), lo que pide que lo miren
+ * es ámbar (`warn`) y la guía es dorada. Las cerraduras y los signos, que antes
+ * eran ámbar sin pedir nada, pasaron a tinta sobre metal.
+ *
+ * El jugo: una pieza que el dedo lleva crece un 30 % y, al llegar a su casa o a
+ * la cerradura, rebota una vez. Y el evento que el nodo enseña —la vuelta
+ * deshizo la ida y el cofre abre— responde una sola vez en la cerradura que lo
+ * causó: un halo menta y seis chispas menta y oro que se abren y se apagan. Las
+ * chispas están montadas desde el principio con opacidad cero (modo retained) y
+ * su reloj corre en el hilo de la interfaz (`useAnimatedReaction`), sin volver
+ * a JavaScript.
  */
 
-import { useMemo } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
-import { useDerivedValue, type SharedValue } from "react-native-reanimated";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  BlurMask,
+  Group,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
+  type SkPath,
+} from "@shopify/react-native-skia";
+import {
+  runOnJS,
+  useAnimatedReaction,
+  useDerivedValue,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+  withTiming,
+  type DerivedValue,
+  type SharedValue,
+} from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
 import { TEETH_PER_TURN, type Layer } from "@mathy/mechanics";
+import { ChipBodies } from "../ui/ChipBodies.tsx";
+import { play, type Sfx } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
+
+// --- Materiales --------------------------------------------------------------
+
+/**
+ * La madera del cofre: la misma de los cuencos del nodo 1. Es el color propio
+ * del objeto y no significa nada más; por eso ningún token vivo la toca.
+ */
+const WOOD = { light: "#d9965a", base: "#a8652f", dark: "#5e3417", lid: "#e8ad73" } as const;
+
+/**
+ * La madera de cada cofre del encastre, un poco más clara cuanto más adentro:
+ * dos cajas de la misma madera, una dentro de la otra, se leían como una sola.
+ */
+const WOOD_DEPTH: readonly { readonly light: string; readonly base: string; readonly dark: string }[] = [
+  { light: WOOD.light, base: WOOD.base, dark: WOOD.dark },
+  { light: "#e4a970", base: "#b8763d", dark: "#6c3f1e" },
+  { light: "#eebd88", base: "#c7884c", dark: "#7a4a25" },
+  { light: "#f5cf9f", base: "#d49a5d", dark: "#87552c" },
+];
+
+/**
+ * El acero de las llaves, las cerraduras y la manivela. Gris frío a propósito:
+ * el dorado es de lo aprendido y el ámbar de "mirá acá", así que una llave de
+ * bronce diría una de las dos cosas sin querer.
+ */
+const STEEL = { light: "#eef3f9", base: "#a9b6c7", dark: "#566579" } as const;
+/** El tesoro del encastre: un cristal sin color de equipo, que no significa nada más. */
+const CRYSTAL = { light: "#ffffff", base: "#cfe3f5", dark: "#6f8fb0" } as const;
+/**
+ * El objeto que vuelve del cofre, con cuerpo. Su color sí tiene trabajo: menta
+ * si encaja en la silueta, ámbar si lo que volvió es otra cosa.
+ */
+const GEM_OK = { light: "#b9f7de", base: theme.color.ok, dark: "#169a6c" } as const;
+const GEM_WARN = { light: "#ffe2b0", base: theme.color.warn, dark: "#c7801a" } as const;
+/** La piedra del río: gris del agua, el color propio de la pista del nodo 3. */
+const STONE = { light: "#9aa8ba", base: "#5f6e82", dark: "#323d4d" } as const;
+/** La tinta sobre el metal: los dientes y los signos grabados en la placa. */
+const ENGRAVE = "#1a2433";
+const SHADOW = "rgba(0, 0, 0, 0.32)";
+/** El vidrio de las superficies que flotan sobre el paisaje. */
+const GLASS_FILL = "rgba(255, 255, 255, 0.05)";
+const GLASS_LINE = "rgba(255, 255, 255, 0.12)";
+/** Lo que va debajo de algo que tiene que leerse sobre cualquier fondo. */
+const PLATE = "rgba(9, 17, 29, 0.9)";
+/** Un hueco: más oscuro que lo que lo rodea, sin tapar el paisaje entero. */
+const HOLLOW = "rgba(0, 0, 0, 0.38)";
+/** La tinta sobre el paisaje: casi blanca, con una sombra que la despega. */
+const INK_SHADOW = "rgba(0, 0, 0, 0.55)";
+
+// --- Jugo --------------------------------------------------------------------
+
+/** Cuánto dura la respuesta al evento: el halo y las chispas. */
+const BURST_MS = 720;
+/** Cuántos pixeles tarda una pieza en crecer entera al separarse de su lugar. */
+const LIFT_RAMP = 34;
+
+const SPARKS = [0, 1, 2, 3, 4, 5].map((i) => (i * Math.PI) / 3 + Math.PI / 6);
+
+/**
+ * El reloj de una respuesta, de 0 a 1; en 1 no se ve. Arranca cuando `value`
+ * cruza `at` subiendo, una sola vez, y se apaga en seco si baja: el cambio de
+ * ronda devuelve el cofre a cero y la chispa no puede quedar a medias. Corre en
+ * el hilo de la interfaz, así que el cruce se detecta sin volver a JavaScript.
+ */
+function useBurstOn(value: SharedValue<number>, at: number, sfx: Sfx = "fit"): SharedValue<number> {
+  const burst = useSharedValue(1);
+  useAnimatedReaction(
+    () => value.value >= at,
+    (arriba, antes) => {
+      if (antes === null || arriba === antes) return;
+      burst.value = arriba
+        ? withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: BURST_MS }))
+        : 1;
+      // El sonido sale con la chispa, en el mismo cruce: la cerradura cede.
+      if (arriba) runOnJS(play)(sfx);
+    },
+    [at, sfx],
+  );
+  return burst;
+}
+
+/**
+ * El mismo reloj, cuando el evento llega como hecho del render y no como valor
+ * animado: la ficha que entró, la vuelta que cerró. `delay` espera a que el
+ * objeto termine de llegar, para que la chispa salga cuando se ve que encajó y
+ * no antes. El cambio de ronda (el hecho vuelve a falso) la apaga en seco.
+ */
+function useBurstWhen(flag: boolean, delay = 0, sfx: Sfx = "fit"): SharedValue<number> {
+  const burst = useSharedValue(1);
+  const antes = useRef(flag);
+  useEffect(() => {
+    let espera: ReturnType<typeof setTimeout> | null = null;
+    if (flag && !antes.current) {
+      burst.value = withDelay(
+        delay,
+        withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: BURST_MS })),
+      );
+      // El sonido espera lo mismo que la chispa: suena cuando se ve que encajó.
+      espera = setTimeout(() => play(sfx), delay);
+    } else if (!flag) {
+      burst.value = 1;
+    }
+    antes.current = flag;
+    return () => {
+      if (espera !== null) clearTimeout(espera);
+    };
+  }, [flag, delay, burst, sfx]);
+  return burst;
+}
+
+/**
+ * Contar se escucha: cada piedra que el caminante pisa suena a madera, y la nota
+ * sube con el número de la piedra (baja cuando vuelve). Se detecta en el hilo de
+ * la interfaz y cruza a JavaScript una vez por piedra, nunca por cuadro. Un salto
+ * de más de una piedra en un cuadro es un cambio de ronda, y no suena.
+ */
+function useStepSound(pos: SharedValue<number>, on: boolean): void {
+  useAnimatedReaction(
+    () => (on ? Math.round(pos.value) : -1),
+    (piedra, antes) => {
+      if (piedra < 0 || antes === null || antes < 0 || Math.abs(piedra - antes) !== 1) return;
+      runOnJS(play)("drop", { pitch: Math.min(12, piedra) });
+    },
+    [on],
+  );
+}
+
+/**
+ * La respuesta al evento que el nivel enseña, en el objeto que lo causó: un
+ * halo menta que se enciende y se apaga, y seis chispas menta y oro que se
+ * abren. Menta porque es "coincide"; el oro, porque lo que coincidió es lo que
+ * se aprende. No se repite para pedir atención: eso sería confeti.
+ */
+function Burst({
+  x,
+  y,
+  r,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly r: number;
+  readonly burst: SharedValue<number>;
+}) {
+  const halo = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(x, y, r);
+    return p;
+  }, [x, y, r]);
+  const haloO = useDerivedValue(() => (burst.value < 1 ? 0.9 * (1 - burst.value) : 0));
+  return (
+    <>
+      <Group opacity={haloO}>
+        <Path path={halo} color={theme.color.ok}>
+          <BlurMask blur={r * 0.7} style="normal" />
+        </Path>
+      </Group>
+      {SPARKS.map((angle, i) => (
+        <Spark key={i} x={x} y={y} reach={r} angle={angle} gold={i % 2 === 1} burst={burst} />
+      ))}
+    </>
+  );
+}
+
+function Spark({
+  x,
+  y,
+  reach,
+  angle,
+  gold,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly reach: number;
+  readonly angle: number;
+  readonly gold: boolean;
+  readonly burst: SharedValue<number>;
+}) {
+  const dot = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 3);
+    return p;
+  }, []);
+  const t = useDerivedValue(() => {
+    const d = reach * 0.4 + reach * 1.5 * burst.value;
+    return [
+      { translateX: x + Math.cos(angle) * d },
+      { translateY: y + Math.sin(angle) * d },
+      { scale: 1 - 0.7 * burst.value },
+    ];
+  }, [x, y, reach, angle]);
+  const o = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group transform={t} opacity={o}>
+      <Path path={dot} color={gold ? theme.color.gold : theme.color.ok} />
+    </Group>
+  );
+}
+
+/**
+ * Un resplandor ámbar que sigue a un valor de 0 a 1 (o de -1 a 1): la llave
+ * que no entra, la manivela contra el tope. Es el "mirá acá" del juego sobre el
+ * objeto que se resiste, y acompaña al tope sin agregar ningún sacudón.
+ */
+function WarnGlow({
+  path,
+  level,
+  width,
+}: {
+  readonly path: SkPath;
+  readonly level: DerivedValue<number>;
+  readonly width: number;
+}) {
+  const o = useDerivedValue(() => Math.min(1, Math.abs(level.value) * 1.4));
+  return (
+    <Group opacity={o}>
+      <Path path={path} color={theme.color.warn} style="stroke" strokeWidth={width}>
+        <BlurMask blur={width * 0.8} style="solid" />
+      </Path>
+    </Group>
+  );
+}
+
+/**
+ * Tinta que se lee sobre el paisaje: el trazo y, un pixel y medio más abajo, su
+ * sombra. Los numerales de la pista y la fila de fichas viven sobre el mundo
+ * pintado, y ahí un gris sin sombra se perdía.
+ */
+function Ink({ path, color }: { readonly path: SkPath; readonly color: string }) {
+  return (
+    <>
+      <Group transform={[{ translateY: 1.5 }]}>
+        <Path path={path} color={INK_SHADOW} />
+      </Group>
+      <Path path={path} color={color} />
+    </>
+  );
+}
 
 // --- Lo que la escena necesita saber -----------------------------------------
 
@@ -267,7 +545,6 @@ export interface ChestLevel {
   readonly tree?: boolean;
 }
 
-const STROKE = 1.5;
 /** Cuánto gira la manivela por piedra. */
 export const TOOTH_ANGLE = (2 * Math.PI) / TEETH_PER_TURN;
 /** Llaves y fichas montadas siempre, para que el árbol no cambie entre rondas. */
@@ -821,29 +1098,61 @@ function arrow(target: SkPath, x0: number, x1: number, y: number, head: number):
 }
 
 /**
- * El cofre. La cerradura no es un adorno: sus dientes son el tramo de ida, así
- * que mirar la cerradura ya dice qué llave hace falta.
+ * Las partes de un cofre, cada una un `SkPath` armado una vez por problema. Las
+ * alturas viajan con él porque cada cofre tiene su propio degradado: con dos
+ * cofres en dos filas, un degradado compartido dejaba uno claro y otro oscuro.
  */
-function buildChest(
-  cx: number,
-  cy: number,
-  w: number,
-  teeth: number,
-): { body: SkPath; lid: SkPath; lock: SkPath; origin: Spot } {
+interface ChestParts {
+  readonly body: SkPath;
+  readonly lid: SkPath;
+  readonly lock: SkPath;
+  /** La placa de metal donde se leen los dientes, y el ojo de la cerradura. */
+  readonly plate: SkPath;
+  readonly keyhole: SkPath;
+  /** Los flejes del cuerpo, el brillo de la tapa y la sombra en el piso. */
+  readonly straps: SkPath;
+  readonly shine: SkPath;
+  readonly shadow: SkPath;
+  readonly origin: Spot;
+  /** Dónde responde el cofre cuando abre: el centro de la placa. */
+  readonly lockAt: Spot;
+  readonly top: number;
+  readonly lidBottom: number;
+  readonly bottom: number;
+  readonly w: number;
+}
+
+/**
+ * El cofre. La cerradura no es un adorno: sus dientes son el tramo de ida, así
+ * que mirar la cerradura ya dice qué llave hace falta. Van grabados en una placa
+ * de acero para que se lean sobre la madera.
+ */
+function buildChest(cx: number, cy: number, w: number, teeth: number): ChestParts {
   const h = w * 0.62;
   const top = cy - h - 6;
+  const left = cx - w / 2;
   const body = Skia.Path.Make();
-  body.addRRect(Skia.RRectXY(Skia.XYWHRect(cx - w / 2, top + h * 0.34, w, h * 0.66), 4, 4));
+  body.addRRect(Skia.RRectXY(Skia.XYWHRect(left, top + h * 0.34, w, h * 0.66), 5, 5));
 
   const lid = Skia.Path.Make();
-  lid.addRRect(Skia.RRectXY(Skia.XYWHRect(cx - w / 2, top, w, h * 0.36), 6, 6));
+  lid.addRRect(Skia.RRectXY(Skia.XYWHRect(left, top, w, h * 0.36), 7, 7));
+  const shine = Skia.Path.Make();
+  shine.addRRect(Skia.RRectXY(Skia.XYWHRect(left + 5, top + 2.5, w - 10, 2.5), 1.25, 1.25));
+
+  // Dos flejes verticales: lo que hace que la caja se lea como cofre y no como
+  // un ladrillo, y lo que le da canto a la luz.
+  const straps = Skia.Path.Make();
+  const fleje = Math.max(3, w * 0.07);
+  for (const fx of [left + w * 0.16, left + w * 0.84 - fleje]) {
+    straps.addRect(Skia.XYWHRect(fx, top + h * 0.36, fleje, h * 0.64));
+  }
 
   // La cerradura: un diente por paso de la ida, del tamaño de los de la manivela.
   const lock = Skia.Path.Make();
   const paso = Math.min(w / 7, 6);
   const ancho = Math.max(paso * teeth, paso);
   let x = cx - ancho / 2;
-  const ly = top + h * 0.58;
+  const ly = top + h * 0.6;
   lock.moveTo(x, ly);
   for (let i = 0; i < Math.max(teeth, 1); i++) {
     lock.lineTo(x, ly - (teeth === 0 ? 0 : 7));
@@ -852,7 +1161,36 @@ function buildChest(
     x += paso;
     lock.lineTo(x, ly);
   }
-  return { body, lid, lock, origin: { x: cx - w / 2, y: top + h * 0.36 } };
+  const plateW = Math.max(ancho + 10, 16);
+  const plateH = teeth === 0 ? 16 : 15;
+  const plateY = teeth === 0 ? top + h * 0.44 : ly - 11;
+  const plate = Skia.Path.Make();
+  plate.addRRect(Skia.RRectXY(Skia.XYWHRect(cx - plateW / 2, plateY, plateW, plateH), 3.5, 3.5));
+  // Sin dientes, la placa lleva el ojo de la cerradura y nada más.
+  const keyhole = Skia.Path.Make();
+  if (teeth === 0) {
+    keyhole.addCircle(cx, plateY + plateH * 0.4, 2.4);
+    keyhole.addRect(Skia.XYWHRect(cx - 1.1, plateY + plateH * 0.4, 2.2, plateH * 0.38));
+  }
+
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(cx - w * 0.56, top + h - 3, w * 1.12, 8));
+  return {
+    body,
+    lid,
+    lock,
+    plate,
+    keyhole,
+    straps,
+    shine,
+    shadow,
+    origin: { x: left, y: top + h * 0.36 },
+    lockAt: { x: cx, y: plateY + plateH / 2 },
+    top,
+    lidBottom: top + h * 0.36,
+    bottom: top + h,
+    w,
+  };
 }
 
 /**
@@ -997,26 +1335,47 @@ function lockFace(
   addDots(target, count, cx, cy + s * 0.62, Math.min(s * 0.26, 7));
 }
 
-/** La rueda dentada del nodo 3. Los dientes son todos iguales: eso es el invariante. */
-function buildCrank(r: number): { body: SkPath; teeth: SkPath; handle: SkPath } {
+/**
+ * La rueda dentada del nodo 3, de acero. Los dientes son todos iguales: eso es
+ * el invariante. El disco no gira (su luz queda arriba a la izquierda); giran
+ * los dientes y el brazo, que es lo que el dedo mueve.
+ */
+interface CrankParts {
+  readonly body: SkPath;
+  readonly hub: SkPath;
+  readonly teeth: SkPath;
+  readonly arm: SkPath;
+  readonly knob: SkPath;
+  readonly shadow: SkPath;
+  /** El contorno por donde se enciende el ámbar cuando la rueda llega al tope. */
+  readonly ring: SkPath;
+}
+
+function buildCrank(r: number): CrankParts {
   const body = Skia.Path.Make();
   body.addCircle(0, 0, r * 0.62);
-  body.addCircle(0, 0, 4);
+  const hub = Skia.Path.Make();
+  hub.addCircle(0, 0, 4.5);
   const teeth = Skia.Path.Make();
   for (let i = 0; i < TEETH_PER_TURN; i++) {
     const a = i * TOOTH_ANGLE - Math.PI / 2;
-    teeth.moveTo(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62);
+    teeth.moveTo(Math.cos(a) * r * 0.64, Math.sin(a) * r * 0.64);
     teeth.lineTo(Math.cos(a) * r * 0.86, Math.sin(a) * r * 0.86);
   }
-  const handle = Skia.Path.Make();
-  handle.moveTo(0, 0);
-  handle.lineTo(0, -r * 0.62);
-  handle.addCircle(0, -r * 0.62, 7);
-  return { body, teeth, handle };
+  const arm = Skia.Path.Make();
+  arm.moveTo(0, 0);
+  arm.lineTo(0, -r * 0.62);
+  const knob = Skia.Path.Make();
+  knob.addCircle(0, -r * 0.62, 7.5);
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-r * 0.8, r * 0.72, r * 1.6, 10));
+  const ring = Skia.Path.Make();
+  ring.addCircle(0, 0, r * 0.9);
+  return { body, hub, teeth, arm, knob, shadow, ring };
 }
 
-/** El caminante del nodo 2: dos trazos, sin cara y sin texto. */
-function buildWalker(): { body: SkPath; head: SkPath } {
+/** El caminante del nodo 2: dos trazos y una cabeza, sin cara y sin texto. */
+function buildWalker(): { body: SkPath; head: SkPath; shadow: SkPath } {
   const body = Skia.Path.Make();
   body.moveTo(0, -8);
   body.lineTo(0, -22);
@@ -1027,8 +1386,42 @@ function buildWalker(): { body: SkPath; head: SkPath } {
   body.lineTo(0, -20);
   body.lineTo(7, -16);
   const head = Skia.Path.Make();
-  head.addCircle(0, -28, 6);
-  return { body, head };
+  head.addCircle(0, -28, 6.5);
+  // La sombra en la piedra: el caminante se apoya, no flota delante de la pista.
+  const shadow = Skia.Path.Make();
+  shadow.addOval(Skia.XYWHRect(-10, -3.5, 20, 6));
+  return { body, head, shadow };
+}
+
+/** El caminante, con el color de su equipo y cuerpo: trazo grueso y cabeza con luz. */
+const WALKER_LOOK = {
+  accent: { light: "#b8e2ff", base: theme.color.accent, dark: "#1f7fcf" },
+  coral: { light: "#ffd0da", base: theme.color.coral, dark: "#d2465f" },
+} as const;
+
+function WalkerFigure({
+  walker,
+  look,
+}: {
+  readonly walker: { body: SkPath; head: SkPath; shadow: SkPath };
+  readonly look: { readonly light: string; readonly base: string; readonly dark: string };
+}) {
+  return (
+    <>
+      <Path path={walker.shadow} color={SHADOW} />
+      <Path
+        path={walker.body}
+        color={look.base}
+        style="stroke"
+        strokeWidth={3.5}
+        strokeCap="round"
+        strokeJoin="round"
+      />
+      <Path path={walker.head}>
+        <RadialGradient c={vec(-2.5, -31)} r={10} colors={[look.light, look.base, look.dark]} />
+      </Path>
+    </>
+  );
 }
 
 /**
@@ -1097,18 +1490,27 @@ function buildAction(kind: string, value: number, cx: number, cy: number, s: num
 interface Geom {
   readonly line: SkPath;
   readonly stones: SkPath;
+  readonly stoneShine: SkPath;
+  readonly stoneShadow: SkPath;
+  /** Las piedras de cada fila por separado: cada fila lleva su propio degradado. */
+  readonly stoneRows: readonly { readonly path: SkPath; readonly y: number }[];
   readonly numerals: SkPath;
-  readonly chest: { body: SkPath; lid: SkPath; lock: SkPath; origin: Spot };
+  /** Un cofre por fila de la pista (`explain` tiene dos), o el cofre suelto. */
+  readonly chests: readonly ChestParts[];
   readonly out: SkPath;
   readonly back: SkPath;
   readonly leftover: SkPath;
   readonly ruler: SkPath;
   readonly rulerCount: SkPath;
   readonly row: SkPath;
+  /** El vidrio debajo del renglón: la cuenta se lee sobre cualquier paisaje. */
+  readonly rowPlate: SkPath;
   readonly slot: SkPath;
   readonly placed: SkPath;
   readonly lockFace: SkPath;
-  readonly lockBox: { body: SkPath; lid: SkPath; lock: SkPath; origin: Spot };
+  /** El cartel oscuro donde se lee la acción de la cerradura que no es un tramo. */
+  readonly lockCard: SkPath;
+  readonly lockBox: ChestParts;
   readonly composed: SkPath;
   readonly pads: SkPath;
   readonly padDigits: SkPath;
@@ -1133,19 +1535,28 @@ function buildGeom(
 
   const line = Skia.Path.Make();
   const stones = Skia.Path.Make();
+  const stoneShine = Skia.Path.Make();
+  const stoneShadow = Skia.Path.Make();
   const numerals = Skia.Path.Make();
+  const stoneRows: { path: SkPath; y: number }[] = [];
   for (const r of l.rows) {
     line.moveTo(r.from.x, r.from.y);
     line.lineTo(r.to.x, r.to.y);
+    const fila = Skia.Path.Make();
+    stoneRows.push({ path: fila, y: r.y });
     for (let i = 0; i < problem.track; i++) {
       const s = r.stones[i] as Spot;
       if (mark) {
         stones.moveTo(s.x, s.y - 8);
         stones.lineTo(s.x, s.y + 8);
       } else {
-        stones.addOval(
-          Skia.XYWHRect(s.x - l.stoneR, s.y - l.stoneR * 0.42, l.stoneR * 2, l.stoneR * 0.84),
-        );
+        const R = l.stoneR;
+        stones.addOval(Skia.XYWHRect(s.x - R, s.y - R * 0.42, R * 2, R * 0.84));
+        fila.addOval(Skia.XYWHRect(s.x - R, s.y - R * 0.42, R * 2, R * 0.84));
+        // El brillo arriba a la izquierda y la sombra corrida hacia abajo: la
+        // piedra asoma del agua en vez de estar pintada sobre ella.
+        stoneShine.addOval(Skia.XYWHRect(s.x - R * 0.62, s.y - R * 0.3, R * 0.7, R * 0.22));
+        stoneShadow.addOval(Skia.XYWHRect(s.x - R * 1.05, s.y - R * 0.18, R * 2.1, R * 0.84));
       }
       // Los numerales aparecen en la capa `visual`, y en la concreta solo bajo
       // las dos piedras que la instancia nombra.
@@ -1156,18 +1567,14 @@ function buildGeom(
 
   // El cofre suelto se apoya donde el nodo lo pidió y su cerradura tiene la
   // forma de la ida, igual que sobre la pista: los dientes son los del estirado.
-  const chest =
-    level.mode === "shrink"
-      ? buildChest(l.chest.x, l.chest.y, l.chest.w, problem.step)
-      : buildChest(xs(problem.home), row0.y - 12, Math.min(row0.step * 0.9, 46), problem.step);
   // En `explain` las dos filas tienen que ser idénticas salvo por el recorrido:
   // si el cofre estuviera en una sola, la comparación diría otra cosa.
-  for (const r of level.mode === "shrink" ? [] : l.rows.slice(1)) {
-    const otro = buildChest(xs(problem.home), r.y - 12, Math.min(r.step * 0.9, 46), problem.step);
-    chest.body.addPath(otro.body);
-    chest.lid.addPath(otro.lid);
-    chest.lock.addPath(otro.lock);
-  }
+  const chests =
+    level.mode === "shrink"
+      ? [buildChest(l.chest.x, l.chest.y, l.chest.w, problem.step)]
+      : l.rows.map((r) =>
+          buildChest(xs(problem.home), r.y - 12, Math.min(r.step * 0.9, 46), problem.step),
+        );
 
   // Las dos flechas enfrentadas: la de ida arriba con la punta a la derecha, la
   // de vuelta abajo con la punta a la izquierda. Se redibujan cuando el
@@ -1197,10 +1604,20 @@ function buildGeom(
 
   // El renglón. La casilla tapada se dibuja como hueco: pide la ficha sin decirlo.
   const rowPath = Skia.Path.Make();
+  const rowPlate = Skia.Path.Make();
   const slot = Skia.Path.Make();
   const puesta = Skia.Path.Make();
   if (level.mode === "write") {
     const rm = rowMetrics(problem, l.center, l.rowY);
+    const primero = rm.chars[0];
+    const ultimo = rm.chars[rm.chars.length - 1];
+    if (primero && ultimo) {
+      const x0 = primero.cx - ROW_SIZE * 0.6;
+      const x1 = ultimo.cx + ROW_SIZE * 0.6;
+      rowPlate.addRRect(
+        Skia.RRectXY(Skia.XYWHRect(x0, l.rowY - ROW_SIZE * 0.95, x1 - x0, ROW_SIZE * 1.9), 18, 18),
+      );
+    }
     rm.chars.forEach((g, i) => {
       const tapado = i >= rm.from && i < rm.from + rm.count;
       if (!tapado) addGlyphs(rowPath, g.c, g.cx, l.rowY, ROW_SIZE);
@@ -1222,9 +1639,11 @@ function buildGeom(
 
   // El cofre de las cerraduras que no son pasos.
   const lockFace = Skia.Path.Make();
+  const lockCard = Skia.Path.Make();
   const lockBox = buildChest(l.lock.x, l.lock.y + 40, 84, 0);
   if (level.mode === "unlock") {
     lockFace.addPath(buildAction(problem.lock.kind, problem.lock.value, l.lock.x, l.lock.y - 46, 26));
+    lockCard.addRRect(Skia.RRectXY(Skia.XYWHRect(l.lock.x - 30, l.lock.y - 46 - 28, 60, 56), 12, 12));
   }
 
   const composedPath = Skia.Path.Make();
@@ -1243,17 +1662,22 @@ function buildGeom(
   return {
     line,
     stones,
+    stoneShine,
+    stoneShadow,
+    stoneRows,
     numerals,
-    chest,
+    chests,
     out,
     back,
     leftover,
     ruler,
     rulerCount,
     row: rowPath,
+    rowPlate,
     slot,
     placed: puesta,
     lockFace,
+    lockCard,
     lockBox,
     composed: composedPath,
     pads,
@@ -1274,6 +1698,12 @@ export interface Slot {
    * árbol de la escena queda igual que antes.
    */
   readonly spin?: SharedValue<number>;
+  /**
+   * 1 mientras el dedo tiene la pieza, 0 si no. Opcional: sin él la escena
+   * deduce que la pieza está en la mano porque se alejó de su ranura y de todo
+   * lugar donde puede quedar apoyada (la manivela, la cerradura, el hueco).
+   */
+  readonly held?: SharedValue<number>;
 }
 
 /**
@@ -1462,8 +1892,48 @@ export function ChestScene({
   ]);
   // El giro de la manivela es la posición del caminante: un solo hecho, no dos.
   const crankT = useDerivedValue(() => [{ rotate: pos.value * TOOTH_ANGLE + jam.value * 0.07 }]);
-  const crankGlow = useDerivedValue(() => 0.35 + 0.65 * hint.value);
+  // La luz de la guía en la perilla: late con la demostración y se apaga cuando
+  // el jugador ya jugó. Dorado, porque es la guía.
+  const crankGlow = useDerivedValue(() => 0.9 * hint.value);
   const lidT = useDerivedValue(() => [{ rotate: -1.9 * open.value }]);
+  // El cofre abre: es el evento del nodo, y responde una sola vez en la cerradura.
+  const abre = useBurstOn(open, 0.92);
+  // Cada piedra que pisa el caminante suena, más aguda cuanto más lejos. En
+  // `explain` los caminantes andan solos y en bucle: ahí no suena nada.
+  useStepSound(pos, level.mode !== "judge" && level.mode !== "key" && !esEncastre(level));
+
+  /** Donde la regla dice su número: entre los dos caminantes, debajo de la pista. */
+  const medida = useMemo<Spot | null>(() => {
+    if (!level.ruler || !problem.marks) return null;
+    const a = row0.stones[Math.max(0, Math.min(problem.track - 1, problem.marks[0]))];
+    const b = row0.stones[Math.max(0, Math.min(problem.track - 1, problem.marks[1]))];
+    return a && b ? { x: (a.x + b.x) / 2, y: row0.y + 52 } : null;
+  }, [level.ruler, problem.marks, problem.track, row0]);
+
+  /**
+   * Los lugares donde una pieza puede quedar apoyada fuera de su ranura: la
+   * manivela, la cerradura, el hueco del renglón, la llave que se arma. Una
+   * pieza crece mientras está lejos de su casa y de todos ellos, que es
+   * mientras el dedo la lleva; al acercarse a uno vuelve a su tamaño, y así se
+   * ve que ahí entra.
+   */
+  const apoyos = useMemo<readonly Spot[]>(() => {
+    const out: Spot[] = [];
+    const m = level.mode;
+    if (m === "turn" || m === "pick" || m === "shrink" || m === "unlock") out.push(layout.crank);
+    if (m === "write") out.push(layout.slot);
+    if (level.keyboard) out.push(layout.composed);
+    if (medida) out.push(medida);
+    for (const p of layout.diagram?.panels ?? []) out.push(...p.up, p.hole);
+    if (layout.diagram) out.push(layout.diagram.opSlot, layout.diagram.countSlot);
+    for (const b of layout.nest?.boxes ?? []) out.push({ x: b.x + b.w - 20, y: b.y + b.h - 18 });
+    if (layout.nest) out.push(layout.nest.row);
+    return out;
+  }, [layout, level.mode, level.keyboard, medida]);
+
+  // La ficha que entró en el hueco del renglón, o en la regla: la cuenta cerró.
+  const colocada = useBurstWhen(placed !== null && (level.mode === "write" || medida !== null));
+  const colocadaEn = level.mode === "write" ? layout.slot : medida;
 
   // La regla se estira con el dedo: una banda rellena que escala, sin trazo que
   // se deforme al escalar.
@@ -1546,13 +2016,16 @@ export function ChestScene({
 
   const cofre = (
     <>
-      <Path path={geom.chest.body} color={theme.color.surfaceHigh} />
-      <Path path={geom.chest.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      <Group origin={geom.chest.origin} transform={lidT}>
-        <Path path={geom.chest.lid} color={theme.color.surfaceHigh} />
-        <Path path={geom.chest.lid} color={theme.color.accent} style="stroke" strokeWidth={2} />
-      </Group>
-      <Path path={geom.chest.lock} color={theme.color.warn} style="stroke" strokeWidth={2} />
+      {geom.chests.map((c, i) => (
+        <ChestView
+          key={`c${i}`}
+          parts={c}
+          lidT={lidT}
+          burst={abre}
+          // Con manivela, el tope es de la rueda y no de la cerradura.
+          jam={conManivela ? null : jam}
+        />
+      ))}
     </>
   );
 
@@ -1583,36 +2056,86 @@ export function ChestScene({
         />
       ) : null}
       <Group opacity={pistaO}>
-          <Path path={geom.line} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
           <Path
-            path={geom.stones}
-            color={level.skin === "stone" ? "#3a4a5c" : theme.color.inkDim}
-            style={level.skin === "stone" ? "fill" : "stroke"}
-            strokeWidth={2}
+            path={geom.line}
+            color="rgba(244, 247, 251, 0.42)"
+            style="stroke"
+            strokeWidth={3}
+            strokeCap="round"
           />
-          <Path path={geom.numerals} color={theme.color.inkDim} />
+          {level.skin === "stone" ? (
+            <>
+              <Path path={geom.stoneShadow} color={SHADOW}>
+                <BlurMask blur={3} style="normal" />
+              </Path>
+              {geom.stoneRows.map((r, i) => (
+                <Path key={`s${i}`} path={r.path}>
+                  <LinearGradient
+                    start={vec(0, r.y - layout.stoneR * 0.42)}
+                    end={vec(0, r.y + layout.stoneR * 0.42)}
+                    colors={[STONE.light, STONE.base, STONE.dark]}
+                  />
+                </Path>
+              ))}
+              <Path path={geom.stoneShine} color="rgba(255, 255, 255, 0.28)" />
+            </>
+          ) : (
+            <Path
+              path={geom.stones}
+              color="rgba(244, 247, 251, 0.8)"
+              style="stroke"
+              strokeWidth={3}
+              strokeCap="round"
+            />
+          )}
+          <Ink path={geom.numerals} color="rgba(244, 247, 251, 0.88)" />
 
-          {/* La regla plegable: el tramo resaltado entre las dos marcas. */}
+          {/* La regla plegable: el tramo resaltado entre las dos marcas. Sin
+              trazo, porque escala con el dedo y un borde se deformaría. */}
           {level.ruler ? (
             <>
               <Group transform={rulerT}>
-                <Path path={geom.ruler} color={theme.color.accent} opacity={0.32} />
+                <Path path={geom.ruler}>
+                  <LinearGradient
+                    start={vec(0, -9)}
+                    end={vec(0, 9)}
+                    colors={[
+                      "rgba(184, 226, 255, 0.62)",
+                      "rgba(86, 184, 255, 0.46)",
+                      "rgba(31, 127, 207, 0.55)",
+                    ]}
+                  />
+                </Path>
               </Group>
               <Group opacity={rulerCountO}>
-                <Path path={geom.rulerCount} color={theme.color.accent} />
+                <Ink path={geom.rulerCount} color={theme.color.accent} />
               </Group>
             </>
           ) : null}
 
           {/* Las dos flechas enfrentadas. Cuando coinciden se apagan juntas. */}
           <Group opacity={outArrow}>
-            <Path path={geom.out} color={theme.color.inkDim} style="stroke" strokeWidth={2.5} strokeCap="round" />
+            <Path
+              path={geom.out}
+              color="rgba(244, 247, 251, 0.75)"
+              style="stroke"
+              strokeWidth={3.5}
+              strokeCap="round"
+              strokeJoin="round"
+            />
           </Group>
           <Group opacity={leftover}>
-            <Path path={geom.leftover} color={theme.color.warn} style="stroke" strokeWidth={4} strokeCap="round" />
+            <Path path={geom.leftover} color={theme.color.warn} style="stroke" strokeWidth={5.5} strokeCap="round" />
           </Group>
           <Group opacity={backArrow}>
-            <Path path={geom.back} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
+            <Path
+              path={geom.back}
+              color={theme.color.accent}
+              style="stroke"
+              strokeWidth={3.5}
+              strokeCap="round"
+              strokeJoin="round"
+            />
           </Group>
 
           {/* El cofre sobre la piedra de partida. Se abre solo, sin cartel. */}
@@ -1633,62 +2156,105 @@ export function ChestScene({
             ))
           ) : (
             <Group transform={walkerT}>
-              <Path path={walker.body} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
-              <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
+              <WalkerFigure walker={walker} look={WALKER_LOOK.accent} />
             </Group>
           )}
 
-          {/* El segundo caminante: el que convierte la vuelta en una distancia. */}
+          {/* El segundo caminante: el que convierte la vuelta en una distancia.
+              Es otro equipo, así que lleva el segundo color de equipo. */}
           {level.ruler && segundo ? (
             <Group transform={[{ translateX: segundo.x }, { translateY: oy }]}>
-              <Path path={walker.body} color={theme.color.ok} style="stroke" strokeWidth={2.5} strokeCap="round" />
-              <Path path={walker.head} color={theme.color.ok} style="stroke" strokeWidth={2} />
+              <WalkerFigure walker={walker} look={WALKER_LOOK.coral} />
             </Group>
           ) : null}
       </Group>
 
-      {/* La cerradura que no es un tramo. */}
+      {/* La cerradura que no es un tramo: el cofre, y arriba el cartel con la
+          acción que hay que deshacer, sobre vidrio oscuro para que se lea. */}
       {level.mode === "unlock" ? (
         <>
-          <Path path={geom.lockBox.body} color={theme.color.surfaceHigh} />
-          <Path path={geom.lockBox.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Group origin={geom.lockBox.origin} transform={lidT}>
-            <Path path={geom.lockBox.lid} color={theme.color.surfaceHigh} />
-            <Path path={geom.lockBox.lid} color={theme.color.accent} style="stroke" strokeWidth={2} />
-          </Group>
-          <Path path={geom.lockFace} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
+          <ChestView parts={geom.lockBox} lidT={lidT} burst={abre} jam={jam} />
+          <Path path={geom.lockCard} color={PLATE} />
+          <Path path={geom.lockCard} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+          <Path
+            path={geom.lockFace}
+            color={theme.color.ink}
+            style="stroke"
+            strokeWidth={2.5}
+            strokeCap="round"
+            strokeJoin="round"
+          />
         </>
       ) : null}
 
       {/* La manivela. Con la llave puesta el sentido de giro se invierte. */}
       {conManivela ? (
         <Group transform={[{ translateX: layout.crank.x }, { translateY: layout.crank.y }]}>
-          <Path path={crank.body} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
+          <Path path={crank.shadow} color={SHADOW}>
+            <BlurMask blur={5} style="normal" />
+          </Path>
+          {/* Contra el tope de la orilla la rueda no pasa: se enciende en ámbar. */}
+          <WarnGlow path={crank.ring} level={jam} width={7} />
           <Group transform={crankT}>
-            <Path path={crank.teeth} color={mounted >= 0 ? theme.color.accent : theme.color.inkDim} style="stroke" strokeWidth={2} />
-            <Group opacity={crankGlow}>
-              <Path path={crank.handle} color={theme.color.accent} style="stroke" strokeWidth={2.5} />
-            </Group>
+            <Path path={crank.teeth} color={STEEL.dark} style="stroke" strokeWidth={7} strokeCap="round" />
+            <Path
+              path={crank.teeth}
+              // Con la llave puesta, los dientes son del caminante: lo mueven.
+              color={mounted >= 0 ? theme.color.accent : STEEL.base}
+              style="stroke"
+              strokeWidth={3.5}
+              strokeCap="round"
+            />
           </Group>
+          <Path path={crank.body}>
+            <RadialGradient
+              c={vec(-layout.crank.r * 0.22, -layout.crank.r * 0.26)}
+              r={layout.crank.r * 0.95}
+              colors={[STEEL.light, STEEL.base, STEEL.dark]}
+            />
+          </Path>
+          <Path path={crank.body} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+          <Group transform={crankT}>
+            <Path path={crank.arm} color={STEEL.dark} style="stroke" strokeWidth={5} strokeCap="round" />
+            <Group opacity={crankGlow}>
+              <Path path={crank.knob} color={theme.color.gold}>
+                <BlurMask blur={7} style="normal" />
+              </Path>
+            </Group>
+            <Path path={crank.knob}>
+              <RadialGradient
+                c={vec(-2.5, -layout.crank.r * 0.62 - 3)}
+                r={11}
+                colors={[WALKER_LOOK.accent.light, WALKER_LOOK.accent.base, WALKER_LOOK.accent.dark]}
+              />
+            </Path>
+          </Group>
+          <Path path={crank.hub} color={ENGRAVE} />
         </Group>
       ) : null}
 
-      {/* El renglón, con su casilla vacía. */}
+      {/* El renglón, sobre vidrio, con su casilla vacía como hueco. */}
       {conRenglon ? (
         <>
-          <Path path={geom.row} color={theme.color.ink} />
-          <Path path={geom.slot} color={theme.color.line} style="stroke" strokeWidth={2} />
+          <Path path={geom.rowPlate} color={GLASS_FILL} />
+          <Path path={geom.rowPlate} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+          <Ink path={geom.row} color={theme.color.ink} />
+          <Path path={geom.slot} color={HOLLOW} />
+          <Path path={geom.slot} color="rgba(255, 255, 255, 0.22)" style="stroke" strokeWidth={1.5} />
           <Path path={geom.placed} color={theme.color.ok} />
         </>
       ) : null}
+      {colocadaEn && (conRenglon || level.ruler) ? (
+        <Burst x={colocadaEn.x} y={colocadaEn.y} r={26} burst={colocada} />
+      ) : null}
 
-      {/* El teclado de dígitos y la ficha que el jugador arma con él. */}
+      {/* El teclado de dígitos, con la ficha de las bandejas, y la ficha que el
+          jugador arma con él. */}
       {level.keyboard ? (
         <>
-          <Path path={geom.pads} color={theme.color.surfaceHigh} />
-          <Path path={geom.pads} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={geom.padDigits} color={theme.color.inkDim} />
-          <Path path={geom.composed} color={theme.color.ink} />
+          <ChipBodies path={geom.pads} />
+          <Path path={geom.padDigits} color={theme.color.ink} />
+          <Ink path={geom.composed} color={theme.color.ink} />
         </>
       ) : null}
 
@@ -1699,9 +2265,11 @@ export function ChestScene({
           slot={keys[i] as Slot}
           box={g.box}
           art={g.shape}
+          // Las acciones sueltas del último nivel son dibujos, no llaves: tinta.
+          metal={level.mode !== "unlock"}
           digits={g.digits}
-          tinta={theme.color.warn}
           origin={layout.keys[i] as Spot}
+          apoyos={apoyos}
         />
       ))}
 
@@ -1713,51 +2281,189 @@ export function ChestScene({
               slot={tiles[i] as Slot}
               box={g.box}
               digits={g.digits}
-              tinta={theme.color.ink}
               origin={layout.tiles[i] as Spot}
+              apoyos={apoyos}
             />
           ))
         : null}
 
+      {/* La mano fantasma es la guía: dorada, con su luz. */}
       <Group transform={ghostT} opacity={ghostO}>
-        <Path path={ghost} color={theme.color.ink} style="stroke" strokeWidth={2} />
+        <Path path={ghost} color={theme.color.gold} style="stroke" strokeWidth={6}>
+          <BlurMask blur={6} style="normal" />
+        </Path>
+        <Path path={ghost} color={theme.color.gold} style="stroke" strokeWidth={2.5} />
       </Group>
     </Group>
   );
 }
 
-/** Una pieza que el dedo puede llevar: su dibujo sigue a los mismos valores que el gesto. */
+/**
+ * Un cofre de madera con su placa de acero. La tapa gira con el mismo valor
+ * que la abre en todos los nodos; la placa se enciende en ámbar cuando la llave
+ * no entra, y suelta las chispas cuando el cofre abre.
+ */
+function ChestView({
+  parts,
+  lidT,
+  burst,
+  jam,
+}: {
+  readonly parts: ChestParts;
+  readonly lidT: DerivedValue<{ rotate: number }[]>;
+  readonly burst: SharedValue<number>;
+  readonly jam: SharedValue<number> | null;
+}) {
+  return (
+    <>
+      <Path path={parts.shadow} color={SHADOW}>
+        <BlurMask blur={5} style="normal" />
+      </Path>
+      <Path path={parts.body}>
+        <LinearGradient
+          start={vec(0, parts.lidBottom)}
+          end={vec(0, parts.bottom)}
+          colors={[WOOD.light, WOOD.base, WOOD.dark]}
+        />
+      </Path>
+      <Path path={parts.straps} color="rgba(38, 22, 10, 0.5)" />
+      <Path path={parts.body} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+      {jam ? <WarnGlow path={parts.plate} level={jam} width={6} /> : null}
+      <Path path={parts.plate}>
+        <LinearGradient
+          start={vec(0, parts.lockAt.y - 8)}
+          end={vec(0, parts.lockAt.y + 8)}
+          colors={[STEEL.light, STEEL.base, STEEL.dark]}
+        />
+      </Path>
+      <Path
+        path={parts.lock}
+        color={ENGRAVE}
+        style="stroke"
+        strokeWidth={2.2}
+        strokeCap="round"
+        strokeJoin="round"
+      />
+      <Path path={parts.keyhole} color={ENGRAVE} />
+      <Group origin={parts.origin} transform={lidT}>
+        <Path path={parts.lid}>
+          <LinearGradient
+            start={vec(0, parts.top)}
+            end={vec(0, parts.lidBottom)}
+            colors={[WOOD.lid, WOOD.light, WOOD.base]}
+          />
+        </Path>
+        <Path path={parts.lid} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+        <Path path={parts.shine} color="rgba(255, 255, 255, 0.4)" />
+      </Group>
+      <Burst x={parts.lockAt.x} y={parts.lockAt.y} r={Math.max(16, parts.w * 0.4)} burst={burst} />
+    </>
+  );
+}
+
+/**
+ * Una pieza que el dedo puede llevar: su dibujo sigue a los mismos valores que
+ * el gesto. Es la ficha neutra de las bandejas, con la llave de acero encima.
+ * Crece un 30 % mientras está en la mano y rebota una vez al llegar a su casa o
+ * a la cerradura: "la tenés vos" y "llegó a un lugar".
+ */
 function Piece({
   slot,
   box,
   art,
+  metal = false,
   digits,
-  tinta,
   origin,
+  apoyos,
 }: {
   readonly slot: Slot;
   readonly box: SkPath;
   readonly art?: SkPath;
+  /** El dibujo es una llave de acero; si no, un símbolo en tinta. */
+  readonly metal?: boolean;
   readonly digits: SkPath;
-  readonly tinta: string;
-  /** El centro de la pieza en su ranura: alrededor de él gira, si gira. */
+  /** El centro de la pieza en su ranura: alrededor de él gira y crece. */
   readonly origin: Spot;
+  /** Donde la pieza puede quedar apoyada fuera de su ranura. */
+  readonly apoyos: readonly Spot[];
 }) {
   // La aguja del giro se lee una vez, fuera del worklet: adentro no puede
   // decidirse si existe, porque la decisión viajaría en la clausura del render.
   const spin = slot.spin;
-  const transform = useDerivedValue(
-    () =>
-      spin
-        ? [{ translateX: slot.dx.value }, { translateY: slot.dy.value }, { rotate: spin.value }]
-        : [{ translateX: slot.dx.value }, { translateY: slot.dy.value }],
-    [spin],
+  const held = slot.held;
+  const ox = origin.x;
+  const oy = origin.y;
+  const bounds = useMemo(() => box.getBounds(), [box]);
+  const cy = bounds.y + bounds.height / 2;
+
+  /** Cuánto está en la mano, de 0 a 1. Se apaga con la pieza cuando ya se usó. */
+  const lift = useDerivedValue(() => {
+    if (held) return held.value;
+    const dx = slot.dx.value;
+    const dy = slot.dy.value;
+    let lejos = Math.hypot(dx, dy) / LIFT_RAMP;
+    for (const a of apoyos) lejos = Math.min(lejos, Math.hypot(ox + dx - a.x, oy + dy - a.y) / LIFT_RAMP);
+    return Math.max(0, Math.min(1, lejos)) * slot.alive.value;
+  }, [held, ox, oy, apoyos]);
+
+  // El rebote de llegada: la pieza que estuvo en la mano y vuelve a apoyarse
+  // late una vez con el resorte de caer. Se decide en el hilo de la interfaz.
+  const alto = useSharedValue(0);
+  const pop = useSharedValue(0);
+  useAnimatedReaction(
+    () => lift.value,
+    (v) => {
+      if (v > 0.5) {
+        // Aire: la pieza se despegó de su lugar. Suena una vez por levantada.
+        if (alto.value === 0) runOnJS(play)("lift");
+        alto.value = 1;
+      } else if (v < 0.04 && alto.value === 1) {
+        alto.value = 0;
+        pop.value = withSequence(withTiming(1, { duration: 0 }), withSpring(0, theme.spring.settle));
+        // Madera: se apoyó en su casa, en la manivela o en la cerradura.
+        runOnJS(play)("drop");
+      }
+    },
   );
+
+  const transform = useDerivedValue(() => {
+    const s = (1 + 0.3 * lift.value) * (1 + 0.14 * pop.value);
+    return spin
+      ? [{ translateX: slot.dx.value }, { translateY: slot.dy.value }, { rotate: spin.value }, { scale: s }]
+      : [{ translateX: slot.dx.value }, { translateY: slot.dy.value }, { scale: s }];
+  }, [spin]);
+
   return (
     <Group transform={transform} origin={origin} opacity={slot.alive}>
-      <Path path={box} color={theme.color.surfaceHigh} />
-      <Path path={box} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      {art ? <Path path={art} color={tinta} style="stroke" strokeWidth={2} strokeCap="round" /> : null}
+      <ChipBodies path={box} />
+      {art && metal ? (
+        <>
+          <Path
+            path={art}
+            color="rgba(6, 12, 22, 0.6)"
+            style="stroke"
+            strokeWidth={5}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+          <Path path={art} style="stroke" strokeWidth={3} strokeCap="round" strokeJoin="round">
+            <LinearGradient
+              start={vec(0, cy - 14)}
+              end={vec(0, cy + 8)}
+              colors={[STEEL.light, STEEL.base, STEEL.dark]}
+            />
+          </Path>
+        </>
+      ) : art ? (
+        <Path
+          path={art}
+          color={theme.color.ink}
+          style="stroke"
+          strokeWidth={2.5}
+          strokeCap="round"
+          strokeJoin="round"
+        />
+      ) : null}
       <Path path={digits} color={theme.color.ink} />
     </Group>
   );
@@ -1778,7 +2484,7 @@ function JudgeWalker({
   readonly walk: readonly number[];
   readonly row: TrackRow;
   readonly clock: SharedValue<number>;
-  readonly walker: { body: SkPath; head: SkPath };
+  readonly walker: { body: SkPath; head: SkPath; shadow: SkPath };
   readonly elegida: boolean;
   readonly miente: boolean;
 }) {
@@ -1809,12 +2515,12 @@ function JudgeWalker({
         path={marca}
         color={miente ? theme.color.warn : theme.color.ok}
         style="stroke"
-        strokeWidth={3}
+        strokeWidth={4.5}
+        strokeCap="round"
         opacity={elegida ? 1 : 0}
       />
       <Group transform={transform}>
-        <Path path={walker.body} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
-        <Path path={walker.head} color={theme.color.accent} style="stroke" strokeWidth={2} />
+        <WalkerFigure walker={walker} look={WALKER_LOOK.accent} />
       </Group>
     </>
   );
@@ -1907,22 +2613,33 @@ function NestedChests({
   const sueltos = useMemo(() => {
     const caja = Skia.Path.Make();
     const tapa = Skia.Path.Make();
+    const placa = Skia.Path.Make();
     const cerradura = Skia.Path.Make();
+    const sombra = Skia.Path.Make();
     for (const r of rings) {
       if (r.placed) continue;
       const b = nest.loose[r.depth];
       if (!b) continue;
       caja.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, b.h), 8, 8));
-      tapa.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, 10), 5, 5));
+      tapa.addRRect(Skia.RRectXY(Skia.XYWHRect(b.x, b.y, b.w, 11), 5.5, 5.5));
+      sombra.addOval(Skia.XYWHRect(b.x + b.w * 0.04, b.y + b.h - 4, b.w * 0.92, 9));
       const signo = OP_SIGN[r.lock];
       if (signo !== undefined) {
-        addGlyphs(cerradura, signo, b.x + b.w / 2, b.y + b.h * 0.62, Math.min(b.h * 0.5, 22));
+        const s = Math.min(b.h * 0.5, 22);
+        placa.addRRect(
+          Skia.RRectXY(Skia.XYWHRect(b.x + b.w / 2 - s * 0.7, b.y + b.h * 0.62 - s * 0.62, s * 1.4, s * 1.24), 5, 5),
+        );
+        addGlyphs(cerradura, signo, b.x + b.w / 2, b.y + b.h * 0.62, s);
       }
     }
-    return { caja, tapa, cerradura };
+    const bounds = caja.getBounds();
+    return { caja, tapa, placa, cerradura, sombra, top: bounds.y, bottom: bounds.y + bounds.height };
   }, [rings, nest.loose]);
 
-  /** El cofre fantasma: se dibuja alrededor de un tramo de la fila y se borra. */
+  /**
+   * El cofre fantasma: se dibuja alrededor de un tramo de la fila y se borra.
+   * Es de madera porque es un cofre: el tramo que abraza es lo que va adentro.
+   */
   const fantasma = useMemo(() => {
     const p = Skia.Path.Make();
     const b = problem.ghostBox;
@@ -1930,10 +2647,13 @@ function NestedChests({
     return p;
   }, [problem.ghostBox]);
 
+  /** El tesoro: un cristal sin color de equipo, con su luz y su brillo. */
   const tesoro = useMemo(() => {
-    const p = Skia.Path.Make();
-    p.addCircle(0, 0, 9);
-    return p;
+    const cuerpo = Skia.Path.Make();
+    cuerpo.addCircle(0, 0, 9);
+    const brillo = Skia.Path.Make();
+    brillo.addOval(Skia.XYWHRect(-5.5, -5.5, 5, 3));
+    return { cuerpo, brillo };
   }, []);
 
   const { opened, vain, tree, ghost, marked } = values;
@@ -1953,14 +2673,14 @@ function NestedChests({
     ];
   }, [paradas]);
 
-  // El hueco vacío late mientras nadie le puso nada, y deja de latir cuando el
-  // tesoro llegó. No hace falta explicarlo: se ve.
-  const huecoO = useDerivedValue(() => 0.35 + 0.55 * hint.value * (1 - Math.min(1, opened.value)));
+  // El hueco vacío late en ámbar mientras nadie le puso nada, y deja de latir
+  // cuando el tesoro llegó. No hace falta explicarlo: se ve.
+  const huecoO = useDerivedValue(() => 0.9 * hint.value * (1 - Math.min(1, opened.value)));
 
   return (
     <>
       {/* Los cofres. Cada uno con su tapa, que se levanta cuando le toca. */}
-      {rings.map((r, i) => (
+      {rings.map((r) => (
         <NestRing
           key={r.id}
           ring={r}
@@ -1969,19 +2689,28 @@ function NestedChests({
           opened={opened}
           vain={vain}
           hueco={huecoO}
-          index={i}
         />
       ))}
       {/* El tesoro. Sin cofres dibujados no hay adónde subir: la fila es lo
           único que hay y el punto quedaría flotando sin nada alrededor. */}
       {rings.some((r) => r.drawn) ? (
         <Group transform={tesoroT}>
-          <Path path={tesoro} color={theme.color.ok} />
+          <Path path={tesoro.cuerpo}>
+            <RadialGradient c={vec(-3, -3.5)} r={13} colors={[CRYSTAL.light, CRYSTAL.base, CRYSTAL.dark]} />
+          </Path>
+          <Path path={tesoro.brillo} color="rgba(255, 255, 255, 0.85)" />
         </Group>
       ) : null}
 
       {/* El árbol al costado: el mismo encastre visto como líneas. */}
-      <Path path={arbol} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
+      <Path
+        path={arbol}
+        color="rgba(244, 247, 251, 0.55)"
+        style="stroke"
+        strokeWidth={2.5}
+        strokeCap="round"
+        strokeJoin="round"
+      />
       {level.tree === true
         ? rings.map((r, i) => (
             <TreeNode
@@ -1995,16 +2724,34 @@ function NestedChests({
           ))
         : null}
 
-      {/* Los cofres que todavía no entraron al encastre. */}
-      <Path path={sueltos.caja} color={theme.color.surfaceHigh} />
-      <Path path={sueltos.caja} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-      <Path path={sueltos.tapa} color={theme.color.accent} style="stroke" strokeWidth={2} />
-      <Path path={sueltos.cerradura} color={theme.color.warn} />
+      {/* Los cofres que todavía no entraron al encastre: de madera, como los
+          puestos, con el signo grabado en su placa. */}
+      <Path path={sueltos.sombra} color={SHADOW}>
+        <BlurMask blur={4} style="normal" />
+      </Path>
+      <Path path={sueltos.caja}>
+        <LinearGradient
+          start={vec(0, sueltos.top)}
+          end={vec(0, sueltos.bottom)}
+          colors={[WOOD.light, WOOD.base, WOOD.dark]}
+        />
+      </Path>
+      <Path path={sueltos.caja} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+      <Path path={sueltos.tapa} color={WOOD.lid} />
+      <Path path={sueltos.placa}>
+        <LinearGradient
+          start={vec(0, sueltos.top)}
+          end={vec(0, sueltos.bottom)}
+          colors={[STEEL.light, STEEL.base, STEEL.dark]}
+        />
+      </Path>
+      <Path path={sueltos.cerradura} color={ENGRAVE} />
 
       {/* La fila de fichas, con el cofre fantasma que aparece y se borra. */}
-      <Path path={fila} color={theme.color.ink} />
+      <Ink path={fila} color={theme.color.ink} />
       <Group opacity={ghost}>
-        <Path path={fantasma} color={theme.color.accent} style="stroke" strokeWidth={2} />
+        <Path path={fantasma} color="rgba(217, 150, 90, 0.10)" />
+        <Path path={fantasma} color={WOOD.light} style="stroke" strokeWidth={3} strokeJoin="round" />
       </Group>
     </>
   );
@@ -2024,28 +2771,40 @@ function NestRing({
   opened,
   vain,
   hueco,
-  index,
 }: {
   readonly ring: ChestRing;
   readonly box: ChestBox | undefined;
   readonly hole: Spot | undefined;
   readonly opened: SharedValue<number>;
   readonly vain: SharedValue<number>;
-  readonly hueco: SharedValue<number>;
-  readonly index: number;
+  readonly hueco: DerivedValue<number>;
 }) {
   const geom = useMemo(() => {
     const body = Skia.Path.Make();
     const lid = Skia.Path.Make();
+    const shine = Skia.Path.Make();
     const lock = Skia.Path.Make();
+    const plate = Skia.Path.Make();
     const hollow = Skia.Path.Make();
-    if (!box) return { body, lid, lock, hollow };
+    const shadow = Skia.Path.Make();
+    const lockAt = { x: 0, y: 0 };
+    if (!box) return { body, lid, shine, lock, plate, hollow, shadow, lockAt };
     body.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, box.h), 12, 12));
-    lid.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, 14), 6, 6));
+    lid.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x, box.y, box.w, 14), 7, 7));
+    shine.addRRect(Skia.RRectXY(Skia.XYWHRect(box.x + 7, box.y + 2.5, box.w - 14, 2.5), 1.25, 1.25));
+    // La sombra que el cofre deja sobre lo que lo sostiene: sobre el piso el de
+    // afuera, sobre la madera del de afuera los de adentro. Es lo que dice
+    // "este está adentro de aquel" sin un solo trazo más.
+    shadow.addRRect(
+      Skia.RRectXY(Skia.XYWHRect(box.x + 3, box.y + box.h - 6, box.w - 6, 12), 6, 6),
+    );
+    const lx = box.x + box.w - 20;
+    const ly = box.y + box.h - 18;
+    plate.addRRect(Skia.RRectXY(Skia.XYWHRect(lx - 15, ly - 15, 30, 30), 7, 7));
     const signo = OP_SIGN[ring.lock];
-    if (signo !== undefined) addGlyphs(lock, signo, box.x + box.w - 20, box.y + box.h - 18, 26);
+    if (signo !== undefined) addGlyphs(lock, signo, lx, ly, 26);
     if (hole) hollow.addCircle(hole.x, hole.y, 9);
-    return { body, lid, lock, hollow };
+    return { body, lid, shine, lock, plate, hollow, shadow, lockAt: { x: lx, y: ly } };
   }, [box, hole, ring.lock]);
 
   const paso = ring.step;
@@ -2055,27 +2814,69 @@ function NestRing({
     const abierta = Math.max(0, Math.min(1, opened.value - paso));
     return [{ rotate: -1.5 * abierta + vain.value * 0.05 }];
   }, [paso]);
+  // Este cofre abrió: la operación se deshizo. Responde una vez, en su placa.
+  const abre = useBurstOn(opened, paso + 0.92);
+  // La llave que giró en el vacío: se enciende en ámbar la placa del cofre que
+  // sí se puede abrir ahora, que es lo que el jugador tiene que mirar.
+  const toca = useDerivedValue(
+    () => (ring.placed && Math.round(opened.value) === paso ? Math.abs(vain.value) : 0),
+    [paso, ring.placed],
+  );
 
   if (!box || !ring.drawn) return null;
-  const tinta = ring.placed ? theme.color.inkDim : theme.color.inkFaint;
+  const madera = WOOD_DEPTH[Math.min(ring.depth, WOOD_DEPTH.length - 1)] ?? WOOD_DEPTH[0];
+  if (!madera) return null;
+  // Los cofres que todavía no se pusieron son vidrio: el anidamiento que hay
+  // que reproducir, todavía vacío. Las dos pieles están montadas siempre y se
+  // cruzan por opacidad, así que poner un cofre no cambia el árbol.
   return (
-    <Group opacity={ring.placed ? 1 : 0.4}>
-      <Path path={geom.body} color={theme.color.surface} opacity={index === 0 ? 0.5 : 0.35} />
-      <Path path={geom.body} color={tinta} style="stroke" strokeWidth={STROKE} />
-      <Path path={geom.lock} color={ring.placed ? theme.color.warn : theme.color.inkFaint} />
-      <Group origin={{ x: box.x, y: box.y }} transform={transform}>
-        <Path path={geom.lid} color={theme.color.surfaceHigh} />
-        <Path
-          path={geom.lid}
-          color={index === 0 ? theme.color.accent : theme.color.inkDim}
-          style="stroke"
-          strokeWidth={2}
-        />
+    <>
+      <Group opacity={ring.placed ? 0 : 1}>
+        <Path path={geom.body} color={GLASS_FILL} />
+        <Path path={geom.body} color="rgba(255, 255, 255, 0.22)" style="stroke" strokeWidth={1.5} />
+        <Path path={geom.lock} color="rgba(244, 247, 251, 0.4)" />
       </Group>
-      <Group opacity={hueco}>
-        <Path path={geom.hollow} color={theme.color.accent} style="stroke" strokeWidth={2} />
+      <Group opacity={ring.placed ? 1 : 0}>
+        <Path path={geom.shadow} color={SHADOW}>
+          <BlurMask blur={5} style="normal" />
+        </Path>
+        <Path path={geom.body}>
+          <LinearGradient
+            start={vec(0, box.y)}
+            end={vec(0, box.y + box.h)}
+            colors={[madera.light, madera.base, madera.dark]}
+          />
+        </Path>
+        <Path path={geom.body} color="rgba(0, 0, 0, 0.38)" style="stroke" strokeWidth={2} />
+        <WarnGlow path={geom.plate} level={toca} width={6} />
+        <Path path={geom.plate}>
+          <LinearGradient
+            start={vec(0, geom.lockAt.y - 15)}
+            end={vec(0, geom.lockAt.y + 15)}
+            colors={[STEEL.light, STEEL.base, STEEL.dark]}
+          />
+        </Path>
+        <Path path={geom.lock} color={ENGRAVE} />
+        <Group origin={{ x: box.x, y: box.y }} transform={transform}>
+          <Path path={geom.lid}>
+            <LinearGradient
+              start={vec(0, box.y)}
+              end={vec(0, box.y + 14)}
+              colors={[WOOD.lid, madera.light, madera.base]}
+            />
+          </Path>
+          <Path path={geom.lid} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+          <Path path={geom.shine} color="rgba(255, 255, 255, 0.4)" />
+        </Group>
+        {/* El hueco de la tapa: oscuro, con canto, y latiendo mientras espera. */}
+        <Path path={geom.hollow} color={HOLLOW} />
+        <Path path={geom.hollow} color="rgba(255, 255, 255, 0.28)" style="stroke" strokeWidth={1.5} />
+        <Group opacity={hueco}>
+          <Path path={geom.hollow} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+        </Group>
       </Group>
-    </Group>
+      <Burst x={geom.lockAt.x} y={geom.lockAt.y} r={20} burst={abre} />
+    </>
   );
 }
 
@@ -2102,13 +2903,23 @@ function TreeNode({
     p.addCircle(0, 0, 9);
     return p;
   }, []);
-  const encendido = useDerivedValue(() => (tree.value > step ? 1 : 0.25), [step]);
+  const encendido = useDerivedValue(() => (tree.value > step ? 1 : 0), [step]);
   const senalado = useDerivedValue(() => (Math.round(marked.value) === index ? 1 : 0), [index]);
   if (!spot) return null;
+  // Apagado, el nodo es vidrio; encendido, una esfera con luz del color del
+  // recorrido. Se lee igual sobre el paisaje en los dos estados.
   return (
     <Group transform={[{ translateX: spot.x }, { translateY: spot.y }]}>
+      <Path path={disco} color={GLASS_FILL} />
+      <Path path={disco} color="rgba(255, 255, 255, 0.3)" style="stroke" strokeWidth={1.5} />
       <Group opacity={encendido}>
-        <Path path={disco} color={theme.color.accent} />
+        <Path path={disco}>
+          <RadialGradient
+            c={vec(-3, -3.5)}
+            r={13}
+            colors={[WALKER_LOOK.accent.light, WALKER_LOOK.accent.base, WALKER_LOOK.accent.dark]}
+          />
+        </Path>
       </Group>
       <Group opacity={senalado}>
         <Path path={disco} color={theme.color.warn} style="stroke" strokeWidth={3} />
@@ -2176,6 +2987,8 @@ function KeyDiagram({
     const stuck = Skia.Path.Make();
     const ends = Skia.Path.Make();
     const reveal = Skia.Path.Make();
+    const plates = Skia.Path.Make();
+    const shadow = Skia.Path.Make();
     const gem = buildGem(9);
 
     panels.forEach((panel, i) => {
@@ -2190,17 +3003,26 @@ function KeyDiagram({
         const silueta = buildGem(10);
         silueta.transform([1, 0, l.hole.x, 0, 1, l.hole.y, 0, 0, 1]);
         hollow.addPath(silueta);
+        shadow.addOval(
+          Skia.XYWHRect(l.chest.x - l.chest.w * 0.04, l.chest.y + l.chest.h - 4, l.chest.w * 1.08, 10),
+        );
         const primera = panel.arrows[0];
         if (primera) {
-          lockFace(
-            lock,
-            primera.lock,
-            primera.count,
-            l.chest.x + l.chest.w / 2,
-            l.chest.y + l.chest.h * 0.42,
-            Math.min(l.chest.w * 0.3, 24),
-            labeled,
-          );
+          const cx = l.chest.x + l.chest.w / 2;
+          const cy = l.chest.y + l.chest.h * 0.42;
+          const s = Math.min(l.chest.w * 0.3, 24);
+          lockFace(lock, primera.lock, primera.count, cx, cy, s, labeled);
+          // La placa de acero donde la cerradura está grabada: abraza el signo
+          // y, según la capa, el número escrito o sus puntitos.
+          const paso = Math.min(s * 0.26, 7);
+          const puntos = Math.min(Math.max(primera.count, 0), 9);
+          const cifras = String(primera.count).length;
+          const medioPuntos = labeled ? 0 : ((puntos - 1) * paso) / 2 + 6;
+          const x0 = Math.min(cx - s * 0.45 - 5, cx - medioPuntos);
+          const x1 = Math.max(labeled ? cx + s * 0.62 + s * 0.22 * cifras + 6 : cx + s * 0.45 + 5, cx + medioPuntos);
+          const y0 = cy - s * 0.62;
+          const y1 = labeled ? cy + s * 0.45 : cy + s * 0.62 + paso * 0.5 + 5;
+          plates.addRRect(Skia.RRectXY(Skia.XYWHRect(x0, y0, x1 - x0, y1 - y0), 6, 6));
         }
       }
 
@@ -2254,7 +3076,7 @@ function KeyDiagram({
       }
     });
 
-    return { body, lid, lock, hollow, down, downChip, up, upChip, stuck, ends, reveal };
+    return { body, lid, lock, plates, shadow, hollow, down, downChip, up, upChip, stuck, ends, reveal };
   }, [panels, layout.panels, conCofre, conFlechas, labeled, numerals]);
 
   /** La llave que se arma, con sus dos ranuras. */
@@ -2298,55 +3120,129 @@ function KeyDiagram({
     () => ({ x: primerCofre?.x ?? 0, y: primerCofre?.y ?? 0 }),
     [primerCofre?.x, primerCofre?.y],
   );
-  // La silueta late mientras el objeto no volvió, y se ilumina cuando encajó.
-  const huecoO = useDerivedValue(
-    () => 0.3 + 0.4 * hint.value * (1 - Math.min(1, open.value)) + 0.6 * Math.min(1, open.value),
+  /**
+   * El panel se resolvió: la vuelta cerró y lo que salió encajó en la silueta.
+   * Es el evento del nodo y responde una sola vez, en la silueta, cuando el
+   * objeto termina de llegar. En `explain` los regresos corren en bucle y no
+   * hay chispa: una chispa que se repite para mirar es confeti.
+   */
+  const primero = panels[0];
+  const resuelto =
+    !comparando &&
+    primero !== undefined &&
+    primero.fits &&
+    primero.arrows.length > 0 &&
+    primero.arrows.every((a) => a.closed);
+  // Lo que volvió coincide con su silueta: vidrio, no cerradura.
+  const vuelve = useBurstWhen(resuelto, theme.motion.morph * 0.85, "join");
+  const destino = layout.panels[0]?.gemTo ?? { x: 0, y: 0 };
+  const encaja = !comparando && primero?.fits === true;
+  // La silueta late en ámbar mientras la guía espera el gesto, y se enciende en
+  // menta cuando lo que volvió encajó: el objeto lo dice sin ningún número.
+  const esperaO = useDerivedValue(
+    () => (resuelto ? 0 : 0.9 * hint.value * (1 - Math.min(1, open.value))),
+    [resuelto],
   );
-  const revelO = useDerivedValue(() => 0.35 + 0.45 * hint.value);
+  const encajaO = useDerivedValue(
+    () => (!encaja ? 0 : resuelto ? 1 : Math.min(1, open.value)),
+    [encaja, resuelto],
+  );
+  const revelO = useDerivedValue(() => 0.45 + 0.45 * hint.value);
+  const cofreY = primerCofre?.y ?? 0;
+  const cofreH = primerCofre?.h ?? 0;
 
   return (
     <>
       {conCofre ? (
         <>
-          <Path path={geom.body} color={theme.color.surfaceHigh} opacity={skin === "ghost" ? 0.45 : 1} />
-          <Path
-            path={geom.body}
-            color={skin === "ghost" ? theme.color.inkFaint : theme.color.line}
-            style="stroke"
-            strokeWidth={STROKE}
-          />
-          <Group origin={origen} transform={lidT}>
-            <Path path={geom.lid} color={theme.color.surfaceHigh} />
-            <Path
-              path={geom.lid}
-              color={skin === "ghost" ? theme.color.inkFaint : theme.color.accent}
-              style="stroke"
-              strokeWidth={2}
-            />
+          {/* El cofre fantasma es el mismo cofre, a media luz: el diagrama ya
+              manda y el cofre queda al costado para acordarse de qué era. */}
+          <Group opacity={skin === "ghost" ? 0.55 : 1}>
+            <Path path={geom.shadow} color={SHADOW}>
+              <BlurMask blur={5} style="normal" />
+            </Path>
+            <Path path={geom.body}>
+              <LinearGradient
+                start={vec(0, cofreY + 14)}
+                end={vec(0, cofreY + cofreH)}
+                colors={[WOOD.light, WOOD.base, WOOD.dark]}
+              />
+            </Path>
+            <Path path={geom.body} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+            {/* La llave que no entra: la placa se enciende en ámbar. */}
+            <WarnGlow path={geom.plates} level={jam} width={6} />
+            <Path path={geom.plates}>
+              <LinearGradient
+                start={vec(0, cofreY + cofreH * 0.2)}
+                end={vec(0, cofreY + cofreH * 0.8)}
+                colors={[STEEL.light, STEEL.base, STEEL.dark]}
+              />
+            </Path>
+            <Path path={geom.lock} color={ENGRAVE} />
+            <Group origin={origen} transform={lidT}>
+              <Path path={geom.lid}>
+                <LinearGradient
+                  start={vec(0, cofreY)}
+                  end={vec(0, cofreY + 14)}
+                  colors={[WOOD.lid, WOOD.light, WOOD.base]}
+                />
+              </Path>
+              <Path path={geom.lid} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+            </Group>
           </Group>
-          <Path path={geom.lock} color={theme.color.warn} />
-          <Group opacity={huecoO}>
-            <Path path={geom.hollow} color={theme.color.accent} style="stroke" strokeWidth={2} />
+          {/* La silueta, a plena luz también en el fantasma: es la verificación. */}
+          <Path path={geom.hollow} color={HOLLOW} />
+          <Path path={geom.hollow} color="rgba(255, 255, 255, 0.3)" style="stroke" strokeWidth={1.5} />
+          <Group opacity={esperaO}>
+            <Path path={geom.hollow} color={theme.color.warn} style="stroke" strokeWidth={2.5} />
+          </Group>
+          <Group opacity={encajaO}>
+            <Path path={geom.hollow} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
           </Group>
         </>
       ) : null}
 
-      {/* Las dos flechas. La de ida siempre está; la de vuelta, cuando se probó. */}
+      {/* Las dos flechas. La de ida siempre está; la de vuelta, cuando se probó.
+          La ida es tinta; la vuelta que cerró es menta, porque coincide; la que
+          se trabó es ámbar, porque pide que la miren. */}
       <Group opacity={outArrow}>
-        <Path path={geom.down} color={theme.color.inkDim} style="stroke" strokeWidth={2.5} strokeCap="round" />
-        <Path path={geom.downChip} color={theme.color.warn} />
+        <Path
+          path={geom.down}
+          color="rgba(244, 247, 251, 0.75)"
+          style="stroke"
+          strokeWidth={3.5}
+          strokeCap="round"
+          strokeJoin="round"
+        />
+        <Ink path={geom.downChip} color={theme.color.ink} />
       </Group>
       <Group opacity={backArrow}>
-        <Path path={geom.up} color={theme.color.accent} style="stroke" strokeWidth={2.5} strokeCap="round" />
-        <Path path={geom.upChip} color={theme.color.accent} />
+        <Path
+          path={geom.up}
+          color={theme.color.ok}
+          style="stroke"
+          strokeWidth={3.5}
+          strokeCap="round"
+          strokeJoin="round"
+        />
+        <Ink path={geom.upChip} color={theme.color.ok} />
       </Group>
       <Group opacity={leftover}>
-        <Path path={geom.stuck} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
+        <Path
+          path={geom.stuck}
+          color={theme.color.warn}
+          style="stroke"
+          strokeWidth={2.5}
+          strokeCap="round"
+          strokeJoin="round"
+        />
       </Group>
-      <Path path={geom.ends} color={theme.color.ink} />
+      <Ink path={geom.ends} color={theme.color.ink} />
+      {/* La llave que sí entra, revelada sin nombrarla: es la guía, en dorado. */}
       <Group opacity={revelO}>
-        <Path path={geom.reveal} color={theme.color.accent} style="stroke" strokeWidth={1.5} />
+        <Path path={geom.reveal} color={theme.color.gold} style="stroke" strokeWidth={2} />
       </Group>
+      <Burst x={destino.x} y={destino.y} r={20} burst={vuelve} />
 
       {/* El objeto que vuelve, uno por panel. */}
       {panels.map((panel, i) => (
@@ -2361,13 +3257,21 @@ function KeyDiagram({
         />
       ))}
 
-      {/* La llave que se arma. */}
+      {/* La llave que se arma: el cuerpo de acero con sus dos ranuras hundidas,
+          y lo que ya se puso, en tinta sobre el hueco. */}
       {diagram?.slots ? (
         <>
-          <Path path={slots.caja} color={theme.color.surfaceHigh} />
-          <Path path={slots.caja} color={theme.color.line} style="stroke" strokeWidth={STROKE} />
-          <Path path={slots.huecos} color={theme.color.inkFaint} style="stroke" strokeWidth={2} />
-          <Path path={slots.puesto} color={theme.color.warn} />
+          <Path path={slots.caja}>
+            <LinearGradient
+              start={vec(0, layout.blank.y)}
+              end={vec(0, layout.blank.y + layout.blank.h)}
+              colors={[STEEL.light, STEEL.base, STEEL.dark]}
+            />
+          </Path>
+          <Path path={slots.caja} color="rgba(0, 0, 0, 0.35)" style="stroke" strokeWidth={1.5} />
+          <Path path={slots.huecos} color={PLATE} />
+          <Path path={slots.huecos} color="rgba(255, 255, 255, 0.3)" style="stroke" strokeWidth={1.5} />
+          <Path path={slots.puesto} color={theme.color.ink} />
         </>
       ) : null}
     </>
@@ -2398,6 +3302,12 @@ function KeyGem({
   readonly marcado: boolean;
 }) {
   const gem = useMemo(() => buildGem(9), []);
+  const shine = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addOval(Skia.XYWHRect(-4.2, -5.5, 3.4, 2.6));
+    return p;
+  }, []);
+  const look = fits ? GEM_OK : GEM_WARN;
   const ax = from?.x ?? 0;
   const ay = from?.y ?? 0;
   const bx = to?.x ?? 0;
@@ -2415,9 +3325,14 @@ function KeyGem({
   if (!from || !to) return null;
   return (
     <Group transform={transform}>
-      <Path path={gem} color={fits ? theme.color.ok : theme.color.warn} />
+      <Path path={gem}>
+        <RadialGradient c={vec(-2.5, -3.5)} r={13} colors={[look.light, look.base, look.dark]} />
+      </Path>
+      <Path path={shine} color="rgba(255, 255, 255, 0.65)" />
+      {/* El que el jugador eligió en `explain`: un contorno de tinta, sin color
+          que diga si acertó; eso lo dice el marco del panel. */}
       {marcado ? (
-        <Path path={gem} color={theme.color.accent} style="stroke" strokeWidth={3} />
+        <Path path={gem} color={theme.color.ink} style="stroke" strokeWidth={2.5} strokeJoin="round" />
       ) : null}
     </Group>
   );

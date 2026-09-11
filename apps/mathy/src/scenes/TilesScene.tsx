@@ -37,20 +37,228 @@
  *
  * `partition` es opcional y nulo por omisión, así que un nodo que solo quiere
  * el piso no escribe una línea de más y no ve nada nuevo en pantalla.
+ *
+ * El estilo es el del nodo 1 (`BowlScene`), y el color tiene un trabajo:
+ *
+ * - Las baldosas son un material neutro con volumen (la ficha de las bandejas,
+ *   `chipTone`): un degradado por grupo que comparte `SkPath`, nunca uno por
+ *   baldosa, así que sesenta cuestan lo mismo que cuatro.
+ * - `accent` es la parte encendida de un todo, y lo que la anota (el libro, el
+ *   número de arriba de la ficha): el equipo de la parte.
+ * - `ok` es "coincide": el contorno del piso que cubrió el marco, el corte
+ *   parejo, la ficha en su marca. `warn` es "mirá acá": lo que sobró, el corte
+ *   desparejo, la ficha en otra marca.
+ * - Las ranuras son surcos dibujados sobre el material, no el color del fondo:
+ *   sobre el paisaje, el color del fondo se veía como un parche.
+ *
+ * Y el jugo: la fila levantada crece un 30 %; la que entra al piso sale de
+ * donde la soltó el dedo y se asienta con un rebote. El evento que la escena
+ * enseña —el rectángulo quedó armado, las partes iguales hacen la fracción, la
+ * ficha llega— responde una sola vez en el objeto que lo causó, con halo y
+ * chispas. Los resortes los arrancan reacciones sobre los mismos `SharedValue`,
+ * en el hilo de la interfaz: nada vuelve a JavaScript por cuadro.
  */
 
-import { useMemo } from "react";
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
-import { useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  BlurMask,
+  Group,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Skia,
+  vec,
+  type SkPath,
+} from "@shopify/react-native-skia";
+import {
+  cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
+  useDerivedValue,
+  useSharedValue,
+  withRepeat,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from "react-native-reanimated";
 import { getGlyph } from "@mathy/glyphs";
 import { pathFor } from "@mathy/viz-skia";
+import { chipTone } from "../ui/Kit.tsx";
+import { play, type Sfx } from "../ui/sound.ts";
 import { theme } from "../ui/theme.ts";
 
 const STROKE = 1.5;
+
+/**
+ * La escala del piso que se llena: cada fila que entra suena un escalón más
+ * arriba, como el agua que sube en una botella. Pentatónica, para que cualquier
+ * tramo suene a una subida.
+ */
+const FILL = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24] as const;
+const fillPitch = (i: number): number => FILL[Math.max(0, Math.min(i, FILL.length - 1))] as number;
+
+/**
+ * Suena un efecto cuando pasa lo que lo causa. Desde un worklet se llama con
+ * `runOnJS`. Sin audio no suena, y el juego no depende de eso para decir nada.
+ */
+function sfx(name: Sfx, pitch = 0, delay = 0): void {
+  if (delay <= 0) play(name, { pitch });
+  else setTimeout(() => play(name, { pitch }), delay);
+}
 /** Baldosa máxima: más grande, un piso de cinco por cinco no entra. */
 const MAX_UNIT = 38;
 /** Cuánto se separan las dos tiras cuando el piso se parte, en baldosas. */
 const SPLIT = 0.35;
+
+/**
+ * La baldosa: la misma familia que la ficha neutra de las bandejas (`chipTone`
+ * de `Kit.tsx`), un punto más clara porque es un material y no un botón. Luz
+ * arriba, canto oscuro abajo y un filo claro en el borde de arriba: volumen sin
+ * color, porque una baldosa no es de ningún equipo.
+ */
+const TILE = {
+  light: "#3f6594",
+  base: chipTone.top,
+  dark: chipTone.low,
+  edge: chipTone.edge,
+  rim: chipTone.rimTop,
+} as const;
+/** Cuánto asoma el canto debajo de la baldosa. */
+const TILE_EDGE = 2.5;
+
+/**
+ * La ranura entre dos piezas: un surco oscuro con un filo de luz al lado. Antes
+ * era el color del fondo, que hacía de hueco sobre el fondo plano y sobre el
+ * paisaje se veía como una raya de otro color; un surco se lee igual sobre
+ * cualquier cosa, porque está dibujado encima del material y no del mundo.
+ */
+const GROOVE = "rgba(4, 9, 16, 0.78)";
+const GROOVE_LIGHT = "rgba(255, 255, 255, 0.16)";
+
+/** El borde de vidrio de las superficies que viven sobre el lienzo (N, estilo visual). */
+const GLASS_LINE = "rgba(255, 255, 255, 0.12)";
+/** Lo que va debajo de algo que tiene que leerse sobre cualquier paisaje. */
+const READ_BACK = "rgba(9, 17, 29, 0.9)";
+
+/** La parte encendida: el equipo de la parte, con su luz y su sombra. */
+const PART = { light: "#b8e2ff", base: theme.color.accent, dark: "#1f7fcf" } as const;
+
+/** La ficha del total: exactamente la ficha neutra de las bandejas. */
+const CHIP_LOOK = {
+  light: chipTone.top,
+  base: chipTone.face,
+  dark: chipTone.low,
+  edge: chipTone.edge,
+  rim: chipTone.rimTop,
+} as const;
+
+/** Los platos del reparto son de cerámica: un contenedor, no una parte. */
+const PLATE = { light: "#c3cedd", base: "#8d9db3", dark: "#56657a" } as const;
+
+/** Chispas del evento: ocho, repartidas alrededor del objeto que lo causó. */
+const SPARKS = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => (i * Math.PI) / 4 + Math.PI / 8);
+
+/**
+ * Una chispa del evento, como las del puente del nodo 1: sale del objeto que la
+ * causó, se abre y se apaga en ~700 ms. Está montada siempre, con opacidad cero
+ * hasta que `burst` corre de 0 a 1 (modo retained: una chispa por hueco, no
+ * una por evento).
+ */
+function Spark({
+  x,
+  y,
+  angle,
+  reach,
+  gold,
+  burst,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly angle: number;
+  /** A qué distancia del centro nace: el borde del objeto, no su centro. */
+  readonly reach: number;
+  readonly gold: boolean;
+  readonly burst: SharedValue<number>;
+}) {
+  const dot = useMemo(() => {
+    const p = Skia.Path.Make();
+    p.addCircle(0, 0, 3);
+    return p;
+  }, []);
+  const t = useDerivedValue(() => {
+    const d = reach + 30 * burst.value;
+    return [
+      { translateX: x + Math.cos(angle) * d },
+      { translateY: y + Math.sin(angle) * d },
+      { scale: 1 - 0.7 * burst.value },
+    ];
+  }, [x, y, angle, reach]);
+  const o = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  return (
+    <Group transform={t} opacity={o}>
+      <Path path={dot} color={gold ? theme.color.gold : theme.color.ok} />
+    </Group>
+  );
+}
+
+/** Las chispas de un rectángulo: salen de su borde, alrededor de su centro. */
+function Sparks({ box, burst }: { readonly box: Box; readonly burst: SharedValue<number> }) {
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const reach = Math.min(box.w, box.h) / 2 + 6;
+  return (
+    <>
+      {SPARKS.map((a, i) => (
+        <Spark key={i} x={cx} y={cy} angle={a} reach={reach} gold={i % 2 === 1} burst={burst} />
+      ))}
+    </>
+  );
+}
+
+/**
+ * El cuerpo con volumen de un grupo de baldosas que comparten un `SkPath`: el
+ * canto debajo, un solo degradado de arriba abajo de lo que ocupa el grupo, y
+ * el filo de luz. Tres dibujos por grupo, sea cual sea la cantidad de baldosas.
+ */
+function TileBody({ path, look = TILE }: { readonly path: SkPath; readonly look?: TileLook }) {
+  const b = useMemo(() => path.getBounds(), [path]);
+  return (
+    <>
+      <Group transform={[{ translateY: TILE_EDGE }]}>
+        <Path path={path} color={look.edge} />
+      </Group>
+      <Path path={path}>
+        <LinearGradient
+          start={vec(0, b.y)}
+          end={vec(0, b.y + Math.max(1, b.height))}
+          colors={[look.light, look.base, look.dark]}
+        />
+      </Path>
+      <Path path={path} color={look.rim} style="stroke" strokeWidth={1} />
+    </>
+  );
+}
+
+interface TileLook {
+  readonly light: string;
+  readonly base: string;
+  readonly dark: string;
+  readonly edge: string;
+  readonly rim: string;
+}
+
+/**
+ * Un numeral o una expresión dibujados, con un borde oscuro debajo: se leen
+ * igual sobre el piso, sobre el vidrio o directo sobre el paisaje.
+ */
+function Legible({ path, color }: { readonly path: SkPath; readonly color: string }) {
+  return (
+    <>
+      <Path path={path} color={READ_BACK} style="stroke" strokeWidth={3} strokeJoin="round" />
+      <Path path={path} color={color} />
+    </>
+  );
+}
 
 export interface Spot {
   readonly x: number;
@@ -735,17 +943,20 @@ function chipPath(
   spot: { x: number; y: number; size: number },
   value: { num: number; den: number },
   mode: TilesChip,
-): { bar: SkPath; ink: SkPath } {
+): { bar: SkPath; num: SkPath; den: SkPath } {
   const bar = Skia.Path.Make();
-  const ink = Skia.Path.Make();
+  // Arriba y abajo van separados porque no dicen lo mismo: arriba cuenta las
+  // partes encendidas, que llevan su color; abajo, el todo, en tinta.
+  const num = Skia.Path.Make();
+  const den = Skia.Path.Make();
   const s = spot.size;
   const w = Math.max(s * 1.5, s * 0.5 * String(value.den).length + s);
   bar.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - w / 2, spot.y - 1.5, w, 3), 2, 2));
   if (mode === "numerals") {
-    addGlyphs(ink, String(value.num), spot.x, spot.y - s * 0.72, s);
-    addGlyphs(ink, String(value.den), spot.x, spot.y + s * 0.72, s);
+    addGlyphs(num, String(value.num), spot.x, spot.y - s * 0.72, s);
+    addGlyphs(den, String(value.den), spot.x, spot.y + s * 0.72, s);
   } else if (mode === "dots") {
-    const dots = (count: number, cy: number): void => {
+    const dots = (ink: SkPath, count: number, cy: number): void => {
       const r = Math.min(s * 0.13, 5);
       const paso = r * 2.9;
       const filas = count <= 4 ? 1 : 2;
@@ -761,10 +972,18 @@ function chipPath(
         );
       }
     };
-    dots(value.num, spot.y - s * 0.72);
-    dots(value.den, spot.y + s * 0.72);
+    dots(num, value.num, spot.y - s * 0.72);
+    dots(den, value.den, spot.y + s * 0.72);
   }
-  return { bar, ink };
+  return { bar, num, den };
+}
+
+/** El cartón oscuro detrás de la ficha: se lee igual sobre cualquier paisaje. */
+function chipCardPath(spot: { x: number; y: number; size: number }): SkPath {
+  const p = Skia.Path.Make();
+  const s = spot.size;
+  p.addRRect(Skia.RRectXY(Skia.XYWHRect(spot.x - s * 1.25, spot.y - s * 1.45, s * 2.5, s * 2.9), 12, 12));
+  return p;
 }
 
 // --- Componente --------------------------------------------------------------
@@ -1050,11 +1269,18 @@ export function TilesScene({
       live,
       liveBox: layout.wholes[0] ?? null,
       liveEven: vivo?.even !== false,
-      statics: part.wholes.map((w, i) =>
-        i === 0 && live ? null : staticWhole(layout.wholes[i] as Box, w, part.marking),
-      ),
+      statics: part.wholes.map((w, i) => {
+        if (i === 0 && live) return null;
+        const b = layout.wholes[i] as Box;
+        const sw = staticWhole(b, w, part.marking);
+        // El cuerpo es siempre la forma cerrada: la barra desigual tiene el
+        // contorno punteado, pero no por eso deja de ser una barra.
+        const body =
+          !w.disc && part.marking !== "figures" && part.marking !== "fill" ? roundRect(b) : sw.outline;
+        return { ...sw, body };
+      }),
       line: part.ticks > 0 ? linePath(layout, part.ticks) : null,
-      plates: layout.plates.map((b) => roundRect(b, b.w / 2)),
+      card: chipCardPath(layout.chip),
       chip: part.chipValue ? chipPath(layout.chip, part.chipValue, part.chip) : null,
       division: (() => {
         if (!part.division) return null;
@@ -1068,20 +1294,30 @@ export function TilesScene({
         );
         return p;
       })(),
-      pin: (() => {
-        if (part.pinned === null || part.ticks <= 0) return null;
-        const p = Skia.Path.Make();
-        const x = layout.line.x0 + ((layout.line.x1 - layout.line.x0) * part.pinned) / part.ticks;
-        p.moveTo(x, layout.line.y - 26);
-        p.lineTo(x, layout.line.y + 26);
-        p.addCircle(x, layout.line.y - 26, 5);
-        return p;
-      })(),
     };
   }, [part, layout]);
 
   const partChipO = useDerivedValue(() => token.value * divide.value);
   const partDivO = useDerivedValue(() => token.value * (1 - divide.value));
+
+  // Lo que la partición sabe de sí misma sin preguntarle a la actividad: la
+  // ficha dice qué fracción se pide, así que la escena ve cuándo el todo vivo
+  // quedó cortado parejo en esas partes con esas encendidas, y si la ficha
+  // quedó clavada en su marca.
+  const vivo0 = part?.wholes[0];
+  const pedido = part?.chipValue ?? null;
+  const liveDone =
+    !!vivo0 &&
+    pedido !== null &&
+    vivo0.even &&
+    vivo0.parts === pedido.den &&
+    vivo0.shaded === pedido.num;
+  const pinMark = part && part.ticks > 0 ? part.pinned : null;
+  const pinX =
+    part && pinMark !== null
+      ? layout.line.x0 + ((layout.line.x1 - layout.line.x0) * pinMark) / Math.max(part.ticks, 1)
+      : layout.line.x0;
+  const pinGood = pinMark !== null && pedido !== null && pinMark === pedido.num;
 
   const onDemand = config.onDemand;
   const floorO = useDerivedValue(() => (onDemand ? ghost.value : 1));
@@ -1098,13 +1334,173 @@ export function TilesScene({
   const wallO = useDerivedValue(() => (hayPared ? 1 - Math.max(0, Math.min(1, split.value)) : 1));
   const gap = layout.unit * SPLIT;
 
+  // --- El evento: el rectángulo quedó armado --------------------------------
+  //
+  // Es lo que el piso enseña: filas sueltas que, juntas, son un rectángulo. El
+  // momento en que la última fila lo cierra —o en que el piso girado entra en
+  // el marco— el contorno se afirma en menta con un halo y suelta chispas, una
+  // sola vez. Todo corre en el hilo de la interfaz, derivado de los mismos
+  // valores que el gesto.
+  //
+  // "Una sola vez" pide saber cuándo el piso se cerró a mano y cuándo llegó
+  // cerrado. Un valor que la actividad pone de golpe (una ronda nueva) salta de
+  // un entero a otro en un cuadro; uno que trae un gesto pasa por el medio. El
+  // piso que llegó cerrado queda desarmado para la ronda: si después se vacía y
+  // se vuelve a llenar, es la réplica de una respuesta que no era, y eso no se
+  // celebra.
+  const floorBurst = useSharedValue(1);
+  const armed = useSharedValue(0);
+  /** Si el piso ya soltó sus chispas en esta ronda: la ficha que sigue solo rebota. */
+  const floorFired = useSharedValue(0);
+  const full = config.rows;
+  useEffect(() => {
+    floorFired.value = 0;
+  }, [config, floorFired]);
+  const fireFloor = (): void => {
+    "worklet";
+    floorBurst.value = 0;
+    floorBurst.value = withTiming(1, { duration: 720 });
+    floorFired.value = 1;
+    // El piso coincide con el marco: vidrio, un instante después de la madera
+    // de la última fila, que es la que lo cerró.
+    runOnJS(sfx)("join", 0, 90);
+  };
+  // Los valores anteriores viven en `SharedValue` propios: una reacción que se
+  // vuelve a registrar (la actividad cambia de estado en el mismo gesto que
+  // arranca la animación) no trae valor anterior en su primera llamada, y el
+  // evento se perdería justo cuando pasa. -1 es "todavía no sé".
+  const lastFull = useSharedValue(-1);
+  const lastSpin = useSharedValue(0);
+  const lastToken = useSharedValue(1);
+  const lastDivide = useSharedValue(1);
+  useAnimatedReaction(
+    () => Math.min(placed.value, placedRight.value),
+    (f) => {
+      const prev = lastFull.value;
+      lastFull.value = f;
+      if (prev < 0) {
+        armed.value = f < full - 0.001 ? 1 : 0;
+        return;
+      }
+      const entero = (v: number): boolean => Math.abs(v - Math.round(v)) < 0.001;
+      const golpe = entero(f) && entero(prev) && Math.abs(f - prev) >= 0.999;
+      if (f < full - 0.001) {
+        if (golpe) armed.value = 1;
+        return;
+      }
+      if (prev >= full - 0.001) return;
+      if (armed.value === 1 && !golpe) fireFloor();
+      armed.value = 0;
+    },
+    [full],
+  );
+  // El giro: las mismas baldosas, dadas vuelta, entran en el marco.
+  useAnimatedReaction(
+    () => spin.value,
+    (now) => {
+      const prev = lastSpin.value;
+      lastSpin.value = now;
+      if (prev > 0.001 && prev < 0.999 && now >= 0.999) fireFloor();
+    },
+  );
+  const floorHalo = useDerivedValue(() => (floorBurst.value < 1 ? 1 - floorBurst.value : 0));
+  const floorBox = useMemo<Box>(
+    () => ({
+      x: layout.center.x - layout.floor.w / 2,
+      y: layout.center.y - layout.floor.h / 2,
+      w: layout.floor.w,
+      h: layout.floor.h,
+    }),
+    [layout],
+  );
+
+  // --- La ficha llega -------------------------------------------------------
+  //
+  // La ficha del total (o la de fracción) aparece con un rebote cuando la trae
+  // un gesto. Si el piso ya celebró en esta ronda, la ficha solo rebota: es el
+  // mismo evento dicho de otra manera. Si no —la respuesta elegida del
+  // teclado, el `÷` que se contrae— la ficha es el evento y suelta las chispas.
+  const chipPop = useSharedValue(0);
+  const chipBurst = useSharedValue(1);
+  const llegaFicha = (now: number, last: SharedValue<number>): void => {
+    "worklet";
+    const prev = last.value;
+    last.value = now;
+    if (!(prev <= 0.001 && now > 0.001 && now < 0.6)) return;
+    chipPop.value = 1;
+    chipPop.value = withSpring(0, theme.spring.settle);
+    // La ficha entra en su lugar: clic. Si es ella el evento (no lo celebró el
+    // piso antes), además coincide: vidrio.
+    runOnJS(sfx)("fit", 0, 0);
+    if (floorFired.value === 0) {
+      chipBurst.value = 0;
+      chipBurst.value = withTiming(1, { duration: 720 });
+      runOnJS(sfx)("join", 0, 130);
+    }
+  };
+  useAnimatedReaction(
+    () => token.value,
+    (now) => llegaFicha(now, lastToken),
+  );
+  useAnimatedReaction(
+    () => divide.value,
+    (now) => llegaFicha(now, lastDivide),
+  );
+  const chipHalo = useDerivedValue(() => (chipBurst.value < 1 ? 1 - chipBurst.value : 0));
+  const tsx = layout.totalSpot.x;
+  const tsy = layout.totalSpot.y;
+  const totalT = useDerivedValue(
+    () => [
+      { translateX: tsx },
+      { translateY: tsy },
+      { scale: 1 + 0.25 * chipPop.value },
+      { translateX: -tsx },
+      { translateY: -tsy },
+    ],
+    [tsx, tsy],
+  );
+  const pcx = layout.chip.x;
+  const pcy = layout.chip.y;
+  const partChipT = useDerivedValue(
+    () => [
+      { translateX: pcx },
+      { translateY: pcy },
+      { scale: 1 + 0.25 * chipPop.value },
+      { translateX: -pcx },
+      { translateY: -pcy },
+    ],
+    [pcx, pcy],
+  );
+  // Las chispas de la ficha salen de la ficha que haya: la del total en el
+  // piso, la de fracción en la partición.
+  const chipBox = useMemo<Box>(() => {
+    if (config.partition) {
+      const s = layout.chip.size;
+      return { x: layout.chip.x - s * 1.1, y: layout.chip.y - s * 1.4, w: s * 2.2, h: s * 2.8 };
+    }
+    const w = layout.unit * 1.8;
+    const h = layout.unit * 1.1;
+    return { x: tsx - w / 2, y: tsy - h / 2, w, h };
+  }, [config.partition, layout, tsx, tsy]);
+
   return (
     <Group opacity={appear}>
+      {/* El marco vacío es un hueco de vidrio oscuro: se lee como un lugar que
+          hay que cubrir sobre cualquier paisaje. Su borde late mientras la
+          demostración pide el gesto; no tiene color de equipo, porque el marco
+          no es de nadie. */}
       {config.frame ? (
         <>
-          <Path path={frame} color={theme.color.surface} />
+          <Path path={frame} color="rgba(9, 17, 29, 0.62)" />
+          <Path path={frame} color={GLASS_LINE} style="stroke" strokeWidth={1} />
           <Group opacity={framePulse}>
-            <Path path={frame} color={theme.color.accent} style="stroke" strokeWidth={2} />
+            <Path
+              path={frame}
+              color="rgba(255, 255, 255, 0.45)"
+              style="stroke"
+              strokeWidth={2.5}
+              strokeJoin="round"
+            />
           </Group>
         </>
       ) : null}
@@ -1119,38 +1515,77 @@ export function TilesScene({
             placed={placed}
             placedRight={placedRight}
             fromBottom={derechaDesdeAbajo ? floor.strips.length - 1 - r : r}
+            rightOwn={derechaDesdeAbajo}
             split={split}
             gap={gap}
-            merged={merged}
+            slots={rows}
+            drawer={layout.drawer}
           />
         ))}
+        {/* Las juntas entre baldosas: un surco, no el color del fondo. */}
         <Path
           path={floor.inner}
-          color={theme.color.bg}
+          color={GROOVE}
           style="stroke"
           strokeWidth={STROKE}
+          strokeCap="round"
           opacity={innerO}
         />
-        <Path path={floor.outline} color={theme.color.accent} style="stroke" strokeWidth={2} opacity={outlineO} />
+        {/* El contorno se afirma en menta cuando el piso coincide con el marco. */}
+        <Group opacity={floorHalo}>
+          <Path path={floor.outline} color={theme.color.ok} style="stroke" strokeWidth={10}>
+            <BlurMask blur={8} style="normal" />
+          </Path>
+        </Group>
+        <Path
+          path={floor.outline}
+          color={theme.color.ok}
+          style="stroke"
+          strokeWidth={2.5}
+          strokeJoin="round"
+          opacity={outlineO}
+        />
       </Group>
+      <Sparks box={floorBox} burst={floorBurst} />
 
       {/* Las baldosas que sobraron, fuera del rectángulo y sin nombre. */}
+      {/* Son baldosas como las otras —el mismo material—; lo que late es el
+          anillo ámbar alrededor: "mirá acá", sin decir nada más. */}
       {leftoverGeom ? (
-        <Group opacity={leftoverO}>
-          <Path path={leftoverGeom} color="#4a3b2a" />
-          <Path path={leftoverGeom} color={theme.color.warn} style="stroke" strokeWidth={2} />
-        </Group>
+        <>
+          <TileBody path={leftoverGeom} />
+          <Group opacity={leftoverO}>
+            <Path
+              path={leftoverGeom}
+              color={theme.color.warn}
+              style="stroke"
+              strokeWidth={2.5}
+              strokeJoin="round"
+            />
+          </Group>
+        </>
       ) : null}
 
       {/* La pared: el paréntesis dibujado adentro del marco. Se va cuando las
           dos tiras se separan, que es el mismo movimiento visto de este lado. */}
       {rooms?.wall === true ? (
+        // La pared es tinta, como el paréntesis que dibuja: una pieza firme
+        // con un borde oscuro que la despega de las baldosas. No es ámbar
+        // porque no pide atención todo el tiempo: la pide la guía, cuando toca.
         <Group opacity={wallO}>
           <Path
             path={keyGeom.wall}
-            color={theme.color.warn}
+            color={READ_BACK}
             style="stroke"
-            strokeWidth={3}
+            strokeWidth={7}
+            strokeCap="round"
+          />
+          <Path
+            path={keyGeom.wall}
+            color={theme.color.ink}
+            style="stroke"
+            strokeWidth={3.5}
+            strokeCap="round"
           />
         </Group>
       ) : null}
@@ -1162,76 +1597,119 @@ export function TilesScene({
             {rooms ? (
               keyGeom.spans.map((span, i) => (
                 <Group key={`span${i}`}>
-                  <Path path={span.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
-                  <Path path={span.digits} color={theme.color.ink} />
+                  <Path
+                    path={span.brace}
+                    color={theme.color.inkDim}
+                    style="stroke"
+                    strokeWidth={2.5}
+                    strokeCap="round"
+                    strokeJoin="round"
+                  />
+                  <Legible path={span.digits} color={theme.color.ink} />
                 </Group>
               ))
             ) : (
               <>
-                <Path path={keyGeom.top.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
-                <Path path={keyGeom.top.digits} color={theme.color.ink} />
+                <Path
+                  path={keyGeom.top.brace}
+                  color={theme.color.inkDim}
+                  style="stroke"
+                  strokeWidth={2.5}
+                  strokeCap="round"
+                  strokeJoin="round"
+                />
+                <Legible path={keyGeom.top.digits} color={theme.color.ink} />
               </>
             )}
-            <Path path={keyGeom.left.brace} color={theme.color.inkDim} style="stroke" strokeWidth={2} />
-            <Path path={keyGeom.left.digits} color={theme.color.ink} />
+            <Path
+              path={keyGeom.left.brace}
+              color={theme.color.inkDim}
+              style="stroke"
+              strokeWidth={2.5}
+              strokeCap="round"
+              strokeJoin="round"
+            />
+            <Legible path={keyGeom.left.digits} color={theme.color.ink} />
           </Group>
           {/* Las dos escrituras ocupan el mismo renglón y se cruzan con la
               pared: no son dos textos, son el mismo piso dicho de dos maneras. */}
           <Group opacity={cross}>
             <Group opacity={wallO}>
-              <Path path={keyGeom.expr} color={theme.color.ink} />
+              <Legible path={keyGeom.expr} color={theme.color.ink} />
             </Group>
             {rooms ? (
               <Group opacity={split}>
-                <Path path={keyGeom.sum} color={theme.color.ink} />
+                <Legible path={keyGeom.sum} color={theme.color.ink} />
               </Group>
             ) : null}
           </Group>
         </>
       ) : null}
 
-      {/* La ficha del total: el rectángulo aplanado en un número. */}
+      {/* La ficha del total: el rectángulo aplanado en un número. Es una ficha
+          como las de la bandeja, con su canto; el filo menta dice que es el
+          total de ese piso, y llega con un rebote. */}
       {config.total !== null ? (
         <Group opacity={token}>
-          <Path path={totalGeom.chip} color={theme.color.surfaceHigh} />
-          <Path path={totalGeom.chip} color={theme.color.ok} style="stroke" strokeWidth={2} />
-          <Path path={totalGeom.digits} color={theme.color.ink} />
+          <Group transform={totalT}>
+            <TileBody path={totalGeom.chip} look={CHIP_LOOK} />
+            <Group opacity={chipHalo}>
+              <Path path={totalGeom.chip} color={theme.color.ok} style="stroke" strokeWidth={7}>
+                <BlurMask blur={6} style="normal" />
+              </Path>
+            </Group>
+            <Path path={totalGeom.chip} color={theme.color.ok} style="stroke" strokeWidth={2} />
+            <Legible path={totalGeom.digits} color={theme.color.ink} />
+          </Group>
         </Group>
       ) : null}
+      <Sparks box={chipBox} burst={chipBurst} />
 
       {/* El montón. Siempre montado: las filas que sobran, invisibles. */}
       {looseGeom.map((path, i) => {
         // Un nodo que solo usa la partición no trae montón, y la ranura no
         // existe: dibujar una fila sin su par de valores rompe la escena.
         const slot = rows[i];
-        return slot ? <LooseRowView key={i} path={path} slot={slot} /> : null;
+        return slot ? (
+          <LooseRowView
+            key={i}
+            path={path}
+            slot={slot}
+            spot={layout.drawer[i] ?? layout.center}
+          />
+        ) : null;
       })}
 
       {/* La partición: el todo que se corta, el libro, la ficha, los platos y
           la recta. Nada de esto se monta cuando el nodo solo quiere el piso. */}
       {part && partGeom ? (
         <Group>
-          {partGeom.plates.map((p, i) => (
-            <Path
-              key={`plate${i}`}
-              path={p}
-              color={theme.color.inkFaint}
-              style="stroke"
-              strokeWidth={STROKE}
-            />
+          {layout.plates.map((b, i) => (
+            <Plate key={`plate${i}`} box={b} />
           ))}
 
-          {partGeom.statics.map((geom, i) =>
-            geom ? (
+          {partGeom.statics.map((geom, i) => {
+            const w = part.wholes[i];
+            const b = layout.wholes[i];
+            if (!geom || !w || !b) return null;
+            // Coincide con la ficha: partes iguales y la misma proporción
+            // encendida. Es lo único que se celebra cuando el todo se enciende.
+            const coincide =
+              pedido !== null && w.even && w.shaded * pedido.den === pedido.num * w.parts;
+            return (
               <StaticWholeView
-                key={part.wholes[i]?.id ?? i}
+                key={w.id}
                 geom={geom}
-                glow={part.wholes[i]?.glow === true}
-                even={part.wholes[i]?.even !== false}
+                box={b}
+                glow={w.glow}
+                even={w.even}
+                matches={coincide}
+                sig={`${b.x},${b.y},${b.w},${b.h},${w.parts},${w.shaded},${w.even},${w.disc}`}
+                vessel={part.marking === "fill" && !w.disc}
                 hint={hint}
               />
-            ) : null,
-          )}
+            );
+          })}
 
           {partGeom.live && partGeom.liveBox ? (
             <LiveWholeView
@@ -1240,6 +1718,7 @@ export function TilesScene({
               parts={parts}
               lit={lit}
               hint={hint}
+              done={liveDone}
             />
           ) : null}
 
@@ -1259,29 +1738,60 @@ export function TilesScene({
               ))
             : null}
 
+          {/* La recta, con un borde oscuro debajo para leerse sobre el paisaje,
+              y la ficha clavada: menta si cayó en su marca, ámbar si pide que
+              la miren. Nunca menta sobre una marca que no es. */}
           {partGeom.line ? (
-            <Path
-              path={partGeom.line}
-              color={theme.color.inkDim}
-              style="stroke"
-              strokeWidth={STROKE}
-            />
-          ) : null}
-          {partGeom.pin ? (
-            <Path path={partGeom.pin} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+            <>
+              <Path
+                path={partGeom.line}
+                color={READ_BACK}
+                style="stroke"
+                strokeWidth={5}
+                strokeCap="round"
+              />
+              <Path
+                path={partGeom.line}
+                color={theme.color.inkDim}
+                style="stroke"
+                strokeWidth={2.5}
+                strokeCap="round"
+              />
+              <Pin x={pinX} y={layout.line.y} mark={pinMark} good={pinGood} />
+            </>
           ) : null}
 
-          {/* El `÷` del nodo 6 y la ficha son el mismo objeto: sus dos puntos se
-              estiran hasta ser los numerales y la barra del medio se queda. */}
+          {/* El cartón de la ficha, el `÷` y la ficha llegan juntos y rebotan
+              juntos. El `÷` del nodo 6 y la ficha son el mismo objeto: sus dos
+              puntos se estiran hasta ser los numerales y la barra se queda. */}
+          {partGeom.chip || partGeom.division ? (
+            <Group opacity={token}>
+              <Group transform={partChipT}>
+                <Path path={partGeom.card} color={READ_BACK} />
+                <Path path={partGeom.card} color={GLASS_LINE} style="stroke" strokeWidth={1} />
+                <Group opacity={chipHalo}>
+                  <Path path={partGeom.card} color={theme.color.ok} style="stroke" strokeWidth={6}>
+                    <BlurMask blur={6} style="normal" />
+                  </Path>
+                  <Path path={partGeom.card} color={theme.color.ok} style="stroke" strokeWidth={2} />
+                </Group>
+              </Group>
+            </Group>
+          ) : null}
           {partGeom.division ? (
             <Group opacity={partDivO}>
-              <Path path={partGeom.division} color={theme.color.ink} />
+              <Group transform={partChipT}>
+                <Path path={partGeom.division} color={theme.color.ink} />
+              </Group>
             </Group>
           ) : null}
           {partGeom.chip ? (
             <Group opacity={partGeom.division ? partChipO : token}>
-              <Path path={partGeom.chip.bar} color={theme.color.accent} />
-              <Path path={partGeom.chip.ink} color={theme.color.ink} />
+              <Group transform={partChipT}>
+                <Path path={partGeom.chip.bar} color={theme.color.inkDim} />
+                <Path path={partGeom.chip.num} color={PART.base} />
+                <Path path={partGeom.chip.den} color={theme.color.ink} />
+              </Group>
             </Group>
           ) : null}
         </Group>
@@ -1310,12 +1820,15 @@ function LiveWholeView({
   parts,
   lit,
   hint,
+  done = false,
 }: {
   readonly box: Box;
   readonly even: boolean;
   readonly parts: SharedValue<number>;
   readonly lit: SharedValue<number>;
   readonly hint: SharedValue<number>;
+  /** El todo quedó cortado parejo en las partes de la ficha, con las encendidas. */
+  readonly done?: boolean;
 }) {
   const full = useMemo(() => roundRect(box, 6), [box]);
   const dashed = useMemo(() => dashedRect(box), [box]);
@@ -1325,26 +1838,91 @@ function LiveWholeView({
     return [{ translateX: box.x }, { scaleX: k }, { translateX: -box.x }];
   }, [box]);
   // El contorno se afirma cuando el corte quedó parejo: es el chasquido, dicho
-  // con luz para el que juega con el sonido apagado.
-  const snap = useDerivedValue(() => (even ? 0.35 + 0.65 * Math.min(1, parts.value / 2) : 0));
-  const pulse = useDerivedValue(() => 0.35 + 0.35 * hint.value);
+  // con luz para el que juega con el sonido apagado. Menta es "coincide", así
+  // que antes del primer corte no hay menta: todavía no hay partes que coincidan.
+  const snap = useDerivedValue(
+    () => (even ? Math.max(0, Math.min(1, parts.value - 1)) : 0),
+    [even],
+  );
+  // Antes del primer corte el borde late con la demostración: es la única
+  // instrucción, y no es de ningún color porque no dice nada todavía.
+  const invite = useDerivedValue(() => (parts.value < 1 ? 0.3 + 0.5 * hint.value : 0));
+
+  // El corte desparejo no dice "mal": el contorno queda punteado y un anillo
+  // ámbar late alrededor, "mirá acá". Late con su propio pulso, porque el de la
+  // demostración se apaga en cuanto el jugador toca.
+  const beat = useSharedValue(0);
+  useEffect(() => {
+    beat.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+    return () => cancelAnimation(beat);
+  }, [beat]);
+  const warnO = useDerivedValue(() => (even ? 0 : 0.4 + 0.6 * beat.value), [even]);
+
+  // El chasquido del corte parejo, con sonido: cada línea que el dedo agrega
+  // hace clic, y cuantas más partes, más aguda, como una tabla más corta. El
+  // corte desparejo no chasquea, y así se oye también que no cerró. Solo cuenta
+  // un paso de a uno: una ronda nueva salta de golpe y no suena.
+  const lastCut = useSharedValue(-1);
+  useAnimatedReaction(
+    () => parts.value,
+    (now) => {
+      const n = Math.round(now);
+      if (Math.abs(now - n) > 0.01) return;
+      const prev = lastCut.value;
+      lastCut.value = n;
+      // El primer corte salta de entero a dos partes de una: también es un clic.
+      const paso = Math.abs(n - prev) === 1 || (prev <= 1 && n === 2);
+      if (prev < 0 || !even || n < 2 || !paso) return;
+      runOnJS(sfx)("fit", (n - 2) * 2, 0);
+    },
+    [even],
+  );
+
+  // El evento: las partes iguales, las encendidas que pide la ficha. Eso es la
+  // fracción, y el todo lo celebra una vez, con halo menta y chispas.
+  const burst = useSharedValue(1);
+  const antes = useRef(done);
+  useEffect(() => {
+    if (done && !antes.current) {
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: 720 });
+      sfx("join", 0, 120);
+    }
+    antes.current = done;
+  }, [done, burst]);
+  const halo = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+
   return (
     <Group>
-      <Path path={full} color={theme.color.surface} />
+      <TileBody path={full} />
       <Group transform={litT}>
-        <Path path={full} color={theme.color.accent} opacity={0.55} />
+        <Path path={full}>
+          <LinearGradient
+            start={vec(0, box.y)}
+            end={vec(0, box.y + box.h)}
+            colors={[PART.light, PART.base, PART.dark]}
+          />
+        </Path>
       </Group>
+      <Path path={full} color={TILE.rim} style="stroke" strokeWidth={1} />
       {Array.from({ length: MAX_CUTS }, (_, i) => (
         <CutLine key={i} index={i} box={box} even={even} parts={parts} />
       ))}
-      <Group opacity={even ? snap : pulse}>
-        <Path
-          path={even ? full : dashed}
-          color={even ? theme.color.ok : theme.color.inkDim}
-          style="stroke"
-          strokeWidth={2}
-        />
+      <Group opacity={invite}>
+        <Path path={full} color="rgba(255, 255, 255, 0.55)" style="stroke" strokeWidth={2} />
       </Group>
+      <Group opacity={snap}>
+        <Path path={full} color={theme.color.ok} style="stroke" strokeWidth={2.5} />
+      </Group>
+      <Group opacity={warnO}>
+        <Path path={dashed} color={theme.color.warn} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      </Group>
+      <Group opacity={halo}>
+        <Path path={full} color={theme.color.ok} style="stroke" strokeWidth={10}>
+          <BlurMask blur={8} style="normal" />
+        </Path>
+      </Group>
+      <Sparks box={box} burst={burst} />
     </Group>
   );
 }
@@ -1374,14 +1952,25 @@ function CutLine({
     return [{ translateX: box.x + corrido * box.w }];
   }, [box, even]);
   const o = useDerivedValue(() => Math.max(0, Math.min(1, parts.value - index - 1)));
+  // El corte parejo es un surco en el material con su filo de luz; el
+  // desparejo, un rayón claro: se ve que alguien pasó el dedo, no que cortó.
   return (
     <Group transform={transform} opacity={o}>
-      <Path
-        path={path}
-        color={even ? theme.color.bg : theme.color.inkFaint}
-        style="stroke"
-        strokeWidth={even ? 2 : 1}
-      />
+      <Group opacity={even ? 1 : 0}>
+        <Path path={path} color={GROOVE} style="stroke" strokeWidth={2.5} strokeCap="round" />
+        <Group transform={[{ translateX: 1.6 }]}>
+          <Path path={path} color={GROOVE_LIGHT} style="stroke" strokeWidth={1} />
+        </Group>
+      </Group>
+      <Group opacity={even ? 0 : 1}>
+        <Path
+          path={path}
+          color="rgba(255, 255, 255, 0.38)"
+          style="stroke"
+          strokeWidth={1.5}
+          strokeCap="round"
+        />
+      </Group>
     </Group>
   );
 }
@@ -1406,26 +1995,54 @@ function LedgerChip({
   readonly parts: SharedValue<number>;
   readonly lit: SharedValue<number>;
 }) {
-  const path = useMemo(() => {
+  const { path, shine } = useMemo(() => {
     const p = Skia.Path.Make();
     p.addRRect(Skia.RRectXY(Skia.XYWHRect(-0.5, -7, 1, 14), 2, 2));
-    return p;
+    // El brillo va como una franja fina y no como trazo: la ficha se estira en
+    // `scaleX`, y un trazo se estiraría con ella.
+    const s = Skia.Path.Make();
+    s.addRect(Skia.XYWHRect(-0.42, -6, 0.84, 2.2));
+    return { path: p, shine: s };
   }, []);
+  // La ficha que se anota llega con un salto y se asienta: la trajo el toque.
+  const pop = useSharedValue(0);
+  const last = useSharedValue(1e9);
+  useAnimatedReaction(
+    () => lit.value,
+    (now) => {
+      const prev = last.value;
+      last.value = now;
+      if (prev <= index && now > index && now - prev < 0.999) {
+        pop.value = 1;
+        pop.value = withSpring(0, theme.spring.settle);
+        // La ficha cae en el libro: madera, un escalón más arriba cada una.
+        runOnJS(sfx)("drop", fillPitch(index), 0);
+      }
+    },
+    [index],
+  );
   const transform = useDerivedValue(() => {
     const n = Math.max(1, parts.value);
     const ancho = (box.w / n) * 0.8;
     const torcido = even ? 0 : (index % 2 === 0 ? 0.22 : -0.16);
     return [
       { translateX: box.x + ancho * 0.62 + index * (ancho + 5) },
-      { translateY: y + (even ? 0 : index * 3) },
+      { translateY: y + (even ? 0 : index * 3) - 8 * pop.value },
       { rotate: torcido },
       { scaleX: ancho },
+      { scaleY: 1 + 0.3 * pop.value },
     ];
   }, [box, y, even, index]);
   const o = useDerivedValue(() => Math.max(0, Math.min(1, lit.value - index)));
   return (
     <Group transform={transform} opacity={o}>
-      <Path path={path} color={theme.color.accent} />
+      <Group transform={[{ translateY: 2.5 }]}>
+        <Path path={path} color={PART.dark} opacity={0.7} />
+      </Group>
+      <Path path={path}>
+        <LinearGradient start={vec(0, -7)} end={vec(0, 7)} colors={[PART.light, PART.base, PART.dark]} />
+      </Path>
+      <Path path={shine} color="rgba(255, 255, 255, 0.4)" />
     </Group>
   );
 }
@@ -1433,32 +2050,209 @@ function LedgerChip({
 /** Un todo que no se está cortando: la pizza, el vaso, el camino, las figuras. */
 function StaticWholeView({
   geom,
+  box,
   glow,
   even,
+  matches,
+  sig,
+  vessel,
   hint,
 }: {
-  readonly geom: { readonly fill: SkPath; readonly cuts: SkPath; readonly outline: SkPath };
+  readonly geom: {
+    readonly fill: SkPath;
+    readonly cuts: SkPath;
+    readonly outline: SkPath;
+    readonly body: SkPath;
+  };
+  readonly box: Box;
   readonly glow: boolean;
   readonly even: boolean;
+  /** Muestra la misma fracción que la ficha. */
+  readonly matches: boolean;
+  /** La forma del todo y dónde está: si cambia, es otra ronda y no un evento. */
+  readonly sig: string;
+  /** Es el vaso: de vidrio, con la parte como líquido. */
+  readonly vessel: boolean;
   readonly hint: SharedValue<number>;
 }) {
-  const o = useDerivedValue(() => (glow ? 0.6 + 0.4 * hint.value : 1));
+  const fb = useMemo(() => geom.fill.getBounds(), [geom.fill]);
+
+  // Mientras reclama que lo toquen, un halo claro late con la demostración.
+  const attn = useDerivedValue(() => (glow ? 0.2 + 0.5 * hint.value : 0), [glow]);
+
+  // El evento de la lámina: el todo que coincide con la ficha se enciende
+  // porque el jugador lo eligió. Es el mismo todo de antes, con la misma forma,
+  // que pasa a reclamar luz: eso lo distingue de una ronda nueva, que trae
+  // otra forma. Se celebra una vez y queda con el borde menta: coincide.
+  const burst = useSharedValue(1);
+  const won = useSharedValue(0);
+  const antes = useRef({ glow, sig });
+  useEffect(() => {
+    const previo = antes.current;
+    antes.current = { glow, sig };
+    if (glow && !previo.glow && previo.sig === sig && matches) {
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: 720 });
+      won.value = withTiming(1, { duration: theme.motion.quick });
+      // El todo elegido dice la misma fracción que la ficha: vidrio.
+      sfx("join");
+    }
+    if (!glow) won.value = 0;
+  }, [glow, sig, matches, burst, won]);
+  const halo = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+
   return (
-    <Group opacity={o}>
-      <Path path={geom.outline} color={theme.color.surface} />
-      <Path path={geom.fill} color={theme.color.accent} opacity={0.55} />
-      <Path
-        path={geom.cuts}
-        color={even ? theme.color.bg : theme.color.inkFaint}
-        style="stroke"
-        strokeWidth={even ? 2 : 1}
-      />
+    <Group>
+      {vessel ? (
+        <>
+          <Path path={geom.body} color="rgba(9, 17, 29, 0.55)" />
+          <Path path={geom.body}>
+            <LinearGradient
+              start={vec(box.x, 0)}
+              end={vec(box.x + box.w, 0)}
+              colors={["rgba(255,255,255,0.13)", "rgba(255,255,255,0.03)", "rgba(255,255,255,0.10)"]}
+            />
+          </Path>
+        </>
+      ) : (
+        <TileBody path={geom.body} />
+      )}
+      <Path path={geom.fill}>
+        <LinearGradient
+          start={vec(0, fb.y)}
+          end={vec(0, fb.y + Math.max(1, fb.height))}
+          colors={[PART.light, PART.base, PART.dark]}
+        />
+      </Path>
+      <Group opacity={even ? 1 : 0}>
+        <Path path={geom.cuts} color={GROOVE} style="stroke" strokeWidth={2.5} strokeCap="round" />
+      </Group>
+      <Group opacity={even ? 0 : 1}>
+        <Path
+          path={geom.cuts}
+          color="rgba(255, 255, 255, 0.38)"
+          style="stroke"
+          strokeWidth={1.5}
+          strokeCap="round"
+        />
+      </Group>
       <Path
         path={geom.outline}
-        color={even ? theme.color.inkDim : theme.color.inkFaint}
+        color={vessel ? "rgba(255, 255, 255, 0.32)" : even ? GLASS_LINE : "rgba(255, 255, 255, 0.4)"}
         style="stroke"
-        strokeWidth={2}
+        strokeWidth={vessel ? 2 : 1.5}
+        strokeCap="round"
+        strokeJoin="round"
       />
+      <Group opacity={attn}>
+        <Path path={geom.body} color="rgba(255, 255, 255, 0.8)" style="stroke" strokeWidth={5}>
+          <BlurMask blur={6} style="normal" />
+        </Path>
+      </Group>
+      <Group opacity={won}>
+        <Path path={geom.body} color={theme.color.ok} style="stroke" strokeWidth={2.5} strokeJoin="round" />
+      </Group>
+      <Group opacity={halo}>
+        <Path path={geom.body} color={theme.color.ok} style="stroke" strokeWidth={10}>
+          <BlurMask blur={8} style="normal" />
+        </Path>
+      </Group>
+      <Sparks box={box} burst={burst} />
+    </Group>
+  );
+}
+
+/** Un plato del reparto: cerámica con su hueco, su borde y su sombra. */
+function Plate({ box }: { readonly box: Box }) {
+  const g = useMemo(() => {
+    const r = Math.min(box.w, box.h) / 2;
+    const cx = box.x + box.w / 2;
+    const cy = box.y + box.h / 2;
+    const shadow = Skia.Path.Make();
+    shadow.addOval(Skia.XYWHRect(cx - r * 0.9, cy + r * 0.7, r * 1.8, r * 0.5));
+    const body = Skia.Path.Make();
+    body.addCircle(cx, cy, r);
+    const well = Skia.Path.Make();
+    well.addCircle(cx, cy, r * 0.7);
+    return { shadow, body, well, top: cy - r, bottom: cy + r };
+  }, [box]);
+  return (
+    <>
+      <Path path={g.shadow} color="rgba(0, 0, 0, 0.35)">
+        <BlurMask blur={4} style="normal" />
+      </Path>
+      <Path path={g.body}>
+        <LinearGradient
+          start={vec(0, g.top)}
+          end={vec(0, g.bottom)}
+          colors={[PLATE.light, PLATE.base, PLATE.dark]}
+        />
+      </Path>
+      <Path path={g.well}>
+        <LinearGradient start={vec(0, g.top)} end={vec(0, g.bottom)} colors={[PLATE.dark, PLATE.base]} />
+      </Path>
+      <Path path={g.body} color="rgba(255, 255, 255, 0.22)" style="stroke" strokeWidth={1} />
+    </>
+  );
+}
+
+/**
+ * La ficha clavada en la recta. Cae desde arriba con un rebote cada vez que el
+ * jugador la clava. En su marca es menta y suelta chispas una vez: es la parte
+ * encendida acostada entre el cero y el uno. En otra marca es ámbar, "mirá
+ * acá", y no dice nada más. Está montada siempre; sin ficha clavada no se ve.
+ */
+function Pin({
+  x,
+  y,
+  mark,
+  good,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly mark: number | null;
+  readonly good: boolean;
+}) {
+  const { stem, head } = useMemo(() => {
+    const s = Skia.Path.Make();
+    s.moveTo(x, y - 26);
+    s.lineTo(x, y + 26);
+    const h = Skia.Path.Make();
+    h.addCircle(x, y - 26, 6.5);
+    return { stem: s, head: h };
+  }, [x, y]);
+  const drop = useSharedValue(0);
+  const burst = useSharedValue(1);
+  useEffect(() => {
+    if (mark === null) return;
+    drop.value = 1;
+    drop.value = withSpring(0, theme.spring.settle);
+    // Se clava: madera. En su marca, además coincide: vidrio.
+    sfx("drop", 0, 120);
+    if (good) {
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: 720 });
+      sfx("join", 0, 220);
+    }
+  }, [mark, good, drop, burst]);
+  const t = useDerivedValue(() => [{ translateY: -36 * drop.value }]);
+  const halo = useDerivedValue(() => (burst.value < 1 ? 1 - burst.value : 0));
+  const color = good ? theme.color.ok : theme.color.warn;
+  return (
+    <Group opacity={mark === null ? 0 : 1}>
+      <Group transform={t}>
+        <Path path={stem} color={READ_BACK} style="stroke" strokeWidth={5} strokeCap="round" />
+        <Path path={stem} color={color} style="stroke" strokeWidth={2.5} strokeCap="round" />
+        <Path path={head}>
+          <RadialGradient c={vec(x - 2.5, y - 29)} r={10} colors={["#ffffff", color, color]} />
+        </Path>
+        <Group opacity={halo}>
+          <Path path={head} color={theme.color.ok}>
+            <BlurMask blur={8} style="normal" />
+          </Path>
+        </Group>
+      </Group>
+      <Sparks box={{ x: x - 6, y: y - 32, w: 12, h: 12 }} burst={burst} />
     </Group>
   );
 }
@@ -1473,9 +2267,11 @@ function FloorRow({
   placed,
   placedRight,
   fromBottom,
+  rightOwn,
   split,
   gap,
-  merged,
+  slots,
+  drawer,
 }: {
   readonly index: number;
   readonly strip: { readonly left: SkPath; readonly right: SkPath };
@@ -1483,42 +2279,177 @@ function FloorRow({
   readonly placedRight: SharedValue<number>;
   /** Qué número de fila es contando desde abajo. */
   readonly fromBottom: number;
+  /**
+   * La habitación derecha se llena por su cuenta. Si no, sigue a la izquierda y
+   * las dos tiras llegan juntas: una sola madera, no dos a la vez.
+   */
+  readonly rightOwn: boolean;
   readonly split: SharedValue<number>;
   readonly gap: number;
-  readonly merged: boolean;
+  /** Las filas del montón y sus casas: de ahí sale la fila que llega. */
+  readonly slots: readonly RowSlot[];
+  readonly drawer: readonly Spot[];
 }) {
   const o = useDerivedValue(() => Math.max(0, Math.min(1, placed.value - index)));
   // La habitación derecha se llena contra la izquierda, así que su fila se
   // cuenta desde abajo. Cuando las dos comparten el mismo valor el efecto no se
   // nota, porque entonces las dos están llenas o las dos vacías.
   const oR = useDerivedValue(() => Math.max(0, Math.min(1, placedRight.value - fromBottom)));
-  const leftT = useDerivedValue(() => [{ translateX: -split.value * gap }]);
-  const rightT = useDerivedValue(() => [{ translateX: split.value * gap }]);
-  const fill = merged ? "#2b3a4d" : "#33445c";
+
+  const lb = useMemo(() => strip.left.getBounds(), [strip.left]);
+  const rb = useMemo(() => strip.right.getBounds(), [strip.right]);
+  const lcx = lb.x + lb.width / 2;
+  const lcy = lb.y + lb.height / 2;
+  const rcx = rb.x + rb.width / 2;
+  const rcy = rb.y + rb.height / 2;
+
+  // Lo que la fila recorre al llegar, y su rebote. En reposo, todo en cero.
+  const lx = useSharedValue(0);
+  const ly = useSharedValue(0);
+  const lPop = useSharedValue(0);
+  const rx = useSharedValue(0);
+  const ry = useSharedValue(0);
+  const rPop = useSharedValue(0);
+  // El valor anterior vive en un `SharedValue` y no en el `previous` de la
+  // reacción: la actividad arma `rows` de nuevo en cada render, así que la
+  // reacción se vuelve a registrar justo cuando la fila entra (el soltar
+  // cambia el estado), y su primera llamada no trae valor anterior.
+  const lastL = useSharedValue(1);
+  const lastR = useSharedValue(1);
+
+  /**
+   * La fila entra de a poco: la trajo el dedo, o la réplica de una respuesta.
+   * Una ronda nueva la pone de golpe y ahí no rebota nada. Si en el montón hay
+   * una fila apagándose en este momento, es la que el dedo acaba de soltar:
+   * la del piso sale de ahí, de donde quedó el dedo, y no de su casa. Todo en
+   * el hilo de la interfaz, leyendo los mismos valores que el gesto.
+   */
+  const llega = (
+    now: number,
+    last: SharedValue<number>,
+    cx: number,
+    cy: number,
+    ox: SharedValue<number>,
+    oy: SharedValue<number>,
+    pop: SharedValue<number>,
+    pitch: number,
+    loud: boolean,
+  ): void => {
+    "worklet";
+    const prev = last.value;
+    last.value = now;
+    if (!(prev <= 0.001 && now > 0.001 && now < 0.999)) return;
+    pop.value = 1;
+    pop.value = withSpring(0, theme.spring.settle);
+    // La fila cae en el piso: madera, y cada fila suena un escalón más arriba.
+    if (loud) runOnJS(sfx)("drop", pitch, 0);
+    for (let i = 0; i < slots.length; i++) {
+      const s = slots[i];
+      const home = drawer[i];
+      if (!s || !home) continue;
+      const a = s.alive.value;
+      if (a > 0.001 && a < 0.999 && Math.hypot(s.dx.value, s.dy.value) > 4) {
+        ox.value = home.x + s.dx.value - cx;
+        oy.value = home.y + s.dy.value - cy;
+        ox.value = withSpring(0, theme.spring.settle);
+        oy.value = withSpring(0, theme.spring.settle);
+        return;
+      }
+    }
+  };
+  useAnimatedReaction(
+    () => placed.value - index,
+    (now) => llega(now, lastL, lcx, lcy, lx, ly, lPop, fillPitch(index), true),
+    [index, lcx, lcy, slots, drawer],
+  );
+  useAnimatedReaction(
+    () => placedRight.value - fromBottom,
+    (now) => llega(now, lastR, rcx, rcy, rx, ry, rPop, fillPitch(fromBottom), rightOwn),
+    [fromBottom, rcx, rcy, slots, drawer, rightOwn],
+  );
+
+  // Crece un cuarto al salir de la mano, del tamaño de la fila levantada, y se
+  // asienta con un rebote: así se ve que llegó a un lugar.
+  const leftT = useDerivedValue(
+    () => [
+      { translateX: -split.value * gap + lx.value + lcx },
+      { translateY: ly.value + lcy },
+      { scale: 1 + 0.25 * lPop.value },
+      { translateX: -lcx },
+      { translateY: -lcy },
+    ],
+    [gap, lcx, lcy],
+  );
+  const rightT = useDerivedValue(
+    () => [
+      { translateX: split.value * gap + rx.value + rcx },
+      { translateY: ry.value + rcy },
+      { scale: 1 + 0.25 * rPop.value },
+      { translateX: -rcx },
+      { translateY: -rcy },
+    ],
+    [gap, rcx, rcy],
+  );
   return (
     <>
       <Group opacity={o} transform={leftT}>
-        <Path path={strip.left} color={fill} />
-        <Path path={strip.left} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+        <TileBody path={strip.left} />
       </Group>
       <Group opacity={oR} transform={rightT}>
-        <Path path={strip.right} color={fill} />
-        <Path path={strip.right} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+        <TileBody path={strip.right} />
       </Group>
     </>
   );
 }
 
-/** Una fila suelta. Su dibujo sigue al mismo par de valores que el gesto. */
-function LooseRowView({ path, slot }: { readonly path: SkPath; readonly slot: RowSlot }) {
-  const transform = useDerivedValue(() => [
-    { translateX: slot.dx.value },
-    { translateY: slot.dy.value },
-  ]);
+/**
+ * Una fila suelta. Su dibujo sigue al mismo par de valores que el gesto. Al
+ * salir de su casa se levanta —crece un 30 % y su sombra se aleja— y al volver
+ * se asienta con un rebote. Se sabe que salió porque el desplazamiento dejó de
+ * ser cero: la escena no necesita que la actividad le avise.
+ */
+function LooseRowView({
+  path,
+  slot,
+  spot,
+}: {
+  readonly path: SkPath;
+  readonly slot: RowSlot;
+  readonly spot: Spot;
+}) {
+  const lift = useSharedValue(0);
+  /** Hacia dónde va el levantado ahora: se compara contra esto y no contra la llamada anterior. */
+  const goal = useSharedValue(0);
+  useAnimatedReaction(
+    () => (Math.hypot(slot.dx.value, slot.dy.value) > 3 ? 1 : 0),
+    (fuera) => {
+      if (goal.value === fuera) return;
+      goal.value = fuera;
+      lift.value = withSpring(fuera, fuera === 1 ? theme.spring.lift : theme.spring.settle);
+      // Se levanta: aire. Al volver no suena nada: lo que no entró no hace ruido.
+      if (fuera === 1) runOnJS(sfx)("lift", 0, 0);
+    },
+  );
+  const transform = useDerivedValue(
+    () => [
+      { translateX: spot.x + slot.dx.value },
+      { translateY: spot.y + slot.dy.value },
+      { scale: 1 + 0.3 * lift.value },
+      { translateX: -spot.x },
+      { translateY: -spot.y },
+    ],
+    [spot],
+  );
+  const shadowT = useDerivedValue(() => [{ translateY: 3 + 10 * lift.value }]);
+  const shadowO = useDerivedValue(() => 0.3 + 0.25 * lift.value);
   return (
     <Group transform={transform} opacity={slot.alive}>
-      <Path path={path} color="#33445c" />
-      <Path path={path} color={theme.color.inkFaint} style="stroke" strokeWidth={STROKE} />
+      <Group transform={shadowT} opacity={shadowO}>
+        <Path path={path} color="rgba(0, 0, 0, 0.75)">
+          <BlurMask blur={6} style="normal" />
+        </Path>
+      </Group>
+      <TileBody path={path} />
     </Group>
   );
 }
