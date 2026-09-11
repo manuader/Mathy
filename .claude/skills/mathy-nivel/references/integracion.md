@@ -167,7 +167,11 @@ las escenas son sus hijos; las fibras se recorren desde
 `container[<clave __reactContainer…>].stateNode.current` (desde el contenedor solo,
 las props son viejas). Con la pestaña oculta más de 5 minutos Chrome también frena
 los `setTimeout` encadenados. Los toques (`Gesture.Tap`) necesitan una pausa real
-entre `pointerdown` y `pointerup` (esperar con la herramienta, no con timers).
+entre `pointerdown` y `pointerup`, pero menor que los 500 ms que acepta el Tap: en
+dos llamadas de la herramienta se pasa y parece un bug que no existe. Bajá y subí
+en la misma llamada, con ~250 ms de espera hecha con `MessageChannel` (no se frena
+con la pestaña oculta, a diferencia de `setTimeout`):
+`await new Promise(r => { const t0 = performance.now(); const c = new MessageChannel(); c.port1.onmessage = () => performance.now() - t0 > 250 ? r() : c.port2.postMessage(0); c.port2.postMessage(0); })`.
 
 Arrastres sintéticos: parchear `setPointerCapture`/`releasePointerCapture` con
 try/catch, `pointerdown` + temblor + 18 `pointermove` + `pointerup`, todos con

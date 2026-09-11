@@ -473,7 +473,8 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 35. **Probar con el panel del navegador oculto**: las capturas fallan, Chrome frena
     `requestAnimationFrame` y, después de 5 minutos, también los `setTimeout`
     encadenados; los toques de `Gesture.Tap` necesitan una pausa real entre bajar y
-    subir, o parece un bug que no existe. Las recetas están en `references/integracion.md`
+    subir, pero de menos de 500 ms: en la misma llamada, esperando con `MessageChannel`
+    (en dos llamadas se pasa y parece un bug que no existe). Las recetas están en `references/integracion.md`
     de la skill `mathy-nivel`. Y mientras hay agentes editando, las recargas en
     caliente reinician la actividad en medio de una prueba y, en una pestaña vieja,
     pueden dejar CanvasKit roto (trampa 32).
