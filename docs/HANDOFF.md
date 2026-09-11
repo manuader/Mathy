@@ -463,6 +463,20 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
     por cada error que le reenvía el navegador; 53 000 `Aborted()` de CanvasKit lo dejaron
     al 99 % de CPU. Síntoma: `curl localhost:8081` no contesta y `preview_logs` pesa
     megas. Cerrar la pestaña, después reiniciar el servidor; al revés, se vuelve a colgar.
+33. **En web, un gesto nacido con `.enabled(false)` no despierta nunca**, aunque
+    después se habilite; y un asa ubicada con `useAnimatedStyle` no sigue a la pieza.
+    Las dos cosas dejaban fichas muertas en la segunda ronda y niveles imposibles de
+    terminar (nodos 2, 3 y 7). Los gestos nacen habilitados y un `SharedValue` decide.
+34. **Un gesto rearmado en cada ronda se queda con la ronda anterior** (`runOnJS`
+    captura la función de cuando se armó): la ficha se evaluaba contra las fichas de
+    la primera ronda. Se arma una vez por nivel y lee de referencias estables.
+35. **Probar con el panel del navegador oculto**: las capturas fallan, Chrome frena
+    `requestAnimationFrame` y, después de 5 minutos, también los `setTimeout`
+    encadenados; los toques de `Gesture.Tap` necesitan una pausa real entre bajar y
+    subir, o parece un bug que no existe. Las recetas están en `references/integracion.md`
+    de la skill `mathy-nivel`. Y mientras hay agentes editando, las recargas en
+    caliente reinician la actividad en medio de una prueba y, en una pestaña vieja,
+    pueden dejar CanvasKit roto (trampa 32).
 
 ## 8. Qué falta
 

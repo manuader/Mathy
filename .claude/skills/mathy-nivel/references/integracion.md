@@ -162,6 +162,13 @@ nada, en la página:
   window.cancelAnimationFrame = (i) => { q = q.filter(([j]) => j !== i); }; })()
 ```
 
+Leer lo que dibuja la escena: el `Canvas` está en el árbol de React de la página y
+las escenas son sus hijos; las fibras se recorren desde
+`container[<clave __reactContainer…>].stateNode.current` (desde el contenedor solo,
+las props son viejas). Con la pestaña oculta más de 5 minutos Chrome también frena
+los `setTimeout` encadenados. Los toques (`Gesture.Tap`) necesitan una pausa real
+entre `pointerdown` y `pointerup` (esperar con la herramienta, no con timers).
+
 Arrastres sintéticos: parchear `setPointerCapture`/`releasePointerCapture` con
 try/catch, `pointerdown` + temblor + 18 `pointermove` + `pointerup`, todos con
 `pointerId: 1`, `pointerType: "mouse"`, `pressure` (trampa 4). Los clics sobre
@@ -175,6 +182,22 @@ en la chuleta con "Nueva"; "Siguiente nivel". Con el nivel ya superado, la tarje
 de entrada ofrece "Jugar con la guía otra vez".
 
 ## Trampas que ya costaron
+
+Tres de los gestos que en web hacían imposible terminar un nivel (los encontró el
+agente de la pista, 2026-09-11). Buscalos en toda actividad que toques:
+
+- **Un gesto nacido con `.enabled(false)` no despierta nunca en web**, aunque
+  después se habilite: las fichas que no existían en la primera ronda quedaban
+  muertas en la segunda. Que el gesto nazca habilitado y un `SharedValue` decida
+  si responde.
+- **Un gesto rearmado en cada ronda se queda con la anterior**: `runOnJS` captura
+  la función de cuando se armó. Se arma una vez por nivel y lee la geometría de
+  `SharedValue` y las funciones de una referencia estable.
+- **Un asa ubicada con `useAnimatedStyle` no sigue a la pieza en web**: ubicala
+  con estilo común desde el estado.
+- **El alto del lienzo, medido**: una zona `flex: 1` con `onLayout` y la línea de
+  abajo con alto fijo (como `CardinalityGame`). Como fracción de la ventana, en un
+  teléfono con el cartel de la guía la línea de abajo quedaba fuera de pantalla.
 
 - **Un índice que comparte valor con "nada agarrado"** (el nodo 1 usaba `-1` en las
   tarjetas fijas y `-1` como "ninguna tarjeta levantada"): arrastrar una fruta
