@@ -463,10 +463,14 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
     por cada error que le reenvía el navegador; 53 000 `Aborted()` de CanvasKit lo dejaron
     al 99 % de CPU. Síntoma: `curl localhost:8081` no contesta y `preview_logs` pesa
     megas. Cerrar la pestaña, después reiniciar el servidor; al revés, se vuelve a colgar.
-33. **En web, un gesto nacido con `.enabled(false)` no despierta nunca**, aunque
-    después se habilite; y un asa ubicada con `useAnimatedStyle` no sigue a la pieza.
-    Las dos cosas dejaban fichas muertas en la segunda ronda y niveles imposibles de
-    terminar (nodos 2, 3 y 7). Los gestos nacen habilitados y un `SharedValue` decide.
+33. **En web, los gestos que cambian de `.enabled` a mitad de nivel dejaban fichas
+    muertas** en la segunda ronda y niveles imposibles de terminar (nodos 2, 3, 4, 5,
+    7 y 19); y un asa ubicada con `useAnimatedStyle` no sigue a la pieza. La causa
+    exacta **no está confirmada**: el 2026-09-11 dos gestos nacidos apagados sí
+    despertaron en RNGH 2.32, y lo que falló comprobadamente fue un `Gesture.Tap` en
+    carrera con un `Pan` apagado. El patrón que no falla: los gestos nacen habilitados
+    y un `SharedValue` decide; el toque se atiende en `onFinalize` de un `Pan` que no
+    se movió, sin `Tap` aparte.
 34. **Un gesto rearmado en cada ronda se queda con la ronda anterior** (`runOnJS`
     captura la función de cuando se armó): la ficha se evaluaba contra las fichas de
     la primera ronda. Se arma una vez por nivel y lee de referencias estables.

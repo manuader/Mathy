@@ -190,10 +190,12 @@ de entrada ofrece "Jugar con la guía otra vez".
 Tres de los gestos que en web hacían imposible terminar un nivel (los encontró el
 agente de la pista, 2026-09-11). Buscalos en toda actividad que toques:
 
-- **Un gesto nacido con `.enabled(false)` no despierta nunca en web**, aunque
-  después se habilite: las fichas que no existían en la primera ronda quedaban
-  muertas en la segunda. Que el gesto nazca habilitado y un `SharedValue` decida
-  si responde.
+- **No cambies `.enabled` a mitad de nivel**: las fichas que no existían en la
+  primera ronda quedaban muertas en la segunda. La causa exacta no está confirmada
+  (un gesto nacido apagado a veces despierta; un `Gesture.Tap` en carrera con un
+  `Pan` apagado no contestó nunca). Que el gesto nazca habilitado y un
+  `SharedValue` decida si responde; el toque, en `onFinalize` de un `Pan` que no se
+  movió.
 - **Un gesto rearmado en cada ronda se queda con la anterior**: `runOnJS` captura
   la función de cuando se armó. Se arma una vez por nivel y lee la geometría de
   `SharedValue` y las funciones de una referencia estable.
