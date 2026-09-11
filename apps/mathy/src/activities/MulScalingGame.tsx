@@ -697,54 +697,107 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
 
   // --- Gestos ----------------------------------------------------------------
 
-  const nailX = sl.nails[0]?.x ?? 0;
-  const nailY = sl.nails[0]?.y ?? 0;
-  const step = sl.step;
-  const rest = Math.max(problem.rest, 1);
-  const crankX = sl.crank.x;
-  const crankY = sl.crank.y;
-  const crankR = sl.crank.r;
-  const ratio = problem.rows;
-  const maxFactor = problem.length / rest;
-  const minFactor = problem.flipped ? -maxFactor : 0;
-  const bandYs = useMemo(() => sl.nails.map((n) => n.y), [sl]);
-  const bandGap = (sl.nails[1]?.y ?? Infinity) - (sl.nails[0]?.y ?? 0);
-  const grab = Math.min(sl.touchR * 1.8, bandGap * 0.45);
-  const rulerY = sl.ruler.y;
-  const touchR = sl.touchR;
-  const markValues = useMemo(() => bandConfig.marks.map((m) => m), [bandConfig.marks]);
+  /**
+   * Los gestos del lienzo se arman una vez por nivel y leen la ronda de un valor
+   * compartido. Con `.enabled(expr)` pasaban dos cosas en web: el gesto que nace
+   * deshabilitado no despierta nunca (en el nivel que anticipa, la banda nacía
+   * sorda hasta que el jugador elegía una marca, y después no se dejaba estirar:
+   * el nivel no se podía terminar), y un gesto rearmado en cada ronda puede
+   * quedarse con el cierre de la anterior (trampas 33 y 34 de HANDOFF). Lo que
+   * sí queda en `.enabled` depende solo del nivel, que remonta la actividad.
+   */
   const canStretch = ask === "stretch" || ask === "match" || ask === "predict";
   const canTurn = ask === "turn";
-  const lastAngle = useSharedValue(0);
-  const turned = useSharedValue(0);
-  const dragging = useSharedValue(0);
-
   // Con dos marcas lejanas (una de cada lado) el toque se acepta cerca de la
   // marca, no sólo encima: lo que se decide es el lado, no la raya exacta.
   const pocasMarcas = ask === "flip" && level.bandSkin === "drawings";
-  const markR = pocasMarcas ? Math.max(touchR * 1.4, step * 2.5) : Math.max(touchR * 1.4, 34);
+  const geoNow = useMemo<BandGeo>(() => {
+    const rest = Math.max(problem.rest, 1);
+    const maxFactor = problem.length / rest;
+    const bandGap = (sl.nails[1]?.y ?? Infinity) - (sl.nails[0]?.y ?? 0);
+    return {
+      // En el nivel que anticipa, la banda no se deja tocar hasta que el
+      // jugador dijo dónde va a caer: ejecutar primero sería contar, no anticipar.
+      pan: solved
+        ? SORDO
+        : canTurn
+          ? GIRAR
+          : canStretch && (ask !== "predict" || guess !== null)
+            ? ESTIRAR
+            : SORDO,
+      tap: solved
+        ? SORDO
+        : ask === "rotate"
+          ? TOCA_PISO
+          : ask === "which"
+            ? TOCA_BANDA
+            : ask === "predict" || ask === "flip"
+              ? TOCA_MARCA
+              : PIDE_PISO,
+      nailX: sl.nails[0]?.x ?? 0,
+      nailY: sl.nails[0]?.y ?? 0,
+      // El blanco es la banda entera, no solo su manija: una mano de cinco
+      // años no apunta fino. Con dos bandas el blanco se recorta a la mitad
+      // de la separación, para que tirar de la de abajo no mueva la de arriba.
+      grab: Math.min(sl.touchR * 1.8, bandGap * 0.45),
+      unit: rest * sl.step,
+      minFactor: problem.flipped ? -maxFactor : 0,
+      maxFactor,
+      crankX: sl.crank.x,
+      crankY: sl.crank.y,
+      crankR: sl.crank.r,
+      ratio: problem.rows,
+      length: problem.length,
+      step: sl.step,
+      rulerY: sl.ruler.y,
+      markR: pocasMarcas ? Math.max(sl.touchR * 1.4, sl.step * 2.5) : Math.max(sl.touchR * 1.4, 34),
+      marks: [...bandConfig.marks],
+      bandYs: sl.nails.map((n) => n.y),
+    };
+  }, [solved, canTurn, canStretch, ask, guess, sl, problem, bandConfig.marks, pocasMarcas]);
+  const geo = useSharedValue<BandGeo>(geoNow);
+  useEffect(() => {
+    geo.value = geoNow;
+  }, [geoNow, geo]);
+
+  const lastAngle = useSharedValue(0);
+  const turned = useSharedValue(0);
+  /** Qué agarró el dedo en este arrastre: nada, la banda o la manivela. */
+  const dragging = useSharedValue(SORDO);
+  const bandFactor = (bands[0] as BandValues).factor;
+
+  const onLanded = useLatest(landed);
+  const onStretched = useLatest(stretched);
+  const onRotate = useLatest(rotateFloor);
+  const onPickBand = useLatest(pickBand);
+  const onGuess = useLatest(guessMark);
+  const onSummon = useLatest(summonFloor);
+  // La fila se evalúa contra las filas de ESTA ronda: el asa se arma una vez y
+  // llama por acá (trampa 34 de HANDOFF).
+  const onDropRow = useLatest(dropRow);
+
+  // Constantes durante todo el nivel: el nivel 3 nunca tira de nada, y solo él
+  // gira el piso con el toque sostenido.
+  const usaArrastre = level.asks.some((a) => a === "stretch" || a === "match" || a === "predict" || a === "turn");
+  const usaSostenido = level.asks.includes("rotate");
 
   const pan = useMemo(
     () =>
       Gesture.Pan()
-        // En el nivel que anticipa, la banda no se deja tocar hasta que el
-        // jugador dijo dónde va a caer: ejecutar primero sería contar, no anticipar.
-        .enabled(!solved && ((canStretch && (ask !== "predict" || guess !== null)) || canTurn))
+        .enabled(usaArrastre)
         .onBegin((e) => {
-          if (canTurn) {
-            dragging.value = Math.hypot(e.x - crankX, e.y - crankY) < crankR * 1.4 ? 1 : 0;
-            lastAngle.value = Math.atan2(e.y - crankY, e.x - crankX);
+          const g = geo.value;
+          if (g.pan === GIRAR) {
+            dragging.value = Math.hypot(e.x - g.crankX, e.y - g.crankY) < g.crankR * 1.4 ? GIRAR : SORDO;
+            lastAngle.value = Math.atan2(e.y - g.crankY, e.x - g.crankX);
             return;
           }
-          // El blanco es la banda entera, no solo su manija: una mano de cinco
-          // años no apunta fino. Con dos bandas el blanco se recorta a la mitad
-          // de la separación, para que tirar de la de abajo no mueva la de arriba.
-          dragging.value = Math.abs(e.y - nailY) < grab ? 1 : 0;
+          dragging.value = g.pan === ESTIRAR && Math.abs(e.y - g.nailY) < g.grab ? ESTIRAR : SORDO;
         })
         .onChange((e) => {
-          if (!dragging.value) return;
-          if (canTurn) {
-            const a = Math.atan2(e.y - crankY, e.x - crankX);
+          const g = geo.value;
+          if (dragging.value === GIRAR) {
+            const a = Math.atan2(e.y - g.crankY, e.x - g.crankX);
             let d = a - lastAngle.value;
             while (d > Math.PI) d -= 2 * Math.PI;
             while (d < -Math.PI) d += 2 * Math.PI;
@@ -752,7 +805,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
             lastAngle.value = a;
             const vueltas = Math.max(0, Math.round((turned.value / (2 * Math.PI)) * 4) / 4);
             turn.value = vueltas * 2 * Math.PI;
-            const casilla = Math.min(problem.length, Math.round(vueltas) * ratio);
+            const casilla = Math.min(g.length, Math.round(vueltas) * g.ratio);
             if (casilla !== bandToken.value) {
               bandToken.value = casilla;
               // La primera vuelta entera es el paso de la guía que se cumple.
@@ -760,99 +813,68 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
             }
             return;
           }
+          if (dragging.value !== ESTIRAR) return;
           // El clavo no se mueve: lo que el dedo cambia es la distancia a él.
-          const f = (e.x - nailX) / (rest * step);
-          (bands[0] as BandValues).factor.value = Math.max(minFactor, Math.min(maxFactor, f));
+          const f = (e.x - g.nailX) / g.unit;
+          bandFactor.value = Math.max(g.minFactor, Math.min(g.maxFactor, f));
         })
         .onEnd(() => {
-          if (!dragging.value) return;
-          dragging.value = 0;
-          if (canTurn) {
-            runOnJS(landed)(bandToken.value);
-            return;
-          }
-          runOnJS(stretched)((bands[0] as BandValues).factor.value);
+          const agarrado = dragging.value;
+          dragging.value = SORDO;
+          if (agarrado === GIRAR) runOnJS(onLanded)(bandToken.value);
+          else if (agarrado === ESTIRAR) runOnJS(onStretched)(bandFactor.value);
         }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      solved,
-      canStretch,
-      canTurn,
-      crankX,
-      crankY,
-      crankR,
-      nailX,
-      nailY,
-      grab,
-      rest,
-      step,
-      ratio,
-      minFactor,
-      maxFactor,
-      touchR,
-      landed,
-      stretched,
-      problem.length,
-      ask,
-      guess,
-      say,
-    ],
+    [usaArrastre, geo, dragging, lastAngle, turned, turn, bandToken, bandFactor, say, onLanded, onStretched],
   );
 
   const tap = useMemo(
     () =>
       Gesture.Tap()
         .maxDistance(26)
-        .enabled(!solved)
         .onEnd((e) => {
+          const g = geo.value;
           // Girar el piso también se hace con un toque: con el mouse, lo natural es
           // un clic, y antes el clic no hacía nada ni decía nada (el nivel parecía
           // roto). El toque sostenido sigue andando.
-          if (ask === "rotate") {
-            runOnJS(rotateFloor)();
+          if (g.tap === TOCA_PISO) {
+            runOnJS(onRotate)();
             return;
           }
-          if (ask === "which") {
-            let row = 0;
-            let best = Infinity;
-            for (let i = 0; i < bandYs.length; i++) {
-              const d = Math.abs(e.y - (bandYs[i] as number));
-              if (d < best) {
-                best = d;
-                row = i;
-              }
-            }
-            runOnJS(pickBand)(row);
+          if (g.tap === TOCA_BANDA) {
+            runOnJS(onPickBand)(bandaCercana(g.bandYs, e.y));
             return;
           }
-          if (ask === "predict" || ask === "flip") {
+          if (g.tap === TOCA_MARCA) {
             let best = NaN;
-            let bestD = markR;
-            for (const m of markValues) {
-              const d = Math.hypot(e.x - (nailX + m * step), e.y - rulerY);
+            let bestD = g.markR;
+            for (const m of g.marks) {
+              const d = Math.hypot(e.x - (g.nailX + m * g.step), e.y - g.rulerY);
               if (d < bestD) {
                 bestD = d;
                 best = m;
               }
             }
-            if (!Number.isNaN(best)) runOnJS(guessMark)(best);
+            if (!Number.isNaN(best)) runOnJS(onGuess)(best);
             return;
           }
-          runOnJS(summonFloor)();
+          if (g.tap === PIDE_PISO) runOnJS(onSummon)();
         }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [solved, ask, bandYs, markValues, nailX, step, rulerY, touchR, markR, pickBand, guessMark, summonFloor, rotateFloor],
+    [geo, onRotate, onPickBand, onGuess, onSummon],
   );
 
   const hold = useMemo(
     () =>
       Gesture.LongPress()
         .minDuration(420)
-        .enabled(!solved && ask === "rotate")
-        .onStart(() => {
-          runOnJS(rotateFloor)();
+        .enabled(usaSostenido)
+        .onStart((e) => {
+          const g = geo.value;
+          if (g.tap === TOCA_PISO) runOnJS(onRotate)();
+          // En las rondas de elegir banda el toque sostenido le gana al corto:
+          // que elija igual, para que apoyar el dedo un rato no quede mudo.
+          else if (g.tap === TOCA_BANDA) runOnJS(onPickBand)(bandaCercana(g.bandYs, e.y));
         }),
-    [solved, ask, rotateFloor],
+    [usaSostenido, geo, onRotate, onPickBand],
   );
 
   // Carrera y no exclusiva: el toque sostenido gana si el dedo no se mueve, el
@@ -1087,7 +1109,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: MulScalingGameProps) 
               w={(row?.cells ?? 1) * tl.unit}
               h={tl.unit}
               enabled={!!row && !solved && ask === "cover" && !usedRows.includes(i)}
-              onDrop={dropRow}
+              onDrop={onDropRow}
             />
           );
         })}
@@ -1147,18 +1169,29 @@ function RowHandle({
   readonly enabled: boolean;
   readonly onDrop: (index: number, dx: number, dy: number) => void;
 }) {
+  // En web, un gesto que nace deshabilitado no despierta nunca: la ranura que
+  // en la primera ronda quedó vacía (el cajón trae tantas filas como el marco
+  // de esa ronda, más dos que no entran) no respondía cuando le tocaba una
+  // fila, y a veces era justo la que faltaba para cubrir el marco. El gesto
+  // nace habilitado, se arma una sola vez, y un valor compartido decide.
+  const live = useSharedValue(enabled ? 1 : 0);
+  useEffect(() => {
+    live.value = enabled ? 1 : 0;
+  }, [enabled, live]);
+  const { dx, dy } = slot;
   const gesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enabled)
         .onChange((e) => {
-          slot.dx.value = e.translationX;
-          slot.dy.value = e.translationY;
+          if (live.value !== 1) return;
+          dx.value = e.translationX;
+          dy.value = e.translationY;
         })
         .onEnd((e) => {
+          if (live.value !== 1) return;
           runOnJS(onDrop)(index, e.translationX, e.translationY);
         }),
-    [enabled, index, slot, onDrop],
+    [index, dx, dy, onDrop, live],
   );
   // El blanco es más alto que la fila dibujada: una baldosa mide lo que entra
   // en el marco, y un dedo necesita más. Apagada, el asa sigue montada pero no
@@ -1190,6 +1223,68 @@ function useSlot(): RowSlot {
 
 function useBand(): BandValues {
   return { factor: useSharedValue(1), deform: useSharedValue(0) };
+}
+
+/** Qué contesta el lienzo en esta ronda. Lo leen los gestos, en el hilo de la interfaz. */
+const SORDO = 0;
+/** Arrastres. */
+const ESTIRAR = 1;
+const GIRAR = 2;
+/** Toques. */
+const TOCA_PISO = 1;
+const TOCA_BANDA = 2;
+const TOCA_MARCA = 3;
+const PIDE_PISO = 4;
+
+/** La geometría y las reglas de la ronda que leen los gestos del lienzo. */
+interface BandGeo {
+  /** Qué hace un arrastre: `SORDO`, `ESTIRAR` o `GIRAR`. */
+  readonly pan: number;
+  /** Qué hace un toque: `SORDO`, `TOCA_PISO`, `TOCA_BANDA`, `TOCA_MARCA` o `PIDE_PISO`. */
+  readonly tap: number;
+  readonly nailX: number;
+  readonly nailY: number;
+  readonly grab: number;
+  /** Cuántos píxeles mide la banda en reposo: el factor es la distancia al clavo sobre esto. */
+  readonly unit: number;
+  readonly minFactor: number;
+  readonly maxFactor: number;
+  readonly crankX: number;
+  readonly crankY: number;
+  readonly crankR: number;
+  readonly ratio: number;
+  readonly length: number;
+  readonly step: number;
+  readonly rulerY: number;
+  readonly markR: number;
+  readonly marks: readonly number[];
+  readonly bandYs: readonly number[];
+}
+
+/** La banda más cercana al dedo, por altura. */
+function bandaCercana(ys: readonly number[], y: number): number {
+  "worklet";
+  let row = 0;
+  let best = Infinity;
+  for (let i = 0; i < ys.length; i++) {
+    const d = Math.abs(y - (ys[i] as number));
+    if (d < best) {
+      best = d;
+      row = i;
+    }
+  }
+  return row;
+}
+
+/**
+ * Una función estable que siempre llama a la última versión de `fn`. Los gestos
+ * se arman una vez por nivel y llaman por acá: `runOnJS` se queda con la función
+ * de cuando el gesto se armó (trampa 34 de HANDOFF).
+ */
+function useLatest<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+  const ref = useRef(fn);
+  ref.current = fn;
+  return useCallback((...args: A) => ref.current(...args), []);
 }
 
 /** El factor como se escribe en la cuenta: entero, o fracción con su barra. */

@@ -752,18 +752,42 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
   const alElegirLlave = useCallback((i: number) => acciones.current.pickKey(i), []);
   const alElegirAccion = useCallback((i: number) => acciones.current.pickAction(i), []);
 
-  const cx = layout.crank.x;
-  const cy = layout.crank.y;
+  /**
+   * La geometría de la ronda que leen los gestos, en el hilo de la interfaz: los
+   * caminantes de la regla cambian de piedra en cada ronda, y un gesto rearmado
+   * por ronda puede quedarse con la anterior (trampa 34 de HANDOFF). Los gestos
+   * se arman una vez por nivel; lo que depende solo del nivel sí va en el
+   * cierre, porque el nivel remonta la actividad.
+   */
+  const geoNow = useMemo<ChestGeo>(
+    () => ({
+      x0,
+      x1,
+      oy,
+      largo: largoRegla,
+      cx: layout.crank.x,
+      cy: layout.crank.y,
+      rowsY,
+      pads,
+      padR,
+    }),
+    [x0, x1, oy, largoRegla, layout, rowsY, pads, padR],
+  );
+  const geo = useSharedValue<ChestGeo>(geoNow);
+  useEffect(() => {
+    geo.value = geoNow;
+  }, [geoNow, geo]);
 
   const canvasPan = useMemo(
     () =>
       Gesture.Pan()
         .onBegin((e) => {
+          const g = geo.value;
           // "De un caminante al otro" vale en los dos sentidos: antes, empezar
           // por el de adelante no hacía nada y el nivel parecía roto.
-          if (conRegla && Math.abs(e.y - oy) < 90 && (Math.abs(e.x - x0) < 70 || Math.abs(e.x - x1) < 70)) {
+          if (conRegla && Math.abs(e.y - g.oy) < 90 && (Math.abs(e.x - g.x0) < 70 || Math.abs(e.x - g.x1) < 70)) {
             sujeto.value = REGLA;
-            rulerFrom.value = Math.abs(e.x - x1) < Math.abs(e.x - x0) ? 1 : 0;
+            rulerFrom.value = Math.abs(e.x - g.x1) < Math.abs(e.x - g.x0) ? 1 : 0;
             ruler.value = 0.02;
             return;
           }
@@ -772,19 +796,20 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
             anchor.value = destino.value;
             turned.value = 0;
             jammed.value = 0;
-            lastAngle.value = Math.atan2(e.y - cy, e.x - cx);
+            lastAngle.value = Math.atan2(e.y - g.cy, e.x - g.cx);
             return;
           }
           sujeto.value = NADA;
         })
         .onChange((e) => {
+          const g = geo.value;
           if (sujeto.value === REGLA) {
-            const tramo = rulerFrom.value > 0.5 ? x1 - e.x : e.x - x0;
-            ruler.value = Math.max(0.02, Math.min(1.15, tramo / largoRegla));
+            const tramo = rulerFrom.value > 0.5 ? g.x1 - e.x : e.x - g.x0;
+            ruler.value = Math.max(0.02, Math.min(1.15, tramo / g.largo));
             return;
           }
           if (sujeto.value !== MANIVELA) return;
-          const a = Math.atan2(e.y - cy, e.x - cx);
+          const a = Math.atan2(e.y - g.cy, e.x - g.cx);
           let d = a - lastAngle.value;
           while (d > Math.PI) d -= 2 * Math.PI;
           while (d < -Math.PI) d += 2 * Math.PI;
@@ -825,7 +850,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
           sujeto.value = NADA;
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [conRegla, modo, x0, x1, oy, largoRegla, cx, cy, alMedir, alSoltar],
+    [conRegla, modo, geo, alMedir, alSoltar],
   );
 
   const canvasTap = useMemo(
@@ -833,11 +858,12 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
       Gesture.Tap()
         .maxDistance(26)
         .onEnd((e) => {
+          const g = geo.value;
           if (esJudge) {
             let row = 0;
             let best = Infinity;
-            for (let i = 0; i < rowsY.length; i++) {
-              const d = Math.abs(e.y - (rowsY[i] as number));
+            for (let i = 0; i < g.rowsY.length; i++) {
+              const d = Math.abs(e.y - (g.rowsY[i] as number));
               if (d < best) {
                 best = d;
                 row = i;
@@ -847,9 +873,9 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
             return;
           }
           if (conTeclado) {
-            for (let i = 0; i < pads.length; i++) {
-              const p = pads[i] as { x: number; y: number };
-              if (Math.hypot(e.x - p.x, e.y - p.y) < padR * 1.7) {
+            for (let i = 0; i < g.pads.length; i++) {
+              const p = g.pads[i] as { x: number; y: number };
+              if (Math.hypot(e.x - p.x, e.y - p.y) < g.padR * 1.7) {
                 runOnJS(alTeclear)(i);
                 return;
               }
@@ -859,7 +885,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
           if (pedirRecta) runOnJS(alPedirRecta)();
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [esJudge, conTeclado, pedirRecta, pads, padR, rowsY, alElegirFila, alTeclear, alPedirRecta],
+    [esJudge, conTeclado, pedirRecta, geo, alElegirFila, alTeclear, alPedirRecta],
   );
 
   const canvasGesture = useMemo(() => Gesture.Race(canvasPan, canvasTap), [canvasPan, canvasTap]);
@@ -1057,11 +1083,13 @@ function Activity({ level, onLevelDone, onExit, onEvent }: SubUndoAddGameProps) 
           : null}
 
         {/* La ficha que el jugador arma con el teclado, para llevarla al hueco. */}
-        {conTeclado && composed !== null ? (
+        {/* Montada todo el nivel, sorda mientras no hay número: un detector que
+            se desmonta y vuelve puede quedar sin enganchar (trampa 9). */}
+        {conTeclado ? (
           <ComposedHandle
             spot={layout.composed}
             slot={composedDrag}
-            enabled={!solved}
+            enabled={composed !== null && !solved}
             onDrop={alSoltarCompuesta}
           />
         ) : null}
@@ -1091,6 +1119,20 @@ function union(rs: readonly Rect[]): Rect | null {
     y1 = Math.max(y1, r.y + r.h);
   }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+/** La geometría de la ronda que leen los gestos del lienzo. */
+interface ChestGeo {
+  /** Los dos caminantes de la regla y la altura de su pista. */
+  readonly x0: number;
+  readonly x1: number;
+  readonly oy: number;
+  readonly largo: number;
+  readonly cx: number;
+  readonly cy: number;
+  readonly rowsY: readonly number[];
+  readonly pads: readonly { x: number; y: number }[];
+  readonly padR: number;
 }
 
 /** Qué agarró el dedo. Vive en un `SharedValue` porque lo decide el hilo de UI. */
@@ -1124,28 +1166,47 @@ function Handle({
   readonly onDrop: (index: number, absX: number, absY: number) => void;
   readonly onTap: (index: number) => void;
 }) {
+  // En web, un gesto que nace deshabilitado no despierta nunca: el cajón trae
+  // cuatro o cinco fichas según la ronda (los desvíos que se pisan no se
+  // repiten), y la ranura que en la primera ronda quedó vacía no respondía
+  // cuando le tocaba ficha, que podía ser la del hueco. El gesto nace
+  // habilitado y lo que decide si responde viaja en un valor compartido, igual
+  // que la ranura: así se arma una sola vez. `drag` sí va en `.enabled`,
+  // porque depende solo del nivel y el nivel remonta la actividad.
+  const live = useSharedValue(enabled ? 1 : 0);
+  const homeX = useSharedValue(spot.x);
+  const homeY = useSharedValue(spot.y);
+  useEffect(() => {
+    live.value = enabled ? 1 : 0;
+  }, [enabled, live]);
+  useEffect(() => {
+    homeX.value = spot.x;
+    homeY.value = spot.y;
+  }, [spot.x, spot.y, homeX, homeY]);
+  const { dx, dy } = slot;
   const gesture = useMemo(() => {
     const pan = Gesture.Pan()
-      .enabled(enabled && drag)
+      .enabled(drag)
       .onChange((e) => {
-        slot.dx.value = e.translationX;
-        slot.dy.value = e.translationY;
+        if (live.value !== 1) return;
+        dx.value = e.translationX;
+        dy.value = e.translationY;
       })
       .onEnd((e) => {
+        if (live.value !== 1) return;
         // Dónde quedó la pieza, en coordenadas del lienzo. Sale de dónde estaba
         // más cuánto se movió, y no de la posición absoluta del dedo: la caja
         // del lienzo no se puede medir con `onLayout`, que en web devuelve el
         // origen del padre y deja el hit test corrido por la altura del encabezado.
-        runOnJS(onDrop)(index, spot.x + e.translationX, spot.y + e.translationY);
+        runOnJS(onDrop)(index, homeX.value + e.translationX, homeY.value + e.translationY);
       });
     const tap = Gesture.Tap()
       .maxDistance(20)
-      .enabled(enabled)
       .onEnd(() => {
-        runOnJS(onTap)(index);
+        if (live.value === 1) runOnJS(onTap)(index);
       });
     return Gesture.Race(pan, tap);
-  }, [enabled, drag, index, slot, spot.x, spot.y, onDrop, onTap]);
+  }, [drag, index, dx, dy, onDrop, onTap, live, homeX, homeY]);
 
   return (
     <GestureDetector gesture={gesture}>
@@ -1156,6 +1217,8 @@ function Handle({
           top: spot.y - h / 2,
           width: w,
           height: h,
+          // Un asa sorda no puede comerse los toques del lienzo (trampa 13).
+          pointerEvents: enabled ? "auto" : "none",
         }}
       />
     </GestureDetector>
@@ -1175,25 +1238,45 @@ function ComposedHandle({
   readonly enabled: boolean;
   readonly onDrop: (absX: number, absY: number) => void;
 }) {
+  // Nace habilitado y un valor compartido decide, como las otras asas (trampa 33).
+  const live = useSharedValue(enabled ? 1 : 0);
+  const homeX = useSharedValue(spot.x);
+  const homeY = useSharedValue(spot.y);
+  useEffect(() => {
+    live.value = enabled ? 1 : 0;
+  }, [enabled, live]);
+  useEffect(() => {
+    homeX.value = spot.x;
+    homeY.value = spot.y;
+  }, [spot.x, spot.y, homeX, homeY]);
+  const { dx, dy } = slot;
   const gesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enabled)
         .onChange((e) => {
-          slot.dx.value = e.translationX;
-          slot.dy.value = e.translationY;
+          if (live.value !== 1) return;
+          dx.value = e.translationX;
+          dy.value = e.translationY;
         })
         // `onFinalize` y no `onEnd`: si el arrastre se cancela a mitad de
         // camino, la ficha igual tiene que volver o entrar, no quedar en el aire.
         .onFinalize((e) => {
-          runOnJS(onDrop)(spot.x + e.translationX, spot.y + e.translationY);
+          if (live.value !== 1) return;
+          runOnJS(onDrop)(homeX.value + e.translationX, homeY.value + e.translationY);
         }),
-    [enabled, spot.x, spot.y, onDrop, slot],
+    [dx, dy, onDrop, live, homeX, homeY],
   );
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
-        style={{ position: "absolute", left: spot.x - 34, top: spot.y - 26, width: 68, height: 52 }}
+        style={{
+          position: "absolute",
+          left: spot.x - 34,
+          top: spot.y - 26,
+          width: 68,
+          height: 52,
+          pointerEvents: enabled ? "auto" : "none",
+        }}
       />
     </GestureDetector>
   );
