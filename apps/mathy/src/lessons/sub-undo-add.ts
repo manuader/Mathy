@@ -41,7 +41,7 @@ export const MODULE: LessonModule = {
         whyKey: k(1, "why"),
         goalKey: k(1, "goal"),
         key: key("sub.undo_same", "sub.back"),
-        uses: [],
+        uses: ["add.chip_is_a_jump"],
         coach: [
           step(1, "look", "tap"),
           step(1, "mount", { signal: "mounted" }),
@@ -83,7 +83,7 @@ export const MODULE: LessonModule = {
         whyKey: k(5, "why"),
         goalKey: k(5, "goal"),
         key: key("sub.two_readings", "sub.row"),
-        uses: ["sub.distance", "sub.undo_same"],
+        uses: ["sub.distance", "sub.undo_same", "add.order_does_not_matter"],
         coach: [
           step(5, "look", "tap"),
           step(5, "line", { signal: "line" }),

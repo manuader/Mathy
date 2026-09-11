@@ -77,7 +77,7 @@ export const MODULE: LessonModule = {
         whyKey: k(4, "why"),
         goalKey: k(4, "goal"),
         key: key("mul.stretch_all", "mul.stretch"),
-        uses: ["mul.same_step"],
+        uses: ["mul.same_step", "line.size_does_not_change"],
         coach: [
           step(4, "look", "tap"),
           step(4, "pull", { signal: "pulled" }),
