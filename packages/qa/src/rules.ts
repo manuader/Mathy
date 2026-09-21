@@ -87,7 +87,8 @@ export function checkEntry(entry: Entry, objetos: Objetos): readonly Finding[] {
     }
   }
   for (const palabra of objetos.global.jerga) {
-    if (new RegExp(`\\b${fold(palabra)}\\b`).test(plano)) {
+    // Con el plural: "dos capas de la misma operación" es la misma jerga que "capa".
+    if (new RegExp(`\\b${fold(palabra)}s?\\b`).test(plano)) {
       out.push(hit(entry, "jerga", "aviso", `"${palabra}" es vocabulario del repositorio, no del juego.`));
     }
   }
@@ -110,9 +111,15 @@ export function checkEntry(entry: Entry, objetos: Objetos): readonly Finding[] {
     }
   }
 
-  const tope = entry.role === "objetivo" || entry.role === "paso_de_guia" ? 120 : 200;
+  // El paso que pide un gesto se lee con el dedo en el aire: tiene que ser
+  // corto. El que explica lo que acaba de pasar se lee con el tablero quieto,
+  // y ahí veintitrés textos buenos chocaban contra un tope que no era suyo.
+  const paso = /\.coach\.([a-zA-Z]+)$/.exec(entry.key)?.[1] ?? "";
+  // `look` describe el tablero antes de pedir nada: también se lee quieto.
+  const explica = ["reveal", "recall", "hold", "again", "done", "look"].includes(paso);
+  const tope = entry.role === "objetivo" ? 120 : entry.role === "paso_de_guia" ? (explica ? 140 : 120) : 200;
   if (entry.text.length > tope) {
-    out.push(hit(entry, "largo", "aviso", `${entry.text.length} caracteres para un ${entry.role}; el tope es ${tope}.`));
+    out.push(hit(entry, "largo", "aviso", `${entry.text.length} caracteres para un ${explica ? "paso que explica" : entry.role}; el tope es ${tope}.`));
   }
   return out;
 }

@@ -208,7 +208,7 @@ export const MODULE: LessonModule = {
     [k(5, "coach.reveal")]:
       "Cada diente fue un paso adelante y la misma subida: por eso la rampa es recta.",
     [k(5, "coach.stretch")]:
-      "Ahora arrastrá la perilla de abajo: la grilla se estira de costado. Llevala hasta que la rampa pase por el punto, y mirá el color.",
+      "Arrastrá la perilla de abajo: la grilla se estira de costado. Llevala hasta que la rampa toque el punto y mirá el color.",
 
     [k(6, "why")]:
       "Una recta se arma con dos números: cuánto sube por paso y dónde arranca. Uno la gira y el otro la corre entera.",

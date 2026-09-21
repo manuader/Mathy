@@ -105,7 +105,7 @@ const es: Record<string, string> = {
 
   "lesson.found.count.cardinality.5.why":
     "Con muchas frutas mezcladas ya no se cuentan de un vistazo. Emparejar sigue funcionando si tocás cada una una sola vez.",
-  "lesson.found.count.cardinality.5.goal": "Emparejá todas las frutas y fijate qué cuenco tiene más.",
+  "lesson.found.count.cardinality.5.goal": "Con las frutas mezcladas, emparejalas todas y fijate qué cuenco tiene más.",
   "lesson.found.count.cardinality.5.coach.recall":
     "Es el juego del nivel 1, con más frutas y mezcladas. Tu llave: emparejar compara.",
 

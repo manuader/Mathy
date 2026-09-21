@@ -126,7 +126,7 @@ export const MODULE: LessonModule = {
     [k(1, "coach.look")]:
       "Esta barra es un todo entero. Vas a cortarla en partes que midan lo mismo, y los puntos de la ficha dicen cuántas.",
     [k(1, "coach.cut")]:
-      "Apoyá el dedo en la barra y arrastrá hacia abajo: cuanto más lejos, más partes iguales. Pará cuando haya tantas como puntos abajo.",
+      "Apoyá el dedo en la barra y arrastrá hacia abajo: cuanto más lejos, más partes. Pará al tener tantas como puntos abajo.",
     [k(1, "coach.light")]:
       "Tocá la barra para encender una parte. Es una de esas partes iguales, como el punto de arriba de la ficha.",
     [k(1, "coach.reveal")]:

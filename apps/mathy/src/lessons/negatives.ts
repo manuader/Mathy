@@ -168,7 +168,7 @@ export const MODULE: LessonModule = {
     [k(4, "coach.choose")]: "Uno de los dos se equivoca. Tocá el que termina mirando al revés.",
     [k(4, "coach.flip")]:
       "Probalo vos: tocá dos veces al caminante. Gira sin moverse. ¿Hacia dónde mira después de dos vueltas?",
-    [k(4, "coach.arrive")]: "Mira como al principio. Ahora girá la manivela hasta la bandera.",
+    [k(4, "coach.arrive")]: "Mirá como al principio. Ahora girá la manivela hasta la bandera.",
     [k(4, "coach.reveal")]:
       "Dos vueltas lo dejaron mirando igual que al principio. Lo contrario de lo contrario es lo mismo.",
 

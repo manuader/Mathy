@@ -173,7 +173,7 @@ export const MODULE: LessonModule = {
 
     [k(5, "why")]:
       "El viaje se escribe en un renglón: primero la piedra de salida, después los tramos, y detrás del igual la llegada.",
-    [k(5, "goal")]: "Tocá la ficha que va en el hueco del renglón.",
+    [k(5, "goal")]: "Tocá la ficha que va en el hueco del final: la llegada.",
     [k(5, "coach.look")]:
       "El viaje ahora es un renglón: salida, más, tramo, igual. El hueco del final pide la llegada.",
     [k(5, "coach.rail")]:
@@ -184,7 +184,7 @@ export const MODULE: LessonModule = {
 
     [k(6, "why")]:
       "Con números grandes ya no conviene contar piedras: se suman los tramos. Y un tramo de cero deja al caminante donde está.",
-    [k(6, "goal")]: "Tocá la ficha que va en el hueco del renglón.",
+    [k(6, "goal")]: "Sumá los tramos, aunque alguno sea cero, y tocá la ficha de la llegada.",
     [k(6, "coach.recall")]:
       "Números grandes, a veces tres tramos y a veces un cero. Tu llave: el igual dice dónde termina el viaje.",
 

@@ -157,25 +157,25 @@ export const MODULE: LessonModule = {
 
     [k(5, "why")]:
       "La balanza puede estar guardada: la regla sigue. Si la querés ver, se pide con un toque.",
-    [k(5, "goal")]: "Arrastrá hacia la ecuación la llave que deja sola a la x.",
+    [k(5, "goal")]: "Sin la balanza a la vista, llevá hasta la ecuación la llave que deja sola a la x.",
     [k(5, "coach.recall")]:
       "Acordate de «La llave va a los dos lados». La balanza está guardada; tocá «ver balanza» si la querés mirar.",
 
     [k(6, "why")]:
       "Con números grandes o negativos la llave es la misma: la contraria, con el mismo número que la cerradura.",
-    [k(6, "goal")]: "Arrastrá hacia la ecuación la llave que deja sola a la x.",
+    [k(6, "goal")]: "Mirá el número que acompaña a la x y llevá la llave contraria, con ese mismo número.",
     [k(6, "coach.recall")]:
       "Acordate de «Abre la operación contraria». Los números cambiaron; la llave lleva el mismo número que la cerradura.",
 
     [k(7, "why")]:
       "La x puede estar a la derecha del igual. 12 = x + 5 dice lo mismo que x + 5 = 12.",
-    [k(7, "goal")]: "Arrastrá hacia la ecuación la llave que deja sola a la x.",
+    [k(7, "goal")]: "La x está del otro lado del igual: llevá igual la llave que la deja sola.",
     [k(7, "coach.recall")]:
       "Acordate de «La llave va a los dos lados». La x está del otro lado del igual, y la regla es la misma.",
 
     [k(8, "why")]:
       "Cualquier cerradura se abre igual: se mira qué operación acompaña a la x y se aplica la contraria a los dos lados.",
-    [k(8, "goal")]: "Arrastrá hacia la ecuación la llave que deja sola a la x.",
+    [k(8, "goal")]: "Fijate qué le hicieron a la x y llevá la llave que lo deshace.",
     [k(8, "coach.recall")]:
       "Acordate de «Abre la operación contraria». Mirá qué acompaña a la x y deshacelo en los dos lados.",
 

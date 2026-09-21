@@ -132,7 +132,7 @@ export const MODULE: LessonModule = {
   },
   texts: {
     [`node.${NODE}.learned`]:
-      "Un sistema son dos filas que hablan de las mismas frutas: un par es solución si deja las dos derechas a la vez. Se encuentra reemplazando o volcando, y las rectas dicen si hay uno, ninguno o infinitos.",
+      "Un sistema son dos filas que hablan de las mismas frutas: un par es solución si deja las dos derechas a la vez. Se busca reemplazando o volcando, y las rectas dicen si hay uno, ninguno o infinitos.",
 
     // --- 1. Una fruta sola: repartir el total ----------------------------------
     [k(1, "why")]:

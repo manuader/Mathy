@@ -144,10 +144,10 @@ export const MODULE: LessonModule = {
       "El tamaño guarda el orden: el más chico quedó más adentro, y es el primero que se abre.",
 
     [k(3, "why")]:
-      "El encastre también se dibuja como un árbol: cada cofre es un nodo. El de más adentro cuelga más abajo y se abre primero.",
-    [k(3, "goal")]: "Tocá lo que se pide: el orden que abre al revés, o el nodo del cofre de más adentro.",
+      "El encastre también se dibuja como un árbol: cada cofre cuelga de una rama. El de más adentro cuelga más abajo y se abre primero.",
+    [k(3, "goal")]: "Tocá lo que se pide: el orden que abre al revés, o la rama del cofre de más adentro.",
     [k(3, "coach.look")]:
-      "A la derecha está el mismo encastre como árbol: un nodo por cofre, el de más adentro más abajo.",
+      "A la derecha está el mismo encastre como árbol: una rama por cofre, el de más adentro más abajo.",
     [k(3, "coach.choose")]: "Abajo hay dos órdenes de apertura. Tocá el que abre al revés: empieza por el cofre de afuera.",
     [k(3, "coach.reveal")]:
       "Ese empezaba por afuera, y la llave de afuera gira en el vacío. En el árbol se sube desde abajo.",
@@ -198,7 +198,7 @@ export const MODULE: LessonModule = {
       "Un cofre puede guardar otro que guarda otro. El más chico es el de más adentro, y es el primero que se abre.",
     "key.prec.tree.title": "El encastre es un árbol",
     "key.prec.tree.body":
-      "Cada cofre es un nodo; el de más adentro cuelga más abajo. Para calcular, el árbol se recorre de abajo hacia la raíz.",
+      "Cada cofre cuelga de una rama; el de más adentro cuelga más abajo. Para calcular, el árbol se recorre de abajo hacia arriba.",
     "key.prec.order_changes.title": "El orden cambia el resultado",
     "key.prec.order_changes.body":
       "Las mismas operaciones en otro orden dan otro número. Por eso una cuenta tiene que decir qué va primero.",

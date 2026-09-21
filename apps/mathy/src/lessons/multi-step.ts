@@ -114,7 +114,7 @@ export const MODULE: LessonModule = {
   },
   texts: {
     [`node.${NODE}.learned`]:
-      "Una ecuación de varios pasos es un cofre adentro de otro: se abre de afuera hacia adentro, cada capa con su contraria y siempre en los dos lados del igual.",
+      "Una ecuación de varios pasos es un cofre adentro de otro: se abre de afuera hacia adentro, cada uno con su contraria y siempre en los dos lados del igual.",
 
     [k(1, "why")]:
       "Cuando a la x le hicieron dos cosas, quedan dos cofres, uno adentro del otro. Sólo el de afuera tiene la cerradura a mano.",
@@ -166,7 +166,7 @@ export const MODULE: LessonModule = {
       "Armaste la llave con la contraria y su número. Así se abre cualquier cerradura, aunque no te la den hecha.",
 
     [k(7, "why")]:
-      "Dos capas de la misma operación se abren en cualquier orden. Y si a la x la multiplicaron por cero, no hay llave: o no hay tesoro o abre con cualquiera.",
+      "Dos cofres de la misma operación se abren en cualquier orden. Y si a la x la multiplicaron por cero, no hay llave: o no hay tesoro o abre con cualquiera.",
     [k(7, "goal")]: "Despejá la x, o decí qué clase de cofre es.",
     [k(7, "coach.recall")]:
       "Acordate de «Primero el de afuera». Si los cofres son del mismo tamaño, cualquiera va primero; si uno es raro, abrilo y mirá.",
@@ -196,7 +196,7 @@ export const MODULE: LessonModule = {
       "Una llave es una operación y un número: la contraria de la cerradura de afuera, con su mismo número.",
     "key.eqn.some_have_no_key.title": "Hay cofres sin llave",
     "key.eqn.some_have_no_key.body":
-      "Capas de la misma operación se abren en cualquier orden. Si a la x la multiplicaron por cero, no hay llave: no hay tesoro o abre con cualquiera.",
+      "Dos cofres de la misma operación se abren en cualquier orden. Si a la x la multiplicaron por cero, no hay llave: no hay tesoro o abre con cualquiera.",
   },
   // Puntos y barras sobre 40 × 40. El punto resaltado es el que importa.
   glyphs: {
