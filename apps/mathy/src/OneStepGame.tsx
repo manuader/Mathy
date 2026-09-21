@@ -23,7 +23,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue, withTiming, withSequence, runOnJS } from "react-native-reanimated";
-import { applyBothSides } from "@mathy/math-core";
+import { applyBothSides, equationToText } from "@mathy/math-core";
 import { getGlyph } from "@mathy/glyphs";
 import { centered, layoutEquation, type GlyphMetrics } from "@mathy/typeset";
 import { planMorph, smooth } from "@mathy/viz-core";
@@ -212,7 +212,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OneStepGameProps) {
    * evidencia de las dos cosas en el mismo gesto, y K lleva la cuenta por verbo.
    */
   const attempt = useCallback(
-    (correct: boolean, misconception?: string) => {
+    (correct: boolean, misconception?: string, snapshot?: string) => {
       const at = Date.now();
       const latency = at - shownAt.current;
       for (const evidence of level.evidence) {
@@ -225,6 +225,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OneStepGameProps) {
           correct,
           latency,
           ...(misconception ? { misconception } : {}),
+          // La línea sólo viaja con el error que ninguna regla reconoció: es lo
+          // único que el minero puede mirar, y donde ya hay misconception no
+          // agrega nada. Se arma con el problema y el gesto, nunca con la hora
+          // ni con nada al azar (ver `snapshot` en @mathy/progress).
+          ...(!correct && !misconception && snapshot ? { snapshot } : {}),
         });
       }
     },
@@ -308,7 +313,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: OneStepGameProps) {
     (key: Key) => {
       // `near_value` no está en el catálogo de L y no debería estarlo: cambiar
       // el número no es una idea equivocada sobre la inversa, es puntería.
-      attempt(false, key.lure && key.lure !== "near_value" ? key.lure : undefined);
+      // Cuando no hay error catalogado, lo que queda es la línea: la ecuación,
+      // la cerradura y la llave que el jugador probó. Con eso el minero puede
+      // ver si "el número corrido" es un error sistemático o un dedazo.
+      attempt(
+        false,
+        key.lure && key.lure !== "near_value" ? key.lure : undefined,
+        `${equationToText(problem.equation)} · cerradura ${OP_CHAR[problem.lock.op]}${problem.lock.value} · llave ${OP_CHAR[key.op]}${key.value}`,
+      );
       if (showsEquation) progress.value = withTiming(0, { duration: theme.motion.base });
       const inverso: Record<string, string> = {
         "+": "restar",

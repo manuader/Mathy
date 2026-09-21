@@ -23,6 +23,25 @@ export type Event =
       readonly latency: number;
       /** El error catalogado, si el movimiento coincidió con uno conocido. */
       readonly misconception?: string;
+      /**
+       * Con qué se equivocó, en una línea: el problema y el movimiento.
+       * Por ejemplo `"x + 5 = 12 · cerradura +5 · llave ÷5"`.
+       *
+       * Existe para lo que ninguna regla `detect` reconoce. Sin esto el error
+       * sin clasificar se pierde, y L dice que los errores son la mejor
+       * evidencia que el juego tiene: de estas líneas sale la minería que
+       * propone qué misconception le falta al catálogo.
+       *
+       * Es opcional a propósito. Los eventos ya guardados siguen valiendo, el
+       * `fold` no cambia de forma y `mathy.events.v1` no se migra.
+       *
+       * Tiene que ser **determinista**: `mergeEvents` identifica un evento por
+       * su contenido serializado, así que una línea con un tiempo, un id nuevo
+       * o cualquier cosa al azar haría que el mismo intento se duplique al
+       * sincronizar dos dispositivos. Sale del problema y del gesto, y de nada
+       * más. Tampoco lleva datos de la persona: el registro es anónimo.
+       */
+      readonly snapshot?: string;
     }
   | { readonly kind: "levelDone"; readonly at: number; readonly node: string; readonly level: number }
   | { readonly kind: "sawLayer"; readonly at: number; readonly node: string; readonly layer: string };

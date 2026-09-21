@@ -1,0 +1,56 @@
+[
+  { "kind": "sawLayer", "at": 1750000000000, "node": "alg.eq.one_step", "layer": "symbolic" },
+
+  { "kind": "attempt", "at": 1750000012000, "node": "alg.eq.one_step", "level": 4, "evidence": "apply", "correct": true, "latency": 5100 },
+  { "kind": "attempt", "at": 1750000031000, "node": "alg.eq.one_step", "level": 4, "evidence": "apply", "correct": false, "latency": 4300, "misconception": "wrong_inverse_choice" },
+
+  { "kind": "attempt", "at": 1750000048000, "node": "alg.eq.one_step", "level": 4, "evidence": "apply", "correct": false, "latency": 1400, "snapshot": "x + 7 = 15 · cerradura +7 · llave −6" },
+  { "kind": "attempt", "at": 1750000063000, "node": "alg.eq.one_step", "level": 4, "evidence": "apply", "correct": false, "latency": 1900, "snapshot": "x + 4 = 11 · cerradura +4 · llave −5" },
+  { "kind": "attempt", "at": 1750000079000, "node": "alg.eq.one_step", "level": 5, "evidence": "apply", "correct": false, "latency": 1200, "snapshot": "x + 9 = 13 · cerradura +9 · llave −8" },
+  { "kind": "attempt", "at": 1750000094000, "node": "alg.eq.one_step", "level": 5, "evidence": "apply", "correct": false, "latency": 2200, "snapshot": "x + 6 = 14 · cerradura +6 · llave −7" },
+  { "kind": "attempt", "at": 1750000111000, "node": "alg.eq.one_step", "level": 5, "evidence": "apply", "correct": false, "latency": 1600, "snapshot": "x + 2 = 9 · cerradura +2 · llave −1" },
+  { "kind": "attempt", "at": 1750000126000, "node": "alg.eq.one_step", "level": 5, "evidence": "apply", "correct": false, "latency": 1750, "snapshot": "x + 5 = 12 · cerradura +5 · llave −4" },
+
+  { "kind": "attempt", "at": 1750000142000, "node": "alg.eq.one_step", "level": 6, "evidence": "apply", "correct": false, "latency": 2050, "snapshot": "x * 3 = 12 · cerradura ×3 · llave ÷4" },
+  { "kind": "attempt", "at": 1750000158000, "node": "alg.eq.one_step", "level": 6, "evidence": "apply", "correct": false, "latency": 1850, "snapshot": "x * 5 = 20 · cerradura ×5 · llave ÷6" },
+
+  { "kind": "levelDone", "at": 1750000170000, "node": "alg.eq.one_step", "level": 5 },
+
+  { "kind": "sawLayer", "at": 1750000200000, "node": "arith.frac.parts_and_ratio", "layer": "visual" },
+
+  { "kind": "attempt", "at": 1750000214000, "node": "arith.frac.parts_and_ratio", "level": 3, "evidence": "manipulate", "correct": true, "latency": 7300 },
+  { "kind": "attempt", "at": 1750000238000, "node": "arith.frac.parts_and_ratio", "level": 3, "evidence": "manipulate", "correct": false, "latency": 8100, "misconception": "fraction_add_across" },
+
+  { "kind": "attempt", "at": 1750000261000, "node": "arith.frac.parts_and_ratio", "level": 4, "evidence": "apply", "correct": false, "latency": 6800, "snapshot": "1/2 + 1/3 · armó 2/5" },
+  { "kind": "attempt", "at": 1750000289000, "node": "arith.frac.parts_and_ratio", "level": 4, "evidence": "apply", "correct": false, "latency": 7400, "snapshot": "1/3 + 1/4 · armó 2/7" },
+  { "kind": "attempt", "at": 1750000316000, "node": "arith.frac.parts_and_ratio", "level": 4, "evidence": "apply", "correct": false, "latency": 9200, "snapshot": "2/5 + 1/2 · armó 3/7" },
+  { "kind": "attempt", "at": 1750000344000, "node": "arith.frac.parts_and_ratio", "level": 5, "evidence": "apply", "correct": false, "latency": 6100, "snapshot": "1/4 + 2/3 · armó 3/7" },
+  { "kind": "attempt", "at": 1750000371000, "node": "arith.frac.parts_and_ratio", "level": 5, "evidence": "apply", "correct": false, "latency": 8600, "snapshot": "3/4 + 1/5 · armó 4/9" },
+
+  { "kind": "levelDone", "at": 1750000390000, "node": "arith.frac.parts_and_ratio", "level": 4 },
+
+  { "kind": "attempt", "at": 1750000420000, "node": "prealg.var.unknown_as_box", "level": 2, "evidence": "manipulate", "correct": true, "latency": 3900 },
+  { "kind": "attempt", "at": 1750000437000, "node": "prealg.var.unknown_as_box", "level": 2, "evidence": "manipulate", "correct": false, "latency": 5200, "misconception": "variable_as_label" },
+  { "kind": "attempt", "at": 1750000455000, "node": "prealg.var.unknown_as_box", "level": 2, "evidence": "manipulate", "correct": false, "latency": 4800, "misconception": "variable_as_label" },
+
+  { "kind": "attempt", "at": 1750000472000, "node": "prealg.var.unknown_as_box", "level": 2, "evidence": "manipulate", "correct": false, "latency": 3100, "snapshot": "libro · fila de cajón marca 0 · soltó manzana suelta" },
+  { "kind": "attempt", "at": 1750000488000, "node": "prealg.var.unknown_as_box", "level": 2, "evidence": "manipulate", "correct": false, "latency": 2700, "snapshot": "libro · fila de cajón marca 1 · soltó manzana suelta" },
+  { "kind": "attempt", "at": 1750000504000, "node": "prealg.var.unknown_as_box", "level": 3, "evidence": "manipulate", "correct": false, "latency": 3400, "snapshot": "libro · fila de cajón marca 0 · soltó manzana suelta" },
+  { "kind": "attempt", "at": 1750000519000, "node": "prealg.var.unknown_as_box", "level": 3, "evidence": "manipulate", "correct": false, "latency": 2900, "snapshot": "libro · fila de pera suelta · soltó manzana suelta" },
+
+  { "kind": "attempt", "at": 1750000541000, "node": "prealg.var.unknown_as_box", "level": 4, "evidence": "recognize", "correct": false, "latency": 3000, "snapshot": "balanza · 3 cajones contra manzanas · puso 7 y la barra queda derecha con 6" },
+  { "kind": "attempt", "at": 1750000566000, "node": "prealg.var.unknown_as_box", "level": 4, "evidence": "recognize", "correct": false, "latency": 3300, "snapshot": "balanza · 2 cajones contra manzanas · puso 9 y la barra queda derecha con 8" },
+
+  { "kind": "attempt", "at": 1750000588000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 6400, "snapshot": "árbol · soltó el cajón en una hoja con 2" },
+  { "kind": "attempt", "at": 1750000609000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 5800, "snapshot": "árbol · soltó el cajón en una hoja con 5" },
+  { "kind": "attempt", "at": 1750000631000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 7100, "snapshot": "árbol · soltó el cajón en una hoja con 3" },
+  { "kind": "attempt", "at": 1750000654000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 5300, "snapshot": "árbol · soltó el cajón en una hoja con 4" },
+  { "kind": "attempt", "at": 1750000676000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 6900, "snapshot": "árbol · soltó el cajón en una hoja con 6" },
+
+  { "kind": "attempt", "at": 1750000698000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 4200, "snapshot": "árbol · soltó el cajón en una rama +" },
+  { "kind": "attempt", "at": 1750000719000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 4600, "snapshot": "árbol · soltó el cajón en una rama +" },
+  { "kind": "attempt", "at": 1750000741000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": false, "latency": 3800, "snapshot": "árbol · soltó el cajón en una rama +" },
+
+  { "kind": "attempt", "at": 1750000760000, "node": "prealg.var.unknown_as_box", "level": 6, "evidence": "recognize", "correct": true, "latency": 4100 },
+  { "kind": "levelDone", "at": 1750000772000, "node": "prealg.var.unknown_as_box", "level": 6 }
+]

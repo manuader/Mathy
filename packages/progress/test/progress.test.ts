@@ -54,6 +54,37 @@ test("los errores catalogados se cuentan, porque son datos y no fallas", () => {
   assert.equal(p.misconceptions["sign_flip_on_move"], 1);
 });
 
+test("el snapshot viaja con el intento y no cambia el estado plegado", () => {
+  const con = attempt(1, false, { snapshot: "x + 5 = 12 · cerradura +5 · llave ÷5" });
+  const sin = attempt(1, false);
+  // El campo es aditivo: el fold no lo mira, así que el estado es el mismo que
+  // el de un evento viejo que no lo trae.
+  assert.deepEqual(fold([con]), fold([sin]));
+  assert.deepEqual(fold([con]).misconceptions, {}, "un error sin clasificar no cuenta como catalogado");
+});
+
+test("los eventos viejos, sin snapshot, siguen valiendo", () => {
+  // Tal como salen de `mathy.events.v1` guardado antes del campo: se parsean,
+  // se pliegan y se unen sin migrar nada.
+  const viejos = JSON.parse(
+    `[{"kind":"attempt","at":1,"node":"${NODE}","level":1,"evidence":"manipulate","correct":false,"latency":4000},
+      {"kind":"levelDone","at":2,"node":"${NODE}","level":1}]`,
+  ) as Event[];
+  const p = fold(viejos);
+  assert.deepEqual(p.tally[NODE]!["manipulate"], { ok: 0, total: 1 });
+  assert.equal(unlockedLevel(p, NODE), 2);
+});
+
+test("el snapshot distingue dos intentos, así que no puede llevar nada al azar", () => {
+  const a = attempt(1, false, { snapshot: "x + 5 = 12 · cerradura +5 · llave ÷5" });
+  const b = attempt(1, false, { snapshot: "x + 5 = 12 · cerradura +5 · llave ×5" });
+  // Dos movimientos distintos del mismo instante son dos eventos, y está bien.
+  assert.equal(mergeEvents([a], [b]).length, 2);
+  // El mismo movimiento contado dos veces sigue siendo uno solo: por eso la
+  // línea se arma con el problema y el gesto, y nunca con un tiempo o un id.
+  assert.equal(mergeEvents([a], [{ ...a }]).length, 1);
+});
+
 test("las capas vistas no se repiten: son las que agregan a la cheatsheet", () => {
   const p = fold([
     { kind: "sawLayer", at: 1, node: NODE, layer: "concrete" },

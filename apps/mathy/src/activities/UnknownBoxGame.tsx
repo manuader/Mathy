@@ -118,6 +118,28 @@ const EN_HOJA = -3;
 /** Una fila que todavía no es de nadie. Es la que late y la que se puede abrir. */
 const SIN_DUENO = -1;
 
+/**
+ * Cómo se cuenta una clase de objeto en la línea del intento fallido. En
+ * castellano y como la ve el jugador, porque esa línea la lee una persona
+ * cuando busca qué error le falta al catálogo.
+ */
+const FORMA: Readonly<Record<string, string>> = {
+  apple: "manzana",
+  pear: "pera",
+  grape: "uva",
+  crate: "cajón",
+  wedge: "cuña",
+  ring: "anillo",
+  star: "estrella",
+};
+
+const nombreDeClase = (k: BoxKind | undefined): string =>
+  k === undefined
+    ? "nada"
+    : k.closed
+      ? `cajón marca ${k.mark}`
+      : `${FORMA[k.shape] ?? k.shape} suelta`;
+
 function Activity({ level, onLevelDone, onExit, onEvent }: UnknownBoxGameProps) {
   // El lienzo mide lo que le deja el panel abierto, no la ventana entera.
   const { width, height } = useActivityViewport();
@@ -389,7 +411,7 @@ function Activity({ level, onLevelDone, onExit, onEvent }: UnknownBoxGameProps) 
 
   /** Un movimiento del jugador, contado para cada verbo que el nivel ejercita. */
   const attempt = useCallback(
-    (correct: boolean, misconception?: string) => {
+    (correct: boolean, misconception?: string, snapshot?: string) => {
       const at = Date.now();
       const latency = at - shownAt.current;
       for (const evidence of level.evidence) {
@@ -402,6 +424,10 @@ function Activity({ level, onLevelDone, onExit, onEvent }: UnknownBoxGameProps) 
           correct,
           latency,
           ...(misconception ? { misconception } : {}),
+          // Sólo con el error que ninguna regla reconoció, que es el único que
+          // el minero puede mirar. La línea sale del tablero y del gesto, nunca
+          // de la hora ni de nada al azar (ver `snapshot` en @mathy/progress).
+          ...(!correct && !misconception && snapshot ? { snapshot } : {}),
         });
       }
     },
@@ -544,7 +570,11 @@ function Activity({ level, onLevelDone, onExit, onEvent }: UnknownBoxGameProps) 
       setBounced(row);
       setTimeout(() => setBounced(-1), 400);
       const error = boxMisconceptionFor(fila, clase);
-      attempt(false, error);
+      // Juntar dos marcas es `variable_as_label` y ya está catalogado. Lo otro
+      // —una fruta en la fila de otra fruta, una fruta en una fila de cajones—
+      // no lo reconoce ninguna regla, y es justo lo que hay que poder mirar
+      // después: qué clase rechazó la fila y qué clase le llegó.
+      attempt(false, error, `libro · fila de ${nombreDeClase(fila)} · soltó ${nombreDeClase(clase)}`);
       if (error) {
         const propia = m.owner.indexOf(token.kind);
         replayError(row, propia >= 0 ? propia : row);
@@ -588,7 +618,16 @@ function Activity({ level, onLevelDone, onExit, onEvent }: UnknownBoxGameProps) 
       say("weighed");
       // Poner una manzana más no es contestar mal: es ir llegando. Lo que se
       // anota es la barra derecha y el pasarse, que sí son respuestas.
-      if (puestas >= w.target) attempt(puestas === w.target);
+      // Pasarse no es ninguna idea equivocada del catálogo, y sin embargo es un
+      // error que se repite: la línea guarda cuántos cajones había y cuántas
+      // manzanas puso, que es lo que haría falta para ver si hay un patrón.
+      if (puestas >= w.target) {
+        attempt(
+          puestas === w.target,
+          undefined,
+          `balanza · ${w.crates} cajones contra manzanas · puso ${puestas} y la barra queda derecha con ${w.target}`,
+        );
+      }
       if (puestas === w.target) {
         // La barra quedó derecha: recién ahí se abre el cajón, y lo que hay
         // adentro es lo que la balanza ya había dicho.
@@ -646,7 +685,14 @@ function Activity({ level, onLevelDone, onExit, onEvent }: UnknownBoxGameProps) 
       const n = v.problem.tree[node];
       if (!n || v.solved) return;
       quiet();
-      attempt(n.unknown);
+      // Soltar el cajón en una rama y soltarlo en una hoja que ya tiene número
+      // son dos confusiones distintas sobre qué es una incógnita, y ninguna
+      // está en el catálogo. La línea las distingue para poder contarlas.
+      attempt(
+        n.unknown,
+        undefined,
+        `árbol · soltó el cajón en ${n.op !== null ? `una rama ${n.op}` : n.value !== null ? `una hoja con ${n.value}` : "la hoja vacía"}`,
+      );
       if (!n.unknown) {
         setMessage({
           text:
