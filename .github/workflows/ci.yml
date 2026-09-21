@@ -1,0 +1,30 @@
+# Lo que antes corríamos a mano.
+#
+# Cuatro pasos, en orden de qué tan barato es fallar: los tipos, los tests, el
+# validador del documento de diseño y el linter de textos del juego. El linter
+# sale con 1 sólo si encuentra errores; sus avisos se leen, no frenan nada.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck --workspaces --if-present
+      - run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: npm run validate:docs
+      - run: npm run qa

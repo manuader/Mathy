@@ -12,7 +12,8 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "validate:docs": "python3 tools/validate.py"
+    "validate:docs": "python3 tools/validate.py",
+    "qa": "npm run qa -w packages/qa"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",

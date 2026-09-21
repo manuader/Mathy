@@ -1,0 +1,76 @@
+# Qué dibuja cada escena, y con qué palabra se la nombra.
+#
+# Existe por un bug real: un texto de `alg.fn.composition` hablaba de "ruedas"
+# donde la escena dibuja máquinas, y ningún test podía verlo porque el texto era
+# válido y la escena también. La lista de `dibuja` es el vocabulario permitido
+# para hablar del tablero; `prohibido` son las palabras que nombran lo mismo con
+# otro objeto y confunden a quien está mirando la pantalla.
+#
+# Lo usa `packages/qa` (el linter de textos) de dos maneras: como regla local y
+# como parte del estado que recibe el modelo de decisión.
+
+global:
+  # N §2.2: el juego nunca dice que algo está mal, muestra qué hizo el movimiento.
+  prohibido: [incorrecto, incorrecta, error, "está mal", "mal hecho", equivocado, fallaste]
+  # Jerga del repositorio que no significa nada para quien juega.
+  jerga: [nodo, misconception, mecánica, lure, señuelo, layer, capa]
+
+escenas:
+  BowlScene:
+    dibuja: [mesa, cuenco, fruta, canasta, tarjeta, fila, puente, marca]
+    prohibido: [plato, bol, recipiente, cesta, bandeja]
+  TrackScene:
+    dibuja: [manivela, perilla, soporte, casilla, pista, piedra, caminante, flecha, tope, cajón, renglón, diente]
+    prohibido: [rueda, engranaje, volante, palanca]
+  ChestScene:
+    dibuja: [cofre, cerradura, llave, llavero, manivela, piedra, caminante, flecha, silueta]
+    prohibido: [candado, baúl, caja fuerte, cajón, puerta]
+  BalanceScene:
+    dibuja: [balanza, plato, barra, pesa, caja, broche, reserva]
+    prohibido: [romana, báscula, platillo, peso muerto]
+  TilesScene:
+    dibuja: [baldosa, piso, marco, tira, pared, fila, columna, bloque, habitación]
+    prohibido: [ladrillo, azulejo, mosaico, alfombra]
+  PipeScene:
+    dibuja: [máquina, caño, entrada, salida, gota, contador, cinta, palanca, flecha]
+    prohibido: [rueda, engranaje, tubo, manguera, motor]
+  LedgerScene:
+    dibuja: [libro, fila, mostrador, hoja, árbol, cofre, puesto, fruta, objeto, columna]
+    prohibido: [planilla, cuaderno, tabla de excel, góndola]
+  WalkScene:
+    dibuja: [caminante, rastro, terreno, escalón, rampa, hoja, gota, eje, punto, perilla, grilla]
+    prohibido: [montaña, cerro, escalera, cuesta arriba]
+  StretchScene:
+    dibuja: [banda, regla, marca, número, piso]
+    prohibido: [goma, elástico, soga, cinta métrica]
+  UrnScene:
+    dibuja: [frasco, dado, bolita, tapa, barra, pizza]
+    prohibido: [urna, jarra, botella, bolsa]
+  NetworkScene:
+    dibuja: [punto, flecha, camino, aro, ruta]
+    prohibido: [grafo, vértice, arista, red social]
+
+# Qué escena usa cada nodo. Sale de qué escena importa su actividad; un test lo
+# vuelve a derivar del código para que esta lista no envejezca sola.
+nodos:
+  found.count.cardinality: BowlScene
+  found.count.number_line: TrackScene
+  arith.add.displacement: TrackScene
+  arith.mul.scaling: TilesScene
+  arith.sub.undo_add: ChestScene
+  arith.div.undo_mul: ChestScene
+  arith.int.negatives: TrackScene
+  arith.frac.parts_and_ratio: TilesScene
+  arith.expr.precedence_tree: ChestScene
+  prealg.var.unknown_as_box: LedgerScene
+  prealg.inv.operation_as_key: ChestScene
+  prealg.eq.balance: BalanceScene
+  alg.eq.one_step: BalanceScene
+  alg.eq.multi_step: ChestScene
+  alg.expr.distributive_tiles: TilesScene
+  alg.sys.two_by_two: LedgerScene
+  alg.fn.function_as_machine: PipeScene
+  alg.fn.graph_as_picture: WalkScene
+  alg.fn.linear_slope: WalkScene
+  alg.fn.composition: PipeScene
+  alg.fn.inverse_function: PipeScene
