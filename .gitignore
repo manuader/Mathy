@@ -51,3 +51,4 @@ apps/*/public/canvaskit.wasm
 
 # Handoffs efímeros: solo importa el más nuevo, y vive fuera del repo
 handoffs/
+packages/qa/.cache/
