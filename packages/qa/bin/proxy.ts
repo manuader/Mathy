@@ -18,7 +18,12 @@
 import { createServer } from "node:http";
 
 const PUERTO = 8788;
-const PERMITIDOS = new Set(["http://localhost:8081", "http://127.0.0.1:8081", "http://[::1]:8081"]);
+/**
+ * Sólo el servidor de Expo, y sólo de esta casa: el mismo puerto y una
+ * dirección local. Un teléfono en la misma red entra; internet no.
+ */
+const PERMITIDO = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+):8081$/;
+const permitido = (origen: string): boolean => PERMITIDO.test(origen);
 
 interface Pedido {
   readonly consulta: string;
@@ -34,7 +39,7 @@ if (clave.length === 0) {
 createServer((req, res) => {
   const origen = req.headers.origin ?? "";
   const cors: Record<string, string> = {
-    "access-control-allow-origin": PERMITIDOS.has(origen) ? origen : "null",
+    "access-control-allow-origin": permitido(origen) ? origen : "null",
     "access-control-allow-headers": "content-type",
     "access-control-allow-methods": "POST, OPTIONS",
   };
@@ -43,7 +48,7 @@ createServer((req, res) => {
     res.end();
     return;
   }
-  if (req.method !== "POST" || req.url !== "/llave" || !PERMITIDOS.has(origen)) {
+  if (req.method !== "POST" || req.url !== "/llave" || !permitido(origen)) {
     res.writeHead(404, cors);
     res.end();
     return;

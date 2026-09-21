@@ -18,7 +18,14 @@
  *   servidor propio, o no hay ayuda semántica.
  */
 
-const PROXY = "http://localhost:8788/llave";
+/**
+ * El proxy vive en la misma máquina que sirve el juego, no en la del jugador:
+ * desde un teléfono de la casa, `localhost` sería el teléfono.
+ */
+const PROXY = ((): string => {
+  const host = typeof window === "undefined" ? "" : (window.location?.hostname ?? "");
+  return `http://${host.length > 0 ? host : "localhost"}:8788/llave`;
+})();
 /** Más que esto y el jugador ya leyó la lista: no vale la pena esperar. */
 const PACIENCIA_MS = 800;
 
