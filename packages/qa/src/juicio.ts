@@ -36,30 +36,34 @@ const ESPERADO: Partial<Record<Entry["role"], string>> = {
 export function juzgar(entry: Entry, answers: Answers): readonly Finding[] {
   const out: (Finding | null)[] = [];
   const voseo = answers["esta_en_voseo"] as Noul | undefined;
-  const objetos = answers["nombra_objetos_que_la_escena_dibuja"] as Noul | undefined;
+  const objetos = answers["nombra_un_objeto_con_otro_nombre"] as Noul | undefined;
   const califica = answers["dice_incorrecto_o_equivalente"] as Noul | undefined;
   const tipo = answers["tipo_de_mensaje"] as Choice | undefined;
   const claridad = answers["claridad_para_un_chico_de_ocho_anios"] as Score | undefined;
 
   if (voseo && !voseo.value) out.push(hallazgo(entry, "voseo", voseo.p, "No parece escrito en voseo."));
-  if (objetos && !objetos.value) {
+  if (objetos && objetos.value) {
     out.push(hallazgo(entry, "objeto_ajeno", objetos.p, "Nombra algo que la escena no dibuja con ese nombre."));
   }
   if (califica && califica.value) {
     out.push(hallazgo(entry, "nunca_incorrecto", califica.p, "Califica el movimiento en vez de contar qué pasó (N §2.2)."));
   }
-  const esperado = ESPERADO[entry.role];
+  // Un paso que se llama `reveal`, `recall` o `hold` explica lo que acaba de
+  // pasar: leerlo como acierto no es un defecto, es su trabajo.
+  const paso = /\.coach\.([a-zA-Z]+)$/.exec(entry.key)?.[1] ?? "";
+  const explica = ["reveal", "recall", "hold", "again", "done"].includes(paso);
+  const esperado = explica ? undefined : ESPERADO[entry.role];
   if (tipo && esperado && tipo.value !== esperado) {
     // Un papel distinto del declarado casi nunca es un error de ortografía: es
     // una guía que explica en vez de pedir, o un objetivo que ya da la respuesta.
     const f = hallazgo(entry, "papel_cambiado", tipo.p, `Está declarado como ${esperado} y se lee como ${tipo.value}.`);
     if (f) out.push({ ...f, severity: "aviso" });
   }
-  if (claridad && claridad.value < 1) {
-    out.push(hallazgo(entry, "claridad", claridad.p, "Difícil de entender para quien recién empieza el concepto."));
-  } else if (claridad && claridad.value < 1.5) {
-    const f = hallazgo(entry, "claridad", claridad.p, "Se entiende a medias: hay que releerlo.");
-    if (f) out.push({ ...f, severity: "aviso" });
+  // La claridad es opinable y se movía entre 0,5 y 0,75 tanto en textos buenos
+  // como en malos: no sirve de puerta. Sólo avisa cuando el modelo dice, con
+  // ganas, que no se entiende nada.
+  if (claridad && claridad.value < 0.6 && claridad.p > ERROR) {
+    out.push({ key: entry.key, text: entry.text, rule: "claridad", severity: "aviso", why: "Difícil de entender para quien recién empieza el concepto.", p: claridad.p, source: "jev" });
   }
   return out.filter((f): f is Finding => f !== null);
 }

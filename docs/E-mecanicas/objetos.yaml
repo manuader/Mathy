@@ -20,31 +20,31 @@ escenas:
     dibuja: [mesa, cuenco, fruta, canasta, tarjeta, fila, puente, marca]
     prohibido: [plato, bol, recipiente, cesta, bandeja]
   TrackScene:
-    dibuja: [manivela, perilla, soporte, casilla, pista, piedra, caminante, flecha, tope, cajón, renglón, diente]
+    dibuja: [manivela, perilla, soporte, casilla, pista, piedra, caminante, flecha, tope, cajón, renglón, diente, ficha, bandera, calle, piso, edificio, ascensor, viaje, tramo]
     prohibido: [rueda, engranaje, volante, palanca]
   ChestScene:
-    dibuja: [cofre, cerradura, llave, llavero, manivela, piedra, caminante, flecha, silueta]
+    dibuja: [cofre, cerradura, llave, llavero, manivela, piedra, caminante, flecha, silueta, ficha, banda, pista, tramo]
     prohibido: [candado, baúl, caja fuerte, cajón, puerta]
   BalanceScene:
     dibuja: [balanza, plato, barra, pesa, caja, broche, reserva]
     prohibido: [romana, báscula, platillo, peso muerto]
   TilesScene:
-    dibuja: [baldosa, piso, marco, tira, pared, fila, columna, bloque, habitación]
+    dibuja: [baldosa, piso, marco, tira, pared, fila, columna, bloque, habitación, ficha, barra, parte, corte, línea, total]
     prohibido: [ladrillo, azulejo, mosaico, alfombra]
   PipeScene:
-    dibuja: [máquina, caño, entrada, salida, gota, contador, cinta, palanca, flecha]
+    dibuja: [máquina, caño, entrada, salida, gota, contador, cinta, palanca, flecha, ficha, pieza, ranura, placa, bola, tabla]
     prohibido: [rueda, engranaje, tubo, manguera, motor]
   LedgerScene:
-    dibuja: [libro, fila, mostrador, hoja, árbol, cofre, puesto, fruta, objeto, columna]
+    dibuja: [libro, fila, mostrador, hoja, árbol, cofre, puesto, fruta, objeto, columna, caja, marca, ficha, balanza]
     prohibido: [planilla, cuaderno, tabla de excel, góndola]
   WalkScene:
     dibuja: [caminante, rastro, terreno, escalón, rampa, hoja, gota, eje, punto, perilla, grilla]
     prohibido: [montaña, cerro, escalera, cuesta arriba]
   StretchScene:
-    dibuja: [banda, regla, marca, número, piso]
+    dibuja: [banda, regla, marca, número, piso, clavo, ficha, tira]
     prohibido: [goma, elástico, soga, cinta métrica]
   UrnScene:
-    dibuja: [frasco, dado, bolita, tapa, barra, pizza]
+    dibuja: [frasco, dado, bolita, tapa, barra, pizza, ficha, parte, porción]
     prohibido: [urna, jarra, botella, bolsa]
   NetworkScene:
     dibuja: [punto, flecha, camino, aro, ruta]

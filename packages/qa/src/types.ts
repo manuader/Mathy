@@ -31,7 +31,12 @@ export interface Score {
 export type Answer = Noul | Choice | Score;
 
 export type Question =
-  | { readonly kind: "noul"; readonly instructions: string }
+  | {
+      readonly kind: "noul";
+      readonly instructions: string;
+      /** Qué significa cada lado. Sin esto, un Noul contesta con la definición que se imagine. */
+      readonly criteria?: { readonly true: string; readonly false: string };
+    }
   | { readonly kind: "choice"; readonly instructions: string; readonly options: Readonly<Record<string, string>> }
   | { readonly kind: "score"; readonly instructions: string; readonly levels: readonly string[] };
 

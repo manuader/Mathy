@@ -47,17 +47,28 @@ export const PREGUNTAS: QuestionSet = {
   esta_en_voseo: {
     kind: "noul",
     instructions:
-      "¿`texto` está escrito en voseo rioplatense, como habla el juego? Mirá las órdenes: en voseo se dice 'arrastrá', 'mirá', 'fijate', 'tocá', y en tuteo 'arrastra', 'mira', 'fíjate', 'toca'. Un texto sin ninguna orden y sin marcas de persona está en voseo.",
+      "¿Cada orden que `texto` le da al jugador está en voseo rioplatense? Sólo importan los verbos que le piden algo a quien lee.",
+    criteria: {
+      true: "Todas las órdenes están en voseo ('arrastrá', 'mirá', 'tocá', 'fijate', 'contá', 'mové', 'arrastrala'), o el texto no da ninguna orden porque describe o explica algo.",
+      false: "Al menos una orden está en tuteo: 'arrastra', 'mira', 'toca', 'fíjate', 'cuenta', 'mueve', 'haz', 'pon', o aparece 'tú', 'tienes', 'puedes'.",
+    },
   },
-  nombra_objetos_que_la_escena_dibuja: {
+  nombra_un_objeto_con_otro_nombre: {
     kind: "noul",
     instructions:
-      "¿Todos los objetos del tablero que `texto` nombra están en `escena.objetos_que_dibuja`, o son partes de ellos? Contestá que no si el texto le pone otro nombre a lo que se ve, por ejemplo llamar rueda a una máquina o candado a una cerradura.",
+      "¿`texto` nombra algún objeto del tablero con una palabra distinta de la que usa `escena.objetos_que_dibuja` para esa misma cosa?",
+    criteria: {
+      true: "Sí: le da otro nombre a algo que está dibujado, por ejemplo llamar 'rueda' a una máquina, 'candado' a una cerradura o 'ladrillo' a una baldosa.",
+      false: "No: todo objeto del tablero que nombra usa la palabra de la lista, o es una parte de uno de ellos, o el texto habla de números, ideas o acciones y no de objetos del tablero.",
+    },
   },
   dice_incorrecto_o_equivalente: {
     kind: "noul",
-    instructions:
-      "¿`texto` califica lo que hizo el jugador como incorrecto, mal o equivocado, en vez de contar qué pasó con los objetos? Decir qué le falta o qué mirar no es calificar.",
+    instructions: "¿`texto` califica de incorrecto o de equivocado lo que hizo el jugador?",
+    criteria: {
+      true: "Sí: dice que está mal, que es incorrecto, que se equivocó, que falló, o lo descalifica con otras palabras.",
+      false: "No: cuenta qué pasó con los objetos del tablero, o le dice qué mirar o qué le falta, sin juzgarlo.",
+    },
   },
   tipo_de_mensaje: {
     kind: "choice",

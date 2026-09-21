@@ -34,7 +34,9 @@ function alSdk(questions: QuestionSet): Record<string, unknown> {
 function traducir(q: Question): Record<string, unknown> {
   switch (q.kind) {
     case "noul":
-      return { type: "noul", instructions: q.instructions };
+      return q.criteria
+        ? { type: "noul", instructions: q.instructions, criteria: q.criteria }
+        : { type: "noul", instructions: q.instructions };
     case "choice":
       return { type: "choice", instructions: q.instructions, criteria: q.options };
     case "score":
