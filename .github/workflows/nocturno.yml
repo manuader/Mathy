@@ -1,0 +1,40 @@
+# El guardrail del generador, todas las noches.
+#
+# El CI de cada push corre los tests, que barren unas pocas semillas: lo
+# suficiente para que un invariante roto no entre al repositorio. Lo que este
+# workflow agrega es el barrido largo —doscientas semillas de los cinco nodos,
+# unas treinta mil rondas— más la pasada del modelo de decisión, que cuesta
+# plata y tarda, y por eso no va en cada push.
+#
+# Dos cosas que no cambian:
+#
+# - **Los avisos del modelo no fallan el workflow.** `qa:generadores` sale con 1
+#   sólo si un invariante determinista encontró una ronda defectuosa; los avisos
+#   se leen en el log. Si un aviso frenara algo, en dos semanas nadie los leería.
+# - **Sin la clave corre igual.** `--jev` sin `TYPESAFE_API_KEY` avisa y sigue
+#   con los invariantes, así que un fork sin el secreto no ve un workflow rojo:
+#   ve el barrido largo sin la parte paga.
+name: Nocturno
+
+on:
+  schedule:
+    # 07:00 UTC, que son las 04:00 acá: el informe está antes de empezar el día.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  generadores:
+    runs-on: ubuntu-latest
+    env:
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      # El tope de consultas lo pone el propio comando (200 por corrida), así
+      # que una noche cuesta centésimas de dólar aunque el barrido mire treinta
+      # mil rondas: el modelo ve una muestra repartida entre nodos y niveles.
+      - run: npm run qa:generadores -w packages/qa -- --semillas=200 --jev

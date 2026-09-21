@@ -14,7 +14,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "validate:docs": "python3 tools/validate.py",
     "qa": "npm run qa -w packages/qa",
-    "qa:minero": "npm run qa:minero -w packages/qa --"
+    "qa:minero": "npm run qa:minero -w packages/qa --",
+    "qa:generadores": "npm run qa:generadores -w packages/qa --",
+    "qa:proxy": "npm run qa:proxy -w packages/qa"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",
