@@ -7,13 +7,18 @@
   "types": "./src/index.ts",
   "scripts": {
     "qa": "node --experimental-strip-types bin/qa.ts",
+    "qa:generadores": "node --experimental-strip-types bin/generadores.ts",
+    "qa:minero": "node --experimental-strip-types bin/minero.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types test/*.test.ts"
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "qa:proxy": "node --experimental-strip-types bin/proxy.ts"
   },
   "devDependencies": {
     "yaml": "^2.9.0"
   },
   "dependencies": {
-    "@typesafe-ai/sdk": "^0.6.0"
+    "@mathy/progress": "*",
+    "@typesafe-ai/sdk": "^0.6.0",
+    "@mathy/content": "*"
   }
 }

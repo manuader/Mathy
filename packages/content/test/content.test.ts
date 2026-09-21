@@ -11,6 +11,7 @@ import {
   isEntryUnlocked,
   isOpUnlocked,
   opsOfTier,
+  scoreMatch,
   searchEntries,
   topicTree,
   unlockedEntries,
@@ -107,20 +108,19 @@ test("el árbol de temas se poda: sin entradas no hay rama", () => {
   for (const raiz of arbol) assert.equal(raiz.topic.parent, null);
 });
 
-test("la búsqueda filtra por título y no le importan los acentos", () => {
+test("la búsqueda ordena por parecido y no le importan los acentos", () => {
   assert.equal(searchEntries(cheatsheetEntries, "").length, cheatsheetEntries.length);
   assert.equal(searchEntries(cheatsheetEntries, "zzzz").length, 0);
   const conTilde = cheatsheetEntries.filter((e) => /[áéíóúÁÉÍÓÚ]/.test(e.title));
   assert.ok(conTilde.length > 0, "el corpus no tiene títulos con tilde para probar");
   const primera = conTilde[0]!;
   const sinTilde = primera.title.normalize("NFD").replace(/[̀-ͯ]/g, "");
-  assert.ok(searchEntries(cheatsheetEntries, sinTilde).includes(primera));
-  // El cuerpo no entra en la búsqueda, a propósito.
+  // El título entero, sin tildes, tiene que traer su entrada primera de todo.
+  assert.equal(searchEntries(cheatsheetEntries, sinTilde)[0], primera);
+  // El cuerpo ya no queda afuera, pero pesa menos: una frase suya trae su
+  // entrada, y el título exacto le gana igual.
   const larga = cheatsheetEntries.find((e) => e.body.length > 40)!;
-  const frase = larga.body.slice(10, 30);
-  for (const hit of searchEntries(cheatsheetEntries, frase)) {
-    assert.ok(hit.title.toLowerCase().includes(frase.toLowerCase()));
-  }
+  assert.ok(searchEntries(cheatsheetEntries, larga.body.slice(10, 30)).includes(larga));
 });
 
 test("toda operación trae etiqueta corta y pista narrable", () => {
@@ -185,4 +185,27 @@ test("resolver ecuaciones nace del nodo del minijuego", () => {
   const resolver = findOp("op_solve_linear");
   assert.ok(resolver, "falta la tecla que el minijuego desbloquea");
   assert.ok(resolver.unlockedBy.includes("alg.eq.one_step"));
+});
+
+test("el buscador encuentra por palabras y no sólo por el título exacto", () => {
+  // El caso que lo motivó: nadie busca con las palabras del título.
+  assert.ok(scoreMatch("dar vuelta las maquinas", "Dar vuelta cambia la salida", "Cambiar el orden de las máquinas cambia lo que sale.") > 0.5);
+  assert.equal(scoreMatch("pizza", "La llave pasa por los dos", "Lo que se hace de un lado se hace del otro."), 0);
+});
+
+test("la consulta entera dentro del título le gana a todo", () => {
+  assert.equal(scoreMatch("los dos lados", "La llave va a los dos lados", ""), 1);
+});
+
+test("el plural encuentra el singular, que es como escribe cualquiera", () => {
+  assert.ok(scoreMatch("maquinas", "La máquina al revés", "") > 0);
+  assert.ok(scoreMatch("pedazos iguales", "Partes iguales", "El todo se corta en pedazos del mismo tamaño.") > 0);
+});
+
+test("una palabra suelta que coincide no arrastra una llave ajena", () => {
+  assert.equal(scoreMatch("cuanto sube la rampa en cada paso", "El cero no es el borde", ""), 0);
+});
+
+test("sin consulta, la lista queda como estaba", () => {
+  assert.equal(scoreMatch("", "cualquier cosa", ""), 1);
 });

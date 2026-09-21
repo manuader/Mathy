@@ -12,9 +12,11 @@
  * Se abre sin salir de la actividad: el panel convive con el lienzo, no lo
  * reemplaza.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import {
+  scoreLoose,
+  scoreMatch,
   searchEntries,
   topicTree,
   unlockedEntries,
@@ -23,6 +25,7 @@ import {
   type TopicNode,
 } from "@mathy/content";
 import { t, tf } from "../i18n.ts";
+import { sugerirLlave } from "./buscarLlave.ts";
 import type { EarnedKey } from "../lessons/index.ts";
 import { KeyCard } from "./KeyGlyph.tsx";
 import { Lumi } from "./Lumi.tsx";
@@ -56,7 +59,43 @@ export function Cheatsheet({
   const mine = useMemo(() => unlockedEntries(reached), [reached]);
   const found = useMemo(() => searchEntries(mine, query), [mine, query]);
   const tree = useMemo(() => topicTree(found), [found]);
-  const groups = useMemo(() => groupKeys(keys, query), [keys, query]);
+  const rankeadas = useMemo(() => rankKeys(keys, query), [keys, query]);
+  // La ayuda semántica sólo entra cuando el ranking local quedó flojo, y nunca
+  // reemplaza la lista: agrega una llave arriba de todo. Ver `buscarLlave.ts`.
+  const [sugerida, setSugerida] = useState<string | null>(null);
+  // El efecto depende sólo de lo que el jugador escribió. Con las listas en las
+  // dependencias se rearmaba en cada render y el temporizador no llegaba nunca
+  // a disparar: la misma trampa que las actividades ya habían pagado.
+  const ultimas = useRef({ rankeadas, keys });
+  ultimas.current = { rankeadas, keys };
+  useEffect(() => {
+    setSugerida(null);
+    let vigente = true;
+    const espera = setTimeout(() => {
+      const { rankeadas: hoy, keys: todas } = ultimas.current;
+      // Sólo se calla cuando el título contiene lo que se escribió (1): una
+      // coincidencia parcial alta puede ser igual de equivocada. "Sumar es
+      // caminar" puntuaba 0,72 contra "Sumar cero no mueve", que no es.
+      if ((hoy[0]?.p ?? 0) >= 0.8) return;
+      // Las candidatas se juntan sin piso: lo que se muestra y lo que se
+      // pregunta no son la misma lista. Ver `scoreLoose` en `@mathy/content`.
+      const candidatas = todas
+        .map((key) => ({ key, p: scoreLoose(query, t(key.key.titleKey), t(key.key.bodyKey)) }))
+        .filter((x) => x.p > 0)
+        .sort((a, b) => b.p - a.p)
+        .slice(0, 12)
+        .map(({ key }) => ({ id: key.key.id, texto: `${t(key.key.titleKey)}. ${t(key.key.bodyKey)}` }));
+      void hoy;
+      void sugerirLlave(query, candidatas).then((r) => {
+        if (vigente) setSugerida(r && r.p > 0.6 ? r.id : null);
+      });
+    }, 350);
+    return () => {
+      vigente = false;
+      clearTimeout(espera);
+    };
+  }, [query]);
+  const groups = useMemo(() => agrupar(rankeadas, sugerida, keys), [rankeadas, sugerida, keys]);
   const total = mine.length + keys.length;
   const nothingFound = groups.length === 0 && tree.length === 0;
 
@@ -143,26 +182,50 @@ interface KeyGroup {
   readonly keys: readonly EarnedKey[];
 }
 
-/** Las llaves por concepto, en el orden en que se ganaron, filtradas por título. */
-function groupKeys(keys: readonly EarnedKey[], query: string): readonly KeyGroup[] {
-  const needle = fold(query);
-  const out: { node: string; keys: EarnedKey[] }[] = [];
-  for (const k of keys) {
-    if (needle.length > 0 && !fold(t(k.key.titleKey)).includes(needle)) continue;
-    const last = out[out.length - 1];
-    if (last && last.node === k.node) last.keys.push(k);
-    else out.push({ node: k.node, keys: [k] });
-  }
-  return out;
+interface LlaveRankeada {
+  readonly key: EarnedKey;
+  readonly p: number;
 }
 
-/** Sin acentos y en minúsculas, igual que la búsqueda de `@mathy/content`. */
-function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+/**
+ * Las llaves que responden a lo que se escribió, de la que más se parece a la
+ * que menos. Sin consulta, quedan en el orden en que se ganaron, que es el
+ * orden en que el jugador las vivió.
+ */
+function rankKeys(keys: readonly EarnedKey[], query: string): readonly LlaveRankeada[] {
+  if (query.trim().length === 0) return keys.map((key) => ({ key, p: 1 }));
+  return keys
+    .map((key) => ({ key, p: scoreMatch(query, t(key.key.titleKey), t(key.key.bodyKey)) }))
+    .filter((x) => x.p > 0)
+    .sort((a, b) => b.p - a.p);
+}
+
+/**
+ * Las llaves por concepto. Con una búsqueda en curso el orden lo manda el
+ * parecido, así que un concepto puede aparecer más de una vez: es lo que hace
+ * falta para que la primera llave de la lista sea la que se buscaba.
+ */
+function agrupar(
+  rankeadas: readonly LlaveRankeada[],
+  sugerida: string | null,
+  todas: readonly EarnedKey[],
+): readonly KeyGroup[] {
+  const lista = [...rankeadas];
+  if (sugerida !== null && !lista.some((x) => x.key.key.id === sugerida)) {
+    const extra = todas.find((k) => k.key.id === sugerida);
+    if (extra) lista.unshift({ key: extra, p: 1 });
+  } else if (sugerida !== null) {
+    const i = lista.findIndex((x) => x.key.key.id === sugerida);
+    const [elegida] = lista.splice(i, 1);
+    if (elegida) lista.unshift(elegida);
+  }
+  const out: { node: string; keys: EarnedKey[] }[] = [];
+  for (const { key } of lista) {
+    const last = out[out.length - 1];
+    if (last && last.node === key.node) last.keys.push(key);
+    else out.push({ node: key.node, keys: [key] });
+  }
+  return out;
 }
 
 function Topic({ node, depth }: { readonly node: TopicNode; readonly depth: number }) {

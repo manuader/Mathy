@@ -169,16 +169,87 @@ export function findOp(id: string): CalculatorOp | undefined {
 }
 
 /**
- * La búsqueda filtra por título y no por cuerpo, para que el resultado sea
- * inmediato y no dependa de una palabra suelta en medio de una frase larga.
+ * Cuánto se parece un texto a lo que el jugador escribió, de 0 a 1.
+ *
+ * Antes la búsqueda era `título.includes(consulta)`, y eso falla justo cuando
+ * más falta hace: sobre diez consultas escritas como las escribiría un chico
+ * ("sacar de los dos lados", "cuanto sube en cada paso") no encontró ninguna,
+ * porque nadie busca con las palabras exactas del título.
+ *
+ * Así que se cuenta cuántas palabras de la consulta aparecen, en el título o en
+ * el cuerpo, y el título pesa más. La consulta entera adentro del título sigue
+ * ganándole a todo, que es el caso de quien ya sabe cómo se llama lo que busca.
+ * Sin red y sin modelo: corre igual en un avión, que es donde el juego promete
+ * andar.
+ */
+export function scoreMatch(query: string, title: string, body = "", piso = 0.34): number {
+  const needle = fold(query);
+  if (needle.length === 0) return 1;
+  const t = fold(title);
+  if (t.includes(needle)) return 1;
+
+  const buscadas = tokens(needle);
+  if (buscadas.length === 0) return fold(body).includes(needle) ? 0.5 : 0;
+  const enTitulo = tokens(t);
+  const enCuerpo = tokens(fold(body));
+
+  let puntos = 0;
+  for (const palabra of buscadas) {
+    if (enTitulo.some((w) => emparenta(w, palabra))) puntos += 1;
+    else if (enCuerpo.some((w) => emparenta(w, palabra))) puntos += 0.45;
+  }
+  const parte = puntos / buscadas.length;
+  // Una sola palabra floja no alcanza para traer una llave que no viene al caso.
+  return parte < piso ? 0 : Math.min(0.99, parte);
+}
+
+/** Las palabras que valen: las cortas no distinguen nada. */
+function tokens(texto: string): string[] {
+  return texto.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3);
+}
+
+/**
+ * Dos palabras de la misma familia, comparando por prefijo.
+ *
+ * Nadie escribe el singular exacto del título: busca "máquinas" lo que está
+ * escrito como "máquina", y "pedazos" lo que el juego llama "pedazo". Cortar
+ * terminaciones a mano erraba más de lo que acertaba —"partes" quedaba en
+ * "part" y no encontraba nada—, así que alcanza con que compartan las primeras
+ * cuatro letras y ninguna sea mucho más larga que la otra.
+ */
+function emparenta(a: string, b: string): boolean {
+  if (a === b) return true;
+  const corta = a.length <= b.length ? a : b;
+  const larga = a.length <= b.length ? b : a;
+  const minimo = Math.min(4, corta.length);
+  return larga.startsWith(corta.slice(0, minimo)) && larga.length - corta.length <= 4;
+}
+
+/**
+ * El mismo parecido pero sin piso, para juntar candidatas antes de preguntarle
+ * a alguien. Mostrar y preguntar piden cosas distintas: al jugador se le
+ * muestran sólo las llaves que vienen al caso, y al modelo se le da lugar para
+ * elegir una que comparte una palabra sola. "Sumar es caminar" no tiene nada en
+ * común con "La ficha es un salto" salvo "caminante", en el cuerpo; con el piso
+ * puesto, esa llave ni siquiera llegaba a la pregunta.
+ */
+export const scoreLoose = (query: string, title: string, body = ""): number =>
+  scoreMatch(query, title, body, 0);
+
+/**
+ * Las entradas que responden a la consulta, de la que más se parece a la que
+ * menos. Las que no tienen nada que ver quedan afuera.
  */
 export function searchEntries(
   entries: readonly CheatsheetEntry[],
   query: string,
 ): readonly CheatsheetEntry[] {
-  const needle = fold(query);
-  if (needle.length === 0) return entries;
-  return entries.filter((entry) => fold(entry.title).includes(needle));
+  if (fold(query).length === 0) return entries;
+  return entries
+    .map((entry) => ({ entry, p: scoreMatch(query, entry.title, entry.body) }))
+    .filter((x) => x.p > 0)
+    .sort((a, b) => b.p - a.p)
+    .map((x) => x.entry);
 }
 
 /** Sin acentos y en minúsculas: nadie escribe "razón" con tilde en un buscador. */

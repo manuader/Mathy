@@ -13,7 +13,8 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "validate:docs": "python3 tools/validate.py",
-    "qa": "npm run qa -w packages/qa"
+    "qa": "npm run qa -w packages/qa",
+    "qa:minero": "npm run qa:minero -w packages/qa --"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",
