@@ -13,7 +13,7 @@ const entry = (text: string, extra: Partial<Entry> = {}): Entry => ({
   node: "alg.fn.composition",
   level: 1,
   role: "objetivo",
-  scene: "PipeScene",
+  scenes: ["PipeScene"],
   ...extra,
 });
 const rules = (text: string, extra: Partial<Entry> = {}): readonly string[] =>
@@ -71,17 +71,18 @@ test("la escena de cada nodo es la que importa su actividad", () => {
     if (node && comp) porNodo.set(node, comp);
   }
   const archivos = readdirSync(dir).filter((f) => f.endsWith("Game.tsx"));
-  const escenaDe = new Map<string, string>();
+  const escenaDe = new Map<string, readonly string[]>();
   for (const file of [...archivos, "../OneStepGame.tsx"]) {
     const src = readFileSync(join(dir, file), "utf8");
-    const scene = /from "\.\.\/scenes\/([A-Za-z]+)\.tsx"/.exec(src)?.[1];
-    if (scene) escenaDe.set(file.replace(/.*\//, "").replace("Game.tsx", ""), scene);
+    // Doce actividades importan más de una escena; la lista es la de todas.
+    const todas = [...src.matchAll(/from "\.{1,2}\/scenes\/([A-Za-z]+)\.tsx"/g)].map((m) => m[1] ?? "");
+    if (todas.length > 0) escenaDe.set(file.replace(/.*\//, "").replace("Game.tsx", ""), [...new Set(todas)]);
   }
-  for (const [node, declarada] of Object.entries(objetos.nodos)) {
+  for (const [node, declaradas] of Object.entries(objetos.nodos)) {
     const comp = porNodo.get(node);
     assert.ok(comp, `${node} no está en el registro de actividades`);
-    const real = escenaDe.get(comp);
-    if (!real) continue; // una actividad sin escena propia no tiene qué comparar
-    assert.equal(declarada, real, `${node}: el YAML dice ${declarada} y la actividad usa ${real}`);
+    const reales = escenaDe.get(comp);
+    if (!reales) continue; // una actividad sin escena propia no tiene qué comparar
+    assert.deepEqual([...declaradas].sort(), [...reales].sort(), `${node}: el YAML dice ${declaradas} y la actividad usa ${reales}`);
   }
 });

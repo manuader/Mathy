@@ -92,12 +92,21 @@ export function checkEntry(entry: Entry, objetos: Objetos): readonly Finding[] {
     }
   }
 
-  const escena = objetos.escenas[entry.scene];
-  if (escena) {
-    for (const palabra of escena.prohibido) {
-      if (plano.includes(fold(palabra))) {
-        out.push(hit(entry, "objeto_ajeno", "error", `Nombra "${palabra}", y ${entry.scene} dibuja: ${escena.dibuja.join(", ")}.`));
-      }
+  // La unión de lo que dibujan todas las escenas del nodo, porque un objeto
+  // prohibido en una puede ser justo lo que dibuja la otra: en el nodo de la
+  // división conviven el cofre, la banda y las baldosas.
+  const dibuja = new Set<string>();
+  const prohibido = new Set<string>();
+  for (const nombre of entry.scenes) {
+    const escena = objetos.escenas[nombre];
+    if (!escena) continue;
+    for (const palabra of escena.dibuja) dibuja.add(fold(palabra));
+    for (const palabra of escena.prohibido) prohibido.add(palabra);
+  }
+  for (const palabra of prohibido) {
+    if (dibuja.has(fold(palabra))) continue;
+    if (plano.includes(fold(palabra))) {
+      out.push(hit(entry, "objeto_ajeno", "error", `Nombra "${palabra}", y ${entry.scenes.join(" + ")} dibujan: ${[...dibuja].join(", ")}.`));
     }
   }
 

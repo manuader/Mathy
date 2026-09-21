@@ -40,7 +40,7 @@ const REALES: readonly Caso[] = [
     entry: {
       key: "comp.lure.ratios_added",
       text: "Ahí las razones están sumadas. Cada rueda estira lo que le llega: se multiplican.",
-      node: "alg.fn.composition", level: 5, role: "mensaje", scene: "PipeScene",
+      node: "alg.fn.composition", level: 5, role: "mensaje", scenes: ["PipeScene"],
     },
   },
   {
@@ -50,7 +50,7 @@ const REALES: readonly Caso[] = [
     entry: {
       key: "comp.done.predict",
       text: "Eso marcó. Cada rueda estira lo que le llega, así que las razones se multiplican.",
-      node: "alg.fn.composition", level: 5, role: "mensaje", scene: "PipeScene",
+      node: "alg.fn.composition", level: 5, role: "mensaje", scenes: ["PipeScene"],
     },
   },
   {
@@ -60,7 +60,7 @@ const REALES: readonly Caso[] = [
     entry: {
       key: "lesson.arith.int.negatives.4.coach.arrive",
       text: "Mira como al principio. Ahora girá la manivela hasta la bandera.",
-      node: "arith.int.negatives", level: 4, role: "paso_de_guia", scene: "TrackScene",
+      node: "arith.int.negatives", level: 4, role: "paso_de_guia", scenes: ["TrackScene"],
     },
   },
   {
@@ -70,7 +70,7 @@ const REALES: readonly Caso[] = [
     entry: {
       key: "sl.hint.stretchStep",
       text: "El escalón se ensanchó y quedó flotando. Movés la esquina hasta que vuelva a tocar la rampa.",
-      node: "alg.fn.linear_slope", level: 5, role: "paso_de_guia", scene: "WalkScene",
+      node: "alg.fn.linear_slope", level: 5, role: "paso_de_guia", scenes: ["WalkScene", "TrackScene"],
     },
   },
   {
@@ -80,7 +80,7 @@ const REALES: readonly Caso[] = [
     entry: {
       key: "sl.hint.setSliders",
       text: "Movés uno y la rampa se corre; movés el otro y gira. Pasá por los dos puntos.",
-      node: "alg.fn.linear_slope", level: 6, role: "paso_de_guia", scene: "WalkScene",
+      node: "alg.fn.linear_slope", level: 6, role: "paso_de_guia", scenes: ["WalkScene", "TrackScene"],
     },
   },
 ];

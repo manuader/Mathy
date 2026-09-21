@@ -62,7 +62,8 @@ export interface Entry {
   readonly level: number | null;
   /** Qué es el texto, según dónde está declarado: no lo adivina nadie. */
   readonly role: "por_que" | "objetivo" | "paso_de_guia" | "llave_titulo" | "llave_cuerpo" | "concepto" | "mensaje";
-  readonly scene: string;
+  /** Las escenas del nodo: doce de los veintiún nodos usan más de una. */
+  readonly scenes: readonly string[];
 }
 
 /** Lo que el linter encontró en un texto. */

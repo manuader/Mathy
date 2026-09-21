@@ -27,7 +27,7 @@ export interface SceneObjects {
 export interface Objetos {
   readonly global: { readonly prohibido: readonly string[]; readonly jerga: readonly string[] };
   readonly escenas: Readonly<Record<string, SceneObjects>>;
-  readonly nodos: Readonly<Record<string, string>>;
+  readonly nodos: Readonly<Record<string, readonly string[]>>;
 }
 
 export function loadObjetos(): Objetos {
@@ -65,11 +65,11 @@ export async function buildCorpus(): Promise<readonly Entry[]> {
 
   // Los nodos salen de `objetos.yaml`, que es también quien dice qué escena
   // tiene cada uno: un nodo sin escena declarada no se puede revisar.
-  for (const [node, scene] of Object.entries(objetos.nodos)) {
+  for (const [node, scenes] of Object.entries(objetos.nodos)) {
     const lesson = lessons.nodeLesson(node);
     if (!lesson) continue;
     const push = (key: string, level: number | null, role: Entry["role"]): void => {
-      out.push({ key, text: i18n.t(key), node: lesson.node, level, role, scene });
+      out.push({ key, text: i18n.t(key), node: lesson.node, level, role, scenes });
     };
     push(lesson.learnedKey, null, "concepto");
     for (const level of lesson.levels) {

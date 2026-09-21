@@ -50,27 +50,28 @@ escenas:
     dibuja: [punto, flecha, camino, aro, ruta]
     prohibido: [grafo, vértice, arista, red social]
 
-# Qué escena usa cada nodo. Sale de qué escena importa su actividad; un test lo
-# vuelve a derivar del código para que esta lista no envejezca sola.
+# Qué escenas usa cada nodo. Salen de las que importa su actividad, y son varias
+# en doce de los veintiún nodos: un texto se juzga contra la unión de lo que
+# dibujan todas. Un test lo vuelve a derivar del código para que no envejezca.
 nodos:
-  found.count.cardinality: BowlScene
-  found.count.number_line: TrackScene
-  arith.add.displacement: TrackScene
-  arith.mul.scaling: TilesScene
-  arith.sub.undo_add: ChestScene
-  arith.div.undo_mul: ChestScene
-  arith.int.negatives: TrackScene
-  arith.frac.parts_and_ratio: TilesScene
-  arith.expr.precedence_tree: ChestScene
-  prealg.var.unknown_as_box: LedgerScene
-  prealg.inv.operation_as_key: ChestScene
-  prealg.eq.balance: BalanceScene
-  alg.eq.one_step: BalanceScene
-  alg.eq.multi_step: ChestScene
-  alg.expr.distributive_tiles: TilesScene
-  alg.sys.two_by_two: LedgerScene
-  alg.fn.function_as_machine: PipeScene
-  alg.fn.graph_as_picture: WalkScene
-  alg.fn.linear_slope: WalkScene
-  alg.fn.composition: PipeScene
-  alg.fn.inverse_function: PipeScene
+  found.count.cardinality: [BowlScene]
+  alg.eq.one_step: [BalanceScene]
+  found.count.number_line: [TrackScene]
+  arith.add.displacement: [TrackScene]
+  arith.mul.scaling: [StretchScene, TilesScene]
+  arith.sub.undo_add: [ChestScene]
+  arith.div.undo_mul: [ChestScene, StretchScene, TilesScene]
+  arith.int.negatives: [TrackScene]
+  arith.frac.parts_and_ratio: [TilesScene, UrnScene]
+  arith.expr.precedence_tree: [ChestScene, PipeScene]
+  prealg.var.unknown_as_box: [BalanceScene, LedgerScene]
+  prealg.inv.operation_as_key: [ChestScene]
+  prealg.eq.balance: [BalanceScene]
+  alg.eq.multi_step: [BalanceScene, ChestScene, PipeScene]
+  alg.expr.distributive_tiles: [LedgerScene, TilesScene]
+  alg.sys.two_by_two: [BalanceScene, LedgerScene, StretchScene]
+  alg.fn.function_as_machine: [NetworkScene, PipeScene]
+  alg.fn.graph_as_picture: [PipeScene, WalkScene]
+  alg.fn.linear_slope: [TrackScene, WalkScene]
+  alg.fn.composition: [PipeScene]
+  alg.fn.inverse_function: [ChestScene, PipeScene, WalkScene]

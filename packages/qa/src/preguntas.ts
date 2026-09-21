@@ -26,14 +26,15 @@ const PAPEL: Readonly<Record<Entry["role"], string>> = {
 
 /** El estado: campos con nombre, como pide la documentación. */
 export function estadoDe(entry: Entry, objetos: Objetos, objetivo: string): Record<string, unknown> {
-  const escena = objetos.escenas[entry.scene];
+  const dibuja = new Set<string>();
+  for (const nombre of entry.scenes) for (const palabra of objetos.escenas[nombre]?.dibuja ?? []) dibuja.add(palabra);
   return {
     texto: entry.text,
     papel_del_texto: PAPEL[entry.role],
     objetivo_del_nivel: objetivo,
     escena: {
-      nombre: entry.scene,
-      objetos_que_dibuja: escena?.dibuja ?? [],
+      nombre: entry.scenes.join(" + "),
+      objetos_que_dibuja: [...dibuja],
     },
     reglas_del_juego: [
       "El juego habla de vos (voseo rioplatense), nunca de tú.",
