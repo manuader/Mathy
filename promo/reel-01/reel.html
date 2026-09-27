@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mathy Reel 01</title>
+<style>
+  @font-face { font-family: Inter; font-weight: 400; src: url(fonts/inter-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: Inter; font-weight: 500; src: url(fonts/inter-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: Inter; font-weight: 600; src: url(fonts/inter-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: Inter; font-weight: 700; src: url(fonts/inter-latin-700-normal.woff2) format("woff2"); }
+  html, body { margin: 0; background: #0b0d10; }
+  body { display: grid; place-items: center; min-height: 100vh; }
+  canvas { display: block; height: 100vh; width: auto; max-width: 100vw; }
+  body.render canvas { height: auto; width: auto; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+/*
+ * Reel 01 de Mathy. Cada cuadro es función pura de `t`: el render lo pide cuadro a
+ * cuadro y la vista previa lo corre en tiempo real. Todo color sale de
+ * apps/mathy/src/ui/theme.ts y todo glifo del atlas horneado del juego.
+ */
+const W = 1080, H = 1920, DUR = 24.5;
+const q = new URLSearchParams(location.search);
+const S = Number(q.get("s") || 1);
+const HOOK = q.get("hook") || "¿Qué es x?";
+const C = {
+  bg: "#0b0d10", surface: "#141821", surfaceHigh: "#1c2027", line: "#2a3038",
+  ink: "#e8eaed", inkDim: "#9aa3ad", inkFaint: "#5b636d",
+  accent: "#8ab4f8", ok: "#81c995", warn: "#f8c675",
+};
+const cv = document.getElementById("c");
+cv.width = W * S; cv.height = H * S;
+const ctx = cv.getContext("2d");
+
+// --- tiempo y curvas (las de ManimGL que usa la app, más overshoot para entradas)
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const P = (t, a, b) => cl((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+const sig = (x) => 1 / (1 + Math.exp(-x));
+const smooth = (t) => { t = cl(t); const e = sig(-5); return cl((sig(10 * (t - 0.5)) - e) / (1 - 2 * e)); };
+const rushInto = (t) => 2 * smooth(cl(t) / 2);
+const rushFrom = (t) => 2 * smooth(cl(t) / 2 + 0.5) - 1;
+const thereBack = (t) => smooth(t < 0.5 ? 2 * t : 2 - 2 * t);
+const outBack = (t, s = 1.9) => { t = cl(t) - 1; return 1 + t * t * ((s + 1) * t + s); };
+const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * cl(t)));
+const inExpo = (t) => (t <= 0 ? 0 : Math.pow(2, 10 * (cl(t) - 1)));
+const outElastic = (t) => { t = cl(t); if (t === 0 || t === 1) return t; return Math.pow(2, -9 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3.2) + 1; };
+const damp = (t, f = 3.2, d = 5) => (t <= 0 ? 0 : Math.exp(-d * t) * Math.sin(t * f * 2 * Math.PI));
+
+function mulberry(seed) {
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let r = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r; return ((r ^ (r >>> 14)) >>> 0) / 4294967296; };
+}
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+function mix(h1, h2, k) {
+  const a = parseInt(h1.slice(1), 16), b = parseInt(h2.slice(1), 16);
+  const ch = (s) => Math.round(lerp((a >> s) & 255, (b >> s) & 255, cl(k)));
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+
+// --- glifos del atlas --------------------------------------------------------
+let ATLAS = null;
+const GP = {};
+const gpath = (ch) => (GP[ch] ??= new Path2D(ATLAS[ch].path));
+const adv = (ch) => ATLAS[ch].advance;
+function glyph(ch, x, y, size, color, o = {}) {
+  const a = o.alpha ?? 1; if (a <= 0.001) return;
+  ctx.save();
+  ctx.translate(x, y);
+  if (o.rot) ctx.rotate(o.rot);
+  ctx.scale(size * (o.sx ?? 1), size * (o.sy ?? 1));
+  ctx.globalAlpha *= a;
+  if (o.glow) { ctx.shadowColor = color; ctx.shadowBlur = o.glow * S; }
+  ctx.fillStyle = color;
+  ctx.fill(gpath(ch));
+  ctx.restore();
+}
+// Diagramación mínima: los operadores binarios llevan aire a los dos lados.
+const OPS = new Set(["+", "=", "−", "×", "÷"]);
+function mlay(chars, size) {
+  let x = 0; const items = [];
+  for (const ch of chars) {
+    if (ch === " ") { x += size * 0.35; continue; }
+    const pad = OPS.has(ch) ? size * 0.24 : 0;
+    x += pad;
+    items.push({ ch, x, w: adv(ch) * size, cx: x + (adv(ch) * size) / 2 });
+    x += adv(ch) * size + pad;
+  }
+  return { items, width: x };
+}
+
+// --- texto de interfaz ---------------------------------------------------------
+function font(size, weight = 600) { ctx.font = `${weight} ${size}px Inter`; }
+/**
+ * Tipografía cinética: cada palabra sube desde detrás de una máscara y sale por
+ * arriba. `lines` es una lista de líneas; cada línea, una lista de [texto, color].
+ */
+function kinetic(t, { lines, y, size, weight = 700, tin, tout = 1e9, stagger = 0.055, lh = 1.12, x = W / 2, track = -0.02, punch = false }) {
+  if (t < tin || t > tout + 0.8) return;
+  font(size, weight);
+  ctx.letterSpacing = `${track * size}px`;
+  let k = 0;
+  lines.forEach((line, li) => {
+    const words = [];
+    for (const [txt, col] of line) for (const w of txt.split(" ").filter(Boolean)) words.push([w, col]);
+    const space = ctx.measureText(" ").width;
+    const widths = words.map(([w]) => ctx.measureText(w).width);
+    const total = widths.reduce((a, b) => a + b, 0) + space * (words.length - 1);
+    let cx = x - total / 2;
+    const by = y + li * size * lh;
+    ctx.save();
+    if (!punch) { ctx.beginPath(); ctx.rect(0, by - size * 1.02, W, size * 1.34); ctx.clip(); }
+    words.forEach(([w, col], i) => {
+      const a0 = tin + k * stagger;
+      const e = outExpo(P(t, a0, a0 + 0.5));
+      const o = rushInto(P(t, tout + k * 0.025, tout + k * 0.025 + 0.28));
+      k++;
+      if (e <= 0) { cx += widths[i] + space; return; }
+      ctx.save();
+      ctx.fillStyle = col;
+      if (punch) {
+        const s = lerp(1.6, 1, outBack(P(t, a0, a0 + 0.42), 2.4)) * (1 - 0.2 * o);
+        ctx.globalAlpha = cl(e * 2) * (1 - o);
+        ctx.translate(cx + widths[i] / 2, by - size * 0.35);
+        ctx.scale(s, s);
+        ctx.fillText(w, -widths[i] / 2, size * 0.35);
+      } else {
+        const dy = (1 - e) * size * 1.1 - o * size * 1.15;
+        if (o >= 1) { ctx.restore(); cx += widths[i] + space; return; }
+        ctx.globalAlpha = cl(e * 1.5) * (1 - o);
+        ctx.fillText(w, cx, by + dy);
+      }
+      ctx.restore();
+      cx += widths[i] + space;
+    });
+    ctx.restore();
+  });
+  ctx.letterSpacing = "0px";
+}
+function label(t, { text, y, tin, tout, size = 30, color = C.inkDim }) {
+  if (t < tin || t > tout + 0.4) return;
+  const e = outExpo(P(t, tin, tin + 0.45)), o = rushInto(P(t, tout, tout + 0.3));
+  font(size, 600);
+  ctx.letterSpacing = `${size * 0.16}px`;
+  const w = ctx.measureText(text).width;
+  ctx.save();
+  ctx.globalAlpha = e * (1 - o);
+  // Una línea fina que crece antes del texto, como en los rótulos de la app.
+  ctx.strokeStyle = hexA(C.accent, 0.9); ctx.lineWidth = 3;
+  const lw = 46 * e;
+  ctx.beginPath(); ctx.moveTo(W / 2 - w / 2 - 24 - lw, y - size * 0.36); ctx.lineTo(W / 2 - w / 2 - 24, y - size * 0.36); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W / 2 + w / 2 + 24, y - size * 0.36); ctx.lineTo(W / 2 + w / 2 + 24 + lw, y - size * 0.36); ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.fillText(text, W / 2 - w / 2 + (1 - e) * 30, y);
+  ctx.restore();
+  ctx.letterSpacing = "0px";
+}
+
+// --- primitivas ----------------------------------------------------------------
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function line(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+function dot(x, y, r, color, a = 1) { if (a <= 0 || r <= 0) return; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.restore(); }
+function ring(x, y, r, color, lw, a = 1) { if (a <= 0 || r <= 0) return; ctx.save(); ctx.globalAlpha *= a; ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); ctx.restore(); }
+function glow(color, blur) { ctx.shadowColor = color; ctx.shadowBlur = blur * S; }
+
+// Fondo: grilla de puntos con paralaje y viñeta, horneados una vez.
+let GRID = null, VIG = null;
+function bake() {
+  GRID = document.createElement("canvas");
+  GRID.width = 120 * S; GRID.height = 120 * S;
+  const g = GRID.getContext("2d"); g.scale(S, S);
+  g.fillStyle = hexA(C.line, 0.9);
+  for (const [x, y] of [[0, 0], [60, 0], [0, 60], [60, 60]]) { g.beginPath(); g.arc(x + 30, y + 30, 1.7, 0, 7); g.fill(); }
+  VIG = document.createElement("canvas");
+  VIG.width = W * S; VIG.height = H * S;
+  const v = VIG.getContext("2d"); v.scale(S, S);
+  const rg = v.createRadialGradient(W / 2, H * 0.48, H * 0.22, W / 2, H * 0.5, H * 0.72);
+  rg.addColorStop(0, "rgba(0,0,0,0)"); rg.addColorStop(1, "rgba(0,0,0,0.55)");
+  v.fillStyle = rg; v.fillRect(0, 0, W, H);
+}
+function background(t, cam = { x: 0, y: 0, z: 1 }, alpha = 1) {
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+  // Un halo de acento muy tenue detrás del foco: profundidad por luminancia, sin sombras.
+  const hg = ctx.createRadialGradient(W / 2, 1000, 0, W / 2, 1000, 900);
+  hg.addColorStop(0, hexA(C.accent, 0.075)); hg.addColorStop(1, hexA(C.accent, 0));
+  ctx.fillStyle = hg; ctx.fillRect(0, 0, W, H);
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha * 0.8;
+  const z = 0.6 + 0.4 * cam.z;
+  ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-W / 2, -H / 2);
+  const ox = ((-cam.x * 0.35) % 120 + 120) % 120 - 120, oy = ((-cam.y * 0.35 - t * 14) % 120 + 120) % 120 - 120;
+  ctx.fillStyle = ctx.createPattern(GRID, "repeat");
+  ctx.translate(ox, oy);
+  ctx.scale(1 / S, 1 / S);
+  ctx.fillRect(-W * S, -H * S, W * 3 * S, H * 3 * S);
+  ctx.restore();
+}
+
+// --- la balanza (BalanceScene, a escala 2×) ----------------------------------
+const B = { cx: 540, beamY: 700, span: 285, hang: 500, pw: 330, MAX_TILT: 0.16, LIFT: 104, ST: 3 };
+function placer(n, cxr, regionW, yBase, maxH) {
+  let cell = 44, cols = Math.max(1, Math.floor(regionW / cell));
+  while (cell > 12 && Math.ceil(n / cols) * cell > maxH) { cell -= 1; cols = Math.max(1, Math.floor(regionW / cell)); }
+  cols = Math.max(1, Math.min(cols, Math.max(n, 1)));
+  const usedW = cols * cell, r = cell * 0.36;
+  return (i) => ({ x: cxr - usedW / 2 + ((i % cols) + 0.5) * cell, y: yBase - (Math.floor(i / cols) + 0.5) * cell, r });
+}
+const PAN = (() => {
+  const { pw, hang } = B, yBase = hang - 8;
+  const boxRegionW = pw * 0.4, boxCx = -pw / 2 + boxRegionW / 2;
+  const unitRegionW = pw * 0.46, unitCx = pw / 2 - unitRegionW / 2;
+  const boxW = 68, boxTop = yBase - boxW;
+  const lp = placer(5, unitCx, unitRegionW, yBase, 400);
+  const rp = placer(12, 0, pw, yBase, 400);
+  const rv = placer(7, boxCx, Math.max(boxW * 1.8, 80), boxTop - 24, 128);
+  return {
+    yBase, boxCx, boxW, boxTop,
+    brooch: { x: (boxCx + boxRegionW / 2 + unitCx - unitRegionW / 2) / 2, y: yBase - boxW / 2 },
+    left: Array.from({ length: 5 }, (_, i) => lp(i)),
+    right: Array.from({ length: 12 }, (_, i) => rp(i)),
+    reveal: Array.from({ length: 7 }, (_, i) => rv(i)),
+  };
+})();
+function panPos(side, tilt) {
+  const s = side === "L" ? -1 : 1;
+  return { x: B.cx + s * B.span * Math.cos(tilt), y: B.beamY + s * B.span * Math.sin(tilt) };
+}
+/**
+ * st: build (0..1 dibujo de la estructura), units (0..1 aparición de pesas),
+ * L y R (acción de la llave en cada plato), tilt, open, boxDraw, fade (0..1 de
+ * la estructura que se va en el morph), unitsA (opacidad de las pesas).
+ */
+function drawBalance(t, st) {
+  const { cx, beamY, span, hang, pw, ST } = B;
+  const tilt = st.tilt;
+  const tiltK = cl(Math.abs(tilt) / B.MAX_TILT);
+  const sA = 1 - (st.fade ?? 0);
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  // pie
+  const b1 = smooth(P(st.build, 0, 0.45));
+  const base = beamY + hang + 84;
+  ctx.globalAlpha = sA;
+  ctx.strokeStyle = C.inkFaint; ctx.lineWidth = ST;
+  if (b1 > 0) { line(cx, base, cx, lerp(base, beamY, b1)); line(cx - 68 * b1, base, cx + 68 * b1, base); }
+  ctx.globalAlpha = 1;
+  // barra
+  const b2 = smooth(P(st.build, 0.2, 0.6));
+  if (b2 > 0) {
+    ctx.save();
+    ctx.translate(cx, beamY); ctx.rotate(tilt);
+    ctx.strokeStyle = mix(C.inkDim, C.warn, tiltK); ctx.lineWidth = 4 + tiltK * 1.5;
+    if (tiltK > 0.05) glow(C.warn, 26 * tiltK);
+    line(-span * b2, 0, span * b2, 0);
+    ctx.shadowBlur = 0;
+    ring(0, 0, 8, mix(C.inkDim, C.warn, tiltK), 4);
+    ctx.restore();
+  }
+  for (const side of ["L", "R"]) {
+    const p = panPos(side, tilt);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    const b3 = smooth(P(st.build, 0.4, 0.8));
+    ctx.globalAlpha = sA;
+    ctx.strokeStyle = C.line; ctx.lineWidth = ST;
+    if (b3 > 0) line(0, 0, 0, hang * b3);
+    const b4 = smooth(P(st.build, 0.6, 1));
+    if (b4 > 0) {
+      ctx.globalAlpha = b4 * sA;
+      ctx.strokeStyle = C.inkFaint;
+      ctx.beginPath();
+      ctx.moveTo(-pw / 2 * b4, hang); ctx.lineTo(pw / 2 * b4, hang); ctx.lineTo(pw * 0.34 * b4, hang + 18); ctx.lineTo(-pw * 0.34 * b4, hang + 18); ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    const act = side === "L" ? st.L : st.R;
+    const units = side === "L" ? PAN.left : PAN.right;
+    const stay = side === "L" ? 0 : 7;
+    units.forEach((u, i) => {
+      const pop = outBack(P(st.units, i * 0.045, i * 0.045 + 0.35), 2.6);
+      if (pop <= 0) return;
+      const leaving = i >= stay;
+      const dy = leaving ? -B.LIFT * smooth(act) : 0;
+      const a = (leaving ? 1 - act : 1) * (st.unitsA ?? 1);
+      const sq = leaving ? 1 + 0.25 * thereBack(act) : 1;
+      ctx.save(); ctx.translate(u.x, u.y + dy); ctx.scale(pop / sq, pop * sq);
+      dot(0, 0, u.r, C.inkDim, a);
+      ctx.restore();
+    });
+    if (side === "L") drawBox(t, st, act);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawBox(t, st, act) {
+  const { boxCx, boxW, boxTop, yBase, brooch } = PAN;
+  const open = st.open ?? 0;
+  const bd = st.boxDraw ?? 1;
+  const a = st.boxA ?? 1;
+  if (a <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.lineWidth = 4; ctx.strokeStyle = C.accent;
+  glow(C.accent, 18 + 30 * (st.boxGlow ?? 0));
+  const x0 = boxCx - boxW / 2;
+  rrect(x0, boxTop, boxW, boxW, 6);
+  if (bd < 1) { ctx.setLineDash([272 * bd, 400]); }
+  ctx.globalAlpha = a * (1 - open * 0.35);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // tapa, que gira desde su esquina izquierda
+  const lidA = smooth(P(bd, 0.7, 1));
+  ctx.save();
+  ctx.globalAlpha = a * lidA;
+  ctx.translate(x0, boxTop - 10); ctx.rotate(-1.9 * smooth(open));
+  rrect(0, 0, boxW, 10, 4); ctx.stroke();
+  ctx.restore();
+  ctx.shadowBlur = 0;
+  // broche: la operación, dibujada
+  const ba = (1 - act) * smooth(P(st.units, 0.3, 0.7)) * a;
+  if (ba > 0) {
+    ctx.globalAlpha = ba; ctx.lineWidth = 4; ctx.lineCap = "round";
+    line(brooch.x - 12, brooch.y, brooch.x + 12, brooch.y);
+    line(brooch.x, brooch.y - 12, brooch.x, brooch.y + 12);
+  }
+  // lo que había adentro
+  if (open > 0) {
+    PAN.reveal.forEach((u, i) => {
+      const p = outBack(P(open, 0.15 + i * 0.07, 0.55 + i * 0.07), 2.2);
+      if (p <= 0) return;
+      ctx.save(); ctx.globalAlpha = a; glow(C.ok, 24);
+      ctx.translate(u.x, u.y - (1 - p) * 30); ctx.scale(p, p);
+      dot(0, 0, u.r, C.ok, (st.revealA ?? 1));
+      ctx.restore();
+    });
+  }
+  ctx.restore();
+}
+
+// La llave del teclado de fichas y el dedo que la arrastra.
+function keyToken(x, y, sym, a = 1, s = 1, lit = 0) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(s, s);
+  rrect(-64, -64, 128, 128, 24);
+  ctx.fillStyle = C.surfaceHigh; ctx.fill();
+  ctx.strokeStyle = mix(C.line, C.accent, lit); ctx.lineWidth = 3;
+  if (lit > 0) glow(C.accent, 30 * lit);
+  ctx.stroke(); ctx.shadowBlur = 0;
+  const m = mlay([sym], 96);
+  glyph(sym, -m.width / 2, 34, 96, C.ink);
+  ctx.restore();
+}
+function finger(x, y, a, press) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  const r = 40 * (1 - 0.14 * press);
+  dot(x, y, r, "#ffffff", 0.16 + 0.1 * press);
+  ring(x, y, r, "#ffffff", 3, 0.7);
+  if (press > 0) ring(x, y, r + 26 * press, "#ffffff", 2, 0.35 * (1 - press));
+  ctx.restore();
+}
+const bez = (p0, p1, p2, k) => ({ x: (1 - k) ** 2 * p0.x + 2 * (1 - k) * k * p1.x + k * k * p2.x, y: (1 - k) ** 2 * p0.y + 2 * (1 - k) * k * p1.y + k * k * p2.y });
+
+// --- actos ------------------------------------------------------------------
+const EQ_SIZE = 210, EQ_Y = 1080;
+let EQ = null; // diagramación de x + 5 = 12
+let SHARDS = null; // partículas de los glifos
+function prep() {
+  EQ = mlay(["x", "+", "5", "=", "1", "2"], EQ_SIZE);
+  const rnd = mulberry(7);
+  const probe = document.createElement("canvas").getContext("2d");
+  SHARDS = [];
+  const x0 = W / 2 - EQ.width / 2;
+  EQ.items.forEach((it, gi) => {
+    if (gi === 0) return;
+    const g = ATLAS[it.ch];
+    let n = 0, tries = 0;
+    while (n < 70 && tries < 4000) {
+      tries++;
+      const u = lerp(g.left, g.right, rnd()), v = lerp(g.top, g.bottom, rnd());
+      if (!probe.isPointInPath(gpath(it.ch), u, v)) continue;
+      const px = x0 + it.x + u * EQ_SIZE, py = EQ_Y + v * EQ_SIZE;
+      const ang = Math.atan2(py - EQ_Y + 70, px - W / 2) + (rnd() - 0.5) * 1.2;
+      const sp = 300 + rnd() * 900;
+      SHARDS.push({ x: px, y: py, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 200, r: 2 + rnd() * 5, c: rnd() < 0.25 ? C.accent : C.ink });
+      n++;
+    }
+  });
+}
+
+// La cámara del mundo de la balanza: foco en coordenadas del mundo y zoom.
+function camera(focus, z, shake = { x: 0, y: 0 }) {
+  ctx.translate(W / 2 + shake.x, 1000 + shake.y);
+  ctx.scale(z, z);
+  ctx.translate(-focus.x, -focus.y);
+}
+function shakeAt(t, t0, amp, dur = 0.5) {
+  const k = P(t, t0, t0 + dur); if (k <= 0 || k >= 1) return { x: 0, y: 0 };
+  const d = (1 - k) ** 2 * amp;
+  return { x: Math.sin(t * 91) * d, y: Math.cos(t * 73) * d };
+}
+
+function actHook(t) {
+  // 0 – 3.1: la x, la ecuación, y la ecuación que se rompe
+  const sh = shakeAt(t, 0.28, 16, 0.5);
+  ctx.save(); ctx.translate(sh.x, sh.y);
+  const x0 = W / 2 - EQ.width / 2;
+  const xi = EQ.items[0];
+  // la x entra de golpe y después toma su lugar en la ecuación
+  const eIn = rushFrom(P(t, 0, 0.34));
+  const eSeat = smooth(P(t, 0.95, 1.45));
+  const big = lerp(3400, 520, eIn);
+  const size = lerp(big, EQ_SIZE, eSeat);
+  const bigX = W / 2 - adv("x") * size / 2, bigY = 1010 + size * 0.23;
+  const seatX = x0 + xi.x, seatY = EQ_Y;
+  let gx = lerp(bigX, seatX, eSeat), gy = lerp(bigY, seatY, eSeat);
+  // en el giro la x vuelve al centro y se hace caja
+  const eBox = smooth(P(t, 2.45, 2.95));
+  const boxS = lerp(size, 90, eBox);
+  gx = lerp(gx, W / 2 - adv("x") * boxS / 2, eBox); gy = lerp(gy, 1000 + boxS * 0.22, eBox);
+  const squash = 1 + 0.18 * damp(t - 0.3, 2.2, 6);
+  const xColor = mix(C.ink, C.accent, smooth(P(t, 2.2, 2.6)));
+  glyph("x", gx, gy, boxS, xColor, { sx: squash, sy: 2 - squash, alpha: 1 - smooth(P(t, 2.75, 3.0)), glow: t > 2.2 ? 30 : 0 });
+  // onda de choque
+  const sw = P(t, 0.3, 1.0);
+  if (sw > 0 && sw < 1) { ring(W / 2, 1000, lerp(120, 900, outExpo(sw)), C.accent, lerp(8, 1, sw), (1 - sw) * 0.7); ring(W / 2, 1000, lerp(60, 600, outExpo(sw)), C.ink, 2, (1 - sw) * 0.35); }
+  // el resto de la ecuación vuela desde la derecha, glifo por glifo
+  const dim = 1 - 0.45 * smooth(P(t, 2.0, 2.3));
+  EQ.items.forEach((it, i) => {
+    if (i === 0) return;
+    const a0 = 1.0 + i * 0.075;
+    const e = outBack(P(t, a0, a0 + 0.42), 1.6);
+    if (e <= 0 || t > 2.62) return;
+    const off = (1 - e) * 700;
+    glyph(it.ch, x0 + it.x + off, EQ_Y, EQ_SIZE, C.ink, { alpha: cl(e * 1.6) * dim, rot: (1 - e) * 0.5 });
+  });
+  // estallido en partículas
+  if (t >= 2.5 && t < 3.6) {
+    const k = t - 2.5;
+    for (const p of SHARDS) {
+      const x = p.x + p.vx * k * (1 - k * 0.35), y = p.y + p.vy * k + 900 * k * k;
+      dot(x, y, p.r * (1 - k * 0.7), p.c, cl(1 - k * 1.1) * dim);
+    }
+  }
+  ctx.restore();
+  kinetic(t, { lines: [[[HOOK, C.ink]]], y: 520, size: 96, tin: 0.12, tout: 0.95, stagger: 0.07 });
+  kinetic(t, { lines: [[["Te lo hicieron", C.ink]], [["memorizar.", C.inkDim]]], y: 470, size: 84, tin: 1.12, tout: 2.3 });
+  // tachado ámbar sobre "memorizar."
+  const st = P(t, 1.75, 2.05), so = P(t, 2.3, 2.5);
+  if (st > 0 && so < 1) {
+    font(84, 700); ctx.letterSpacing = `${-0.02 * 84}px`;
+    const w = ctx.measureText("memorizar.").width; ctx.letterSpacing = "0px";
+    ctx.save(); ctx.strokeStyle = C.warn; ctx.lineWidth = 7; ctx.lineCap = "round"; ctx.globalAlpha = 1 - so; glow(C.warn, 20);
+    line(W / 2 - w / 2 - 10, 470 + 94 - 30, W / 2 - w / 2 - 10 + (w + 20) * outExpo(st), 470 + 94 - 30); ctx.restore();
+  }
+  kinetic(t, { lines: [[["Acá lo", C.ink], ["tocás.", C.accent]]], y: 560, size: 118, tin: 2.5, tout: 3.2, punch: true, stagger: 0.09 });
+}
+
+// Estado de la balanza a lo largo del acto, en tiempo global.
+function balanceState(t) {
+  const st = {
+    build: P(t, 3.05, 3.95), units: P(t, 3.55, 4.4), boxDraw: smooth(P(t, 2.55, 2.95)),
+    L: 0, R: 0, open: 0, fade: 0, boxGlow: 0,
+  };
+  // error: solo el plato izquierdo (5.05 – 5.55), y el replay que lo deshace (6.0 – 6.5)
+  st.L = smooth(P(t, 5.05, 5.5)) * (1 - smooth(P(t, 6.0, 6.5)));
+  // acierto: la llave pasa por los dos platos sin soltar
+  st.L += smooth(P(t, 7.0, 7.4));
+  st.R = smooth(P(t, 7.22, 7.62));
+  st.L = cl(st.L);
+  let tilt = (st.L - st.R) * B.MAX_TILT;
+  // el golpe de la caída: sobrepasa y rebota
+  tilt += 0.05 * damp(t - 5.45, 1.6, 4) * (t < 6.0 ? 1 : 0);
+  st.tilt = tilt;
+  st.open = smooth(P(t, 7.8, 8.3));
+  st.boxGlow = thereBack(P(t, 7.8, 8.6));
+  return st;
+}
+
+function actBalance(t) {
+  // 2.5 – 11.6: del cubo a la balanza, el error, el acierto y el morph al símbolo
+  const st = balanceState(t);
+  const boxWorld = { x: panPos("L", 0).x + PAN.boxCx, y: B.beamY + PAN.boxTop + PAN.boxW / 2 };
+  // cámara: nace con la caja centrada y grande, y se abre
+  const eOut = smooth(P(t, 3.0, 4.0));
+  const focus0 = boxWorld, focus1 = { x: 540, y: 990 };
+  let focus = { x: lerp(focus0.x, focus1.x, eOut), y: lerp(focus0.y, focus1.y, eOut) };
+  let z = lerp(90 / 68 * 1.9, 1.1, eOut);
+  // respiración de cámara: un empuje lento hacia la caja durante el acierto
+  const push = smooth(P(t, 6.7, 8.2)) * (1 - smooth(P(t, 8.5, 9.2)));
+  z *= 1 + 0.08 * push;
+  focus = { x: lerp(focus.x, 440, push * 0.5), y: lerp(focus.y, 1100, push * 0.4) };
+  const sh = shakeAt(t, 5.45, 22, 0.55);
+  // morph: la estructura se va y la barra queda como la línea de la ecuación
+  const m = smooth(P(t, 8.7, 9.4));
+  st.fade = m;
+  st.unitsA = 1 - m;
+  st.boxA = 1 - smooth(P(t, 8.8, 9.3));
+  st.revealA = 1 - m;
+  ctx.save();
+  camera(focus, z, sh);
+  if (t < 9.5) drawBalance(t, st);
+  ctx.restore();
+
+  // la llave y el dedo
+  const tray = { x: 540, y: 1430 };
+  const keyIn = outBack(P(t, 4.45, 4.85), 2.2);
+  const keyOut = smooth(P(t, 8.3, 8.7));
+  const toScreen = (p) => ({ x: W / 2 + sh.x + (p.x - focus.x) * z, y: 1000 + sh.y + (p.y - focus.y) * z });
+  const Lp = toScreen({ x: panPos("L", st.tilt).x + 40, y: panPos("L", st.tilt).y + B.hang - 90 });
+  const Rp = toScreen({ x: panPos("R", st.tilt).x, y: panPos("R", st.tilt).y + B.hang - 90 });
+  let kp = { ...tray }, press = 0, fa = 0, lit = 0;
+  if (t >= 4.55 && t < 6.6) {
+    const d1 = smooth(P(t, 4.65, 5.1));
+    const back = smooth(P(t, 6.0, 6.5));
+    kp = bez(tray, { x: 180, y: 1400 }, Lp, d1);
+    kp = { x: lerp(kp.x, tray.x, back), y: lerp(kp.y, tray.y, back) };
+    press = smooth(P(t, 4.55, 4.65)) * (1 - smooth(P(t, 5.55, 5.65)));
+    fa = smooth(P(t, 4.5, 4.6)) * (1 - smooth(P(t, 5.6, 5.8)));
+    lit = press;
+  } else if (t >= 6.6) {
+    const d1 = smooth(P(t, 6.72, 7.1));
+    const d2 = smooth(P(t, 7.12, 7.6));
+    kp = bez(tray, { x: 180, y: 1400 }, Lp, d1);
+    if (d2 > 0) kp = bez(Lp, { x: 540, y: Lp.y - 260 }, Rp, d2);
+    press = smooth(P(t, 6.62, 6.72)) * (1 - smooth(P(t, 7.7, 7.8)));
+    fa = smooth(P(t, 6.55, 6.65)) * (1 - smooth(P(t, 7.8, 8.0)));
+    lit = press;
+    const back = smooth(P(t, 7.8, 8.2));
+    kp = { x: lerp(kp.x, tray.x, back), y: lerp(kp.y, tray.y, back) };
+  }
+  // estela de la llave en el barrido
+  if (t > 7.1 && t < 7.75) {
+    for (let i = 1; i <= 6; i++) {
+      const tt = t - i * 0.022;
+      const d2 = smooth(P(tt, 7.12, 7.6));
+      const p = bez(Lp, { x: 540, y: Lp.y - 260 }, Rp, d2);
+      dot(p.x, p.y, 20 - i * 2, C.accent, 0.12 * (1 - i / 7));
+    }
+  }
+  keyToken(kp.x, kp.y, "−", keyIn * (1 - keyOut), 1 - 0.1 * press, lit);
+  finger(kp.x + 34, kp.y + 40, fa, press);
+
+  // el replay: barrido de rebobinado
+  const rw = P(t, 5.98, 6.55);
+  if (rw > 0 && rw < 1) {
+    ctx.save(); ctx.globalAlpha = 0.5 * thereBack(rw);
+    for (let i = 0; i < 9; i++) { const yy = ((i * 230 + (1 - rw) * 1900) % 1900); ctx.fillStyle = hexA(C.accent, 0.06); ctx.fillRect(0, yy, W, 3); }
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = thereBack(rw); ctx.translate(W / 2, 1000);
+    ctx.fillStyle = C.ink;
+    for (const dx of [-26, 14]) { ctx.beginPath(); ctx.moveTo(dx + 20, -30); ctx.lineTo(dx - 20, 0); ctx.lineTo(dx + 20, 30); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+  }
+
+  // textos del acto
+  kinetic(t, { lines: [[["El igual es", C.ink]], [["una balanza.", C.accent]]], y: 380, size: 88, tin: 3.55, tout: 4.45 });
+  kinetic(t, { lines: [[["Si tocás un", C.ink]], [["solo plato…", C.ink]]], y: 380, size: 80, tin: 4.6, tout: 5.35 });
+  kinetic(t, { lines: [[["se cae.", C.warn]]], y: 440, size: 150, tin: 5.4, tout: 5.95, punch: true });
+  kinetic(t, { lines: [[["Nada dice", C.inkDim]], [["“incorrecto”.", C.ink]]], y: 380, size: 80, tin: 6.0, tout: 6.75 });
+  kinetic(t, { lines: [[["Una llave,", C.ink]], [["los dos platos.", C.accent]]], y: 380, size: 86, tin: 6.85, tout: 8.25 });
+
+  // x = 7 sobre el morph
+  actSymbol(t, st, focus, z);
+}
+
+function actSymbol(t, st, focus, z) {
+  if (t < 8.1 || t > 11.9) return;
+  const size = 190, y = 1180;
+  const lay = mlay(["x", "=", "7"], size);
+  const x0 = W / 2 - lay.width / 2;
+  const toScreen = (p) => ({ x: W / 2 + (p.x - focus.x) * z, y: 1000 + (p.y - focus.y) * z });
+  const out = smooth(P(t, 11.2, 11.6));
+  ctx.save();
+  ctx.translate(-out * 1200, 0);
+  // la línea de la balanza queda como renglón de la ecuación
+  const m = smooth(P(t, 8.7, 9.4));
+  if (m > 0) {
+    ctx.strokeStyle = C.inkFaint; ctx.lineWidth = 4; ctx.globalAlpha = m;
+    line(lerp(W / 2 - B.span, 150, m), lerp(B.beamY, y + 46, m), lerp(W / 2 + B.span, 930, m), lerp(B.beamY, y + 46, m));
+    ctx.globalAlpha = 1;
+  }
+  // la caja se vuelve x y las siete pesas verdes se vuelven 7
+  const box = toScreen({ x: panPos("L", 0).x + PAN.boxCx, y: B.beamY + PAN.yBase - PAN.boxW / 2 });
+  const gx = lerp(box.x - adv("x") * 60 / 2, x0 + lay.items[0].x, m);
+  const gy = lerp(box.y + 20, y, m);
+  glyph("x", gx, gy, lerp(60, size, m), C.accent, { alpha: smooth(P(t, 8.75, 9.1)), glow: 26 });
+  const eqA = smooth(P(t, 9.05, 9.35));
+  glyph("=", x0 + lay.items[1].x, y, size, C.ink, { alpha: eqA, sx: lerp(0.3, 1, outBack(P(t, 9.05, 9.4))) });
+  const sev = { x: x0 + lay.items[2].x, y };
+  PAN.reveal.forEach((u, i) => {
+    const k = smooth(P(t, 8.7 + i * 0.03, 9.3 + i * 0.03));
+    if (k <= 0 || k >= 1) return;
+    const p = toScreen({ x: panPos("L", 0).x + u.x, y: B.beamY + u.y });
+    dot(lerp(p.x, sev.x + 50, k), lerp(p.y, sev.y - 60, k), u.r * z * (1 - k * 0.6), C.ok, 1 - k * 0.5);
+  });
+  glyph("7", sev.x, y, size, C.ok, { alpha: smooth(P(t, 9.15, 9.4)), glow: 30, sy: lerp(1.25, 1, outBack(P(t, 9.15, 9.5))) });
+  // la cuenta escrita, que aparece arriba como en el cuaderno
+  const w1 = mlay(["x", "+", "5", "=", "1", "2"], 92), w2 = mlay(["−", "5", " ", " ", " ", "−", "5"], 70);
+  const a1 = smooth(P(t, 9.5, 9.8)), a2 = smooth(P(t, 9.75, 10.05));
+  w1.items.forEach((it, i) => glyph(it.ch, W / 2 - w1.width / 2 + it.x, 820 - (1 - a1) * 30, 92, C.inkDim, { alpha: a1 * cl(1 - i * 0.02) }));
+  const wx = W / 2 - w1.width / 2;
+  const pl = w1.items[2], tw = w1.items[4];
+  glyph("−", wx + pl.x - 70, 930 - (1 - a2) * 30, 70, C.accent, { alpha: a2 });
+  glyph("5", wx + pl.x - 70 + adv("−") * 70 + 4, 930 - (1 - a2) * 30, 70, C.accent, { alpha: a2 });
+  glyph("−", wx + tw.x - 20, 930 - (1 - a2) * 30, 70, C.accent, { alpha: a2 });
+  glyph("5", wx + tw.x - 20 + adv("−") * 70 + 4, 930 - (1 - a2) * 30, 70, C.accent, { alpha: a2 });
+  ctx.restore();
+  kinetic(t, { lines: [[["Primero", C.ink], ["lo tocás.", C.ink]]], y: 420, size: 86, tin: 9.1, tout: 11.15 });
+  kinetic(t, { lines: [[["Después", C.accent], ["lo escribís.", C.accent]]], y: 520, size: 86, tin: 9.7, tout: 11.2 });
+}
+
+// --- montaje: cuatro nodos reales, cortes al pulso -------------------------------
+const MONT = [
+  { t0: 11.5, label: "LOS CUENCOS DE FRUTA", line: "Contar dice cuántas hay", draw: drawBowls },
+  { t0: 13.0, label: "COFRES DENTRO DE COFRES", line: "Los paréntesis son cofres", draw: drawChests },
+  { t0: 14.5, label: "LA FÁBRICA", line: "Una función es una máquina", draw: drawMachine },
+  { t0: 16.0, label: "LA RAMPA DEL CAMINANTE", line: "La pendiente es lo empinado", draw: drawSlope },
+];
+function fruit(x, y, r, color, sx = 1, sy = 1, a = 1) {
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.scale(sx, sy);
+  ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
+  line(0, -r * 0.9, 0, -r * 1.45);
+  dot(0, 0, r, color);
+  ctx.restore();
+}
+function drawBowls(lt) {
+  const bowls = [{ x: 330, c: C.accent }, { x: 750, c: C.ink }];
+  const by = 1130, br = 150;
+  ctx.lineCap = "round";
+  bowls.forEach((b, bi) => {
+    ctx.strokeStyle = C.inkFaint; ctx.lineWidth = 4;
+    line(b.x - br - 20, by - 60, b.x + br + 20, by - 60);
+    ctx.beginPath(); ctx.arc(b.x, by - 60, br, 0.12, Math.PI - 0.12); ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const t0 = 0.05 + i * 0.14 + bi * 0.07;
+      const k = P(lt, t0, t0 + 0.32);
+      if (k <= 0) continue;
+      const fx = b.x + (i - 1) * 84, fy = by + 10 - (i === 1 ? 0 : 0);
+      const fall = inExpo(k) ** 0.6;
+      const y = lerp(fy - 620, fy, cl(k * 1.15) ** 2);
+      const land = P(lt, t0 + 0.26, t0 + 0.6);
+      const sq = k >= 0.87 ? 1 + 0.35 * damp(land, 2.2, 5) : 1;
+      fruit(fx, y, 34, b.c, sq, 2 - sq, cl(fall * 4));
+    }
+  });
+  // uno a uno: la correspondencia que es contar
+  for (let i = 0; i < 3; i++) {
+    const k = smooth(P(lt, 0.75 + i * 0.1, 1.0 + i * 0.1));
+    if (k <= 0) continue;
+    const x1 = 330 + (i - 1) * 84, x2 = 750 + (i - 1) * 84, y = 1110;
+    ctx.save(); ctx.strokeStyle = hexA(C.accent, 0.8); ctx.lineWidth = 3; ctx.setLineDash([10, 10]);
+    ctx.beginPath(); ctx.moveTo(x1, y - 50); ctx.quadraticCurveTo((x1 + x2) / 2, y - 260 + i * 30, lerp(x1, x2, k), lerp(y - 50, y - 50, k)); ctx.stroke(); ctx.restore();
+  }
+  const n = smooth(P(lt, 1.05, 1.3));
+  glyph("3", W / 2 - adv("3") * 170 / 2, 1400, 170, C.ok, { alpha: n, glow: 30, sy: lerp(1.3, 1, outBack(P(lt, 1.05, 1.35))) });
+}
+function chest(x, y, w, h, lid, lidA, fill = C.surfaceHigh) {
+  ctx.save();
+  rrect(x - w / 2, y - h / 2, w, h, 22); ctx.fillStyle = fill; ctx.fill();
+  ctx.strokeStyle = C.inkDim; ctx.lineWidth = 3; ctx.stroke();
+  ctx.translate(x - w / 2, y - h / 2 - 12 - lid * 180);
+  ctx.globalAlpha *= lidA;
+  ctx.translate(w / 2, 10); ctx.rotate(lid * -0.6); ctx.translate(-w / 2, -10);
+  rrect(0, 0, w, 20, 10); ctx.fillStyle = C.surfaceHigh; ctx.fill();
+  ctx.strokeStyle = C.accent; ctx.lineWidth = 4; glow(C.accent, 16); ctx.stroke(); ctx.shadowBlur = 0;
+  ring(w / 2, 10, 18, C.accent, 3.5);
+  ctx.restore();
+}
+function keyIcon(x, y, s, a, sym) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.scale(s, s);
+  rrect(-80, -52, 160, 104, 22); ctx.fillStyle = C.surfaceHigh; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 3; ctx.stroke();
+  ctx.strokeStyle = C.warn; ctx.lineWidth = 5; ctx.lineCap = "round";
+  ring(-38, -6, 18, C.warn, 5); ring(-38, -6, 6, C.warn, 4);
+  line(-20, -6, 50, -6); line(40, -6, 40, 8);
+  glyph(sym, 12, 38, 40, C.ink);
+  ctx.restore();
+}
+function drawChests(lt) {
+  const cx = 540, cy = 1130;
+  const o1 = smooth(P(lt, 0.45, 0.75)), o2 = smooth(P(lt, 0.85, 1.1));
+  const pop = outBack(P(lt, 0.0, 0.3), 1.8);
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+  chest(cx, cy, 640, 460, o1, 1 - o1 * 0.9, "#10141b");
+  ctx.save(); ctx.globalAlpha = 1; chest(cx, cy + 40, 400, 300, o2, 1 - o2 * 0.9); ctx.restore();
+  ctx.strokeStyle = C.warn; ctx.lineWidth = 4; ctx.lineCap = "round";
+  line(cx + 250, cy + 190, cx + 280, cy + 220); line(cx + 280, cy + 190, cx + 250, cy + 220);
+  line(cx + 135, cy + 130, cx + 135, cy + 170); line(cx + 115, cy + 150, cx + 155, cy + 150);
+  const g = outBack(P(lt, 1.08, 1.35), 2.5);
+  ctx.save(); glow(C.ok, 40); dot(cx, cy + 50, 30 * g, C.ok); ctx.restore();
+  ring(cx, cy + 50, 30 + 140 * P(lt, 1.1, 1.5), C.ok, 3, 1 - P(lt, 1.1, 1.5));
+  ctx.restore();
+  // dos llaves que suben de la bandeja a cada tapa
+  const k1 = smooth(P(lt, 0.15, 0.45)), k2 = smooth(P(lt, 0.6, 0.88));
+  keyIcon(lerp(420, cx, k1), lerp(1470, cy - 250, k1), 1, smooth(P(lt, 0.08, 0.18)) * (1 - smooth(P(lt, 0.45, 0.6))), "×");
+  keyIcon(lerp(660, cx, k2), lerp(1470, cy - 90, k2), 1, smooth(P(lt, 0.5, 0.62)) * (1 - smooth(P(lt, 0.88, 1.0))), "−");
+}
+function drawMachine(lt) {
+  const y = 1110, mx = 540;
+  const e = outBack(P(lt, 0, 0.3), 1.6);
+  ctx.save(); ctx.translate(mx, y); ctx.scale(e, e); ctx.translate(-mx, -y);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = C.accent; ctx.lineWidth = 22; glow(C.accent, 22);
+  line(215, y, mx - 100, y); line(mx + 100, y, 900, y);
+  ctx.shadowBlur = 0;
+  ring(170, y, 56, C.inkFaint, 4);
+  const pulse = 1 + 0.12 * damp(lt - 0.55, 2.5, 6) + 0.12 * damp(lt - 1.05, 2.5, 6);
+  ctx.save(); ctx.translate(mx, y); ctx.scale(pulse, 2 - pulse);
+  rrect(-100, -100, 200, 200, 22); ctx.fillStyle = C.surfaceHigh; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 3; ctx.stroke();
+  ring(0, 0, 46, C.warn, 5);
+  ctx.strokeStyle = C.warn; ctx.lineWidth = 5; line(-18, -18, 18, 18); line(18, -18, -18, 18);
+  ctx.restore();
+  // placa de salida
+  rrect(900, y - 70, 110, 140, 16); ctx.strokeStyle = C.ok; ctx.lineWidth = 4; ctx.stroke();
+  ctx.restore();
+  // dos entradas: 3 sale 6, 4 sale 8
+  [[0.15, "3", "6"], [0.62, "4", "8"]].forEach(([t0, a, b]) => {
+    const k = P(lt, t0, t0 + 0.42);
+    if (k > 0 && k < 1) {
+      const x = lerp(170, mx, smooth(k));
+      dot(x, y, 34, C.accent); glyph(a, x - adv(a) * 60 / 2, y + 20, 60, C.bg);
+    }
+    const o = P(lt, t0 + 0.42, t0 + 0.72);
+    if (o > 0 && o < 1) { const x = lerp(mx, 955, smooth(o)); dot(x, y, 38, C.ok); }
+    const shown = P(lt, t0 + 0.7, t0 + 0.9);
+    const hide = t0 < 0.5 ? P(lt, 1.0, 1.1) : 0;
+    if (shown > 0) glyph(b, 955 - adv(b) * 90 / 2, y + 32, 90, C.ok, { alpha: shown * (1 - hide), glow: 22, sy: lerp(1.3, 1, outBack(shown)) });
+    const ia = t0 < 0.5 ? 1 - smooth(P(lt, 0.55, 0.65)) : smooth(P(lt, 0.55, 0.65));
+    glyph(a, 170 - adv(a) * 80 / 2, y + 150, 80, C.inkDim, { alpha: ia * smooth(P(lt, t0 - 0.1, t0)) });
+  });
+}
+function drawSlope(lt) {
+  const ox = 250, oy = 1400, u = 70;
+  const g = smooth(P(lt, 0, 0.35));
+  ctx.save(); ctx.lineCap = "round";
+  ctx.strokeStyle = hexA(C.line, 0.9); ctx.lineWidth = 2;
+  for (let i = 1; i <= 8; i++) { ctx.globalAlpha = g; line(ox + i * u, oy, ox + i * u, oy - 8 * u * g); line(ox, oy - i * u, ox + 8 * u * g, oy - i * u); }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = C.inkDim; ctx.lineWidth = 3;
+  line(ox - 30, oy, ox + (8 * u + 40) * g, oy); line(ox, oy + 30, ox, oy - (8 * u + 40) * g);
+  for (let i = 1; i <= 8; i++) { glyph(String(i), ox + i * u - 11, oy + 56, 44, C.inkDim, { alpha: g }); glyph(String(i), ox - 50, oy - i * u + 16, 44, C.inkDim, { alpha: g }); }
+  const lines = [[3, C.warn, 0.2], [2, C.ink, 0.32], [1, C.ok, 0.44]];
+  lines.forEach(([m, col, t0]) => {
+    const k = smooth(P(lt, t0, t0 + 0.45));
+    if (k <= 0) return;
+    const run = Math.min(8, 8 / m) * k;
+    ctx.strokeStyle = col; ctx.lineWidth = 5; glow(col, 14);
+    line(ox, oy, ox + run * u, oy - run * m * u); ctx.shadowBlur = 0;
+  });
+  // el caminante sube la rampa de pendiente 2: un paso, dos pisos
+  const w = P(lt, 0.55, 1.4);
+  if (w > 0) {
+    const steps = 3.2 * w, s = Math.floor(steps), f = steps - s;
+    for (let i = 0; i < Math.min(s + 1, 4); i++) {
+      const kk = i < s ? 1 : f;
+      ctx.strokeStyle = hexA(C.accent, 0.9); ctx.lineWidth = 3; ctx.setLineDash([8, 8]);
+      line(ox + i * u, oy - 2 * i * u, ox + (i + Math.min(1, kk * 2)) * u, oy - 2 * i * u);
+      if (kk > 0.5) line(ox + (i + 1) * u, oy - 2 * i * u, ox + (i + 1) * u, oy - 2 * i * u - 2 * u * cl((kk - 0.5) * 2));
+      ctx.setLineDash([]);
+    }
+    const px = ox + steps * u, py = oy - 2 * steps * u;
+    ctx.strokeStyle = C.accent; ctx.lineWidth = 5; glow(C.accent, 16);
+    const bob = Math.sin(steps * Math.PI * 2) * 6;
+    ring(px, py - 78 + bob, 16, C.accent, 5);
+    line(px, py - 62 + bob, px, py - 26 + bob); line(px, py - 26 + bob, px - 16, py); line(px, py - 26 + bob, px + 16, py);
+    line(px - 18, py - 48 + bob, px + 18, py - 48 + bob);
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+}
+function actMontage(t) {
+  if (t < 11.2 || t > 17.9) return;
+  MONT.forEach((m, i) => {
+    const t1 = m.t0 + 1.5;
+    if (t < m.t0 - 0.3 || t > t1 + 0.3) return;
+    // barrido: entra desde la derecha, sale por la izquierda
+    const ein = rushFrom(P(t, m.t0 - 0.3, m.t0 + 0.05));
+    const eout = i === MONT.length - 1 ? 0 : rushInto(P(t, t1 - 0.12, t1 + 0.2));
+    const dx = (1 - ein) * 1100 - eout * 1100;
+    const lt = t - m.t0;
+    ctx.save(); ctx.translate(dx, 0);
+    m.draw(Math.max(0, lt));
+    ctx.restore();
+    // estela horizontal del barrido
+    const sp = Math.max(1 - ein, eout);
+    if (sp > 0.02 && sp < 0.98) {
+      ctx.save(); ctx.globalAlpha = 0.5 * thereBack(sp);
+      const rnd = mulberry(i * 31 + 3);
+      for (let k = 0; k < 16; k++) { const yy = 700 + rnd() * 900, ll = 200 + rnd() * 500; ctx.fillStyle = hexA(rnd() < 0.5 ? C.accent : C.ink, 0.35); ctx.fillRect(dx + rnd() * W - ll / 2, yy, ll, 2 + rnd() * 3); }
+      ctx.restore();
+    }
+    label(t, { text: m.label, y: 360, tin: m.t0 + 0.02, tout: t1 - 0.12 });
+    kinetic(t, { lines: [[[m.line, C.ink]]], y: 480, size: 64, tin: m.t0 + 0.08, tout: t1 - 0.15, stagger: 0.04 });
+  });
+  kinetic(t, { lines: [[["La misma idea,", C.inkDim], ["en todo.", C.accent]]], y: 1540, size: 50, weight: 600, tin: 11.6, tout: 17.2, stagger: 0.05 });
+}
+
+// --- escala: los 21 conceptos jugables de la espina ---------------------------
+let SKY = null, SPINE = null;
+const NAMES = ["Los cuencos de fruta", "El camino de piedras", "El viaje de dos tramos", "La llave de vuelta", "La banda y el piso", "La llave que encoge", "El ascensor y el caminante", "La pizza y la barra", "Cofres dentro de cofres", "Cajas en el libro de cuentas", "Los dos platos", "El llavero", "Cofres y llaves", "Cofres anidados", "Dos habitaciones", "El libro de frutas", "La fábrica", "El rastro del caminante", "La rampa del caminante", "La cadena de máquinas", "La máquina en reversa"];
+function prepSky() {
+  const r = mulberry(21);
+  // el cielo del grafo completo, tenue: los 348 nodos diseñados
+  SKY = Array.from({ length: 348 }, () => ({ x: -400 + r() * 1880, y: 200 + r() * 1700, s: 1 + r() * 2.4, tw: r() * 6.28 }));
+  SPINE = Array.from({ length: 21 }, (_, i) => {
+    const k = i / 20;
+    return { x: 540 + Math.sin(k * Math.PI * 2.6 + 0.4) * 300 + (r() - 0.5) * 40, y: 1390 - k * 820 + (r() - 0.5) * 30 };
+  });
+}
+function actScale(t) {
+  if (t < 17.3 || t > 21.2) return;
+  const ein = smooth(P(t, 17.3, 17.8));
+  const lit = (i) => P(t, 17.75 + i * 0.085, 17.95 + i * 0.085);
+  const done = Math.min(20, Math.floor((t - 17.75) / 0.085));
+  const cur = SPINE[cl(done, 0, 20)];
+  // la cámara sigue al nodo que se enciende y después se abre
+  const zo = smooth(P(t, 18.4, 19.9));
+  const z = lerp(2.1, 0.92, zo) * lerp(1.6, 1, ein);
+  const f = { x: lerp(cur.x, 540, zo), y: lerp(cur.y, 1040, zo) };
+  const conv = smooth(P(t, 20.35, 20.85));
+  ctx.save();
+  ctx.globalAlpha = ein * (1 - smooth(P(t, 20.8, 21.1)));
+  ctx.translate(W / 2, 1000); ctx.scale(z, z); ctx.translate(-f.x, -f.y);
+  for (const s of SKY) {
+    const tw = 0.5 + 0.5 * Math.sin(t * 2 + s.tw);
+    const x = lerp(s.x, 540, conv), y = lerp(s.y, 1040, conv);
+    dot(x, y, s.s, C.inkFaint, 0.35 + 0.35 * tw);
+  }
+  ctx.lineCap = "round";
+  for (let i = 0; i < 20; i++) {
+    const a = SPINE[i], b = SPINE[i + 1];
+    const k = smooth(lit(i + 1));
+    ctx.strokeStyle = hexA(C.line, 1); ctx.lineWidth = 2; line(lerp(a.x, 540, conv), lerp(a.y, 1040, conv), lerp(b.x, 540, conv), lerp(b.y, 1040, conv));
+    if (k > 0) { ctx.strokeStyle = hexA(C.accent, 0.8); ctx.lineWidth = 4; glow(C.accent, 14); line(lerp(a.x, 540, conv), lerp(a.y, 1040, conv), lerp(lerp(a.x, b.x, k), 540, conv), lerp(lerp(a.y, b.y, k), 1040, conv)); ctx.shadowBlur = 0; }
+  }
+  SPINE.forEach((p, i) => {
+    const k = lit(i);
+    const x = lerp(p.x, 540, conv), y = lerp(p.y, 1040, conv);
+    dot(x, y, 9, C.inkFaint, 1);
+    if (k > 0) {
+      ctx.save(); glow(C.accent, 30); dot(x, y, 9 + 5 * outBack(k, 3), C.accent, 1); ctx.restore();
+      ring(x, y, 12 + 50 * k, C.accent, 2, (1 - k) * 0.8);
+    }
+  });
+  ctx.restore();
+  // destello de convergencia que da paso a la marca
+  const fl = P(t, 20.7, 21.1);
+  if (fl > 0 && fl < 1) { ctx.save(); ctx.globalAlpha = thereBack(fl) * 0.9; glow(C.accent, 80); dot(540, 1040 + (800 - 1040) * smooth(fl), 40 * thereBack(fl), C.ink); ctx.restore(); }
+  kinetic(t, { lines: [[["De contar frutas", C.ink]], [["a funciones inversas.", C.accent]]], y: 360, size: 76, tin: 17.6, tout: 20.3 });
+  if (t > 17.75 && t < 20.3) {
+    const name = NAMES[cl(done, 0, 20)];
+    font(40, 500);
+    const w = ctx.measureText(name).width;
+    ctx.save(); ctx.globalAlpha = smooth(P(t, 17.8, 18.0)) * (1 - smooth(P(t, 20.0, 20.3)));
+    ctx.fillStyle = C.inkDim; ctx.fillText(name, W / 2 - w / 2, 1545);
+    font(28, 600); ctx.letterSpacing = "4px";
+    const nn = String(cl(done, 0, 20) + 1).padStart(2, "0") + " / 21";
+    const w2 = ctx.measureText(nn).width; ctx.fillStyle = C.accent; ctx.fillText(nn, W / 2 - w2 / 2, 1488); ctx.letterSpacing = "0px";
+    ctx.restore();
+  }
+}
+
+// --- cierre ---------------------------------------------------------------------
+function actEnd(t) {
+  if (t < 20.6) return;
+  const cx = 540, cy = 790, s = 0.5; // el ícono de 1024 a 512
+  const T = (x, y) => ({ x: cx + (x - 512) * s, y: cy + (y - 512) * s });
+  const out = smooth(P(t, 24.05, 24.3));
+  ctx.save();
+  ctx.globalAlpha = 1 - out;
+  // líneas de construcción del ícono
+  const cons = smooth(P(t, 20.7, 21.5));
+  ctx.strokeStyle = hexA(C.accent, lerp(0.5, 0.22, smooth(P(t, 21.6, 22.2)))); ctx.lineWidth = 2.5;
+  if (cons > 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, 468 * s, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cons); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, 305 * s, Math.PI / 2, Math.PI / 2 + Math.PI * 2 * cons); ctx.stroke();
+    ctx.setLineDash([14, 12]);
+    const a = T(512, 0), b = T(512, 1024); line(a.x, a.y, a.x, lerp(a.y, b.y, cons));
+    const l1 = T(512, 40), l2 = T(0, 1000), r2 = T(1024, 1000);
+    line(l1.x, l1.y, lerp(l1.x, l2.x, cons), lerp(l1.y, l2.y, cons)); line(l1.x, l1.y, lerp(l1.x, r2.x, cons), lerp(l1.y, r2.y, cons));
+    ctx.setLineDash([]);
+    const h1 = T(0, 785), h2 = T(1024, 785); line(lerp(cx, h1.x, cons), h1.y, lerp(cx, h2.x, cons), h2.y);
+    ring(cx, T(512, 412).y, 16 * s * 2, hexA(C.accent, 0.6), 2.5, cons);
+  }
+  // la marca: el Λ se dibuja en un solo trazo
+  const mk = smooth(P(t, 21.0, 21.65));
+  if (mk > 0) {
+    const A = T(262, 735), Bp = T(512, 300), Cp = T(762, 735);
+    const g = ctx.createLinearGradient(0, Bp.y - 60, 0, A.y + 40);
+    g.addColorStop(0, "#1a7fe8"); g.addColorStop(0.55, "#6fb0fb"); g.addColorStop(1, "#cde3fd");
+    ctx.save();
+    const pop = 1 + 0.06 * damp(t - 21.6, 1.8, 5);
+    ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+    ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 150 * s;
+    const len = 2 * Math.hypot(Bp.x - A.x, Bp.y - A.y);
+    ctx.setLineDash([len * mk, len]);
+    glow("#3d8ff0", 50 * mk);
+    ctx.strokeStyle = g;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(Bp.x, Bp.y); ctx.lineTo(Cp.x, Cp.y); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+  if (out < 1) {
+    ctx.save(); ctx.globalAlpha = 1 - out;
+    kinetic(t, { lines: [[["Mathy", C.ink]]], y: 1215, size: 150, weight: 700, tin: 21.45, stagger: 0, track: -0.035 });
+    kinetic(t, { lines: [[["Tocalo antes de escribirlo.", C.inkDim]]], y: 1305, size: 46, weight: 500, tin: 21.75, stagger: 0.04, track: 0 });
+    // CTA
+    const ce = outBack(P(t, 22.2, 22.6), 2);
+    if (ce > 0) {
+      const pulse = 1 + 0.045 * thereBack(P(t, 23.0, 23.5));
+      ctx.save(); ctx.translate(W / 2, 1420); ctx.scale(ce * pulse, ce * pulse);
+      rrect(-210, -52, 420, 104, 52); ctx.fillStyle = C.accent; glow(C.accent, 40); ctx.fill(); ctx.shadowBlur = 0;
+      font(44, 700); const cw = ctx.measureText("Jugá ahora").width;
+      ctx.fillStyle = C.bg; ctx.fillText("Jugá ahora", -cw / 2, 15);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  // empalme del loop: la x vuelve a llenar la pantalla, como en el cuadro cero
+  const lp = P(t, 24.08, 24.5);
+  if (lp > 0) {
+    const size = lerp(60, 3400, inExpo(lp) ** 0.7);
+    glyph("x", W / 2 - adv("x") * size / 2, 1010 + size * 0.23, size, C.ink, { alpha: smooth(P(t, 24.08, 24.2)) });
+  }
+}
+
+// --- cuadro ---------------------------------------------------------------------
+function draw(t) {
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.textBaseline = "alphabetic";
+  const gridA = 1 - 0.7 * smooth(P(t, 0, 0.1)) * (1 - smooth(P(t, 0.3, 1.2)));
+  background(t, { x: 0, y: t * 30, z: 1 + 0.03 * Math.sin(t * 0.6) }, gridA);
+  if (t < 3.7) actHook(t);
+  if (t >= 2.5 && t < 11.9) actBalance(t);
+  actMontage(t);
+  actScale(t);
+  actEnd(t);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(VIG, 0, 0);
+}
+
+window.renderFrame = (t) => draw(t);
+window.DUR = DUR;
+window.ready = (async () => {
+  ATLAS = window.ATLAS || (await (await fetch("../../packages/glyphs/src/atlas.json")).json());
+  await Promise.all([400, 500, 600, 700].map((w) => document.fonts.load(`${w} 40px Inter`)));
+  bake(); prep(); prepSky();
+  if (!q.has("render")) {
+    const t0 = performance.now() - Number(q.get("t") || 0) * 1000;
+    const loop = () => { draw(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  } else document.body.classList.add("render");
+  return true;
+})();
+</script>
+</body>
+</html>

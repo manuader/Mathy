@@ -116,6 +116,14 @@ nodos que la usan.
 
 ## 4. Qué cambió, sesión por sesión
 
+### Sesión 2026-09-27 — el primer reel para pauta
+No se tocó el juego. Se hizo una pieza de motion graphics vertical (9:16, 24,5 s, 4K 60 fps)
+para anunciar Mathy en Reels, TikTok y Shorts: `promo/reel-01/`. Las escenas se redibujaron
+en vector desde su propio código y los glifos salen del atlas del juego; se verificaron
+contra capturas de la app real. El plan de la pieza, las variantes de hook y los desvíos del
+brief (Mathy no tiene personajes y N los excluye) están en `promo/reel-01/PLAN.md`. Detalle en
+[SESSION-2026-09-27-reel-promo.md](SESSION-2026-09-27-reel-promo.md).
+
 ### Sesión 2026-09-10 — de 5 a 21 nodos jugables, y la espina de 44 a 51 conceptos
 Se construyeron los nodos 6 a 21: la aritmética hasta fracciones, la incógnita, la
 igualdad, la llave, ecuaciones de varios pasos, la distributiva, sistemas y la rama de
@@ -406,6 +414,11 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 - **No hay capa de audio.** Varios minijuegos piden un "tic" que hoy es un destello, y las
   definiciones de la capa formal se leen en vez de narrarse.
 
+**Promoción:**
+- El CTA del reel 01 dice "Jugá ahora" sin destino: la URL o la tienda se completa en la
+  plataforma de anuncios. Si el producto cambia (nodos, plataformas), el reclamo "de contar
+  frutas a funciones inversas" se revisa antes de volver a pautar.
+
 **Decisión de diseño, no de un agente:**
 - Cerrar las discrepancias entre la prosa de los minijuegos y el catálogo de errores.
   Mientras sigan, los agentes no emiten esos ids, que es lo correcto:
@@ -426,6 +439,8 @@ parece vivo pero no contesta, puede haber un proceso viejo tomando el puerto 808
 | Documento | Qué contesta |
 |---|---|
 | **este** | punto de entrada: estado, reglas, arquitectura, decisiones, trampas |
+| [`SESSION-2026-09-27-reel-promo.md`](SESSION-2026-09-27-reel-promo.md) | cómo se hizo el reel 01 y por qué se redibujó en vez de grabar la app |
+| [`../promo/reel-01/PLAN.md`](../promo/reel-01/PLAN.md) | el plan de la pieza publicitaria: guion por tiempos, retención, variantes de hook |
 | [`SESSION-2026-09-10-espina-hasta-21.md`](SESSION-2026-09-10-espina-hasta-21.md) | por qué la espina llegó a 21 nodos con estas escenas, y qué diagnósticos resultaron falsos |
 | [`SESSION-2026-09-09-espina-jugable.md`](SESSION-2026-09-09-espina-jugable.md) | por qué la app quedó como quedó al pasar de prueba vertical a cinco nodos |
 | [`U-desarrollo/U3-prompt-de-nodo.md`](U-desarrollo/U3-prompt-de-nodo.md) | cómo seguir sin supervisión: el bucle de agentes, las plantillas y qué mirar antes de commitear |
