@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mathy Reel 02</title>
+<style>
+  @font-face { font-family: Inter; font-weight: 400; src: url(../reel-01/fonts/inter-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: Inter; font-weight: 500; src: url(../reel-01/fonts/inter-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: Inter; font-weight: 600; src: url(../reel-01/fonts/inter-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: Inter; font-weight: 700; src: url(../reel-01/fonts/inter-latin-700-normal.woff2) format("woff2"); }
+  html, body { margin: 0; background: #0b0d10; }
+  body { display: grid; place-items: center; min-height: 100vh; }
+  canvas { display: block; height: 100vh; width: auto; max-width: 100vw; }
+  body.render canvas { height: auto; width: auto; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script src="../shared/engine.js"></script>
+<script>
+/*
+ * Reel 02: el caminante recorre los mundos del juego. Todos los personajes son
+ * los del código: TrackScene (caminante, piedras, manivela, edificio, ascensor)
+ * y LedgerScene (frutas y cajón), escalados y animados como marioneta.
+ */
+const HOOK = q.get("hook") || "Este es el caminante.";
+const WATER = "#16324a", STONE = "#3a4a5c";
+
+// --- personajes ---------------------------------------------------------------
+
+/**
+ * El caminante de TrackScene.buildWalker, en sus unidades (mide 34 de alto).
+ * o.face da vuelta todo el cuerpo; o.sq es squash (>0) o stretch (<0) con pivote
+ * en los pies; o.tuck recoge las piernas en el aire; o.stride mueve las piernas
+ * al caminar; o.arms levanta los brazos; o.flag pone la bandera ámbar.
+ */
+function walker(x, y, k, o = {}) {
+  const a = o.alpha ?? 1; if (a <= 0) return;
+  const sq = o.sq ?? 0, tuck = o.tuck ?? 0, st = o.stride ?? 0;
+  ctx.save();
+  ctx.globalAlpha *= a;
+  ctx.translate(x, y);
+  ctx.rotate(o.lean ?? 0);
+  ctx.scale(k * (1 + sq) * (o.face ?? 1), k * (1 - sq));
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.strokeStyle = C.accent;
+  glow(C.accent, o.glow ?? 10);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -8); ctx.lineTo(0, -22);
+  ctx.moveTo(lerp(-7, -4, tuck) + st * 4, lerp(-2, -6, tuck) - Math.max(0, st) * 3);
+  ctx.lineTo(0, -10);
+  ctx.lineTo(lerp(7, 4, tuck) - st * 4, lerp(-2, -6, tuck) - Math.max(0, -st) * 3);
+  if (o.arms) {
+    const w = o.wave ?? 0;
+    ctx.moveTo(-7, -18 - w * 6); ctx.lineTo(0, -20); ctx.lineTo(7, -16 - w * 8);
+  }
+  ctx.stroke();
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, -28, 6, 0, 7); ctx.stroke();
+  ctx.shadowBlur = 0;
+  if (o.flag) {
+    ctx.fillStyle = C.warn;
+    ctx.globalAlpha *= o.flag;
+    ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(16, -18); ctx.lineTo(0, -14); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/**
+ * Los saltos de piedra en piedra, como en el juego: la posición interpolada con
+ * smoothstep y un arco de altura h. Encima, anticipación antes de despegar y
+ * squash al caer.
+ */
+function hops(keys, t, start) {
+  let u = start, lift = 0, sq = 0, tuck = 0;
+  for (const k of keys) {
+    if (t < k.t) {
+      const c = P(t, k.t - 0.1, k.t);
+      sq += 0.16 * Math.sin(c * Math.PI / 2);
+      break;
+    }
+    if (t < k.t + k.d) {
+      const f = (t - k.t) / k.d, e = f * f * (3 - 2 * f);
+      u = lerp(u, k.to, e);
+      lift = Math.sin(f * Math.PI) * k.h;
+      tuck = Math.sin(f * Math.PI);
+      sq = -0.14 * Math.sin(f * Math.PI);
+      return { u, lift, sq, tuck, air: true };
+    }
+    u = k.to;
+    const land = t - (k.t + k.d);
+    sq = land < 0.4 ? 0.24 * Math.exp(-land * 11) * Math.cos(land * 26) : 0;
+  }
+  return { u, lift, sq, tuck, air: false };
+}
+
+// El camino de piedras de TrackScene, a escala 2,5.
+const TR = { n: 7, x0: 120, step: 140, y: 1000, rx: 46, ry: 18, half: 36, over: 24 };
+const stoneX = (u) => TR.x0 + TR.step * u;
+function drawTrack(t, o = {}) {
+  const { n, x0, step, y, rx, ry, half, over } = TR;
+  const build = o.build ?? 1;
+  ctx.save();
+  // el agua
+  const bw = (step * (n - 1) + 2 * over) * smooth(P(build, 0, 0.5));
+  rrect(x0 - over, y - half, bw, half * 2, half); ctx.fillStyle = WATER; ctx.fill();
+  // ondas tenues sobre el agua
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = hexA("#2b4f73", 0.55); ctx.lineWidth = 3; ctx.lineCap = "round";
+  for (let i = 0; i < 9; i++) { const xx = ((i * 131 + t * 60) % (bw + 200)) + x0 - over - 100; line(xx, y - 8 + (i % 3) * 10, xx + 40, y - 8 + (i % 3) * 10); }
+  ctx.restore();
+  for (let i = 0; i < n; i++) {
+    const p = outBack(P(build, 0.15 + i * 0.07, 0.45 + i * 0.07), 2.4);
+    if (p <= 0) continue;
+    ctx.save(); ctx.translate(stoneX(i), y); ctx.scale(p, p);
+    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, 7); ctx.fillStyle = STONE; ctx.fill();
+    ctx.restore();
+    // tarjeta con el numeral
+    const c = outBack(P(o.cards ?? 0, i * 0.08, i * 0.08 + 0.4), 2);
+    if (c > 0) {
+      const lit = o.lit?.(i) ?? 0;
+      ctx.save(); ctx.translate(stoneX(i), y + 72); ctx.scale(c, c);
+      rrect(-35, -28, 70, 56, 12); ctx.fillStyle = C.surface; ctx.fill();
+      ctx.strokeStyle = mix(C.line, C.accent, lit); ctx.lineWidth = 3 + lit * 2; if (lit > 0) glow(C.accent, 20 * lit); ctx.stroke(); ctx.shadowBlur = 0;
+      glyph(String(i), -adv(String(i)) * 40 / 2, 14, 40, C.ink);
+      ctx.restore();
+    }
+  }
+  // la bandera de llegada, con su halo
+  if (o.flagAt !== undefined) {
+    const fa = o.flagA ?? 1;
+    const fx = stoneX(o.flagAt);
+    ctx.save(); ctx.globalAlpha = fa; ctx.strokeStyle = C.ok; ctx.lineWidth = 5; ctx.lineJoin = "round";
+    const halo = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 6));
+    ctx.globalAlpha = fa * halo;
+    ctx.beginPath(); ctx.ellipse(fx, y, rx + 10, ry + 10, 0, 0, 7); ctx.stroke();
+    ctx.globalAlpha = fa;
+    const rise = outBack(P(t, o.flagT ?? -1, (o.flagT ?? -1) + 0.4), 2.2);
+    ctx.beginPath(); ctx.moveTo(fx, y - 15); ctx.lineTo(fx, y - 15 - 85 * rise); ctx.lineTo(fx + 50, y - 100 * rise + 17); ctx.lineTo(fx, y - 100 * rise + 35); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+// La estela del tirón: un arco por casilla saltada y el tramo entero en verde.
+function trail(a, b, k, y, whole) {
+  if (k <= 0) return;
+  ctx.save(); ctx.lineCap = "round";
+  const dir = Math.sign(b - a);
+  for (let i = a; i !== b; i += dir) {
+    const kk = cl((k * Math.abs(b - a)) - Math.abs(i - a));
+    if (kk <= 0) break;
+    const x1 = stoneX(i), x2 = stoneX(i + dir);
+    ctx.strokeStyle = C.inkDim; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x1, y - 30);
+    const mx = (x1 + x2) / 2;
+    for (let s = 1; s <= 12 * kk; s++) { const f = s / 12; ctx.lineTo(lerp(x1, x2, f), y - 30 - Math.sin(f * Math.PI) * 60); }
+    ctx.stroke();
+  }
+  if (whole > 0) {
+    ctx.strokeStyle = C.ok; ctx.lineWidth = 6; glow(C.ok, 18); ctx.globalAlpha = whole;
+    const x1 = stoneX(a), x2 = stoneX(b);
+    ctx.beginPath(); ctx.moveTo(x1, y - 30);
+    for (let s = 1; s <= 24; s++) { const f = s / 24; ctx.lineTo(lerp(x1, x2, f), y - 30 - Math.sin(f * Math.PI) * 130); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+// La manivela de TrackScene.buildCrank: doce dientes, un diente es una piedra.
+function crank(x, y, r, ang, o = {}) {
+  const a = o.alpha ?? 1; if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.scale(o.s ?? 1, o.s ?? 1);
+  ctx.lineCap = "round";
+  ring(0, 0, r * 0.62, C.line, 4); ring(0, 0, 8, C.line, 4);
+  for (let i = 0; i < 12; i++) {
+    const t = i * Math.PI / 6 - Math.PI / 2;
+    const lit = o.stop && i < o.stop;
+    ctx.strokeStyle = lit ? C.warn : C.inkDim; ctx.lineWidth = lit ? 7 : 5;
+    line(Math.cos(t) * r * 0.62, Math.sin(t) * r * 0.62, Math.cos(t) * r * (lit ? 0.95 : 0.86), Math.sin(t) * r * (lit ? 0.95 : 0.86));
+  }
+  ctx.rotate(ang);
+  ctx.strokeStyle = C.accent; ctx.lineWidth = 6; glow(C.accent, 16);
+  line(0, 0, 0, -r * 0.62); ring(0, -r * 0.62, 20, C.accent, 6);
+  ctx.restore();
+}
+// Las frutas y el cajón de LedgerScene.shapePath.
+function shape(kind, x, y, r, color, o = {}) {
+  const a = o.alpha ?? 1; if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.rotate(o.rot ?? 0); ctx.scale((o.s ?? 1) * (1 + (o.sq ?? 0)), (o.s ?? 1) * (1 - (o.sq ?? 0)));
+  ctx.fillStyle = color; ctx.strokeStyle = color;
+  const p = new Path2D();
+  if (kind === "pear") { p.ellipse(0, r * 0.55, r * 0.85, r * 0.75, 0, 0, 7); p.moveTo(r * 0.55, -r * 0.55); p.ellipse(0, -r * 0.55, r * 0.55, r * 0.55, 0, 0, 7); ctx.fill(p); }
+  else if (kind === "grape") { for (const [cx, cy] of [[-0.5, 0.35], [0.5, 0.35], [0, -0.5]]) { p.moveTo(cx * r + r * 0.55, cy * r); p.arc(cx * r, cy * r, r * 0.55, 0, 7); } ctx.fill(p); }
+  else if (kind === "crate") {
+    ctx.lineWidth = 5; ctx.lineJoin = "round"; glow(C.accent, 18);
+    rrect(-r * 1.1, -r * 0.95, r * 2.2, r * 1.9, 6); ctx.fillStyle = C.surface; ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.save(); ctx.translate(0, -r * 0.45 - (o.lid ?? 0) * 40); ctx.rotate(-(o.lid ?? 0) * 0.5);
+    line(-r * 1.1, 0, r * 1.1, 0); ctx.restore();
+    // la marca de la tapa: un triángulo, que se distingue sin leer
+    ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, -r * 0.05); ctx.lineTo(r * 0.45, r * 0.6); ctx.lineTo(-r * 0.45, r * 0.6); ctx.closePath(); ctx.stroke();
+  } else {
+    // la manzana
+    p.arc(0, r * 0.1, r * 0.92, 0, 7); p.roundRect(-r * 0.1, -r * 1.4, r * 0.2, r * 0.6, r * 0.1); ctx.fill(p);
+  }
+  ctx.restore();
+}
+
+// Un velo arriba para que el texto se lea sobre la escena que pasa por detrás.
+function scrim(a) {
+  if (a <= 0) return;
+  const g = ctx.createLinearGradient(0, 180, 0, 720);
+  g.addColorStop(0, hexA(C.bg, 0.95 * a)); g.addColorStop(0.7, hexA(C.bg, 0.8 * a)); g.addColorStop(1, hexA(C.bg, 0));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 720);
+}
+
+// --- actos ------------------------------------------------------------------------
+
+// El camino: contar, sumar y restar (0 – 6.9).
+const HOPS_A = [
+  { t: 2.85, d: 0.3, to: 1, h: 70 },
+  { t: 3.25, d: 0.3, to: 2, h: 70 },
+  { t: 3.65, d: 0.3, to: 3, h: 70 },
+  { t: 4.4, d: 0.5, to: 5, h: 200 },
+  { t: 5.75, d: 0.45, to: 3, h: 170 },
+];
+function actTrack(t) {
+  if (t > 7.1) return;
+  const h = hops(HOPS_A, t, 0);
+  const wx = stoneX(h.u), wy = TR.y - 6 - h.lift;
+  // cámara: primerísimo plano, y se abre al camino
+  const open = smooth(P(t, 1.1, 2.4));
+  // mientras juega, la cámara lo sigue un poco más cerca
+  const follow = smooth(P(t, 2.3, 2.9)) * (1 - smooth(P(t, 6.2, 6.5)));
+  let z = lerp(lerp(4.4, 3.9, smooth(P(t, 0, 1.1))), 1, open) * (1 + 0.3 * follow);
+  let f = { x: lerp(stoneX(0) + 30, 540, open), y: lerp(TR.y - 60, 1040, open) };
+  f.x = lerp(f.x, cl(wx + 80, 420, 660), follow);
+  // al final el camino gira y se vuelve el edificio; el pivote es el caminante
+  const roll = smooth(P(t, 6.35, 7.0));
+  const sh = shakeAt(t, 4.9, 12, 0.4);
+  ctx.save();
+  camera(f, z, sh);
+  ctx.translate(stoneX(3), TR.y); ctx.rotate(-Math.PI / 2 * roll); ctx.translate(-stoneX(3), -TR.y);
+  ctx.globalAlpha = 1 - smooth(P(t, 6.55, 6.95));
+  const landedAt = (i) => [0, 2.85 + 0.3, 3.25 + 0.3, 3.65 + 0.3, 1e9, 4.9][i];
+  drawTrack(t, {
+    build: 1, cards: P(t, 1.6, 2.6), flagAt: 5, flagT: 1.4, flagA: 1,
+    lit: (i) => (i === 5 ? thereBack(P(t, 4.9, 5.6)) : i >= 1 && i <= 3 ? thereBack(P(t, landedAt(i), landedAt(i) + 0.4)) : 0),
+  });
+  trail(3, 5, P(t, 4.4, 4.9), TR.y, smooth(P(t, 4.85, 5.1)) * (1 - smooth(P(t, 5.5, 5.8))));
+  trail(5, 3, P(t, 5.75, 6.2), TR.y, 0);
+  // salpicadura de llegada a la bandera
+  const sp = P(t, 4.9, 5.5);
+  if (sp > 0 && sp < 1) { ring(stoneX(5), TR.y, 60 + 240 * outExpo(sp), C.ok, 5 * (1 - sp), 1 - sp); }
+  const face = t < 5.45 ? 1 : lerp(1, -1, smooth(P(t, 5.45, 5.6)));
+  const celebrate = smooth(P(t, 4.95, 5.05)) * (1 - smooth(P(t, 5.35, 5.45)));
+  walker(wx, wy, 2.5, { sq: h.sq, tuck: h.tuck, face: Math.abs(face) < 0.05 ? 0.05 : face, arms: celebrate > 0.5 || t < 2.4, wave: t < 2.4 ? thereBack(P(t, 0.25, 0.85)) : Math.sin(t * 20) * 0.5 + 0.5, flag: t > 5.5 ? smooth(P(t, 5.5, 5.65)) : 0 });
+  ctx.restore();
+
+  // la manivela, el dedo y la ficha 2
+  const cin = outBack(P(t, 2.35, 2.7), 2);
+  const turned = [2.85, 3.25, 3.65].reduce((a, t0) => a + smooth(P(t, t0 - 0.08, t0 + 0.22)), 0) + 2 * smooth(P(t, 4.4, 4.9)) - 2 * smooth(P(t, 5.75, 6.2));
+  const tokenLand = P(t, 3.95, 4.3);
+  const stop = t >= 4.25 && t < 5.2 ? 2 : t >= 5.6 && t < 6.3 ? 2 : 0;
+  const cx = 300, cy = 1370;
+  crank(cx, cy, 120, turned * Math.PI / 6, { alpha: cin * (1 - smooth(P(t, 6.3, 6.6))), s: cin, stop });
+  const kp = bez({ x: 780, y: 1370 }, { x: 560, y: 1150 }, { x: cx, y: cy }, smooth(tokenLand));
+  if (t > 2.5 && t < 4.35) keyToken(kp.x, kp.y, "2", outBack(P(t, 2.5, 2.8), 2) * (1 - smooth(P(t, 4.2, 4.35))), lerp(1, 0.5, smooth(tokenLand)), smooth(tokenLand));
+  // el dedo sobre la perilla mientras gira
+  const hand = t > 2.7 && t < 6.3;
+  if (hand) {
+    const ang = turned * Math.PI / 6;
+    const hx = cx + Math.sin(ang) * 120 * 0.62, hy = cy - Math.cos(ang) * 120 * 0.62;
+    const drag = t > 3.9 && t < 4.35;
+    finger(drag ? kp.x + 30 : hx + 20, drag ? kp.y + 30 : hy + 24, smooth(P(t, 2.7, 2.8)) * (1 - smooth(P(t, 6.1, 6.3))), 1);
+  }
+
+  kinetic(t, { lines: [[[HOOK, C.ink]]], y: 460, size: 86, tin: 0.1, tout: 1.05, stagger: 0.07 });
+  kinetic(t, { lines: [[["No sabe sumar.", C.ink]]], y: 420, size: 88, tin: 1.12, tout: 2.3 });
+  kinetic(t, { lines: [[["Todavía.", C.accent]]], y: 560, size: 130, tin: 1.7, tout: 2.3, punch: true });
+  kinetic(t, { lines: [[["Un diente,", C.ink], ["una piedra.", C.inkDim]]], y: 420, size: 80, tin: 2.65, tout: 3.95 });
+  kinetic(t, { lines: [[["Sumar es", C.ink]], [["avanzar.", C.ok]]], y: 400, size: 92, tin: 4.05, tout: 5.35 });
+  kinetic(t, { lines: [[["Restar es", C.ink]], [["volver.", C.accent]]], y: 400, size: 92, tin: 5.45, tout: 6.35 });
+}
+
+// El edificio de TrackScene.buildShaft y el ascensor (6.4 – 9.6).
+const SH = { x: 540, w: 210, floorH: 116, slots: 9, zero: 4 };
+SH.bottom = 994 + 7.5 * SH.floorH - 40; // el piso +3 queda donde estaba el caminante
+const floorCy = (i) => SH.bottom - (i + 0.5) * SH.floorH;
+function actElevator(t) {
+  if (t < 6.3 || t > 9.9) return;
+  const ein = smooth(P(t, 6.4, 7.0));
+  // el ascensor baja piso por piso, de +3 a −3, sin frenar en el cero
+  let fl = 7;
+  for (let i = 0; i < 6; i++) fl -= smooth(P(t, 7.05 + i * 0.26, 7.05 + i * 0.26 + 0.24));
+  const cy = floorCy(fl);
+  const passZero = P(t, 7.05 + 2.5 * 0.26, 7.05 + 2.5 * 0.26 + 0.5);
+  const out = smooth(P(t, 9.3, 9.75));
+  const f = { x: 540 + out * 700, y: lerp(994 - 40, cy, smooth(P(t, 6.9, 7.3))) + 30 };
+  ctx.save();
+  camera(f, 1 + 0.12 * thereBack(passZero), shakeAt(t, 8.4, 8, 0.3));
+  ctx.translate(540, 994); ctx.rotate(Math.PI / 2 * (1 - ein)); ctx.translate(-540, -994);
+  ctx.globalAlpha = smooth(P(t, 6.45, 6.9));
+  const { x, w, floorH, slots, zero } = SH;
+  ctx.lineCap = "round";
+  for (let i = 0; i < slots; i++) {
+    const y = SH.bottom - (i + 1) * floorH, c = y + floorH / 2;
+    const b = outBack(P(t, 6.5 + Math.abs(i - 7) * 0.03, 6.8 + Math.abs(i - 7) * 0.03), 1.6);
+    ctx.save(); ctx.translate(x, c); ctx.scale(b, b); ctx.translate(-x, -c);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 4; ctx.strokeRect(x - w / 2, y, w, floorH);
+    if (i > zero) { ctx.fillStyle = C.inkFaint; ctx.fillRect(x - w * 0.22, c - floorH * 0.22, w * 0.2, floorH * 0.44); }
+    else if (i < zero) { ctx.strokeStyle = C.warn; ctx.lineWidth = 5; glow(C.warn, 14 * smooth(P(fl, i + 1.5, i + 0.5))); line(x - w * 0.26, c, x + w * 0.18, c); ctx.shadowBlur = 0; }
+    // el numeral, afuera de la pared
+    const v = i - zero, s = v < 0 ? ["−", String(-v)] : [String(v)];
+    const here = 1 - cl(Math.abs(fl - i));
+    let gx = x + w / 2 + 40;
+    for (const ch of s) { glyph(ch, gx, c + 16, 44, mix(C.inkDim, v < 0 ? C.warn : C.ink, here), { glow: here * 20 }); gx += adv(ch) * 44; }
+    ctx.restore();
+  }
+  // la calle, en el cero
+  const sy = SH.bottom - zero * floorH;
+  ctx.strokeStyle = C.ok; ctx.lineWidth = 7 + 5 * thereBack(passZero); glow(C.ok, 10 + 30 * thereBack(passZero));
+  line(x - w * 0.85, sy, x + w * 0.85, sy); ctx.shadowBlur = 0;
+  // el coche, con el caminante adentro
+  const carS = 1 + 0.08 * damp(t - 8.63, 2.2, 6);
+  ctx.save(); ctx.translate(x, cy); ctx.scale(1 / carS, carS);
+  rrect(-w * 0.34, -floorH * 0.4, w * 0.68, floorH * 0.8, 8); ctx.strokeStyle = C.accent; ctx.lineWidth = 5; glow(C.accent, 20); ctx.stroke(); ctx.shadowBlur = 0;
+  walker(0, floorH * 0.4 - 6, 2.1, { face: -1, flag: 1, sq: 0.1 * damp(t - 8.63, 2, 5) });
+  ctx.restore();
+  // velocidad: líneas que pasan al costado del coche
+  const moving = t > 7.05 && t < 8.65;
+  if (moving) { ctx.strokeStyle = hexA(C.accent, 0.35); ctx.lineWidth = 3; for (let i = 0; i < 5; i++) { const yy = cy + ((i * 97 - t * 900) % 300) - 150; line(x - w * 0.62, yy, x - w * 0.62, yy + 60); line(x + w * 0.62, yy + 40, x + w * 0.62, yy + 100); } }
+  ctx.restore();
+  scrim(smooth(P(t, 6.6, 7.0)) * (1 - smooth(P(t, 9.3, 9.6))));
+  kinetic(t, { lines: [[["¿Y debajo", C.ink]], [["del cero?", C.ink]]], y: 400, size: 88, tin: 6.6, tout: 7.75 });
+  kinetic(t, { lines: [[["El cero", C.ok]], [["no frena.", C.ink]]], y: 400, size: 110, tin: 7.85, tout: 9.3, punch: true, stagger: 0.12 });
+}
+
+// La rampa y el rastro (9.4 – 13.1).
+const G = { ox: 230, oy: 1400, u: 84 };
+const HOPS_C = [0, 1, 2, 3].map((i) => ({ t: 10.0 + i * 0.4, d: 0.32, to: i + 1, h: 60 }));
+function actRamp(t) {
+  if (t < 9.3 || t > 13.4) return;
+  const ein = rushFrom(P(t, 9.3, 9.75));
+  const out = smooth(P(t, 12.8, 13.3));
+  const dx = (1 - ein) * 1100;
+  ctx.save();
+  ctx.translate(540, 1000); ctx.scale(1 + out * 1.5, 1 + out * 1.5); ctx.translate(-540, -1000);
+  ctx.translate(dx, 0);
+  ctx.globalAlpha = 1 - out;
+  const { ox, oy, u } = G;
+  const g = smooth(P(t, 9.4, 9.9));
+  ctx.lineCap = "round";
+  ctx.strokeStyle = hexA(C.line, 0.9); ctx.lineWidth = 2;
+  for (let i = 1; i <= 8; i++) { line(ox + i * u, oy, ox + i * u, oy - 8 * u * g); line(ox, oy - i * u, ox + 8 * u * g, oy - i * u); }
+  ctx.strokeStyle = C.inkDim; ctx.lineWidth = 4;
+  line(ox - 30, oy, ox + (8 * u + 40) * g, oy); line(ox, oy + 30, ox, oy - (8 * u + 40) * g);
+  for (let i = 1; i <= 8; i++) { glyph(String(i), ox + i * u - 11, oy + 56, 40, C.inkDim, { alpha: g }); glyph(String(i), ox - 50, oy - i * u + 15, 40, C.inkDim, { alpha: g }); }
+  // el caminante sube la rampa: un paso, dos pisos
+  const h = hops(HOPS_C, t, 0);
+  // escalones punteados (avance y subida) y el rastro que deja
+  ctx.setLineDash([10, 10]); ctx.strokeStyle = hexA(C.accent, 0.8); ctx.lineWidth = 3;
+  for (let i = 0; i < Math.floor(h.u + 0.001); i++) { line(ox + i * u, oy - 2 * i * u, ox + (i + 1) * u, oy - 2 * i * u); line(ox + (i + 1) * u, oy - 2 * i * u, ox + (i + 1) * u, oy - 2 * (i + 1) * u); }
+  ctx.setLineDash([]);
+  const full = smooth(P(t, 11.75, 12.3));
+  ctx.strokeStyle = C.accent; ctx.lineWidth = 7; glow(C.accent, 22);
+  line(ox, oy, ox + lerp(h.u, 4.2, full) * u, oy - 2 * lerp(h.u, 4.2, full) * u); ctx.shadowBlur = 0;
+  // las gotas: una por paso, con anillo ámbar al caer
+  for (let i = 0; i <= 4; i++) {
+    const land = i === 0 ? 9.95 : 10.0 + (i - 1) * 0.4 + 0.32;
+    const k = outBack(P(t, land, land + 0.25), 3);
+    if (k <= 0) continue;
+    const x = ox + i * u, y = oy - 2 * i * u;
+    ctx.save(); glow(C.accent, 20); dot(x, y, 11 * k, C.accent); ctx.restore();
+    ring(x, y, 22, C.warn, 5, k);
+    ring(x, y, 22 + 60 * P(t, land, land + 0.5), C.warn, 3, 1 - P(t, land, land + 0.5));
+  }
+  const wlk = { x: ox + h.u * u, y: oy - 2 * h.u * u - 12 - h.lift };
+  walker(wlk.x, wlk.y, 2.4, { sq: h.sq, tuck: h.tuck, arms: t > 11.75 && t < 12.6, wave: Math.sin(t * 18) * 0.5 + 0.5 });
+  // y = 2x, la gráfica con su nombre
+  const eqA = smooth(P(t, 12.0, 12.35));
+  if (eqA > 0) {
+    const L = mlay(["y", "=", "2", "x"], 84);
+    L.items.forEach((it, i) => glyph(it.ch, ox + 4.9 * u + it.x, oy - 6.4 * u + (1 - outBack(P(t, 12.0 + i * 0.05, 12.35 + i * 0.05))) * 40, 84, C.accent, { alpha: eqA, glow: 20 }));
+  }
+  ctx.restore();
+  kinetic(t, { lines: [[["Cada paso", C.ink]], [["deja un rastro.", C.inkDim]]], y: 400, size: 86, tin: 9.6, tout: 11.55 });
+  kinetic(t, { lines: [[["El rastro", C.ink]], [["es una gráfica.", C.accent]]], y: 400, size: 86, tin: 11.65, tout: 12.85 });
+}
+
+// Las frutas, el cajón y la x (13.0 – 17.2).
+const ROWS = [
+  { kind: "apple", color: C.ink, n: 3, y: 830 },
+  { kind: "pear", color: C.ok, n: 2, y: 990 },
+  { kind: "grape", color: C.inkDim, n: 1, y: 1150 },
+];
+const FRUITS = (() => {
+  const r = mulberry(5), out = [];
+  ROWS.forEach((row, ri) => { for (let i = 0; i < row.n; i++) out.push({ ...row, ri, i, x0: 180 + r() * 720, fall: 13.1 + out.length * 0.09, rot: (r() - 0.5) * 1.4 }); });
+  return out;
+})();
+function actFruits(t) {
+  if (t < 12.9 || t > 17.4) return;
+  const ein = smooth(P(t, 12.9, 13.2));
+  const out = rushInto(P(t, 16.85, 17.25));
+  ctx.save();
+  ctx.globalAlpha = ein * (1 - out);
+  ctx.translate(0, -out * 300);
+  const floor = 1330;
+  ctx.strokeStyle = C.inkFaint; ctx.lineWidth = 4; ctx.lineCap = "round";
+  line(120, floor, 120 + 840 * smooth(P(t, 12.95, 13.3)), floor);
+  // las reglas de las filas
+  const sort = (f) => smooth(P(t, 14.0 + f.ri * 0.08 + f.i * 0.05, 14.45 + f.ri * 0.08 + f.i * 0.05));
+  ROWS.concat([{ y: 1310 - 0 }]).forEach((row, ri) => {
+    if (ri === 3) return;
+    const k = smooth(P(t, 13.9 + ri * 0.08, 14.3 + ri * 0.08)) * (1 - smooth(P(t, 15.6, 15.9)));
+    ctx.strokeStyle = C.line; ctx.lineWidth = 3; line(170, row.y + 52, 170 + 520 * k, row.y + 52);
+  });
+  const toGlyph = (row) => smooth(P(t, 15.55 + row.ri * 0.08, 15.95 + row.ri * 0.08));
+  FRUITS.forEach((f) => {
+    // cae con rebote y squash, después vuela a su fila
+    const fk = P(t, f.fall, f.fall + 0.42);
+    if (fk <= 0) return;
+    const fy = lerp(-100, floor - 40, cl(fk * 1.2) ** 2);
+    const land = t - (f.fall + 0.35);
+    const sq = land > 0 ? 0.3 * Math.exp(-land * 9) * Math.cos(land * 28) : -0.15 * fk;
+    const s = sort(f);
+    const tx = 220 + f.i * 120, ty = ROWS[f.ri].y;
+    const g = toGlyph(f);
+    const gx = 820, gy = ROWS[f.ri].y;
+    let x = lerp(lerp(f.x0, tx, s), gx, g), y = lerp(lerp(fy, ty, s), gy, g) - Math.sin(s * Math.PI) * 120;
+    shape(f.kind, x, y, 34, f.color, { rot: f.rot * (1 - s), sq: s > 0 ? 0 : sq, alpha: 1 - g, s: 1 - g * 0.5 });
+  });
+  // los conteos: la fila se vuelve su número
+  ROWS.forEach((row, ri) => {
+    const g = smooth(P(t, 15.8 + ri * 0.08, 16.1 + ri * 0.08));
+    if (g > 0) glyph(String(row.n), 800, row.y + 40, 110, row.color, { alpha: g, glow: 16, sy: lerp(1.3, 1, outBack(g)) });
+  });
+  // el cajón: lo trae el caminante, empujándolo, a la última fila
+  const push = smooth(P(t, 14.3, 15.3));
+  const cx = lerp(1250, 330, push), cy = 1270;
+  const toX = smooth(P(t, 15.8 + 0.24, 16.2 + 0.24));
+  shape("crate", lerp(cx, 850, toX), lerp(cy, 1285, toX), 44, C.accent, { alpha: 1 - toX, lid: thereBack(P(t, 15.5, 15.9)) * 0.6, sq: 0.06 * Math.sin(t * 14) * (push > 0 && push < 1 ? 1 : 0) });
+  if (toX > 0) glyph("x", 800, 1320, 130, C.accent, { alpha: toX, glow: 26, sy: lerp(1.3, 1, outBack(toX)) });
+  // el caminante empuja: piernas en marcha, cuerpo inclinado
+  const walking = push > 0 && push < 1;
+  const cele = t > 16.2;
+  walker(cx + 90 + (cele ? 40 * smooth(P(t, 16.2, 16.4)) : 0), 1330 - 4 - (cele ? Math.abs(Math.sin((t - 16.2) * 9)) * 30 : 0), 2.4, {
+    face: -1, lean: walking ? 0.25 : 0, stride: walking ? Math.sin(t * 22) : 0, arms: cele, wave: Math.sin(t * 20) * 0.5 + 0.5,
+    alpha: smooth(P(t, 14.2, 14.4)),
+  });
+  ctx.restore();
+  kinetic(t, { lines: [[["Las frutas", C.ink]], [["se cuentan.", C.ok]]], y: 400, size: 86, tin: 13.2, tout: 14.9 });
+  kinetic(t, { lines: [[["La caja cerrada", C.ink]], [["es la x.", C.accent]]], y: 400, size: 86, tin: 15.0, tout: 16.85 });
+}
+
+// La espina: salta de concepto en concepto (17.0 – 21.2).
+let SKY = null, SPINE = null;
+const NAMES = ["Los cuencos de fruta", "El camino de piedras", "El viaje de dos tramos", "La llave de vuelta", "La banda y el piso", "La llave que encoge", "El ascensor y el caminante", "La pizza y la barra", "Cofres dentro de cofres", "Cajas en el libro de cuentas", "Los dos platos", "El llavero", "Cofres y llaves", "Cofres anidados", "Dos habitaciones", "El libro de frutas", "La fábrica", "El rastro del caminante", "La rampa del caminante", "La cadena de máquinas", "La máquina en reversa"];
+function prepSky() {
+  const r = mulberry(21);
+  SKY = Array.from({ length: 348 }, () => ({ x: -400 + r() * 1880, y: 200 + r() * 1700, s: 1 + r() * 2.4, tw: r() * 6.28 }));
+  SPINE = Array.from({ length: 21 }, (_, i) => {
+    const k = i / 20;
+    return { x: 540 + Math.sin(k * Math.PI * 2.6 + 0.4) * 300 + (r() - 0.5) * 40, y: 1390 - k * 820 + (r() - 0.5) * 30 };
+  });
+}
+const HOP_E = 0.1, E0 = 17.55;
+function actSpine(t) {
+  if (t < 17.0 || t > 21.2) return;
+  const ein = smooth(P(t, 17.0, 17.5));
+  const keys = SPINE.slice(1).map((_, i) => ({ t: E0 + i * HOP_E, d: HOP_E * 0.85, to: i + 1, h: 40 }));
+  const h = hops(keys, t, 0);
+  const i0 = Math.floor(h.u), fr = h.u - i0;
+  const a = SPINE[cl(i0, 0, 20)], b = SPINE[cl(i0 + 1, 0, 20)];
+  const wp = { x: lerp(a.x, b.x, fr), y: lerp(a.y, b.y, fr) };
+  const lit = (i) => (i === 0 ? P(t, E0 - 0.2, E0) : P(t, E0 + (i - 1) * HOP_E + HOP_E * 0.85, E0 + (i - 1) * HOP_E + HOP_E * 0.85 + 0.2));
+  const zo = smooth(P(t, 18.9, 20.1));
+  const z = lerp(2.2, 0.92, zo) * lerp(1.4, 1, ein);
+  const f = { x: lerp(wp.x, 540, zo), y: lerp(wp.y - 30, 1040, zo) };
+  const conv = smooth(P(t, 20.35, 20.85));
+  ctx.save();
+  ctx.globalAlpha = ein * (1 - smooth(P(t, 20.8, 21.1)));
+  camera(f, z);
+  for (const s of SKY) {
+    const tw = 0.5 + 0.5 * Math.sin(t * 2 + s.tw);
+    dot(lerp(s.x, 540, conv), lerp(s.y, 1040, conv), s.s, C.inkFaint, 0.35 + 0.35 * tw);
+  }
+  ctx.lineCap = "round";
+  for (let i = 0; i < 20; i++) {
+    const A = SPINE[i], B2 = SPINE[i + 1], k = smooth(lit(i + 1));
+    const ax = lerp(A.x, 540, conv), ay = lerp(A.y, 1040, conv), bx = lerp(B2.x, 540, conv), by = lerp(B2.y, 1040, conv);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 3; line(ax, ay, bx, by);
+    if (k > 0) { ctx.strokeStyle = hexA(C.accent, 0.8); ctx.lineWidth = 4; glow(C.accent, 14); line(ax, ay, lerp(ax, bx, k), lerp(ay, by, k)); ctx.shadowBlur = 0; }
+  }
+  SPINE.forEach((p, i) => {
+    const k = lit(i), x = lerp(p.x, 540, conv), y = lerp(p.y, 1040, conv);
+    ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.4); dot(0, 0, 22, STONE); ctx.restore();
+    if (k > 0) { ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.4); glow(C.accent, 30); ring(0, 0, 26, C.accent, 5, k); ctx.restore(); ring(x, y, 14 + 60 * k, C.accent, 2, (1 - k) * 0.8); }
+  });
+  walker(wp.x, wp.y - 4 - h.lift, 1.3 / Math.max(0.7, z) * 1.6, { sq: h.sq, tuck: h.tuck, alpha: 1 - conv, arms: t > 19.6 });
+  ctx.restore();
+  const fl = P(t, 20.7, 21.1);
+  if (fl > 0 && fl < 1) { ctx.save(); ctx.globalAlpha = thereBack(fl) * 0.9; glow(C.accent, 80); dot(540, lerp(1040, 700, smooth(fl)), 40 * thereBack(fl), C.ink); ctx.restore(); }
+  kinetic(t, { lines: [[["De contar frutas", C.ink]], [["a funciones inversas.", C.accent]]], y: 360, size: 76, tin: 17.2, tout: 20.3 });
+  if (t > E0 && t < 20.3) {
+    const done = cl(Math.round(h.u), 0, 20);
+    font(40, 500); const name = NAMES[done]; const w = ctx.measureText(name).width;
+    ctx.save(); ctx.globalAlpha = smooth(P(t, E0, E0 + 0.2)) * (1 - smooth(P(t, 20.0, 20.3)));
+    ctx.fillStyle = C.inkDim; ctx.fillText(name, W / 2 - w / 2, 1545);
+    font(28, 600); ctx.letterSpacing = "4px";
+    const nn = String(done + 1).padStart(2, "0") + " / 21"; const w2 = ctx.measureText(nn).width;
+    ctx.fillStyle = C.accent; ctx.fillText(nn, W / 2 - w2 / 2, 1488); ctx.letterSpacing = "0px";
+    ctx.restore();
+  }
+}
+
+// El cierre: la marca, y el caminante clava la bandera (20.6 – 24.5).
+function drawLogo(t, cx, cy, s, t0) {
+  const T = (x, y) => ({ x: cx + (x - 512) * s, y: cy + (y - 512) * s });
+  const cons = smooth(P(t, t0, t0 + 0.8));
+  ctx.save();
+  ctx.strokeStyle = hexA(C.accent, lerp(0.5, 0.22, smooth(P(t, t0 + 0.9, t0 + 1.5)))); ctx.lineWidth = 2.5;
+  if (cons > 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, 468 * s, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cons); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, 305 * s, Math.PI / 2, Math.PI / 2 + Math.PI * 2 * cons); ctx.stroke();
+    ctx.setLineDash([14, 12]);
+    const a = T(512, 0), b = T(512, 1024); line(a.x, a.y, a.x, lerp(a.y, b.y, cons));
+    const l1 = T(512, 40), l2 = T(0, 1000), r2 = T(1024, 1000);
+    line(l1.x, l1.y, lerp(l1.x, l2.x, cons), lerp(l1.y, l2.y, cons)); line(l1.x, l1.y, lerp(l1.x, r2.x, cons), lerp(l1.y, r2.y, cons));
+    ctx.setLineDash([]);
+  }
+  const mk = smooth(P(t, t0 + 0.3, t0 + 0.95));
+  if (mk > 0) {
+    const A = T(262, 735), Bp = T(512, 300), Cp = T(762, 735);
+    const g = ctx.createLinearGradient(0, Bp.y - 60, 0, A.y + 40);
+    g.addColorStop(0, "#1a7fe8"); g.addColorStop(0.55, "#6fb0fb"); g.addColorStop(1, "#cde3fd");
+    const pop = 1 + 0.06 * damp(t - t0 - 0.9, 1.8, 5);
+    ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+    ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 150 * s;
+    const len = 2 * Math.hypot(Bp.x - A.x, Bp.y - A.y);
+    ctx.setLineDash([len * mk, len]);
+    glow("#3d8ff0", 50 * mk); ctx.strokeStyle = g;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(Bp.x, Bp.y); ctx.lineTo(Cp.x, Cp.y); ctx.stroke();
+  }
+  ctx.restore();
+}
+// El caminante del cierre está en la última piedra de un camino corto.
+const END = { y: 1000, x0: 400, step: 140 };
+const HOPS_F = [{ t: 21.05, d: 0.35, to: 1, h: 90 }, { t: 21.45, d: 0.35, to: 2, h: 90 }];
+function endWalker(t) {
+  const h = hops(HOPS_F, t, 0);
+  return { x: END.x0 + END.step * h.u, y: END.y - 6 - h.lift, h };
+}
+function actEnd(t) {
+  if (t < 20.6) return;
+  const lp = P(t, 24.0, 24.5);
+  const ew = endWalker(t);
+  // empalme del loop: la cámara entra al caminante, como en el cuadro cero
+  const z = lerp(1, 4.4, inExpo(lp) ** 0.6);
+  const f = { x: lerp(540, ew.x + 30, smooth(lp)), y: lerp(1000, END.y - 60, smooth(lp)) };
+  const fade = 1 - smooth(P(t, 24.0, 24.25));
+  ctx.save();
+  camera(f, z);
+  ctx.globalAlpha = fade;
+  drawLogo(t, 540, 640, 0.42, 20.7);
+  ctx.globalAlpha = 1;
+  // el camino corto con su agua, las piedras y la bandera
+  const b = smooth(P(t, 20.8, 21.1));
+  rrect(END.x0 - 24, END.y - 36, (END.step * 2 + 48) * b, 72, 36); ctx.fillStyle = WATER; ctx.fill();
+  for (let i = 0; i < 3; i++) { const p = outBack(P(t, 20.85 + i * 0.07, 21.15 + i * 0.07), 2.4); if (p > 0) { ctx.save(); ctx.translate(END.x0 + i * END.step, END.y); ctx.scale(p, p); ctx.beginPath(); ctx.ellipse(0, 0, 46, 18, 0, 0, 7); ctx.fillStyle = STONE; ctx.fill(); ctx.restore(); } }
+  const plant = outBack(P(t, 21.95, 22.3), 2.2);
+  if (plant > 0) {
+    const fx = END.x0 + 2 * END.step + 60;
+    ctx.save(); ctx.globalAlpha = fade; ctx.strokeStyle = C.ok; ctx.lineWidth = 5; ctx.lineJoin = "round"; glow(C.ok, 16);
+    ctx.beginPath(); ctx.moveTo(fx, END.y - 15); ctx.lineTo(fx, END.y - 15 - 85 * plant); ctx.lineTo(fx + 50, END.y - 100 * plant + 17); ctx.lineTo(fx, END.y - 100 * plant + 35); ctx.stroke();
+    ctx.restore();
+    ring(fx, END.y - 10, 30 + 160 * P(t, 22.0, 22.5), C.ok, 4, (1 - P(t, 22.0, 22.5)) * fade);
+  }
+  const cele = t > 22.2 && t < 23.9;
+  walker(ew.x, ew.y, 2.5, { sq: ew.h.sq, tuck: ew.h.tuck, arms: cele || t > 23.9, wave: cele ? Math.sin(t * 16) * 0.5 + 0.5 : thereBack(P(t, 24.0, 24.5)), alpha: smooth(P(t, 20.95, 21.05)) });
+  ctx.restore();
+  if (fade > 0) {
+    ctx.save(); ctx.globalAlpha = fade;
+    kinetic(t, { lines: [[["Mathy", C.ink]]], y: 1215, size: 150, weight: 700, tin: 21.5, stagger: 0, track: -0.035 });
+    kinetic(t, { lines: [[["Tocalo antes de escribirlo.", C.inkDim]]], y: 1305, size: 46, weight: 500, tin: 21.8, stagger: 0.04, track: 0 });
+    const ce = outBack(P(t, 22.4, 22.8), 2);
+    if (ce > 0) {
+      const pulse = 1 + 0.045 * thereBack(P(t, 23.1, 23.6));
+      ctx.save(); ctx.translate(W / 2, 1420); ctx.scale(ce * pulse, ce * pulse);
+      rrect(-210, -52, 420, 104, 52); ctx.fillStyle = C.accent; glow(C.accent, 40); ctx.fill(); ctx.shadowBlur = 0;
+      font(44, 700); const cw = ctx.measureText("Jugá ahora").width;
+      ctx.fillStyle = C.bg; ctx.fillText("Jugá ahora", -cw / 2, 15);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  // en el último tramo aparece el camino del cuadro cero detrás de él
+  if (lp > 0) {
+    ctx.save(); camera(f, z); ctx.globalAlpha = smooth(P(t, 24.2, 24.45));
+    ctx.translate(ew.x - stoneX(0), 0);
+    drawTrack(t, { build: 1, flagAt: 5, flagT: -2, flagA: 1 });
+    walker(stoneX(0), TR.y - 6, 2.5, { arms: true, wave: thereBack(P(t, 24.0, 24.5)) });
+    ctx.restore();
+  }
+}
+
+// --- cuadro ---------------------------------------------------------------------
+function draw(t) {
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.textBaseline = "alphabetic";
+  background(t, { x: 0, y: t * 30, z: 1 + 0.03 * Math.sin(t * 0.6) }, 1);
+  actTrack(t);
+  actElevator(t);
+  actRamp(t);
+  actFruits(t);
+  actSpine(t);
+  actEnd(t);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(VIG, 0, 0);
+}
+
+window.renderFrame = (t) => draw(t);
+window.DUR = DUR;
+window.ready = (async () => {
+  ATLAS = window.ATLAS || (await (await fetch("../../packages/glyphs/src/atlas.json")).json());
+  await Promise.all([400, 500, 600, 700].map((w) => document.fonts.load(`${w} 40px Inter`)));
+  bake(); prepSky();
+  if (!q.has("render")) {
+    const t0 = performance.now() - Number(q.get("t") || 0) * 1000;
+    const loop = () => { draw(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  } else document.body.classList.add("render");
+  return true;
+})();
+</script>
+</body>
+</html>

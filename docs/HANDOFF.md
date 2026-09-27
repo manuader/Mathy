@@ -123,6 +123,9 @@ en vector desde su propio código y los glifos salen del atlas del juego; se ver
 contra capturas de la app real. El plan de la pieza, las variantes de hook y los desvíos del
 brief (Mathy no tiene personajes y N los excluye) están en `promo/reel-01/PLAN.md`. Detalle en
 [SESSION-2026-09-27-reel-promo.md](SESSION-2026-09-27-reel-promo.md).
+Después se hizo el reel 02, `promo/reel-02/`: el mismo formato con **el caminante** de
+`TrackScene` como protagonista, y las frutas y el cajón de `LedgerScene`. El motor común de
+las piezas quedó en `promo/shared/engine.js`.
 
 ### Sesión 2026-09-10 — de 5 a 21 nodos jugables, y la espina de 44 a 51 conceptos
 Se construyeron los nodos 6 a 21: la aritmética hasta fracciones, la incógnita, la

@@ -33,6 +33,17 @@ conceptos jugables encendiéndose sobre el cielo del grafo, y el cierre con la m
   "de contar frutas a funciones inversas".
 - **Audio sintetizado** para no depender de licencias de música.
 
+## El reel 02: con personajes
+
+Se pidió una segunda pieza que usara los personajes del juego. Mathy no tiene mascotas,
+pero sí tiene personajes dibujados en el código, y son los que se usaron sin tocarles una
+proporción: el caminante (`TrackScene.buildWalker`), las piedras sobre el agua, la bandera,
+la manivela de doce dientes, el edificio con el ascensor (`buildShaft`, `buildCar`), las
+frutas y el cajón cerrado (`LedgerScene.shapePath`). El caminante hace de protagonista:
+empieza sin saber sumar y recorre contar, sumar, restar, negativos, la gráfica como rastro y
+la caja cerrada como `x`. La animación es de marioneta (anticipación, squash & stretch,
+piernas que se recogen en el salto), sobre las mismas piezas.
+
 ## Trampas
 
 - `pkill -f "expo start"` mata al propio shell que lo ejecuta, porque su línea de comando
